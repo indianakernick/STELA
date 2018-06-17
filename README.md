@@ -1,0 +1,1 @@
+# Statically Typed Embeddable LAnguage
