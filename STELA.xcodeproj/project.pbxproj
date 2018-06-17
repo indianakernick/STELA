@@ -10,6 +10,7 @@
 		45BBA3FC20D640EA006108C1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA3FB20D640EA006108C1 /* main.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexer.cpp */; };
+		45BBA40A20D65340006108C1 /* libSTELA.a in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -21,6 +22,19 @@
 			remoteInfo = STELA;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		45BBA40920D65331006108C1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/local/lib;
+			dstSubfolderSpec = 0;
+			files = (
+				45BBA40A20D65340006108C1 /* libSTELA.a in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -112,6 +126,7 @@
 				45BBA3E820D63E3D006108C1 /* Sources */,
 				45BBA3E920D63E3D006108C1 /* Frameworks */,
 				45BBA40820D6431B006108C1 /* ShellScript */,
+				45BBA40920D65331006108C1 /* CopyFiles */,
 			);
 			buildRules = (
 			);
