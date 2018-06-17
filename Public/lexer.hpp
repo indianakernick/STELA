@@ -9,6 +9,6 @@
 #ifndef lexer_hpp
 #define lexer_hpp
 
-
+int five();
 
 #endif

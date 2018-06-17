@@ -8,6 +8,6 @@
 
 #include "lexer.hpp"
 
-void dummy() {
-  
+int five() {
+  return 5;
 }

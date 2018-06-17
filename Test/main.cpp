@@ -6,9 +6,14 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
+#include <cassert>
 #include <iostream>
+#include "lexer.hpp"
 
 int main() {
-  std::cout << "Hello, World!\n";
+  assert(five() == 5);
+  
+  std::cout << "All tests passed\n";
+  
   return 0;
 }
