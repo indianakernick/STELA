@@ -13,26 +13,26 @@
 #define STRINGIFY_IMPL(X) #X
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
 
+#define PRINT_ERROR std::cout << "  " STRINGIFY(__LINE__) ": "
+
 #define ASSERT_TRUE(EXP)                                                        \
   if (!(EXP)) {                                                                 \
-    std::cout << "  " STRINGIFY(__LINE__) ": `" #EXP "` should be true\n";      \
+    PRINT_ERROR "`" #EXP "` should be true\n";                                  \
     ++failCount;                                                                \
   } do{}while(0)
 #define ASSERT_FALSE(EXP)                                                       \
   if (EXP) {                                                                    \
-    std::cout << "  " STRINGIFY(__LINE__) ": `" #EXP "` should be false\n";     \
+    PRINT_ERROR "`" #EXP "` should be false\n";                                 \
     ++failCount;                                                                \
   } do{}while(0)
 #define ASSERT_EQ(EXP_A, EXP_B)                                                 \
   if ((EXP_A) != (EXP_B)) {                                                     \
-    std::cout << "  " STRINGIFY(__LINE__) ": `" #EXP_A "` and `" #EXP_B         \
-      "` should be equal\n";                                                    \
+    PRINT_ERROR "`" #EXP_A "` and `" #EXP_B "` should be equal\n";              \
     ++failCount;                                                                \
   } do{}while(0)
 #define ASSERT_NEQ(EXP_A, EXP_B)                                                \
   if ((EXP_A) == (EXP_B)) {                                                     \
-    std::cout << "  " STRINGIFY(__LINE__) ": `" #EXP_A "` and `" #EXP_B         \
-      "` should not be equal\n";                                                \
+    PRINT_ERROR "`" #EXP_A "` and `" #EXP_B "` should not be equal\n";          \
     ++failCount;                                                                \
   } do{}while(0)
 
@@ -49,7 +49,7 @@ int main() {
   TEST(Five, {
     ASSERT_EQ(five(), 5);
   });
-  TEST(FiveTheSecond, {
+  TEST(Five that fails, {
     ASSERT_TRUE(five());
     ASSERT_FALSE(five());
     ASSERT_EQ(five(), 5);
