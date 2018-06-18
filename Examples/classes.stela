@@ -37,18 +37,36 @@ let half = Rational(1, 2);
 // but nothing else
 
 struct Vec3 {
-  var x: Float;
-  var y: Float;
-  var z: Float;
+  // if all properties have default values, there is an implicit init()
+  // but only if the user doesn't declare any other constructors
+  var x = 0.0f; // Float literal
+  var y = 0.0f;
+  var z = 0.0f;
   
   /*
-  This declaration prevents the (Float, Float, Float) constructor from being
+  This declaration prevents the init(Float, Float, Float) constructor from being
   implicitly generated
   init(val: Float) {
-    x = y = z = val;
+    x = val;
+    y = val;
+    z = val;
+  }
+  
+  not implicity generated if the above constructor is present
+  init(x: Float, y: Float, z: Float) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
   */
 }
 
 // calling implicitly generated constructor
 let origin = Vec3(0, 0, 0);
+
+class Thingy {
+  // only classes can have destructors
+  deinit {
+    
+  }
+}

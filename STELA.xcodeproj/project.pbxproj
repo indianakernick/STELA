@@ -11,6 +11,8 @@
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexer.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		45BBA43720D7AFB8006108C1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA43620D7AFB8006108C1 /* main.cpp */; };
+		45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -20,6 +22,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
 			remoteInfo = STELA;
+		};
+		45BBA43D20D7B557006108C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45BBA43F20D7B57E006108C1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA43320D7AFB8006108C1;
+			remoteInfo = CLI;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -47,6 +63,9 @@
 		45BBA40E20D7319F006108C1 /* functions.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = functions.stela; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		45BBA40F20D732C6006108C1 /* helloworld.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = helloworld.stela; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		45BBA42D20D76B42006108C1 /* primatives.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = primatives.stela; sourceTree = "<group>"; };
+		45BBA42F20D7993E006108C1 /* this is not swift.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = "this is not swift.stela"; sourceTree = "<group>"; };
+		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
+		45BBA43620D7AFB8006108C1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +84,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		45BBA43120D7AFB8006108C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -76,6 +103,7 @@
 				45BBA40720D642C7006108C1 /* Public */,
 				45BBA3F320D63E7B006108C1 /* Source */,
 				45BBA3FA20D640EA006108C1 /* Test */,
+				45BBA43520D7AFB8006108C1 /* CLI */,
 				45BBA3ED20D63E3D006108C1 /* Products */,
 				45BBA40220D6410E006108C1 /* Frameworks */,
 			);
@@ -86,6 +114,7 @@
 			children = (
 				45BBA3EC20D63E3D006108C1 /* libSTELA.a */,
 				45BBA3F920D640EA006108C1 /* Test */,
+				45BBA43420D7AFB8006108C1 /* CLI */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -128,8 +157,17 @@
 				45BBA40E20D7319F006108C1 /* functions.stela */,
 				45BBA40F20D732C6006108C1 /* helloworld.stela */,
 				45BBA42D20D76B42006108C1 /* primatives.stela */,
+				45BBA42F20D7993E006108C1 /* this is not swift.stela */,
 			);
 			path = Examples;
+			sourceTree = "<group>";
+		};
+		45BBA43520D7AFB8006108C1 /* CLI */ = {
+			isa = PBXGroup;
+			children = (
+				45BBA43620D7AFB8006108C1 /* main.cpp */,
+			);
+			path = CLI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -163,11 +201,30 @@
 			buildRules = (
 			);
 			dependencies = (
+				45BBA44020D7B57E006108C1 /* PBXTargetDependency */,
 				45BBA40120D640F0006108C1 /* PBXTargetDependency */,
 			);
 			name = Test;
 			productName = Test;
 			productReference = 45BBA3F920D640EA006108C1 /* Test */;
+			productType = "com.apple.product-type.tool";
+		};
+		45BBA43320D7AFB8006108C1 /* CLI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45BBA43820D7AFB8006108C1 /* Build configuration list for PBXNativeTarget "CLI" */;
+			buildPhases = (
+				45BBA43020D7AFB8006108C1 /* Sources */,
+				45BBA43120D7AFB8006108C1 /* Frameworks */,
+				45BBA43C20D7AFE9006108C1 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45BBA43E20D7B557006108C1 /* PBXTargetDependency */,
+			);
+			name = CLI;
+			productName = CLI;
+			productReference = 45BBA43420D7AFB8006108C1 /* CLI */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -186,6 +243,9 @@
 					45BBA3F820D640EA006108C1 = {
 						CreatedOnToolsVersion = 9.4;
 					};
+					45BBA43320D7AFB8006108C1 = {
+						CreatedOnToolsVersion = 9.4;
+					};
 				};
 			};
 			buildConfigurationList = 45BBA3E720D63E3D006108C1 /* Build configuration list for PBXProject "STELA" */;
@@ -202,6 +262,7 @@
 			targets = (
 				45BBA3EB20D63E3D006108C1 /* STELA */,
 				45BBA3F820D640EA006108C1 /* Test */,
+				45BBA43320D7AFB8006108C1 /* CLI */,
 			);
 		};
 /* End PBXProject section */
@@ -220,6 +281,19 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
 			shellScript = "INSTALL_DIR=/usr/local/include/STELA\nrm -dfR $INSTALL_DIR\nmkdir $INSTALL_DIR\ncp -RpX \"$PROJECT_DIR/Public/\" $INSTALL_DIR";
+		};
+		45BBA43C20D7AFE9006108C1 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "cp \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" /usr/local/bin/stela";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -240,6 +314,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		45BBA43020D7AFB8006108C1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45BBA43720D7AFB8006108C1 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -247,6 +329,16 @@
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
 			targetProxy = 45BBA40020D640F0006108C1 /* PBXContainerItemProxy */;
+		};
+		45BBA43E20D7B557006108C1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45BBA43D20D7B557006108C1 /* PBXContainerItemProxy */;
+		};
+		45BBA44020D7B57E006108C1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA43320D7AFB8006108C1 /* CLI */;
+			targetProxy = 45BBA43F20D7B57E006108C1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -469,6 +561,47 @@
 			};
 			name = Release;
 		};
+		45BBA43920D7AFB8006108C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wno-documentation",
+					"-fvisibility=default",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45BBA43A20D7AFB8006108C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				HEADER_SEARCH_PATHS = /usr/local/include;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wno-documentation",
+					"-fvisibility=default",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -495,6 +628,15 @@
 			buildConfigurations = (
 				45BBA3FE20D640EA006108C1 /* Debug */,
 				45BBA3FF20D640EA006108C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45BBA43820D7AFB8006108C1 /* Build configuration list for PBXNativeTarget "CLI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45BBA43920D7AFB8006108C1 /* Debug */,
+				45BBA43A20D7AFB8006108C1 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
