@@ -1,0 +1,30 @@
+//
+//  primatives.stela
+//  STELA
+//
+//  Created by Indi Kernick on 18/6/18.
+//  Copyright © 2018 Indi Kernick. All rights reserved.
+//
+
+/*
+
+Integer types
+
+Int8   8-bit signed
+Int16  16-bit signed
+Int32  32-bit signed
+Int64  64-bit signed
+
+UInt8  8-bit unsigned
+UInt16 16-bit unsigned
+UInt32 32-bit unsigned
+UInt64 64-bit unsigned
+
+Int        alias of Int32  (in Swift, this is Int64)
+Character  alias of Int8
+Bool       boolean
+Float      single precision floating point
+Double     double precision floating point
+String     a collection of Characters
+
+*/

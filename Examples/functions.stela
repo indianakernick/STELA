@@ -1,0 +1,37 @@
+//
+//  functions.stela
+//  STELA
+//
+//  Created by Indi Kernick on 18/6/18.
+//  Copyright © 2018 Indi Kernick. All rights reserved.
+//
+
+// specifying the return type is optional
+// func square(x: Double) -> Double
+func square(x: Double) {
+  return x * x;
+}
+
+func quart(x: Double) {
+  // parameters don't have to be named
+  // naming parameters is optional
+  return square(square(x));
+  // equiv to
+  // return square(x: square(x))
+}
+
+func square(x: Int) {
+  // x is cast from Int to Double
+  // this calls the square(Double) overload
+  return square(Double(x));
+}
+
+func main() {
+  let five = 5; // type is Int
+  let fivePointO = 5.0; // type is Double
+  
+  let twentyFive = square(five);
+  
+  let uoh: Float = 2.5;
+  square(uoh); // We got a square(Double) and a square(Int) but no square(Float)
+}

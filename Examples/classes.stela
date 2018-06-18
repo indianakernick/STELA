@@ -1,0 +1,54 @@
+//
+//  classes.stela
+//  STELA
+//
+//  Created by Indi Kernick on 18/6/18.
+//  Copyright © 2018 Indi Kernick. All rights reserved.
+//
+
+struct Rational {
+  var n: Int64;
+  var d: Int64;
+  
+  init(num: Int64) {
+    // self is optional
+    // self.n = num;
+    // self.d = 1;
+    n = num;
+    d = 1;
+  }
+  
+  // if we didn't provide any constructors then this one would have been
+  // implicitly generated. Since we provided our own constructor,
+  // init(num: Int64)
+  // this one is not implicitly generated, so we have to define it
+  init(n: Int64, d: Int64) {
+    self.n = n;
+    self.d = d;
+  }
+} // optional ;
+
+// global variables are not allowed
+// var half = Rational(1, 2);
+// global constants are allowed though
+let half = Rational(1, 2);
+// speaking of global, like C++ but unlike Swift,
+// constants, type declartions and functions are allowed at global scope
+// but nothing else
+
+struct Vec3 {
+  var x: Float;
+  var y: Float;
+  var z: Float;
+  
+  /*
+  This declaration prevents the (Float, Float, Float) constructor from being
+  implicitly generated
+  init(val: Float) {
+    x = y = z = val;
+  }
+  */
+}
+
+// calling implicitly generated constructor
+let origin = Vec3(0, 0, 0);
