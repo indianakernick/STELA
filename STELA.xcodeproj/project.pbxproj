@@ -59,13 +59,12 @@
 		45BBA3FB20D640EA006108C1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		45BBA40420D6418B006108C1 /* lexer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lexer.cpp; sourceTree = "<group>"; };
 		45BBA40520D6418B006108C1 /* lexer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = lexer.hpp; sourceTree = "<group>"; };
-		45BBA40D20D7313B006108C1 /* classes.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = classes.stela; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		45BBA40E20D7319F006108C1 /* functions.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = functions.stela; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		45BBA40F20D732C6006108C1 /* helloworld.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = helloworld.stela; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		45BBA42D20D76B42006108C1 /* primatives.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = primatives.stela; sourceTree = "<group>"; };
-		45BBA42F20D7993E006108C1 /* this is not swift.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = "this is not swift.stela"; sourceTree = "<group>"; };
 		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA43620D7AFB8006108C1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		45BBA44120D8D80D006108C1 /* classes.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = classes.stela; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,11 +152,10 @@
 		45BBA40B20D72E33006108C1 /* Examples */ = {
 			isa = PBXGroup;
 			children = (
-				45BBA40D20D7313B006108C1 /* classes.stela */,
+				45BBA44120D8D80D006108C1 /* classes.stela */,
 				45BBA40E20D7319F006108C1 /* functions.stela */,
 				45BBA40F20D732C6006108C1 /* helloworld.stela */,
 				45BBA42D20D76B42006108C1 /* primatives.stela */,
-				45BBA42F20D7993E006108C1 /* this is not swift.stela */,
 			);
 			path = Examples;
 			sourceTree = "<group>";

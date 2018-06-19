@@ -39,9 +39,9 @@ let half = Rational(1, 2);
 struct Vec3 {
   // if all properties have default values, there is an implicit init()
   // but only if the user doesn't declare any other constructors
-  var x = 0.0f; // Float literal
-  var y = 0.0f;
-  var z = 0.0f;
+  var x = 0.0;
+  var y = 0.0;
+  var z = 0.0;
   
   /*
   This declaration prevents the init(Float, Float, Float) constructor from being
