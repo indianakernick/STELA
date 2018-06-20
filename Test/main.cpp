@@ -46,15 +46,7 @@
   }
 
 int main() {
-  TEST(Five, {
-    ASSERT_EQ(five(), 5);
-  });
-  TEST(Five that fails, {
-    ASSERT_TRUE(five());
-    ASSERT_FALSE(five());
-    ASSERT_EQ(five(), 5);
-    ASSERT_NEQ(five(), 5);
-  });
+  
   
   return 0;
 }

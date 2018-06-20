@@ -9,6 +9,34 @@
 #ifndef lexer_hpp
 #define lexer_hpp
 
-int five();
+#include <vector>
+#include <string_view>
+
+namespace stela {
+
+struct InvalidToken {
+  uint32_t line;
+  uint32_t col;
+};
+
+struct Token {
+  enum class Type {
+    KEYWORD,
+    IDENTIFIER,
+    NUMBER,
+    STRING,
+    CHARACTER,
+    OPERATOR
+  };
+
+  std::string_view view;
+  uint32_t line;
+  uint32_t col;
+  Type type;
+};
+
+std::vector<Token> lex(std::string_view);
+
+}
 
 #endif
