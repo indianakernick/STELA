@@ -17,8 +17,18 @@ using namespace stela;
 namespace {
 
 constexpr std::string_view keywords[] = {
-  "func", "class", "struct", "let", "var", "if", "while", "for", "init",
-  "deinit", "public", "private", "protected"
+  "func", "return",
+  "class", "public", "private", "protected", "static", "self", "super", "override"
+  "struct",
+  "enum",
+  "let", "var",
+  "if", "else",
+  "switch", "case", "default",
+  "while", "for", "break", "continue"
+  "init", "deinit",
+  "is", "as", "nil",
+  "true", "false",
+  
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -151,12 +161,12 @@ std::vector<Token> lexImpl(const std::string_view source) {
     Token &token = tokens.emplace_back();
     begin(token, str);
     
-    if (!parseKeyword(token, str)) {}
-    else if (!parseIdent(token, str)) {}
-    else if (!parseNumber(token, str)) {}
-    else if (!parseString(token, str)) {}
-    else if (!parseChar(token, str)) {}
-    else if (!parseOper(token, str)) {}
+    if (parseKeyword(token, str)) {}
+    else if (parseIdent(token, str)) {}
+    else if (parseNumber(token, str)) {}
+    else if (parseString(token, str)) {}
+    else if (parseChar(token, str)) {}
+    else if (parseOper(token, str)) {}
     else throw InvalidToken{str.lineCol().line(), str.lineCol().col()};
     
     end(token, str);

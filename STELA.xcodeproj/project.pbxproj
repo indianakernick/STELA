@@ -13,6 +13,7 @@
 		45BBA40A20D65340006108C1 /* libSTELA.a in CopyFiles */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		45BBA43720D7AFB8006108C1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA43620D7AFB8006108C1 /* main.cpp */; };
 		45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45EE9C0420DA484A00CC3289 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0220DA484A00CC3289 /* lexer.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,9 @@
 		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA43620D7AFB8006108C1 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		45BBA44120D8D80D006108C1 /* classes.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = classes.stela; sourceTree = "<group>"; };
+		45EE9C0120DA1B5D00CC3289 /* macros.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = macros.hpp; sourceTree = "<group>"; };
+		45EE9C0220DA484A00CC3289 /* lexer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lexer.cpp; sourceTree = "<group>"; };
+		45EE9C0320DA484A00CC3289 /* lexer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = lexer.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +133,9 @@
 		45BBA3FA20D640EA006108C1 /* Test */ = {
 			isa = PBXGroup;
 			children = (
+				45EE9C0120DA1B5D00CC3289 /* macros.hpp */,
+				45EE9C0220DA484A00CC3289 /* lexer.cpp */,
+				45EE9C0320DA484A00CC3289 /* lexer.hpp */,
 				45BBA3FB20D640EA006108C1 /* main.cpp */,
 			);
 			path = Test;
@@ -308,6 +315,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45EE9C0420DA484A00CC3289 /* lexer.cpp in Sources */,
 				45BBA3FC20D640EA006108C1 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -525,7 +533,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/Public;
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wall",
@@ -545,7 +553,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/Public;
+				HEADER_SEARCH_PATHS = /usr/local/include;
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wall",

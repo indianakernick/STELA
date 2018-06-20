@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef lexer_hpp
-#define lexer_hpp
+#ifndef stela_lexer_hpp
+#define stela_lexer_hpp
 
 #include <vector>
 #include <string_view>
