@@ -52,13 +52,13 @@ const char *helloWorld = R"(func main(argc: Int) {
 
 }
 
-void testLexer() {
-  #define ASSERT_TYPE(INDEX, TYPE) \
-    ASSERT_EQ(tokens[INDEX].type, stela::Token::Type::TYPE)
-  #define ASSERT_VIEW(INDEX, VIEW) \
-    ASSERT_EQ(tokens[INDEX].view, VIEW)
-  
-  TEST(Lexer_HelloWorld, {
+#define ASSERT_TYPE(INDEX, TYPE) \
+  ASSERT_EQ(tokens[INDEX].type, stela::Token::Type::TYPE)
+#define ASSERT_VIEW(INDEX, VIEW) \
+  ASSERT_EQ(tokens[INDEX].view, VIEW)
+
+TEST_GROUP(Lexer, {
+  TEST(HelloWorld, {
     const std::vector<stela::Token> tokens = stela::lex(helloWorld);
     
     ASSERT_EQ(tokens.size(), 17);
@@ -100,7 +100,7 @@ void testLexer() {
     ASSERT_VIEW(16, "}");
   });
   
-  TEST(Lexer_SimpleStrings, {
+  TEST(SimpleStrings, {
     const stela::Tokens tokens = stela::lex(
       R"( "string" "string \" with ' quotes" )"
     );
@@ -114,10 +114,10 @@ void testLexer() {
     ASSERT_VIEW(1, "\"string \\\" with ' quotes\"");
   });
   
-  TEST(Lexer_UnterminatedString, {
+  TEST(UnterminatedString, {
     ASSERT_THROWS(stela::lex("\"unterminated"), const char *);
   });
-  
-  #undef ASSERT_VIEW
-  #undef ASSERT_TYPE
-}
+})
+
+#undef ASSERT_VIEW
+#undef ASSERT_TYPE

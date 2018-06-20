@@ -9,6 +9,6 @@
 #ifndef lexer_hpp
 #define lexer_hpp
 
-void testLexer();
+bool testLexer();
 
 #endif

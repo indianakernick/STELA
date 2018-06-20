@@ -9,6 +9,9 @@
 #ifndef macros_hpp
 #define macros_hpp
 
+#include <vector>
+#include <iomanip>
+#include <utility>
 #include <iostream>
 #include <experimental/optional>
 
@@ -68,11 +71,35 @@
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
-    std::cout << "Running test \"" << #NAME << "\"\n";                          \
+    std::cout << "Running " << #NAME << "\n";                                   \
     int failCount = 0;                                                          \
     { __VA_ARGS__ }                                                             \
-    std::cout << "Test \"" << #NAME << "\" ";                                   \
-    std::cout << (failCount == 0 ? "passed\n\n" : "failed\n\n");                \
+    results.emplace_back(#NAME, failCount == 0);                                \
   }
+
+#define TEST_GROUP(NAME, ...)                                                   \
+  bool test##NAME() {                                                           \
+    std::cout << "Testing " #NAME "\n";                                         \
+    std::vector<std::pair<std::string_view, bool>> results;                     \
+    { __VA_ARGS__ }                                                             \
+    std::cout << '\n';                                                          \
+    bool passedAll = true;                                                      \
+    for (const auto &pair : results) {                                          \
+      std::cout << std::left << std::setw(24) << pair.first;                    \
+      if (pair.second) {                                                        \
+        std::cout << "PASSED\n";                                                \
+      } else {                                                                  \
+        std::cout << "FAILED\n";                                                \
+        passedAll = false;                                                      \
+      }                                                                         \
+    }                                                                           \
+    std::cout << '\n';                                                          \
+    if (passedAll) {                                                            \
+      std::cout << "ALL PASSED!\n";                                              \
+    }                                                                           \
+    std::cout << '\n';                                                          \
+    return passedAll;                                                           \
+  }
+    
 
 #endif
