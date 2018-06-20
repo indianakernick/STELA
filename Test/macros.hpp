@@ -58,13 +58,9 @@
     std::experimental::optional<decltype(EXP)> result;                          \
     try {                                                                       \
       result = EXP;                                                             \
-    } catch (std::exception &e) {                                               \
-      PRINT_ERROR "`" #EXP "` should not throw an exception\n";                 \
-      std::cout << "  " << e.what();                                            \
-      ++failCount;                                                              \
     } catch (...) {                                                             \
       PRINT_ERROR "`" #EXP "` should not throw an exception\n";                 \
-      ++failCount;                                                              \
+      throw;                                                                    \
     }                                                                           \
     return *result;                                                             \
   }()
@@ -76,10 +72,10 @@
     try {                                                                       \
       __VA_ARGS__                                                               \
     } catch (std::exception &e) {                                               \
-      std::cout << "  EXCEPTION THROWN\n  " << e.what() << '\n';                \
+      std::cout << "  EXCEPTION CAUGHT\n  " << e.what() << '\n';                \
       ++failCount;                                                              \
     } catch (...) {                                                             \
-      std::cout << "  EXCEPTION THROWN\n";                                      \
+      std::cout << "  EXCEPTION CAUGHT\n";                                      \
       ++failCount;                                                              \
     }                                                                           \
     results.emplace_back(#NAME, failCount == 0);                                \
