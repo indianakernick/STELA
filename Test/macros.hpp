@@ -73,7 +73,15 @@
   {                                                                             \
     std::cout << "Running " << #NAME << "\n";                                   \
     int failCount = 0;                                                          \
-    { __VA_ARGS__ }                                                             \
+    try {                                                                       \
+      __VA_ARGS__                                                               \
+    } catch (std::exception &e) {                                               \
+      std::cout << "  EXCEPTION THROWN\n  " << e.what() << '\n';                \
+      ++failCount;                                                              \
+    } catch (...) {                                                             \
+      std::cout << "  EXCEPTION THROWN\n";                                      \
+      ++failCount;                                                              \
+    }                                                                           \
     results.emplace_back(#NAME, failCount == 0);                                \
   }
 

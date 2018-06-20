@@ -45,11 +45,6 @@ void printTokens(const std::vector<stela::Token> &tokens) {
   }
 }
 
-const char *helloWorld = R"(func main(argc: Int) {
-  print("Hello world!");
-  return 0;
-})";
-
 }
 
 #define ASSERT_TYPE(INDEX, TYPE) \
@@ -59,7 +54,10 @@ const char *helloWorld = R"(func main(argc: Int) {
 
 TEST_GROUP(Lexer, {
   TEST(Hello world, {
-    const std::vector<stela::Token> tokens = stela::lex(helloWorld);
+    const std::vector<stela::Token> tokens = stela::lex(R"(func main(argc: Int) {
+      print("Hello world!");
+      return 0;
+    })");
     
     ASSERT_EQ(tokens.size(), 17);
     
