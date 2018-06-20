@@ -85,7 +85,7 @@
     std::cout << '\n';                                                          \
     bool passedAll = true;                                                      \
     for (const auto &pair : results) {                                          \
-      std::cout << std::left << std::setw(24) << pair.first;                    \
+      std::cout << std::left << std::setw(32) << pair.first;                    \
       if (pair.second) {                                                        \
         std::cout << "PASSED\n";                                                \
       } else {                                                                  \
@@ -95,7 +95,7 @@
     }                                                                           \
     std::cout << '\n';                                                          \
     if (passedAll) {                                                            \
-      std::cout << "ALL PASSED!\n";                                              \
+      std::cout << "ALL PASSED!\n";                                             \
     }                                                                           \
     std::cout << '\n';                                                          \
     return passedAll;                                                           \

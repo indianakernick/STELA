@@ -98,17 +98,15 @@ bool parseString(Token &token, Utils::ParseString &str) {
   if (str.check('"')) {
     while (true) {
       str.skipUntil([] (const char c) {
-        return c == '\\' || c == '"';
+        return c == '\n' || c == '\\' || c == '"';
       });
       if (str.check('"')) {
         token.type = Token::Type::string;
         return true;
       } else if (str.check('\\')) {
-        if (!str.check('"')) {
-          throw "something";
-        }
+        str.advance();
       } else {
-        throw "something";
+        throw "Unterminated string literal";
       }
     }
   } else {
@@ -120,17 +118,15 @@ bool parseChar(Token &token, Utils::ParseString &str) {
   if (str.check('\'')) {
     while (true) {
       str.skipUntil([] (const char c) {
-        return c == '\\' || c == '\'';
+        return c == '\n' || c == '\\' || c == '\'';
       });
       if (str.check('\'')) {
         token.type = Token::Type::character;
         return true;
       } else if (str.check('\\')) {
-        if (!str.check('\'')) {
-          throw "something";
-        }
+        str.advance();
       } else {
-        throw "something";
+        throw "Unterminated character literal";
       }
     }
   } else {

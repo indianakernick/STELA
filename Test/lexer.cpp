@@ -58,7 +58,7 @@ const char *helloWorld = R"(func main(argc: Int) {
   ASSERT_EQ(tokens[INDEX].view, VIEW)
 
 TEST_GROUP(Lexer, {
-  TEST(HelloWorld, {
+  TEST(Hello world, {
     const std::vector<stela::Token> tokens = stela::lex(helloWorld);
     
     ASSERT_EQ(tokens.size(), 17);
@@ -100,7 +100,7 @@ TEST_GROUP(Lexer, {
     ASSERT_VIEW(16, "}");
   });
   
-  TEST(SimpleStrings, {
+  TEST(Simple strings, {
     const stela::Tokens tokens = stela::lex(
       R"( "string" "string \" with ' quotes" )"
     );
@@ -114,8 +114,24 @@ TEST_GROUP(Lexer, {
     ASSERT_VIEW(1, "\"string \\\" with ' quotes\"");
   });
   
-  TEST(UnterminatedString, {
+  TEST(Unterminated string, {
     ASSERT_THROWS(stela::lex("\"unterminated"), const char *);
+  });
+  
+  TEST(Simple characters, {
+    const stela::Tokens tokens = stela::lex(R"( 'c' '\'' )");
+    
+    ASSERT_EQ(tokens.size(), 2);
+    
+    ASSERT_TYPE(0, character);
+    ASSERT_TYPE(1, character);
+    
+    ASSERT_VIEW(0, "'c'");
+    ASSERT_VIEW(1, "'\\''");
+  });
+  
+  TEST(Unterminated character, {
+    ASSERT_THROWS(stela::lex("'u"), const char *);
   });
 })
 
