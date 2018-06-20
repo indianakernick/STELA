@@ -10,6 +10,7 @@
 #define macros_hpp
 
 #include <iostream>
+#include <experimental/optional>
 
 #define STRINGIFY_IMPL(X) #X
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
@@ -36,6 +37,34 @@
     PRINT_ERROR "`" #EXP_A "` and `" #EXP_B "` should not be equal\n";          \
     ++failCount;                                                                \
   } do{}while(0)
+#define ASSERT_THROWS(EXP, EXCEPTION)                                           \
+  {                                                                             \
+    bool caught = false;                                                        \
+    try {                                                                       \
+      EXP;                                                                      \
+    } catch (EXCEPTION) {                                                       \
+      caught = true;                                                            \
+    }                                                                           \
+    if (!caught) {                                                              \
+      PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n";     \
+      ++failCount;                                                              \
+    }                                                                           \
+  }
+#define ASSERT_NOTHROW(EXP)                                                     \
+  [] {                                                                          \
+    std::experimental::optional<decltype(EXP)> result;                          \
+    try {                                                                       \
+      result = EXP;                                                             \
+    } catch (std::exception &e) {                                               \
+      PRINT_ERROR "`" #EXP "` should not throw an exception\n";                 \
+      std::cout << "  " << e.what();                                            \
+      ++failCount;                                                              \
+    } catch (...) {                                                             \
+      PRINT_ERROR "`" #EXP "` should not throw an exception\n";                 \
+      ++failCount;                                                              \
+    }                                                                           \
+    return *result;                                                             \
+  }()
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \

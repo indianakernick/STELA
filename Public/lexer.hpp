@@ -21,12 +21,12 @@ struct InvalidToken {
 
 struct Token {
   enum class Type {
-    KEYWORD,
-    IDENTIFIER,
-    NUMBER,
-    STRING,
-    CHARACTER,
-    OPERATOR
+    keyword,
+    identifier,
+    number,
+    string,
+    character,
+    oper
   };
 
   std::string_view view;
@@ -35,7 +35,9 @@ struct Token {
   Type type;
 };
 
-std::vector<Token> lex(std::string_view);
+using Tokens = std::vector<Token>;
+
+Tokens lex(std::string_view);
 
 }
 

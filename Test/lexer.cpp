@@ -13,27 +13,28 @@
 
 namespace {
 
+[[maybe_unused]]
 void printTokens(const std::vector<stela::Token> &tokens) {
   for (const stela::Token &token : tokens) {
     std::cout << token.line << ':' << token.col << "  \t";
     
     switch (token.type) {
-      case stela::Token::Type::KEYWORD:
+      case stela::Token::Type::keyword:
         std::cout << "KEYWORD     ";
         break;
-      case stela::Token::Type::IDENTIFIER:
+      case stela::Token::Type::identifier:
         std::cout << "IDENTIFIER  ";
         break;
-      case stela::Token::Type::NUMBER:
+      case stela::Token::Type::number:
         std::cout << "NUMBER      ";
         break;
-      case stela::Token::Type::STRING:
+      case stela::Token::Type::string:
         std::cout << "STRING      ";
         break;
-      case stela::Token::Type::CHARACTER:
+      case stela::Token::Type::character:
         std::cout << "CHARACTER   ";
         break;
-      case stela::Token::Type::OPERATOR:
+      case stela::Token::Type::oper:
         std::cout << "OPERATOR    ";
         break;
       default:
@@ -52,29 +53,71 @@ const char *helloWorld = R"(func main(argc: Int) {
 }
 
 void testLexer() {
-  #define TOK(NAME, TYPE) stela::Token{NAME, 0, 0, stela::Token::Type::TYPE}
+  #define ASSERT_TYPE(INDEX, TYPE) \
+    ASSERT_EQ(tokens[INDEX].type, stela::Token::Type::TYPE)
+  #define ASSERT_VIEW(INDEX, VIEW) \
+    ASSERT_EQ(tokens[INDEX].view, VIEW)
   
   TEST(Lexer_HelloWorld, {
-  
-    const std::vector<stela::Token> should = {
-      TOK("func", KEYWORD), TOK("main", IDENTIFIER), TOK("(", OPERATOR),
-      TOK("argc", IDENTIFIER), TOK(":", OPERATOR), TOK("Int", IDENTIFIER),
-      TOK(")", OPERATOR), TOK("{", OPERATOR), TOK("print", IDENTIFIER),
-      TOK("(", OPERATOR), TOK("\"Hello world!\"", STRING), TOK(")", OPERATOR),
-      TOK(";", OPERATOR), TOK("return", KEYWORD), TOK("0", NUMBER),
-      TOK(";", OPERATOR), TOK("}", OPERATOR)
-    };
-  
-    const std::vector<stela::Token> actual = stela::lex(helloWorld);
+    const std::vector<stela::Token> tokens = stela::lex(helloWorld);
     
-    ASSERT_EQ(actual.size(), should.size());
+    ASSERT_EQ(tokens.size(), 17);
     
-    for (size_t i = 0; i != should.size(); ++i) {
-      std::cout << i << '\n';
-      ASSERT_EQ(actual[i].type, should[i].type);
-      ASSERT_EQ(actual[i].view, should[i].view);
-    }
+    ASSERT_TYPE(0, keyword);
+    ASSERT_TYPE(1, identifier);
+    ASSERT_TYPE(2, oper);
+    ASSERT_TYPE(3, identifier);
+    ASSERT_TYPE(4, oper);
+    ASSERT_TYPE(5, identifier);
+    ASSERT_TYPE(6, oper);
+    ASSERT_TYPE(7, oper);
+    ASSERT_TYPE(8, identifier);
+    ASSERT_TYPE(9, oper);
+    ASSERT_TYPE(10, string);
+    ASSERT_TYPE(11, oper);
+    ASSERT_TYPE(12, oper);
+    ASSERT_TYPE(13, keyword);
+    ASSERT_TYPE(14, number);
+    ASSERT_TYPE(15, oper);
+    ASSERT_TYPE(16, oper);
+    
+    ASSERT_VIEW(0, "func");
+    ASSERT_VIEW(1, "main");
+    ASSERT_VIEW(2, "(");
+    ASSERT_VIEW(3, "argc");
+    ASSERT_VIEW(4, ":");
+    ASSERT_VIEW(5, "Int");
+    ASSERT_VIEW(6, ")");
+    ASSERT_VIEW(7, "{");
+    ASSERT_VIEW(8, "print");
+    ASSERT_VIEW(9, "(");
+    ASSERT_VIEW(10, "\"Hello world!\"");
+    ASSERT_VIEW(11, ")");
+    ASSERT_VIEW(12, ";");
+    ASSERT_VIEW(13, "return");
+    ASSERT_VIEW(14, "0");
+    ASSERT_VIEW(15, ";");
+    ASSERT_VIEW(16, "}");
   });
   
-  #undef TOK
+  TEST(Lexer_SimpleStrings, {
+    const stela::Tokens tokens = stela::lex(
+      R"( "string" "string \" with ' quotes" )"
+    );
+    
+    ASSERT_EQ(tokens.size(), 2);
+    
+    ASSERT_TYPE(0, string);
+    ASSERT_TYPE(1, string);
+    
+    ASSERT_VIEW(0, "\"string\"");
+    ASSERT_VIEW(1, "\"string \\\" with ' quotes\"");
+  });
+  
+  TEST(Lexer_UnterminatedString, {
+    ASSERT_THROWS(stela::lex("\"unterminated"), const char *);
+  });
+  
+  #undef ASSERT_VIEW
+  #undef ASSERT_TYPE
 }

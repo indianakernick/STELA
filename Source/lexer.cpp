@@ -67,7 +67,7 @@ bool continueNumber(const char c) {
 
 bool parseKeyword(Token &token, Utils::ParseString &str) {
   if (str.tryParseEnum(keywords, numKeywords) != numKeywords) {
-    token.type = Token::Type::KEYWORD;
+    token.type = Token::Type::keyword;
     return true;
   } else {
     return false;
@@ -77,7 +77,7 @@ bool parseKeyword(Token &token, Utils::ParseString &str) {
 bool parseIdent(Token &token, Utils::ParseString &str) {
   if (str.check(startIdent)) {
     str.skip(continueIdent);
-    token.type = Token::Type::IDENTIFIER;
+    token.type = Token::Type::identifier;
     return true;
   } else {
     return false;
@@ -87,7 +87,7 @@ bool parseIdent(Token &token, Utils::ParseString &str) {
 bool parseNumber(Token &token, Utils::ParseString &str) {
   if (str.check(startNumber)) {
     str.skip(continueNumber);
-    token.type = stela::Token::Type::NUMBER;
+    token.type = stela::Token::Type::number;
     return true;
   } else {
     return false;
@@ -101,7 +101,7 @@ bool parseString(Token &token, Utils::ParseString &str) {
         return c == '\\' || c == '"';
       });
       if (str.check('"')) {
-        token.type = Token::Type::STRING;
+        token.type = Token::Type::string;
         return true;
       } else if (str.check('\\')) {
         if (!str.check('"')) {
@@ -123,7 +123,7 @@ bool parseChar(Token &token, Utils::ParseString &str) {
         return c == '\\' || c == '\'';
       });
       if (str.check('\'')) {
-        token.type = Token::Type::CHARACTER;
+        token.type = Token::Type::character;
         return true;
       } else if (str.check('\\')) {
         if (!str.check('\'')) {
@@ -140,14 +140,14 @@ bool parseChar(Token &token, Utils::ParseString &str) {
 
 bool parseOper(Token &token, Utils::ParseString &str) {
   if (str.tryParseEnum(oper, numOper) != numOper) {
-    token.type = Token::Type::OPERATOR;
+    token.type = Token::Type::oper;
     return true;
   } else {
     return false;
   }
 }
 
-std::vector<Token> lexImpl(const std::string_view source) {
+Tokens lexImpl(const std::string_view source) {
   Utils::ParseString str(source);
   std::vector<Token> tokens;
   tokens.reserve(source.size() / 16);
@@ -175,7 +175,7 @@ std::vector<Token> lexImpl(const std::string_view source) {
 
 }
 
-std::vector<Token> stela::lex(const std::string_view source) try {
+Tokens stela::lex(const std::string_view source) try {
   return lexImpl(source);
 } catch (Utils::ParsingError &) {
   throw;
