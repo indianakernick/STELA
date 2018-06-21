@@ -35,7 +35,7 @@
     PRINT_ERROR "`" #EXP_A "` and `" #EXP_B "` should be equal\n";              \
     ++failCount;                                                                \
   } do{}while(0)
-#define ASSERT_NEQ(EXP_A, EXP_B)                                                \
+#define ASSERT_NE(EXP_A, EXP_B)                                                 \
   if ((EXP_A) == (EXP_B)) {                                                     \
     PRINT_ERROR "`" #EXP_A "` and `" #EXP_B "` should not be equal\n";          \
     ++failCount;                                                                \
@@ -47,12 +47,19 @@
       EXP;                                                                      \
     } catch (EXCEPTION) {                                                       \
       caught = true;                                                            \
+    } catch (...) {                                                             \
+      PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n"      \
+        "  but threw something else\n";                                         \
+      ++failCount;                                                              \
+      caught = true;                                                            \
     }                                                                           \
     if (!caught) {                                                              \
-      PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n";     \
+      PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n"      \
+        "  but didn't throw\n";                                                 \
       ++failCount;                                                              \
     }                                                                           \
   }
+// @TODO merge ASSERT_NOTHROW_VOID into ASSERT_NOTHROW
 #define ASSERT_NOTHROW(EXP)                                                     \
   [] {                                                                          \
     std::experimental::optional<decltype(EXP)> result;                          \
@@ -64,6 +71,13 @@
     }                                                                           \
     return *result;                                                             \
   }()
+#define ASSERT_NOTHROW_VOID(EXP)                                                \
+  try {                                                                         \
+    EXP;                                                                        \
+  } catch (...) {                                                               \
+    PRINT_ERROR "`" #EXP "` should not throw an exception\n";                   \
+    throw;                                                                      \
+  }
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
@@ -104,6 +118,5 @@
     std::cout << '\n';                                                          \
     return passedAll;                                                           \
   }
-    
 
 #endif
