@@ -113,7 +113,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated string, {
-    ASSERT_THROWS(stela::lex("\"unterminated"), const char *);
+    ASSERT_THROWS(stela::lex("\"unterminated"), stela::LexerError);
   });
   
   TEST(Simple characters, {
@@ -129,7 +129,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated character, {
-    ASSERT_THROWS(stela::lex("'u"), const char *);
+    ASSERT_THROWS(stela::lex("'u"), stela::LexerError);
   });
 })
 

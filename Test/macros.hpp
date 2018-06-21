@@ -113,9 +113,8 @@
     }                                                                           \
     std::cout << '\n';                                                          \
     if (passedAll) {                                                            \
-      std::cout << "ALL PASSED!\n";                                             \
+      std::cout << "ALL PASSED!\n\n";                                           \
     }                                                                           \
-    std::cout << '\n';                                                          \
     return passedAll;                                                           \
   }
 

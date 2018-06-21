@@ -10,13 +10,21 @@
 #define stela_lexer_hpp
 
 #include <vector>
+#include <stdexcept>
 #include <string_view>
 
 namespace stela {
 
-struct InvalidToken {
-  uint32_t line;
-  uint32_t col;
+class LexerError final : public std::runtime_error {
+public:
+  LexerError(uint32_t, uint32_t, const char *);
+  
+  uint32_t line() const;
+  uint32_t col() const; 
+  
+private:
+  uint32_t line_;
+  uint32_t col_;
 };
 
 struct Token {

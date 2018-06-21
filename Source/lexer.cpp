@@ -14,6 +14,28 @@
 
 using namespace stela;
 
+stela::LexerError::LexerError(
+  const uint32_t line, const uint32_t col, const char *msg
+) : std::runtime_error(
+  "Lexer Error - "
+  + std::to_string(line)
+  + ':'
+  + std::to_string(col)
+  + " - "
+  + msg
+), line_(line), col_(col) {}
+
+uint32_t stela::LexerError::line() const {
+  return line_;
+}
+
+uint32_t stela::LexerError::col() const {
+  return col_;
+}
+
+#define THROW_LEX(MESSAGE)                                                      \
+  throw stela::LexerError{str.line(), str.col(), MESSAGE}
+
 namespace {
 
 constexpr std::string_view keywords[] = {
@@ -106,7 +128,7 @@ bool parseString(Token &token, Utils::ParseString &str) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        throw "Unterminated string literal";
+        THROW_LEX("Unterminated string literal");
       }
     }
   } else {
@@ -126,7 +148,7 @@ bool parseChar(Token &token, Utils::ParseString &str) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        throw "Unterminated character literal";
+        THROW_LEX("Unterminated character literal");
       }
     }
   } else {
@@ -163,7 +185,7 @@ Tokens lexImpl(const std::string_view source) {
     else if (parseString(token, str)) {}
     else if (parseChar(token, str)) {}
     else if (parseOper(token, str)) {}
-    else throw InvalidToken{str.lineCol().line(), str.lineCol().col()};
+    else THROW_LEX("Invalid token");
     
     end(token, str);
   }
@@ -173,6 +195,12 @@ Tokens lexImpl(const std::string_view source) {
 
 Tokens stela::lex(const std::string_view source) try {
   return lexImpl(source);
-} catch (Utils::ParsingError &) {
+} catch (stela::LexerError &) {
   throw;
+} catch (Utils::ParsingError &e) {
+  throw stela::LexerError(e.line(), e.column(), e.what());
+} catch (std::exception &e) {
+  throw stela::LexerError(0, 0, e.what());
+} catch (...) {
+  throw stela::LexerError(0, 0, "Unknown error");
 }
