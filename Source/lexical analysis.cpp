@@ -1,12 +1,12 @@
 //
-//  lexer.cpp
+//  lexical analysis.cpp
 //  STELA
 //
 //  Created by Indi Kernick on 17/6/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "lexer.hpp"
+#include "lexical analysis.hpp"
 
 #include <cctype>
 #include <algorithm>
@@ -40,23 +40,22 @@ namespace {
 
 constexpr std::string_view keywords[] = {
   "func", "return",
-  "class", "public", "private", "protected", "static", "self", "super", "override"
+  "class", "static", "self", "super",
+  "override", "final", "public", "private", "protected",
   "struct",
   "enum",
   "let", "var",
   "if", "else",
   "switch", "case", "default",
   "while", "for", "break", "continue"
-  "init", "deinit",
-  "is", "as", "nil",
-  "true", "false",
-  
+  "init", "deinit"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
 constexpr std::string_view oper[] = {
-  "==", "!=", "<=", ">=", "&&", "||", "->", "=", "!", "<", ">", "&", "|", "{",
-  "}", "(", ")", "[", "]", "+", "-", "*", "/", "%", "~", ".", ",", ":", ";", "?"
+  "is", "as", "==", "!=", "<=", ">=", "&&", "||", "->", "+=", "-=", "*=", "/=",
+  "%=", "&=", "|=", "^=", "=", "!", "<", ">", "&", "|", "{", "}", "(", ")", "[",
+  "]", "+", "-", "*", "/", "%", "~", ".", ",", ":", ";", "?"
 };
 constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 

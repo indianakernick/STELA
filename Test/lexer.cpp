@@ -9,7 +9,7 @@
 #include "lexer.hpp"
 
 #include "macros.hpp"
-#include <STELA/lexer.hpp>
+#include <STELA/lexical analysis.hpp>
 
 namespace {
 
