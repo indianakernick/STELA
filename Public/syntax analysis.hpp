@@ -10,9 +10,15 @@
 #define stela_syntax_analysis_hpp
 
 #include "ast.hpp"
+#include "error.hpp"
 #include "token.hpp"
 
 namespace stela {
+
+class SyntaxError final : public Error {
+public:
+  SyntaxError(Line, Col, const char *);
+};
 
 AST createAST(const Tokens &);
 

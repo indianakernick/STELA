@@ -9,21 +9,14 @@
 #ifndef stela_lexical_analysis_hpp
 #define stela_lexical_analysis_hpp
 
+#include "error.hpp"
 #include "token.hpp"
-#include <stdexcept>
 
 namespace stela {
 
-class LexerError final : public std::runtime_error {
+class LexicalError final : public Error {
 public:
-  LexerError(uint32_t, uint32_t, const char *);
-  
-  uint32_t line() const;
-  uint32_t col() const; 
-  
-private:
-  uint32_t line_;
-  uint32_t col_;
+  LexicalError(Line, Col, const char *);
 };
 
 Tokens lex(std::string_view);

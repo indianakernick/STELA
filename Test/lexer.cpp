@@ -113,7 +113,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated string, {
-    ASSERT_THROWS(stela::lex("\"unterminated"), stela::LexerError);
+    ASSERT_THROWS(stela::lex("\"unterminated"), stela::LexicalError);
   });
   
   TEST(Simple characters, {
@@ -129,7 +129,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated character, {
-    ASSERT_THROWS(stela::lex("'u"), stela::LexerError);
+    ASSERT_THROWS(stela::lex("'u"), stela::LexicalError);
   });
   
   TEST(Single line comment, {
@@ -184,9 +184,9 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated multi line comment, {
-    ASSERT_THROWS(stela::lex("/*"), stela::LexerError);
-    ASSERT_THROWS(stela::lex("/* /*"), stela::LexerError);
-    ASSERT_THROWS(stela::lex("/* /* */"), stela::LexerError);
+    ASSERT_THROWS(stela::lex("/*"), stela::LexicalError);
+    ASSERT_THROWS(stela::lex("/* /*"), stela::LexicalError);
+    ASSERT_THROWS(stela::lex("/* /* */"), stela::LexicalError);
   });
 })
 
