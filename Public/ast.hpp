@@ -49,8 +49,18 @@ struct DictionaryType final : public Type {
   TypePtr val;
 };
 
+enum class ParamRef {
+  value,
+  inout
+};
+
+struct ParamType {
+  ParamRef ref;
+  TypePtr type;
+};
+
 struct FunctionType final : public Type {
-  std::vector<TypePtr> params;
+  std::vector<ParamType> params;
   TypePtr ret;
 };
 
@@ -140,23 +150,18 @@ enum class Member {
   stat
 };
 
-enum class ParamRef {
-  value,
-  inout
-};
-
-struct FunctionParam {
+struct FuncParam {
   Name name;
   ParamRef ref;
   TypePtr type;
 };
-using FunctionParams = std::vector<FunctionParam>;
+using FuncParams = std::vector<FuncParam>;
 
 struct Function final : Node {
   Member mem;
   Access access;
   Name name;
-  FunctionParams params;
+  FuncParams params;
   TypePtr ret;
   Block body;
 };
@@ -188,12 +193,12 @@ struct DictPair {
   NodePtr val;
 };
 
-struct DictionaryLiteral final : public Node {
+struct DictLiteral final : public Node {
   std::vector<DictPair> pairs;
 };
 
 struct Lambda final : public Node {
-  FunctionParams params;
+  FuncParams params;
   TypePtr ret;
   Block body;
 };
@@ -209,7 +214,7 @@ struct Variable final : Node {
 };
 
 struct Init final : Node {
-  FunctionParams params;
+  FuncParams params;
   Block body;
 };
 
