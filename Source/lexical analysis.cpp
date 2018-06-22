@@ -39,11 +39,11 @@ uint32_t stela::LexerError::col() const {
 namespace {
 
 constexpr std::string_view keywords[] = {
-  "func", "return",
+  "func", "inout", "return",
   "struct", "static", "self", "init",
   "public", "private",
   "enum",
-  "let", "var", "inout",
+  "let", "var",
   "if", "else",
   "switch", "case", "default",
   "while", "for", "repeat", "in",
@@ -54,8 +54,8 @@ constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
 constexpr std::string_view oper[] = {
   "==", "!=", "<=", ">=", "&&", "||", "->", "+=", "-=", "*=", "/=", "%=", "&=",
-  "|=", "^=", "=", "!", "<", ">", "&", "|", "{", "}", "(", ")", "[", "]", "+",
-  "-", "*", "/", "%", "~", ".", ",", ":", ";", "?"
+  "|=", "^=", "=", "!", "<", ">", "&", "|", "^", "~", "{", "}", "(", ")", "[",
+  "]", "+", "-", "*", "/", "%", ".", ",", "?", ":", ";"
 };
 constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 

@@ -76,14 +76,29 @@ struct FunctionArg {
 using FunctionArgs = std::vector<FunctionArg>;
 
 struct FunctionCall final : public Node {
-  NodePtr object;
   Name name;
   FunctionArgs args;
+};
+
+struct MemberAccess final : public Node {
+  NodePtr object;
+  Name name;
 };
 
 struct ConstructorCall final : public Node {
   TypePtr type;
   FunctionArgs args;
+};
+
+struct AssignOper final : public Node {
+  NodePtr left;
+  std::string_view oper;
+  NodePtr right;
+};
+
+struct Subscript final : public Node {
+  NodePtr object;
+  NodePtr index;
 };
 
 //------------------------------- Functions ------------------------------------
