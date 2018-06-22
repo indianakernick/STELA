@@ -13,7 +13,7 @@
 #include <iomanip>
 #include <utility>
 #include <iostream>
-#include <experimental/optional>
+#include <string_view>
 
 #define STRINGIFY_IMPL(X) #X
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
@@ -58,26 +58,16 @@
         "  but didn't throw\n";                                                 \
       ++failCount;                                                              \
     }                                                                           \
-  }
-// @TODO merge ASSERT_NOTHROW_VOID into ASSERT_NOTHROW
+  } do{}while(0)
 #define ASSERT_NOTHROW(EXP)                                                     \
-  [] {                                                                          \
-    std::experimental::optional<decltype(EXP)> result;                          \
+  [&] {                                                                          \
     try {                                                                       \
-      result = EXP;                                                             \
+      return (EXP);                                                             \
     } catch (...) {                                                             \
       PRINT_ERROR "`" #EXP "` should not throw an exception\n";                 \
       throw;                                                                    \
     }                                                                           \
-    return *result;                                                             \
   }()
-#define ASSERT_NOTHROW_VOID(EXP)                                                \
-  try {                                                                         \
-    EXP;                                                                        \
-  } catch (...) {                                                               \
-    PRINT_ERROR "`" #EXP "` should not throw an exception\n";                   \
-    throw;                                                                      \
-  }
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
