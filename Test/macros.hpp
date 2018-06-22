@@ -60,7 +60,7 @@
     }                                                                           \
   } do{}while(0)
 #define ASSERT_NOTHROW(EXP)                                                     \
-  [&] {                                                                          \
+  [&] {                                                                         \
     try {                                                                       \
       return (EXP);                                                             \
     } catch (...) {                                                             \
