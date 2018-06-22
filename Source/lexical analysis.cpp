@@ -173,13 +173,26 @@ bool parseLineComment(Utils::ParseString &str) {
   }
 }
 
-// DOES NOT HANDLE NESTED MULTILINE COMMENTS!
 bool parseMultiComment(Utils::ParseString &str) {
+  const Utils::LineCol<> pos = str.lineCol();
   if (str.check("/*")) {
+    uint32_t depth = 1;
     while (true) {
-      str.skipUntil('*');
+      str.skipUntil([] (const char c) {
+        return c == '*' || c == '/';
+      });
       if (str.check("*/")) {
-        return true;
+        --depth;
+        if (depth == 0) {
+          return true;
+        }
+      } else if (str.check("/*")) {
+        ++depth;
+      } else if (str.empty()) {
+        throw LexerError(pos.line(), pos.col(), "Unterminated multi-line comment");
+      } else {
+        // skipping the '*' or '/' char
+        str.advance();
       }
     }
   } else {

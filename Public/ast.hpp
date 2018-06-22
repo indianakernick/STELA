@@ -124,6 +124,7 @@ struct Function final : Node {
   Modifiers mods;
   Name name;
   FunctionParams params;
+  Modifiers retMods;
   TypePtr ret;
   Block body;
 };

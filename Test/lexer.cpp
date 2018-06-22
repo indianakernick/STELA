@@ -138,7 +138,6 @@ TEST_GROUP(Lexer, {
     
     // another comment // with // more // slashes //
     )");
-    printTokens(tokens);
     ASSERT_TRUE(tokens.empty());
   });
   
@@ -153,9 +152,41 @@ TEST_GROUP(Lexer, {
     multiple
     lines
     */
+    
+    /* just put some / * // ** /// *** in here */
     )");
-    printTokens(tokens);
     ASSERT_TRUE(tokens.empty());
+  });
+  
+  TEST(Nested multi line comment, {
+    const stela::Tokens tokens = stela::lex(R"(
+    
+    /*
+    
+    just a regular comment
+    
+    /* oh but there's a nested bit here */
+    
+    // is this also nested?
+    
+    /* oh dear
+    
+    /* that's a lot of nesting! */
+    
+    */
+    
+    I don't think C++ supports nested comments
+    
+    */
+    
+    )");
+    ASSERT_TRUE(tokens.empty());
+  });
+  
+  TEST(Unterminated multi line comment, {
+    ASSERT_THROWS(stela::lex("/*"), stela::LexerError);
+    ASSERT_THROWS(stela::lex("/* /*"), stela::LexerError);
+    ASSERT_THROWS(stela::lex("/* /* */"), stela::LexerError);
   });
 })
 
