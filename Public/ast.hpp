@@ -86,6 +86,27 @@ struct ConstructorCall final : public Node {
   FunctionArgs args;
 };
 
+//------------------------------- Functions ------------------------------------
+
+struct FunctionParam {
+  Name name;
+  Modifiers mods;
+  TypePtr type;
+};
+using FunctionParams = std::vector<FunctionParam>;
+
+struct Function final : Node {
+  Modifiers mods;
+  Name name;
+  FunctionParams params;
+  TypePtr ret;
+  Block body;
+};
+
+struct Return final : Node {
+  NodePtr expr;
+};
+
 //-------------------------------- Literals ------------------------------------
 
 struct Literal : Node {};
@@ -116,26 +137,10 @@ struct DictionaryLiteral final : public Literal {
   std::vector<DictPair> pairs;
 };
 
-//------------------------------- Functions ------------------------------------
-
-struct FunctionParam {
-  Name name;
-  Modifiers mods;
-  TypePtr type;
-};
-using FunctionParams = std::vector<FunctionParam>;
-
-struct Function final : Node {
-  Modifiers mods;
-  Name name;
+struct Lambda final : public Literal {
   FunctionParams params;
-  Modifiers retMods;
   TypePtr ret;
   Block body;
-};
-
-struct Return final : Node {
-  NodePtr expr;
 };
 
 //---------------------------------- Data --------------------------------------
