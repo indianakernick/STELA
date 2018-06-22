@@ -40,24 +40,22 @@ namespace {
 
 constexpr std::string_view keywords[] = {
   "func", "return",
-  "class", "static", "self", "super", "override",
-  "public", "private", "protected",
-  "struct",
+  "struct", "static", "self", "init",
+  "public", "private",
   "enum",
   "let", "var", "inout",
   "if", "else",
   "switch", "case", "default",
   "while", "for", "repeat", "in",
   "break", "continue", "fallthrough",
-  "init", "deinit",
   "typealias"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
 constexpr std::string_view oper[] = {
-  "is", "as", "==", "!=", "<=", ">=", "&&", "||", "->", "+=", "-=", "*=", "/=",
-  "%=", "&=", "|=", "^=", "=", "!", "<", ">", "&", "|", "{", "}", "(", ")", "[",
-  "]", "+", "-", "*", "/", "%", "~", ".", ",", ":", ";", "?"
+  "==", "!=", "<=", ">=", "&&", "||", "->", "+=", "-=", "*=", "/=", "%=", "&=",
+  "|=", "^=", "=", "!", "<", ">", "&", "|", "{", "}", "(", ")", "[", "]", "+",
+  "-", "*", "/", "%", "~", ".", ",", ":", ";", "?"
 };
 constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 

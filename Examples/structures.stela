@@ -65,14 +65,7 @@ struct Vec3 {
 // calling implicitly generated constructor
 let origin = Vec3(0, 0, 0);
 
-class Thingy {
-  // only classes can have destructors
-  deinit {
-    
-  }
-}
-
-class IntStack {
+struct IntStack {
   // member variables are implicitly private
   // you can mark them private if you want
   private var data: [Int];
@@ -80,11 +73,9 @@ class IntStack {
   the `data` member is an array of ints
   arrays are objects with member functions
   arrays have very similar interfaces to std::vector<> from C++
-  
   */
   
   // init() {}  implicitly generated
-  // deinit() {} implicitly generatred
   
   // member functions are implicitly public
   // you can mark them public if you want
@@ -92,15 +83,11 @@ class IntStack {
     data.push_back(value);
   }
   func pop() {
-    // shadowing top() member is OK
-    // data.back() returns inout Int which decays to Int
-    // if you want to capture by reference then you specify a reference type
-    // let top: inout Int = data.back();
     let top = data.back();
     data.pop_back();
     return top;
   }
-  func top() -> inout Int {
+  func top() {
     return data.back();
   }
   func empty() {

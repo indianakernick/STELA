@@ -147,23 +147,9 @@ struct Variable final : Node {
   NodePtr expr;
 };
 
-struct Class final : Node {
-  Name name;
-  NamedType base;
-  Block body;
-};
-
 struct Init final : Node {
   FunctionParams params;
   Block body;
-};
-
-struct Deinit final : Node {
-  Block body;
-};
-
-struct SuperCall final : Node {
-  FunctionArgs args;
 };
 
 struct Struct final : Node {
