@@ -29,6 +29,29 @@ using Name = std::string_view;
 
 using Modifiers = std::vector<Name>;
 
+//--------------------------------- Types --------------------------------------
+
+struct Type : Node {};
+using TypePtr = std::unique_ptr<Type>;
+
+struct ArrayType final : public Type {
+  TypePtr elem;
+};
+
+struct DictionaryType final : public Type {
+  TypePtr key;
+  TypePtr val;
+};
+
+struct FunctionType final : public Type {
+  std::vector<TypePtr> params;
+  TypePtr ret;
+};
+
+struct NamedType final : public Type {
+  Name name;
+};
+
 //------------------------------ Expressions -----------------------------------
 
 struct BinaryOper final : public Node {
@@ -53,27 +76,9 @@ struct FunctionCall final : public Node {
   FunctionArgs args;
 };
 
-//--------------------------------- Types --------------------------------------
-
-struct Type : Node {};
-using TypePtr = std::unique_ptr<Type>;
-
-struct ArrayType final : public Type {
-  TypePtr elem;
-};
-
-struct DictionaryType final : public Type {
-  TypePtr key;
-  TypePtr val;
-};
-
-struct FunctionType final : public Type {
-  std::vector<TypePtr> params;
-  TypePtr ret;
-};
-
-struct NamedType final : public Type {
-  Name name;
+struct ConstructorCall final : public Node {
+  TypePtr type;
+  FunctionArgs args;
 };
 
 //-------------------------------- Literals ------------------------------------
@@ -176,8 +181,14 @@ struct If final : Node {
   Block body;
 };
 
-class Else final : Node {
+struct Else final : Node {
   Block body;
+};
+
+struct Ternary final : Node {
+  NodePtr cond;
+  NodePtr tru;
+  NodePtr fals;
 };
 
 struct SwitchCase {
