@@ -30,8 +30,6 @@ struct Block final : Node {
 
 using Name = std::string_view;
 
-using Modifiers = std::vector<Name>;
-
 //--------------------------------- Types --------------------------------------
 
 struct Type : Node {};
@@ -64,24 +62,24 @@ struct NamedType final : public Type {
 
 /// Binary operator
 enum class BinOp {
-  EQ, NE, LE, GE, LT, GT,
-  BOOL_AND, BOOL_OR,
-  BIT_AND, BIT_OR, BIT_XOR,
-  ADD, SUB, MUL, DIV, MOD
+  eq, ne, ls, ge, lt, gt,
+  bool_and, bool_or,
+  bit_and, bit_or, bit_xor,
+  add, sub, mul, div, mod
 };
 
 /// Unary operator
 enum class UnOp {
-  BOOL_NOT,
-  BIT_NOT,
-  NEG
+  bool_not,
+  bit_not,
+  neg
 };
 
 /// Assignment operator
 enum class AssignOp {
-  ADD, SUB, MUL, DIV, MOD,
-  AND, OR, XOR,
-  ASSIGN,
+  add, sub, mul, div, mod,
+  bit_and, bit_or, bit_xor,
+  assign,
 };
 
 struct BinaryExpr final : public Node {
@@ -95,17 +93,23 @@ struct UnaryExpr final : public Node {
   NodePtr expr;
 };
 
+struct AssignExpr final : public Node {
+  NodePtr left;
+  AssignOp oper;
+  NodePtr right;
+};
+
 struct FunctionArg {
   NodePtr expr;
 };
 using FunctionArgs = std::vector<FunctionArg>;
 
 struct FunctionCall final : public Node {
-  Name name;
+  NodePtr func;
   FunctionArgs args;
 };
 
-struct MemberAccess final : public Node {
+struct ObjectMember final : public Node {
   NodePtr object;
   Name name;
 };
@@ -115,32 +119,42 @@ struct ConstructorCall final : public Node {
   FunctionArgs args;
 };
 
-struct AssignExpr final : public Node {
-  NodePtr left;
-  AssignOp oper;
-  NodePtr right;
-};
-
 struct Subscript final : public Node {
   NodePtr object;
   NodePtr index;
 };
 
-struct VariableName final : public Node {
+struct Identifier final : public Node {
   Name name;
 };
 
 //------------------------------- Functions ------------------------------------
 
+enum class Access {
+  pub,
+  priv
+};
+
+enum class Member {
+  member,
+  stat
+};
+
+enum class ParamRef {
+  value,
+  inout
+};
+
 struct FunctionParam {
   Name name;
-  Modifiers mods;
+  ParamRef ref;
   TypePtr type;
 };
 using FunctionParams = std::vector<FunctionParam>;
 
 struct Function final : Node {
-  Modifiers mods;
+  Member mem;
+  Access access;
   Name name;
   FunctionParams params;
   TypePtr ret;
@@ -153,22 +167,19 @@ struct Return final : Node {
 
 //-------------------------------- Literals ------------------------------------
 
-struct Literal : Node {};
-using LiteralPtr = std::unique_ptr<Literal>;
-
-struct StringLiteral final : public Literal {
+struct StringLiteral final : public Node {
   std::string_view value;
 };
 
-struct CharLiteral final : public Literal {
+struct CharLiteral final : public Node {
   std::string_view value;
 };
 
-struct NumberLiteral final : public Literal {
+struct NumberLiteral final : public Node {
   std::string_view value;
 };
 
-struct ArrayLiteral final : public Literal {
+struct ArrayLiteral final : public Node {
   std::vector<NodePtr> exprs;
 };
 
@@ -177,11 +188,11 @@ struct DictPair {
   NodePtr val;
 };
 
-struct DictionaryLiteral final : public Literal {
+struct DictionaryLiteral final : public Node {
   std::vector<DictPair> pairs;
 };
 
-struct Lambda final : public Literal {
+struct Lambda final : public Node {
   FunctionParams params;
   TypePtr ret;
   Block body;
@@ -190,7 +201,8 @@ struct Lambda final : public Literal {
 //---------------------------------- Data --------------------------------------
 
 struct Variable final : Node {
-  Modifiers mods;
+  Member mem;
+  Access access;
   Name name;
   TypePtr type;
   NodePtr expr;
@@ -212,7 +224,6 @@ struct EnumCase {
 };
 
 struct Enum final : Node {
-  Modifiers mods;
   Name name;
   std::vector<EnumCase> cases;
 };

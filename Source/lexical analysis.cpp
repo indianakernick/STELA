@@ -45,9 +45,8 @@ constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 
 void begin(Token &token, const Utils::ParseString &str) {
   token.view = str.beginViewing();
-  const auto lineCol = str.lineCol();
-  token.loc.l = lineCol.line();
-  token.loc.c = lineCol.col();
+  token.loc.l = str.line();
+  token.loc.c = str.col();
 }
 
 void end(Token &token, const Utils::ParseString &str) {
