@@ -81,6 +81,7 @@
 		45EE9C0D20DCEC2500CC3289 /* syntax.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = syntax.hpp; sourceTree = "<group>"; };
 		45EE9C0F20DCF08400CC3289 /* error.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = error.hpp; sourceTree = "<group>"; };
 		45EE9C1020DCF14F00CC3289 /* error.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = error.cpp; sourceTree = "<group>"; };
+		45EE9C1420DCF92800CC3289 /* location.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = location.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -167,6 +168,7 @@
 		45BBA40720D642C7006108C1 /* Public */ = {
 			isa = PBXGroup;
 			children = (
+				45EE9C1420DCF92800CC3289 /* location.hpp */,
 				45EE9C0520DB3F2100CC3289 /* token.hpp */,
 				45EE9C0620DB3F7A00CC3289 /* ast.hpp */,
 				45EE9C0F20DCF08400CC3289 /* error.hpp */,

@@ -14,12 +14,11 @@
 
 using namespace stela;
 
-stela::LexicalError::LexicalError(
-  const Line line, const Col col, const char *msg
-) : Error{"Lexical Error", line, col, msg} {}
+stela::LexicalError::LexicalError(const Loc loc, const char *msg)
+  : Error{"Lexical Error", loc, msg} {}
 
 #define THROW_LEX(MESSAGE)                                                      \
-  throw stela::LexicalError{str.line(), str.col(), MESSAGE}
+  throw stela::LexicalError{{str.line(), str.col()}, MESSAGE}
 
 namespace {
 
@@ -47,8 +46,8 @@ constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 void begin(Token &token, const Utils::ParseString &str) {
   token.view = str.beginViewing();
   const auto lineCol = str.lineCol();
-  token.line = lineCol.line();
-  token.col = lineCol.col();
+  token.loc.l = lineCol.line();
+  token.loc.c = lineCol.col();
 }
 
 void end(Token &token, const Utils::ParseString &str) {
@@ -177,7 +176,7 @@ bool parseMultiComment(Utils::ParseString &str) {
       } else if (str.check("/*")) {
         ++depth;
       } else if (str.empty()) {
-        throw LexicalError(pos.line(), pos.col(), "Unterminated multi-line comment");
+        throw LexicalError({pos.line(), pos.col()}, "Unterminated multi-line comment");
       } else {
         // skipping the '*' or '/' char
         str.advance();
@@ -224,9 +223,9 @@ Tokens stela::lex(const std::string_view source) try {
 } catch (stela::LexicalError &) {
   throw;
 } catch (Utils::ParsingError &e) {
-  throw stela::LexicalError(e.line(), e.column(), e.what());
+  throw stela::LexicalError({e.line(), e.column()}, e.what());
 } catch (std::exception &e) {
-  throw stela::LexicalError(0, 0, e.what());
+  throw stela::LexicalError({0, 0}, e.what());
 } catch (...) {
-  throw stela::LexicalError(0, 0, "Unknown error");
+  throw stela::LexicalError({0, 0}, "Unknown error");
 }

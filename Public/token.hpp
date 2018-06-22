@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string_view>
+#include "location.hpp"
 
 namespace stela {
 
@@ -25,8 +26,7 @@ struct Token {
   };
 
   std::string_view view;
-  uint32_t line;
-  uint32_t col;
+  Loc loc;
   Type type;
 };
 

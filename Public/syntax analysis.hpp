@@ -17,7 +17,7 @@ namespace stela {
 
 class SyntaxError final : public Error {
 public:
-  SyntaxError(Line, Col, const char *);
+  SyntaxError(Loc, const char *);
 };
 
 AST createAST(const Tokens &);

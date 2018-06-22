@@ -16,7 +16,7 @@ namespace stela {
 
 class LexicalError final : public Error {
 public:
-  LexicalError(Line, Col, const char *);
+  LexicalError(Loc, const char *);
 };
 
 Tokens lex(std::string_view);

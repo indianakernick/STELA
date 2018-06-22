@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string_view>
+#include "location.hpp"
 
 namespace stela::ast {
 
@@ -18,6 +19,8 @@ namespace stela::ast {
 
 struct Node {
   virtual ~Node() = default;
+  
+  Loc loc;
 };
 using NodePtr = std::unique_ptr<Node>;
 

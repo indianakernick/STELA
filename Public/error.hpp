@@ -10,21 +10,20 @@
 #define stela_error_hpp
 
 #include <exception>
+#include "location.hpp"
 
 namespace stela {
 
-using Line = uint32_t;
-using Col = uint32_t;
-
+/// A base exception class for all exceptions thrown by STELA
 class Error : public std::exception {
 public:
-  Error(const char *, Line, Col, const char *);
+  Error(const char *, Loc, const char *);
   
   Line line() const {
-    return line_;
+    return loc.l;
   }
   Col col() const {
-    return col_;
+    return loc.c;
   }
   
   const char *what() const noexcept override;
@@ -32,8 +31,7 @@ public:
 private:
   const char *type;
   const char *msg;
-  Line line_;
-  Col col_;
+  Loc loc;
 };
 
 }

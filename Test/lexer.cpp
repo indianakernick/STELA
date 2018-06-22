@@ -16,7 +16,7 @@ namespace {
 [[maybe_unused]]
 void printTokens(const std::vector<stela::Token> &tokens) {
   for (const stela::Token &token : tokens) {
-    std::cout << token.line << ':' << token.col << "  \t";
+    std::cout << token.loc.l << ':' << token.loc.c << "  \t";
     
     switch (token.type) {
       case stela::Token::Type::keyword:

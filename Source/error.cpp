@@ -13,15 +13,14 @@
 
 stela::Error::Error(
   const char *type,
-  const Line line,
-  const Col col,
+  const Loc loc,
   const char *msg
-) : type{type}, msg{msg}, line_{line}, col_{col} {}
+) : type{type}, msg{msg}, loc{loc} {}
 
 const char *stela::Error::what() const noexcept {
   static_assert(std::is_same_v<Line, unsigned>);
   static_assert(std::is_same_v<Col, unsigned>);
   static char string[1024];
-  std::snprintf(string, 1024, "%u:%u  %s - %s", line_, col_, type, msg);
+  std::snprintf(string, 1024, "%u:%u  %s - %s", loc.l, loc.c, type, msg);
   return string;
 }
