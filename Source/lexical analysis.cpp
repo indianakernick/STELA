@@ -226,6 +226,4 @@ Tokens stela::lex(const std::string_view source) try {
   throw stela::LexicalError({e.line(), e.column()}, e.what());
 } catch (std::exception &e) {
   throw stela::LexicalError({0, 0}, e.what());
-} catch (...) {
-  throw stela::LexicalError({0, 0}, "Unknown error");
 }
