@@ -62,14 +62,36 @@ struct NamedType final : public Type {
 
 //------------------------------ Expressions -----------------------------------
 
-struct BinaryOper final : public Node {
+/// Binary operator
+enum class BinOp {
+  EQ, NE, LE, GE, LT, GT,
+  BOOL_AND, BOOL_OR,
+  BIT_AND, BIT_OR, BIT_XOR,
+  ADD, SUB, MUL, DIV, MOD
+};
+
+/// Unary operator
+enum class UnOp {
+  BOOL_NOT,
+  BIT_NOT,
+  NEG
+};
+
+/// Assignment operator
+enum class AssignOp {
+  ADD, SUB, MUL, DIV, MOD,
+  AND, OR, XOR,
+  ASSIGN,
+};
+
+struct BinaryExpr final : public Node {
   NodePtr left;
-  std::string_view oper;
+  BinOp oper;
   NodePtr right;
 };
 
-struct UnaryOper final : public Node {
-  std::string_view oper;
+struct UnaryExpr final : public Node {
+  UnOp oper;
   NodePtr expr;
 };
 
@@ -93,15 +115,19 @@ struct ConstructorCall final : public Node {
   FunctionArgs args;
 };
 
-struct AssignOper final : public Node {
+struct AssignExpr final : public Node {
   NodePtr left;
-  std::string_view oper;
+  AssignOp oper;
   NodePtr right;
 };
 
 struct Subscript final : public Node {
   NodePtr object;
   NodePtr index;
+};
+
+struct VariableName final : public Node {
+  Name name;
 };
 
 //------------------------------- Functions ------------------------------------

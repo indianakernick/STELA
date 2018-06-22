@@ -13,7 +13,6 @@ using namespace stela::ast;
 stela::SyntaxError::SyntaxError(const Loc loc, const char *msg)
   : Error{"Syntax Error", loc, msg} {}
 
-
 stela::AST stela::createAST(const Tokens &) {
   
   return {};
