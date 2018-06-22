@@ -9,8 +9,10 @@
 #include "macros.hpp"
 
 #include "lexer.hpp"
+#include "syntax.hpp"
 
 int main() {
   testLexer();
+  testSyntax();
   return 0;
 }
