@@ -74,21 +74,22 @@ struct NamedType final : public Type {
 enum class BinOp {
   eq, ne, ls, ge, lt, gt,
   bool_and, bool_or,
-  bit_and, bit_or, bit_xor,
+  bit_and, bit_or, bit_xor, bit_shl, bit_shr,
   add, sub, mul, div, mod
 };
 
 /// Unary operator
 enum class UnOp {
-  bool_not,
-  bit_not,
+  bool_not, bit_not,
+  pre_incr, pre_decr,
+  post_incr, post_decr,
   neg
 };
 
 /// Assignment operator
 enum class AssignOp {
   add, sub, mul, div, mod,
-  bit_and, bit_or, bit_xor,
+  bit_and, bit_or, bit_xor, bit_shl, bit_shr,
   assign,
 };
 
