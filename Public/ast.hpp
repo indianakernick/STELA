@@ -34,6 +34,11 @@ using Modifiers = std::vector<Name>;
 struct Type : Node {};
 using TypePtr = std::unique_ptr<Type>;
 
+struct TypeAlias final : public Node {
+  Name name;
+  TypePtr type;
+};
+
 struct ArrayType final : public Type {
   TypePtr elem;
 };
@@ -143,7 +148,6 @@ struct Variable final : Node {
 };
 
 struct Class final : Node {
-  Modifiers mods;
   Name name;
   NamedType base;
   Block body;
@@ -158,8 +162,11 @@ struct Deinit final : Node {
   Block body;
 };
 
+struct SuperCall final : Node {
+  FunctionArgs args;
+};
+
 struct Struct final : Node {
-  Modifiers mods;
   Name name;
   Block body;
 };
@@ -205,10 +212,16 @@ struct Switch final : Node {
 
 struct Break final : Node {};
 struct Continue final : Node {};
+struct Fallthrough final : Node {};
 
 struct While final : Node {
-  NodePtr expr;
+  NodePtr cond;
   Block body;
+};
+
+struct RepeatWhile final : Node {
+  Block body;
+  NodePtr cond;
 };
 
 struct For final : Node {
@@ -229,7 +242,7 @@ struct ForIn final : Node {
 namespace stela {
 
 struct AST {
-  std::vector<ast::NodePtr> top;
+  std::vector<ast::NodePtr> topNodes;
 };
 
 }

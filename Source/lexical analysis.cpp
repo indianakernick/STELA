@@ -40,15 +40,17 @@ namespace {
 
 constexpr std::string_view keywords[] = {
   "func", "return",
-  "class", "static", "self", "super",
-  "override", "final", "public", "private", "protected",
+  "class", "static", "self", "super", "override",
+  "public", "private", "protected",
   "struct",
   "enum",
   "let", "var", "inout",
   "if", "else",
   "switch", "case", "default",
-  "while", "for", "break", "continue",
-  "init", "deinit"
+  "while", "for", "repeat", "in",
+  "break", "continue", "fallthrough",
+  "init", "deinit",
+  "typealias"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
@@ -79,11 +81,14 @@ bool continueIdent(const char c) {
 }
 
 bool startNumber(const char c) {
-  return std::isdigit(c) || c == '.' || c == '-' || c == '+';
+  return std::isdigit(c);
 }
 
 bool continueNumber(const char c) {
-  return startNumber(c) || c == 'e' || c == 'E' || c == 'x' || c == 'X';
+  return std::isdigit(c) ||
+    c == 'e' || c == 'E' ||
+    c == 'x' || c == 'X' ||
+    c == 'b' || c == 'B';
 }
 
 bool parseKeyword(Token &token, Utils::ParseString &str) {

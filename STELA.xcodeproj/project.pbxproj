@@ -74,6 +74,7 @@
 		45EE9C0620DB3F7A00CC3289 /* ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = ast.hpp; sourceTree = "<group>"; };
 		45EE9C0720DB41BE00CC3289 /* syntax analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "syntax analysis.hpp"; sourceTree = "<group>"; };
 		45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "syntax analysis.cpp"; sourceTree = "<group>"; };
+		45EE9C0A20DCA7F700CC3289 /* polymorphism.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = polymorphism.stela; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -172,6 +173,7 @@
 				45BBA40E20D7319F006108C1 /* functions.stela */,
 				45BBA40F20D732C6006108C1 /* helloworld.stela */,
 				45BBA42D20D76B42006108C1 /* primatives.stela */,
+				45EE9C0A20DCA7F700CC3289 /* polymorphism.stela */,
 			);
 			path = Examples;
 			sourceTree = "<group>";
