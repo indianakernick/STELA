@@ -44,10 +44,10 @@ constexpr std::string_view keywords[] = {
   "override", "final", "public", "private", "protected",
   "struct",
   "enum",
-  "let", "var",
+  "let", "var", "inout",
   "if", "else",
   "switch", "case", "default",
-  "while", "for", "break", "continue"
+  "while", "for", "break", "continue",
   "init", "deinit"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
@@ -164,6 +164,29 @@ bool parseOper(Token &token, Utils::ParseString &str) {
   }
 }
 
+bool parseLineComment(Utils::ParseString &str) {
+  if (str.check("//")) {
+    str.skipUntil('\n');
+    return true;
+  } else {
+    return false;
+  }
+}
+
+// DOES NOT HANDLE NESTED MULTILINE COMMENTS!
+bool parseMultiComment(Utils::ParseString &str) {
+  if (str.check("/*")) {
+    while (true) {
+      str.skipUntil('*');
+      if (str.check("*/")) {
+        return true;
+      }
+    }
+  } else {
+    return false;
+  }
+}
+
 Tokens lexImpl(const std::string_view source) {
   Utils::ParseString str(source);
   std::vector<Token> tokens;
@@ -175,18 +198,21 @@ Tokens lexImpl(const std::string_view source) {
       return tokens;
     }
     
-    Token &token = tokens.emplace_back();
+    Token token;
     begin(token, str);
     
-    if (parseKeyword(token, str)) {}
+    if (parseLineComment(str)) continue;
+    else if (parseMultiComment(str)) continue;
+    else if (parseKeyword(token, str)) {}
+    else if (parseOper(token, str)) {}
     else if (parseIdent(token, str)) {}
     else if (parseNumber(token, str)) {}
     else if (parseString(token, str)) {}
     else if (parseChar(token, str)) {}
-    else if (parseOper(token, str)) {}
     else THROW_LEX("Invalid token");
     
     end(token, str);
+    tokens.push_back(token);
   }
 }
 

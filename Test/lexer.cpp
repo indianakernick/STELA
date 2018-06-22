@@ -131,6 +131,32 @@ TEST_GROUP(Lexer, {
   TEST(Unterminated character, {
     ASSERT_THROWS(stela::lex("'u"), stela::LexerError);
   });
+  
+  TEST(Single line comment, {
+    const stela::Tokens tokens = stela::lex(R"(
+    // this is a comment
+    
+    // another comment // with // more // slashes //
+    )");
+    printTokens(tokens);
+    ASSERT_TRUE(tokens.empty());
+  });
+  
+  TEST(Multi line comment, {
+    const stela::Tokens tokens = stela::lex(R"(
+    /**/
+    
+    /* cool comment */
+    
+    /*
+    spans
+    multiple
+    lines
+    */
+    )");
+    printTokens(tokens);
+    ASSERT_TRUE(tokens.empty());
+  });
 })
 
 #undef ASSERT_VIEW

@@ -8,7 +8,6 @@
 
 #include "syntax analysis.hpp"
 
-using namespace stela;
 using namespace stela::ast;
 
 stela::AST stela::createAST(const Tokens &) {
