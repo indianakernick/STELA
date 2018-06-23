@@ -53,6 +53,9 @@ public:
   const Token &front() const {
     return *beg;
   }
+  Loc lastLoc() const {
+    return beg[-1].loc;
+  }
   
   bool check(const Token::Type type, const std::string_view view) {
     if (empty() || beg->type != type || beg->view != view) {
@@ -76,9 +79,9 @@ public:
       log_.endError();
       throw FatalError{};
     }
-    const std::string_view str = beg->view;
+    const std::string_view view = beg->view;
     ++beg;
-    return str;
+    return view;
   }
   void expect(const Token::Type type, const std::string_view view) {
     expectToken();
@@ -90,6 +93,19 @@ public:
     }
     ++beg;
   }
+  std::string_view expectEither(const Token::Type type, const std::string_view a, const std::string_view b) {
+    expectToken();
+    if (beg->type != type || (beg->view != a && beg->view != b)) {
+      log_.error(beg->loc) << "Expected " << type << ' ' << a << " or " << b
+        << " but found " << *beg;
+      log_.endError();
+      throw FatalError{};
+    }
+    const std::string_view view = beg->view;
+    ++beg;
+    return view;
+  }
+  
   std::string_view expectID() {
     return expect(Token::Type::identifier);
   }
@@ -98,6 +114,9 @@ public:
   }
   void expectOp(const std::string_view view) {
     expect(Token::Type::oper, view);
+  }
+  std::string_view expectEitherOp(const std::string_view a, const std::string_view b) {
+    return expectEither(Token::Type::oper, a, b);
   }
 
 private:
@@ -130,23 +149,19 @@ NodePtr parseEnum(ParseTokens &tok) {
   enumNode->name = tok.expectID();
   tok.expectOp("{");
   
-  if (tok.checkOp("}")) {
-    return enumNode;
+  if (!tok.checkOp("}")) {
+    do {
+      EnumCase &ecase = enumNode->cases.emplace_back();
+      ecase.name = tok.expectID();
+      if (tok.checkOp("=")) {
+        ecase.value = parseExpr(tok);
+      }
+    } while (tok.expectEitherOp("}", ",") == ",");
   }
   
-  while (true) {
-    EnumCase ecase;
-    ecase.name = tok.expectID();
-    if (tok.checkOp("=")) {
-      ecase.value = parseExpr(tok);
-    }
-    enumNode->cases.emplace_back(std::move(ecase));
-    
-    if (tok.checkOp("}")) {
-      break;
-    } else {
-      tok.expectOp(",");
-    }
+  if (tok.checkOp(";")) {
+    tok.log().warn(tok.lastLoc()) << "Unnecessary ;";
+    tok.log().endWarn();
   }
   
   return enumNode;

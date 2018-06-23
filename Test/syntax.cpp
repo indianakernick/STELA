@@ -20,7 +20,7 @@ TEST_GROUP(Syntax, {
     ASSERT_TRUE(ast.topNodes.empty());
   });
   
-  TEST(Empty enum, {
+  TEST(Enum - empty, {
     const char *source = R"(
       enum NoCases {}
     )";
@@ -34,7 +34,7 @@ TEST_GROUP(Syntax, {
     ASSERT_TRUE(enumNode->cases.empty());
   });
   
-  TEST(Direction enum, {
+  TEST(Enum - standard, {
     const char *source = R"(
       enum Dir {
         up,
@@ -56,5 +56,25 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(enumNode->cases[1].name, "right");
     ASSERT_EQ(enumNode->cases[2].name, "down");
     ASSERT_EQ(enumNode->cases[3].name, "left");
+  });
+  
+  TEST(Enum - extra comma, {
+    const char *source = R"(
+      enum ExtraComma {
+        first,
+        second,
+      }
+    )";
+    ASSERT_THROWS(stela::createAST(source, log), stela::FatalError);
+  });
+  
+  TEST(Enum - missing comma, {
+    const char *source = R"(
+      enum ExtraComma {
+        first
+        second
+      }
+    )";
+    ASSERT_THROWS(stela::createAST(source, log), stela::FatalError);
   });
 });
