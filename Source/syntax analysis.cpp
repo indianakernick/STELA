@@ -9,6 +9,7 @@
 #include "syntax analysis.hpp"
 
 #include <iostream>
+#include "lexical analysis.hpp"
 
 using namespace stela;
 using namespace stela::ast;
@@ -166,4 +167,8 @@ AST stela::createAST(const Tokens &tokens, Log &log) try {
   log.error() << e.what();
   log.endError();
   throw;
+}
+
+AST stela::createAST(const std::string_view source, Log &log) {
+  return createAST(lex(source, log), log);
 }

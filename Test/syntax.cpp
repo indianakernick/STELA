@@ -17,7 +17,7 @@ TEST_GROUP(Syntax, {
   log.pri(stela::LogPri::info);
 
   TEST(No tokens, {
-    const stela::AST ast = stela::createAST({}, log);
+    const stela::AST ast = stela::createAST(stela::Tokens{}, log);
     ASSERT_TRUE(ast.topNodes.empty());
   });
   
@@ -25,8 +25,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       enum NoCases {}
     )";
-    const stela::Tokens tokens = stela::lex(source, log);
-    const stela::AST ast = stela::createAST(tokens, log);
+    const stela::AST ast = stela::createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
     const stela::ast::NodePtr &node = ast.topNodes[0];
     ASSERT_TRUE(node);
@@ -45,8 +44,7 @@ TEST_GROUP(Syntax, {
         left
       }
     )";
-    const stela::Tokens tokens = stela::lex(source, log);
-    const stela::AST ast = stela::createAST(tokens, log);
+    const stela::AST ast = stela::createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
     const stela::ast::NodePtr &node = ast.topNodes[0];
     ASSERT_TRUE(node);
