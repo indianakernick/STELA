@@ -22,7 +22,7 @@ bool isKeyword(TokIter &tok, const std::string_view keyword) {
 }
 
 // expect another token
-void expectNext(TokIter &tok, const TokIter end, Logger &log) {
+void expectNext(TokIter &tok, const TokIter end, Log &log) {
   const TokIter prev = tok++;
   if (tok == end) {
     log.error(prev->loc) << "Unexpected end of input";
@@ -50,7 +50,7 @@ std::ostream &operator<<(std::ostream &stream, const Token::Type type) {
   }
 }
 
-void expectType(TokIter &tok, const Token::Type type, Logger &log) {
+void expectType(TokIter &tok, const Token::Type type, Log &log) {
   if (tok->type != type) {
     log.error(tok->loc) << "Expected " << type << " but found " << tok->type;
     log.endError();
@@ -62,7 +62,7 @@ NodePtr parseFunc(TokIter &tok, const TokIter end) {
   return nullptr;
 }
 
-NodePtr parseEnum(TokIter &tok, const TokIter end, Logger &log) {
+NodePtr parseEnum(TokIter &tok, const TokIter end, Log &log) {
   if (!isKeyword(tok, "enum")) {
     return nullptr;
   }
@@ -85,7 +85,7 @@ NodePtr parseLet(TokIter &tok, const TokIter end) {
   return nullptr;
 }
 
-AST createASTimpl(const Tokens &tokens, Logger &log) {
+AST createASTimpl(const Tokens &tokens, Log &log) {
   AST ast;
   
   const TokIter end = tokens.cend();
@@ -111,13 +111,13 @@ AST createASTimpl(const Tokens &tokens, Logger &log) {
 
 }
 
-AST stela::createAST(const Tokens &tokens, Logger &log) try {
+AST stela::createAST(const Tokens &tokens, Log &log) try {
   log.cat(stela::LogCat::syntax);
   return createASTimpl(tokens, log);
 } catch (FatalError &) {
   throw;
 } catch (std::exception &e) {
-  log.error({0, 0}) << e.what();
+  log.error() << e.what();
   log.endError();
-  throw FatalError{};
+  throw;
 }

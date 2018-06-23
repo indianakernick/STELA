@@ -9,9 +9,9 @@
 #ifndef log_counter_hpp
 #define log_counter_hpp
 
-#include <STELA/error.hpp>
+#include <STELA/log.hpp>
 
-class CountLogs final : public stela::Logger {
+class CountLogs final : public stela::Log {
 public:
   CountLogs() = default;
   
@@ -27,6 +27,7 @@ private:
   uint32_t errorCount = 0;
   
   std::ostream &log(stela::LogCat, stela::LogPri, stela::Loc) override;
+  std::ostream &log(stela::LogCat, stela::LogPri) override;
   void endLog(stela::LogCat, stela::LogPri) override;
 };
 

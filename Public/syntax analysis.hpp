@@ -9,13 +9,13 @@
 #ifndef stela_syntax_analysis_hpp
 #define stela_syntax_analysis_hpp
 
+#include "log.hpp"
 #include "ast.hpp"
-#include "error.hpp"
 #include "token.hpp"
 
 namespace stela {
 
-AST createAST(const Tokens &, Logger &);
+AST createAST(const Tokens &, Log &);
 
 }
 

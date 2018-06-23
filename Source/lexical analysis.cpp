@@ -108,7 +108,7 @@ bool parseNumber(Token &token, Utils::ParseString &str) {
   }
 }
 
-bool parseString(Token &token, Utils::ParseString &str, Logger &log) {
+bool parseString(Token &token, Utils::ParseString &str, Log &log) {
   if (str.check('"')) {
     while (true) {
       str.skipUntil([] (const char c) {
@@ -128,7 +128,7 @@ bool parseString(Token &token, Utils::ParseString &str, Logger &log) {
   }
 }
 
-bool parseChar(Token &token, Utils::ParseString &str, Logger &log) {
+bool parseChar(Token &token, Utils::ParseString &str, Log &log) {
   if (str.check('\'')) {
     while (true) {
       str.skipUntil([] (const char c) {
@@ -166,8 +166,8 @@ bool parseLineComment(Utils::ParseString &str) {
   }
 }
 
-bool parseMultiComment(Utils::ParseString &str, Logger &log) {
-  const Utils::LineCol<> pos = str.lineCol();
+bool parseMultiComment(Utils::ParseString &str, Log &log) {
+  const Loc loc = +str.lineCol();
   if (str.check("/*")) {
     uint32_t depth = 1;
     while (true) {
@@ -182,7 +182,7 @@ bool parseMultiComment(Utils::ParseString &str, Logger &log) {
       } else if (str.check("/*")) {
         ++depth;
       } else if (str.empty()) {
-        log.error(+pos) << "Unterminated multi-line comment";
+        log.error(loc) << "Unterminated multi-line comment";
         log.endError();
         throw FatalError{};
       } else {
@@ -195,7 +195,7 @@ bool parseMultiComment(Utils::ParseString &str, Logger &log) {
   }
 }
 
-Tokens lexImpl(const std::string_view source, Logger &log) {
+Tokens lexImpl(const std::string_view source, Log &log) {
   Utils::ParseString str(source);
   std::vector<Token> tokens;
   tokens.reserve(source.size() / 16);
@@ -226,7 +226,7 @@ Tokens lexImpl(const std::string_view source, Logger &log) {
 
 }
 
-Tokens stela::lex(const std::string_view source, Logger &log) try {
+Tokens stela::lex(const std::string_view source, Log &log) try {
   log.cat(stela::LogCat::lexical);
   return lexImpl(source, log);
 } catch (stela::FatalError &) {
@@ -236,5 +236,7 @@ Tokens stela::lex(const std::string_view source, Logger &log) try {
   log.endError();
   throw FatalError{};
 } catch (std::exception &e) {
-  throw FatalError{};
+  log.error() << e.what();
+  log.endError();
+  throw;
 }

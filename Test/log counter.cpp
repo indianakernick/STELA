@@ -24,7 +24,11 @@ void CountLogs::reset() {
   infoCount = warnCount = errorCount = 0;
 }
 
-std::ostream &CountLogs::log(stela::LogCat, const stela::LogPri pri, stela::Loc) {
+std::ostream &CountLogs::log(const stela::LogCat cat, const stela::LogPri pri, stela::Loc) {
+  return log(cat, pri);
+}
+
+std::ostream &CountLogs::log(stela::LogCat, const stela::LogPri pri) {
   switch (pri) {
     case stela::LogPri::info:
       ++infoCount;

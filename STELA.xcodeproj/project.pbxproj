@@ -15,7 +15,7 @@
 		45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45EE9C0420DA484A00CC3289 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0220DA484A00CC3289 /* lexer.cpp */; };
 		45EE9C0E20DCEC2500CC3289 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0C20DCEC2500CC3289 /* syntax.cpp */; };
-		45EE9C1220DCF19400CC3289 /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* error.cpp */; };
+		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1720DDD74500CC3289 /* log counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1520DDD74500CC3289 /* log counter.cpp */; };
 /* End PBXBuildFile section */
@@ -80,8 +80,8 @@
 		45EE9C0B20DCE4A800CC3289 /* closures.stela */ = {isa = PBXFileReference; lastKnownFileType = text; path = closures.stela; sourceTree = "<group>"; };
 		45EE9C0C20DCEC2500CC3289 /* syntax.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = syntax.cpp; sourceTree = "<group>"; };
 		45EE9C0D20DCEC2500CC3289 /* syntax.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = syntax.hpp; sourceTree = "<group>"; };
-		45EE9C0F20DCF08400CC3289 /* error.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = error.hpp; sourceTree = "<group>"; };
-		45EE9C1020DCF14F00CC3289 /* error.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = error.cpp; sourceTree = "<group>"; };
+		45EE9C0F20DCF08400CC3289 /* log.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = log.hpp; sourceTree = "<group>"; };
+		45EE9C1020DCF14F00CC3289 /* log.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = log.cpp; sourceTree = "<group>"; };
 		45EE9C1420DCF92800CC3289 /* location.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = location.hpp; sourceTree = "<group>"; };
 		45EE9C1520DDD74500CC3289 /* log counter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log counter.cpp"; sourceTree = "<group>"; };
 		45EE9C1620DDD74500CC3289 /* log counter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log counter.hpp"; sourceTree = "<group>"; };
@@ -141,7 +141,7 @@
 		45BBA3F320D63E7B006108C1 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				45EE9C1020DCF14F00CC3289 /* error.cpp */,
+				45EE9C1020DCF14F00CC3289 /* log.cpp */,
 				45BBA40420D6418B006108C1 /* lexical analysis.cpp */,
 				45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */,
 			);
@@ -176,7 +176,7 @@
 				45EE9C1420DCF92800CC3289 /* location.hpp */,
 				45EE9C0520DB3F2100CC3289 /* token.hpp */,
 				45EE9C0620DB3F7A00CC3289 /* ast.hpp */,
-				45EE9C0F20DCF08400CC3289 /* error.hpp */,
+				45EE9C0F20DCF08400CC3289 /* log.hpp */,
 				45BBA40520D6418B006108C1 /* lexical analysis.hpp */,
 				45EE9C0720DB41BE00CC3289 /* syntax analysis.hpp */,
 			);
@@ -335,7 +335,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45EE9C1220DCF19400CC3289 /* error.cpp in Sources */,
+				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
 			);

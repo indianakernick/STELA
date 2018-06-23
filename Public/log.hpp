@@ -1,13 +1,13 @@
 //
-//  error.hpp
+//  log.hpp
 //  STELA
 //
 //  Created by Indi Kernick on 22/6/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef stela_error_hpp
-#define stela_error_hpp
+#ifndef stela_log_hpp
+#define stela_log_hpp
 
 #include <iosfwd>
 #include <exception>
@@ -40,12 +40,11 @@ public:
   const char *what() const noexcept override;
 };
 
-/// Pass a reference to a Logger to the compiler to get warnings and
-/// errors. Pass an instance of NoLog if you don't want error reporting
-class Logger {
+/// A logging class. The compiler writes logs to a user provided logging class
+class Log {
 public:
-  Logger() = default;
-  virtual ~Logger() = default;
+  Log() = default;
+  virtual ~Log() = default;
   
   void cat(LogCat);
   void pri(LogPri);
@@ -55,21 +54,29 @@ public:
   std::ostream &error(Loc);
   std::ostream &log(LogPri, Loc);
   
+  std::ostream &info();
+  std::ostream &warn();
+  std::ostream &error();
+  std::ostream &log(LogPri);
+  
   void endInfo();
   void endWarn();
   void endError();
   void end(LogPri);
   
 private:
-  virtual std::ostream &log(LogCat, LogPri, Loc) = 0;
-  virtual void endLog(LogCat, LogPri) = 0;
-  
   LogCat category = LogCat::lexical;
   LogPri priority = LogPri::nothing;
+
+  virtual std::ostream &log(LogCat, LogPri, Loc) = 0;
+  virtual std::ostream &log(LogCat, LogPri) = 0;
+  virtual void endLog(LogCat, LogPri) = 0;
+  
+  bool canLog(LogPri) const;
 };
 
-/// An implementation of Logger that simply writes errors to the given stream
-class StreamLog final : public Logger {
+/// A logger that simply writes errors to the given stream
+class StreamLog final : public Log {
 public:
   /// Log errors to std::cerr
   StreamLog();
@@ -80,19 +87,21 @@ private:
   std::ostream &stream;
   
   std::ostream &log(LogCat, LogPri, Loc) override;
+  std::ostream &log(LogCat, LogPri) override;
   void endLog(LogCat, LogPri) override;
 };
 
 /// Get a reference to a silent std::ostream. Used internally by NoLog
 std::ostream &silentStream();
 
-/// An implementation of Logger that does nothing
-class NoLog final : public Logger {
+/// A logger that does nothing
+class NoLog final : public Log {
 public:
   NoLog() = default;
-
+  
 private:
   std::ostream &log(LogCat, LogPri, Loc) override;
+  std::ostream &log(LogCat, LogPri) override;
   void endLog(LogCat, LogPri) override;
 };
 

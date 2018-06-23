@@ -9,12 +9,12 @@
 #ifndef stela_lexical_analysis_hpp
 #define stela_lexical_analysis_hpp
 
-#include "error.hpp"
+#include "log.hpp"
 #include "token.hpp"
 
 namespace stela {
 
-Tokens lex(std::string_view, Logger &);
+Tokens lex(std::string_view, Log &);
 
 }
 

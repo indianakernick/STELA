@@ -1,13 +1,15 @@
 //
-//  error.cpp
+//  log.cpp
 //  STELA
 //
 //  Created by Indi Kernick on 22/6/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "error.hpp"
+#include "log.hpp"
 
+#include <iomanip>
+#include <sstream>
 #include <iostream>
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
@@ -44,50 +46,74 @@ const char *stela::FatalError::what() const noexcept {
   return "A fatal error has occured";
 }
 
-void stela::Logger::cat(const LogCat newCat) {
+void stela::Log::cat(const LogCat newCat) {
   category = newCat;
 }
 
-void stela::Logger::pri(const LogPri newPri) {
+void stela::Log::pri(const LogPri newPri) {
   priority = newPri;
 }
 
-std::ostream &stela::Logger::info(const Loc loc) {
+std::ostream &stela::Log::info(const Loc loc) {
   return log(LogPri::info, loc);
 }
 
-std::ostream &stela::Logger::warn(const Loc loc) {
+std::ostream &stela::Log::warn(const Loc loc) {
   return log(LogPri::warning, loc);
 }
 
-std::ostream &stela::Logger::error(const Loc loc) {
+std::ostream &stela::Log::error(const Loc loc) {
   return log(LogPri::error, loc);
 }
 
-std::ostream &stela::Logger::log(const LogPri pri, const Loc loc) {
-  if (static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority)) {
+std::ostream &stela::Log::log(const LogPri pri, const Loc loc) {
+  if (canLog(pri)) {
     return log(category, pri, loc);
   } else {
     return silentStream();
   }
 }
 
-void stela::Logger::endInfo() {
+std::ostream &stela::Log::info() {
+  return log(LogPri::info);
+}
+
+std::ostream &stela::Log::warn() {
+  return log(LogPri::warning);
+}
+
+std::ostream &stela::Log::error() {
+  return log(LogPri::error);
+}
+
+std::ostream &stela::Log::log(const LogPri pri) {
+  if (canLog(pri)) {
+    return log(category, pri);
+  } else {
+    return silentStream();
+  }
+}
+
+void stela::Log::endInfo() {
   end(LogPri::info);
 }
 
-void stela::Logger::endWarn() {
+void stela::Log::endWarn() {
   end(LogPri::warning);
 }
 
-void stela::Logger::endError() {
+void stela::Log::endError() {
   end(LogPri::error);
 }
 
-void stela::Logger::end(const LogPri pri) {
-  if (static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority)) {
+void stela::Log::end(const LogPri pri) {
+  if (canLog(pri)) {
     endLog(category, pri);
   }
+}
+
+bool stela::Log::canLog(const LogPri pri) const {
+  return static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority);
 }
 
 stela::StreamLog::StreamLog()
@@ -97,7 +123,14 @@ stela::StreamLog::StreamLog(std::ostream &stream)
   : stream{stream} {}
 
 std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri, const Loc loc) {
-  return stream << loc << "  " << cat << ' ' << pri << ": ";
+  std::ostringstream str;
+  str << loc;
+  stream << std::left << std::setw(8) << str.str();
+  return stream << cat << ' ' << pri << ": ";
+}
+
+std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri) {
+  return stream << cat << ' ' << pri << ": ";
 }
 
 void stela::StreamLog::endLog(LogCat, LogPri) {
@@ -125,6 +158,10 @@ std::ostream &stela::silentStream() {
 }
 
 std::ostream &stela::NoLog::log(LogCat, LogPri, Loc) {
+  return silentStream();
+}
+
+std::ostream &stela::NoLog::log(LogCat, LogPri) {
   return silentStream();
 }
 
