@@ -58,7 +58,20 @@ void expectType(TokIter &tok, const Token::Type type, Log &log) {
   }
 }
 
+void expectOper(TokIter &tok, const std::string_view view, Log &log) {
+  if (tok->type != Token::Type::oper || tok->view != view) {
+    log.error(tok->loc) << "Expected `" << view << "` but found "
+      << tok->type << " " << tok->view;
+    log.endError();
+    throw FatalError{};
+  }
+}
+
 NodePtr parseFunc(TokIter &tok, const TokIter end) {
+  return nullptr;
+}
+
+NodePtr parseExpr(TokIter &tok, const TokIter end, Log &log) {
   return nullptr;
 }
 
@@ -69,6 +82,39 @@ NodePtr parseEnum(TokIter &tok, const TokIter end, Log &log) {
   expectNext(tok, end, log);
   auto enumNode = std::make_unique<ast::Enum>();
   expectType(tok, Token::Type::identifier, log);
+  enumNode->name = tok->view;
+  expectNext(tok, end, log);
+  expectOper(tok, "{", log);
+  expectNext(tok, end, log);
+  
+  if (tok->type == Token::Type::oper && tok->view == "}") {
+    return enumNode;
+  }
+  
+  while (true) {
+    expectType(tok, Token::Type::identifier, log);
+    EnumCase ecase;
+    ecase.name = tok->view;
+    expectNext(tok, end, log);
+    expectType(tok, Token::Type::oper, log);
+    
+    if (tok->view == "=") {
+      expectNext(tok, end, log);
+      ecase.value = parseExpr(tok, end, log);
+      expectNext(tok, end, log);
+      expectType(tok, Token::Type::oper, log);
+    }
+    enumNode->cases.emplace_back(std::move(ecase));
+    if (tok->view == ",") {
+      expectNext(tok, end, log);
+    } else if (tok->view == "}") {
+      break;
+    } else {
+      log.error(tok->loc) << "Expected `,` or `}` but found `" << tok->view << "`";
+      log.endError();
+      throw FatalError{};
+    }
+  }
   
   return enumNode;
 }
@@ -106,7 +152,7 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     ast.topNodes.emplace_back(std::move(node));
   }
   
-  return {};
+  return ast;
 }
 
 }
