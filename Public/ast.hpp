@@ -214,6 +214,14 @@ struct Variable final : Node {
   NodePtr expr;
 };
 
+struct Constant final : Node {
+  Member mem;
+  Access access;
+  Name name;
+  TypePtr type;
+  NodePtr expr;
+};
+
 struct Init final : Node {
   FuncParams params;
   Block body;
