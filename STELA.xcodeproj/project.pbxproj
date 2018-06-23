@@ -17,6 +17,7 @@
 		45EE9C0E20DCEC2500CC3289 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0C20DCEC2500CC3289 /* syntax.cpp */; };
 		45EE9C1220DCF19400CC3289 /* error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* error.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
+		45EE9C1720DDD74500CC3289 /* log counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1520DDD74500CC3289 /* log counter.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +83,8 @@
 		45EE9C0F20DCF08400CC3289 /* error.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = error.hpp; sourceTree = "<group>"; };
 		45EE9C1020DCF14F00CC3289 /* error.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = error.cpp; sourceTree = "<group>"; };
 		45EE9C1420DCF92800CC3289 /* location.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = location.hpp; sourceTree = "<group>"; };
+		45EE9C1520DDD74500CC3289 /* log counter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log counter.cpp"; sourceTree = "<group>"; };
+		45EE9C1620DDD74500CC3289 /* log counter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log counter.hpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +152,8 @@
 			isa = PBXGroup;
 			children = (
 				45EE9C0120DA1B5D00CC3289 /* macros.hpp */,
+				45EE9C1520DDD74500CC3289 /* log counter.cpp */,
+				45EE9C1620DDD74500CC3289 /* log counter.hpp */,
 				45EE9C0220DA484A00CC3289 /* lexer.cpp */,
 				45EE9C0320DA484A00CC3289 /* lexer.hpp */,
 				45EE9C0C20DCEC2500CC3289 /* syntax.cpp */,
@@ -340,6 +345,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45EE9C1720DDD74500CC3289 /* log counter.cpp in Sources */,
 				45EE9C0420DA484A00CC3289 /* lexer.cpp in Sources */,
 				45EE9C0E20DCEC2500CC3289 /* syntax.cpp in Sources */,
 				45BBA3FC20D640EA006108C1 /* main.cpp in Sources */,

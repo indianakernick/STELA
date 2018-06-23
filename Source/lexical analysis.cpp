@@ -9,16 +9,22 @@
 #include "lexical analysis.hpp"
 
 #include <cctype>
+#include <iostream>
 #include <algorithm>
 #include <Simpleton/Utils/parse string.hpp>
 
 using namespace stela;
 
-stela::LexicalError::LexicalError(const Loc loc, const char *msg)
-  : Error{"Lexical Error", loc, msg} {}
+stela::Loc operator+(Utils::LineCol<> lineCol) {
+  return {lineCol.line(), lineCol.col()};
+}
 
-#define THROW_LEX(MESSAGE)                                                      \
-  throw stela::LexicalError{{str.line(), str.col()}, MESSAGE}
+#define THROW_LEX(MESSAGE) \
+{                                                                               \
+  log.error(+str.lineCol()) << MESSAGE;                                         \
+  log.endError();                                                               \
+  throw FatalError{};                                                           \
+}
 
 namespace {
 
@@ -102,7 +108,7 @@ bool parseNumber(Token &token, Utils::ParseString &str) {
   }
 }
 
-bool parseString(Token &token, Utils::ParseString &str) {
+bool parseString(Token &token, Utils::ParseString &str, Logger &log) {
   if (str.check('"')) {
     while (true) {
       str.skipUntil([] (const char c) {
@@ -122,7 +128,7 @@ bool parseString(Token &token, Utils::ParseString &str) {
   }
 }
 
-bool parseChar(Token &token, Utils::ParseString &str) {
+bool parseChar(Token &token, Utils::ParseString &str, Logger &log) {
   if (str.check('\'')) {
     while (true) {
       str.skipUntil([] (const char c) {
@@ -160,7 +166,7 @@ bool parseLineComment(Utils::ParseString &str) {
   }
 }
 
-bool parseMultiComment(Utils::ParseString &str) {
+bool parseMultiComment(Utils::ParseString &str, Logger &log) {
   const Utils::LineCol<> pos = str.lineCol();
   if (str.check("/*")) {
     uint32_t depth = 1;
@@ -176,7 +182,9 @@ bool parseMultiComment(Utils::ParseString &str) {
       } else if (str.check("/*")) {
         ++depth;
       } else if (str.empty()) {
-        throw LexicalError({pos.line(), pos.col()}, "Unterminated multi-line comment");
+        log.error(+pos) << "Unterminated multi-line comment";
+        log.endError();
+        throw FatalError{};
       } else {
         // skipping the '*' or '/' char
         str.advance();
@@ -187,7 +195,7 @@ bool parseMultiComment(Utils::ParseString &str) {
   }
 }
 
-Tokens lexImpl(const std::string_view source) {
+Tokens lexImpl(const std::string_view source, Logger &log) {
   Utils::ParseString str(source);
   std::vector<Token> tokens;
   tokens.reserve(source.size() / 16);
@@ -202,13 +210,13 @@ Tokens lexImpl(const std::string_view source) {
     begin(token, str);
     
     if (parseLineComment(str)) continue;
-    else if (parseMultiComment(str)) continue;
+    else if (parseMultiComment(str, log)) continue;
     else if (parseKeyword(token, str)) {}
     else if (parseOper(token, str)) {}
     else if (parseIdent(token, str)) {}
     else if (parseNumber(token, str)) {}
-    else if (parseString(token, str)) {}
-    else if (parseChar(token, str)) {}
+    else if (parseString(token, str, log)) {}
+    else if (parseChar(token, str, log)) {}
     else THROW_LEX("Invalid token");
     
     end(token, str);
@@ -218,12 +226,15 @@ Tokens lexImpl(const std::string_view source) {
 
 }
 
-Tokens stela::lex(const std::string_view source) try {
-  return lexImpl(source);
-} catch (stela::LexicalError &) {
+Tokens stela::lex(const std::string_view source, Logger &log) try {
+  log.cat(stela::LogCat::lexical);
+  return lexImpl(source, log);
+} catch (stela::FatalError &) {
   throw;
 } catch (Utils::ParsingError &e) {
-  throw stela::LexicalError({e.line(), e.column()}, e.what());
+  log.error({e.line(), e.column()}) << e.what();
+  log.endError();
+  throw FatalError{};
 } catch (std::exception &e) {
-  throw stela::LexicalError({0, 0}, e.what());
+  throw FatalError{};
 }

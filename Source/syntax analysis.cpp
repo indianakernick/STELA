@@ -8,14 +8,10 @@
 
 #include "syntax analysis.hpp"
 
+#include <iostream>
+
 using namespace stela;
 using namespace stela::ast;
-
-stela::SyntaxError::SyntaxError(const Loc loc, const char *msg)
-  : Error{"Syntax Error", loc, msg} {}
-
-#define THROW_SYNTAX(MSG)                                                       \
-  throw stela::SyntaxError(tok->loc, MSG)
 
 namespace {
 
@@ -26,16 +22,39 @@ bool isKeyword(TokIter &tok, const std::string_view keyword) {
 }
 
 // expect another token
-void expectNext(TokIter &tok, const TokIter end) {
+void expectNext(TokIter &tok, const TokIter end, Logger &log) {
   const TokIter prev = tok++;
   if (tok == end) {
-    throw stela::SyntaxError(prev->loc, "Unexpected end of input");
+    log.error(prev->loc) << "Unexpected end of input";
+    log.endError();
+    throw FatalError{};
   }
 }
 
-void expectType(TokIter &tok, const Token::Type type) {
+std::ostream &operator<<(std::ostream &stream, const Token::Type type) {
+  switch (type) {
+    case Token::Type::keyword:
+      return stream << "keyword";
+    case Token::Type::identifier:
+      return stream << "identifier";
+    case Token::Type::number:
+      return stream << "number";
+    case Token::Type::string:
+      return stream << "string";
+    case Token::Type::character:
+      return stream << "character";
+    case Token::Type::oper:
+      return stream << "operator";
+    default:
+      return stream;
+  }
+}
+
+void expectType(TokIter &tok, const Token::Type type, Logger &log) {
   if (tok->type != type) {
-    throw stela::SyntaxError(tok->loc, "Expected token ");
+    log.error(tok->loc) << "Expected " << type << " but found " << tok->type;
+    log.endError();
+    throw FatalError{};
   }
 }
 
@@ -43,14 +62,15 @@ NodePtr parseFunc(TokIter &tok, const TokIter end) {
   return nullptr;
 }
 
-NodePtr parseEnum(TokIter &tok, const TokIter end) {
+NodePtr parseEnum(TokIter &tok, const TokIter end, Logger &log) {
   if (!isKeyword(tok, "enum")) {
     return nullptr;
   }
-  expectNext(tok, end);
-  const auto enumNode = std::make_unique<ast::Enum>();
-  expectType(tok, Token::Type::identifier);
+  expectNext(tok, end, log);
+  auto enumNode = std::make_unique<ast::Enum>();
+  expectType(tok, Token::Type::identifier, log);
   
+  return enumNode;
 }
 
 NodePtr parseStruct(TokIter &tok, const TokIter end) {
@@ -65,22 +85,25 @@ NodePtr parseLet(TokIter &tok, const TokIter end) {
   return nullptr;
 }
 
-AST createASTimpl(const Tokens &tokens) {
+AST createASTimpl(const Tokens &tokens, Logger &log) {
   AST ast;
   
   const TokIter end = tokens.cend();
   for (TokIter tok = tokens.cbegin(); tok != end; ++tok) {
     ast::NodePtr node;
     if ((node = parseFunc(tok, end))) {}
-    else if ((node = parseEnum(tok, end))) {}
+    else if ((node = parseEnum(tok, end, log))) {}
     else if ((node = parseStruct(tok, end))) {}
     else if ((node = parseTypealias(tok, end))) {}
     else if ((node = parseLet(tok, end))) {}
-    else THROW_SYNTAX(
-      "Unexpected token in global scope."
-      "Only functions, type declarations and constants are allowed at global scope"
-    );
-    ast.topNodes.push_back(node);
+    else {
+      log.error(tok->loc) << "Unexpected token in global scope";
+      log.endError();
+      log.info(tok->loc) << "Only functions, type declarations and constants are allowed at global scope";
+      log.endInfo();
+      throw FatalError{};
+    };
+    ast.topNodes.emplace_back(std::move(node));
   }
   
   return {};
@@ -88,10 +111,13 @@ AST createASTimpl(const Tokens &tokens) {
 
 }
 
-AST stela::createAST(const Tokens &tokens) try {
-  return createASTimpl(tokens);
-} catch (SyntaxError &) {
+AST stela::createAST(const Tokens &tokens, Logger &log) try {
+  log.cat(stela::LogCat::syntax);
+  return createASTimpl(tokens, log);
+} catch (FatalError &) {
   throw;
 } catch (std::exception &e) {
-  throw SyntaxError({0, 0}, e.what());
+  log.error({0, 0}) << e.what();
+  log.endError();
+  throw FatalError{};
 }

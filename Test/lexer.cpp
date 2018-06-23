@@ -53,11 +53,14 @@ void printTokens(const std::vector<stela::Token> &tokens) {
   ASSERT_EQ(tokens[INDEX].view, VIEW)
 
 TEST_GROUP(Lexer, {
+  stela::StreamLog log;
+  log.pri(stela::LogPri::info);
+
   TEST(Hello world, {
     const std::vector<stela::Token> tokens = stela::lex(R"(func main(argc: Int) {
       print("Hello world!");
       return 0;
-    })");
+    })", log);
     
     ASSERT_EQ(tokens.size(), 17);
     
@@ -100,7 +103,8 @@ TEST_GROUP(Lexer, {
   
   TEST(Simple strings, {
     const stela::Tokens tokens = stela::lex(
-      R"( "string" "string \" with ' quotes" )"
+      R"( "string" "string \" with ' quotes" )",
+      log
     );
     
     ASSERT_EQ(tokens.size(), 2);
@@ -113,11 +117,11 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated string, {
-    ASSERT_THROWS(stela::lex("\"unterminated"), stela::LexicalError);
+    ASSERT_THROWS(stela::lex("\"unterminated", log), stela::FatalError);
   });
   
   TEST(Simple characters, {
-    const stela::Tokens tokens = stela::lex(R"( 'c' '\'' )");
+    const stela::Tokens tokens = stela::lex(R"( 'c' '\'' )", log);
     
     ASSERT_EQ(tokens.size(), 2);
     
@@ -129,7 +133,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated character, {
-    ASSERT_THROWS(stela::lex("'u"), stela::LexicalError);
+    ASSERT_THROWS(stela::lex("'u", log), stela::FatalError);
   });
   
   TEST(Single line comment, {
@@ -137,7 +141,7 @@ TEST_GROUP(Lexer, {
     // this is a comment
     
     // another comment // with // more // slashes //
-    )");
+    )", log);
     ASSERT_TRUE(tokens.empty());
   });
   
@@ -154,7 +158,7 @@ TEST_GROUP(Lexer, {
     */
     
     /* just put some / * // ** /// *** in here */
-    )");
+    )", log);
     ASSERT_TRUE(tokens.empty());
   });
   
@@ -179,14 +183,14 @@ TEST_GROUP(Lexer, {
     
     */
     
-    )");
+    )", log);
     ASSERT_TRUE(tokens.empty());
   });
   
   TEST(Unterminated multi line comment, {
-    ASSERT_THROWS(stela::lex("/*"), stela::LexicalError);
-    ASSERT_THROWS(stela::lex("/* /*"), stela::LexicalError);
-    ASSERT_THROWS(stela::lex("/* /* */"), stela::LexicalError);
+    ASSERT_THROWS(stela::lex("/*", log), stela::FatalError);
+    ASSERT_THROWS(stela::lex("/* /*", log), stela::FatalError);
+    ASSERT_THROWS(stela::lex("/* /* */", log), stela::FatalError);
   });
 })
 
