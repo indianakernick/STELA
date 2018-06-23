@@ -71,7 +71,7 @@
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
-    std::cout << "Running " << #NAME << "\n";                                   \
+    std::cout << "  Running " << #NAME << "\n";                                   \
     int failCount = 0;                                                          \
     try {                                                                       \
       __VA_ARGS__                                                               \

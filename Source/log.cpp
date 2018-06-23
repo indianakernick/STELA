@@ -11,6 +11,9 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#include <Simpleton/Utils/terminal color.hpp>
+
+namespace Term = Utils::Term;
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
   switch (cat) {
@@ -126,7 +129,7 @@ std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri, const Lo
   std::ostringstream str;
   str << loc;
   stream << std::left << std::setw(8) << str.str();
-  return stream << cat << ' ' << pri << ": ";
+  return log(cat, pri);
 }
 
 std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri) {
@@ -135,6 +138,35 @@ std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri) {
 
 void stela::StreamLog::endLog(LogCat, LogPri) {
   stream << '\n';
+}
+
+std::ostream &stela::ColorLog::log(const LogCat cat, const LogPri pri, const Loc loc) {
+  std::ostringstream str;
+  str << loc;
+  Term::intensity(Term::Intensity::BOLD);
+  std::cerr << std::left << std::setw(8) << str.str();
+  Term::intensity(Term::Intensity::NORMAL);
+  return log(cat, pri);
+}
+
+std::ostream &stela::ColorLog::log(const LogCat cat, const LogPri pri) {
+  if (pri == LogPri::info) {
+    Term::textColor(Term::Color::BLUE);
+  } else if (pri == LogPri::warning) {
+    Term::textColor(Term::Color::YELLOW);
+  } else if (pri == LogPri::error) {
+    Term::textColor(Term::Color::RED);
+  }
+  std::cerr << cat << ' ' << pri;
+  Term::defaultTextColor();
+  std::cerr << ": ";
+  Term::intensity(Term::Intensity::FAINT);
+  return std::cerr;
+}
+
+void stela::ColorLog::endLog(LogCat, LogPri) {
+  Term::intensity(Term::Intensity::NORMAL);
+  std::cerr << '\n';
 }
 
 namespace {

@@ -75,7 +75,7 @@ private:
   bool canLog(LogPri) const;
 };
 
-/// A logger that simply writes errors to the given stream
+/// A logger that simply writes to the given stream
 class StreamLog final : public Log {
 public:
   /// Log errors to std::cerr
@@ -86,6 +86,13 @@ public:
 private:
   std::ostream &stream;
   
+  std::ostream &log(LogCat, LogPri, Loc) override;
+  std::ostream &log(LogCat, LogPri) override;
+  void endLog(LogCat, LogPri) override;
+};
+
+/// A logger that writes colored text to stderr
+class ColorLog final : public Log {
   std::ostream &log(LogCat, LogPri, Loc) override;
   std::ostream &log(LogCat, LogPri) override;
   void endLog(LogCat, LogPri) override;
