@@ -8,7 +8,7 @@
 
 #include "syntax analysis.hpp"
 
-#include <iostream>
+#include "log output.hpp"
 #include "lexical analysis.hpp"
 
 using namespace stela;
@@ -16,7 +16,7 @@ using namespace stela::ast;
 
 namespace {
 
-std::ostream &operator<<(std::ostream &stream, const Token::Type type) {
+stela::LogStream &operator<<(stela::LogStream &stream, const Token::Type type) {
   switch (type) {
     case Token::Type::keyword:
       return stream << "keyword";
@@ -35,7 +35,7 @@ std::ostream &operator<<(std::ostream &stream, const Token::Type type) {
   }
 }
 
-std::ostream &operator<<(std::ostream &stream, const Token &tok) {
+stela::LogStream &operator<<(stela::LogStream &stream, const Token &tok) {
   return stream << tok.type << ' ' << tok.view;
 }
 
@@ -75,9 +75,7 @@ public:
   std::string_view expect(const Token::Type type) {
     expectToken();
     if (beg->type != type) {
-      log_.error(beg->loc) << "Expected " << type << " but found " << *beg;
-      log_.endError();
-      throw FatalError{};
+      log_.ferror(beg->loc) << "Expected " << type << " but found " << *beg << endlog;
     }
     const std::string_view view = beg->view;
     ++beg;
@@ -86,20 +84,16 @@ public:
   void expect(const Token::Type type, const std::string_view view) {
     expectToken();
     if (beg->type != type || beg->view != view) {
-      log_.error(beg->loc) << "Expected " << type << ' ' << view
-        << " but found " << *beg;
-      log_.endError();
-      throw FatalError{};
+      log_.ferror(beg->loc) << "Expected " << type << ' ' << view
+        << " but found " << *beg << endlog;
     }
     ++beg;
   }
   std::string_view expectEither(const Token::Type type, const std::string_view a, const std::string_view b) {
     expectToken();
     if (beg->type != type || (beg->view != a && beg->view != b)) {
-      log_.error(beg->loc) << "Expected " << type << ' ' << a << " or " << b
-        << " but found " << *beg;
-      log_.endError();
-      throw FatalError{};
+      log_.ferror(beg->loc) << "Expected " << type << ' ' << a << " or " << b
+        << " but found " << *beg << endlog;
     }
     const std::string_view view = beg->view;
     ++beg;
@@ -126,9 +120,7 @@ private:
   
   void expectToken() {
     if (empty()) {
-      log_.error() << "Unexpected end of input";
-      log_.endError();
-      throw FatalError{};
+      log_.ferror() << "Unexpected end of input" << endlog;
     }
   }
 };
@@ -160,8 +152,7 @@ NodePtr parseEnum(ParseTokens &tok) {
   }
   
   if (tok.checkOp(";")) {
-    tok.log().warn(tok.lastLoc()) << "Unnecessary ;";
-    tok.log().endWarn();
+    tok.log().warn(tok.lastLoc()) << "Unnecessary ;" << endlog;
   }
   
   return enumNode;
@@ -192,10 +183,9 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     else if ((node = parseLet(tok))) {}
     else {
       const Token &token = tok.front();
-      log.error(token.loc) << "Unexpected token in global scope";
-      log.endError();
-      log.info(token.loc) << "Only functions, type declarations and constants are allowed at global scope";
-      log.endInfo();
+      log.error(token.loc) << "Unexpected token in global scope" << endlog;
+      log.info(token.loc) << "Only functions, type declarations and constants "
+        "are allowed at global scope" << endlog;
       throw FatalError{};
     };
     ast.topNodes.emplace_back(std::move(node));
@@ -206,17 +196,19 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
 
 }
 
-AST stela::createAST(const Tokens &tokens, Log &log) try {
-  log.cat(stela::LogCat::syntax);
-  return createASTimpl(tokens, log);
-} catch (FatalError &) {
-  throw;
-} catch (std::exception &e) {
-  log.error() << e.what();
-  log.endError();
-  throw;
+AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
+  Log log{buf};
+  try {
+    log.cat(stela::LogCat::syntax);
+    return createASTimpl(tokens, log);
+  } catch (FatalError &) {
+    throw;
+  } catch (std::exception &e) {
+    log.error() << e.what() << endlog;
+    throw;
+  }
 }
 
-AST stela::createAST(const std::string_view source, Log &log) {
-  return createAST(lex(source, log), log);
+AST stela::createAST(const std::string_view source, LogBuf &buf) {
+  return createAST(lex(source, buf), buf);
 }

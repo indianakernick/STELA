@@ -27,6 +27,7 @@ enum class LogPri : uint8_t {
   info,
   warning,
   error,
+  fatal_error,
   nothing
 };
 
@@ -40,76 +41,64 @@ public:
   const char *what() const noexcept override;
 };
 
-/// A logging class. The compiler writes logs to a user provided logging class
-class Log {
+/// Get a reference to a silent output stream buf
+std::streambuf *silentBuf();
+
+/// Controls the output of the logger
+class LogBuf {
 public:
-  Log() = default;
-  virtual ~Log() = default;
+  virtual ~LogBuf() = default;
   
-  void cat(LogCat);
   void pri(LogPri);
   
-  std::ostream &info(Loc);
-  std::ostream &warn(Loc);
-  std::ostream &error(Loc);
-  std::ostream &log(LogPri, Loc);
-  
-  std::ostream &info();
-  std::ostream &warn();
-  std::ostream &error();
-  std::ostream &log(LogPri);
-  
-  void endInfo();
-  void endWarn();
-  void endError();
-  void end(LogPri);
+  void beginLog(LogCat, LogPri, Loc);
+  void beginLog(LogCat, LogPri);
+  // if the priority passed to endLog is fatal_error then throw FatalError
+  void endLog(LogCat, LogPri);
+  std::streambuf *getStreambuf(LogCat, LogPri);
   
 private:
-  LogCat category = LogCat::lexical;
-  LogPri priority = LogPri::info;
-
-  virtual std::ostream &log(LogCat, LogPri, Loc) = 0;
-  virtual std::ostream &log(LogCat, LogPri) = 0;
-  virtual void endLog(LogCat, LogPri) = 0;
+  virtual void begin(LogCat, LogPri, Loc) = 0;
+  virtual void begin(LogCat, LogPri) = 0;
+  virtual void end(LogCat, LogPri) = 0;
+  virtual std::streambuf *getBuf(LogCat, LogPri) = 0;
   
   bool canLog(LogPri) const;
+  
+  LogPri priority = LogPri::info;
 };
 
-/// A logger that simply writes to the given stream
-class StreamLog final : public Log {
+/// Write to a stream
+class StreamLog final : public LogBuf {
 public:
-  /// Log errors to std::cerr
+  /// Write to std::cerr
   StreamLog();
-  /// Log errors to a stream
-  explicit StreamLog(std::ostream &);
+  /// Write to a stream
+  explicit StreamLog(const std::ostream &);
   
 private:
-  std::ostream &stream;
+  std::streambuf *buf;
   
-  std::ostream &log(LogCat, LogPri, Loc) override;
-  std::ostream &log(LogCat, LogPri) override;
-  void endLog(LogCat, LogPri) override;
+  std::streambuf *getBuf(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, Loc) override;
+  void begin(LogCat, LogPri) override;
+  void end(LogCat, LogPri) override;
 };
 
-/// A logger that writes colored text to stderr
-class ColorLog final : public Log {
-  std::ostream &log(LogCat, LogPri, Loc) override;
-  std::ostream &log(LogCat, LogPri) override;
-  void endLog(LogCat, LogPri) override;
+/// Write colored text to stderr
+class ColorLog final : public LogBuf {
+  std::streambuf *getBuf(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, Loc) override;
+  void begin(LogCat, LogPri) override;
+  void end(LogCat, LogPri) override;
 };
 
-/// Get a reference to a silent std::ostream. Used internally by NoLog
-std::ostream &silentStream();
-
-/// A logger that does nothing
-class NoLog final : public Log {
-public:
-  NoLog() = default;
-  
-private:
-  std::ostream &log(LogCat, LogPri, Loc) override;
-  std::ostream &log(LogCat, LogPri) override;
-  void endLog(LogCat, LogPri) override;
+/// Do nothing
+class NoLog final : public LogBuf {
+  std::streambuf *getBuf(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, Loc) override;
+  void begin(LogCat, LogPri) override;
+  void end(LogCat, LogPri) override;
 };
 
 }

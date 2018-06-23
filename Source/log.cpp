@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#define TERM_STREAM stderr
 #include <Simpleton/Utils/terminal color.hpp>
 
 namespace Term = Utils::Term;
@@ -35,6 +36,7 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
     case LogPri::warning:
       return stream << "warning";
     case LogPri::error:
+    case LogPri::fatal_error:
       return stream << "error";
     default:
       return stream;
@@ -46,127 +48,7 @@ std::ostream &stela::operator<<(std::ostream &stream, const Loc loc) {
 }
 
 const char *stela::FatalError::what() const noexcept {
-  return "A fatal error has occured";
-}
-
-void stela::Log::cat(const LogCat newCat) {
-  category = newCat;
-}
-
-void stela::Log::pri(const LogPri newPri) {
-  priority = newPri;
-}
-
-std::ostream &stela::Log::info(const Loc loc) {
-  return log(LogPri::info, loc);
-}
-
-std::ostream &stela::Log::warn(const Loc loc) {
-  return log(LogPri::warning, loc);
-}
-
-std::ostream &stela::Log::error(const Loc loc) {
-  return log(LogPri::error, loc);
-}
-
-std::ostream &stela::Log::log(const LogPri pri, const Loc loc) {
-  if (canLog(pri)) {
-    return log(category, pri, loc);
-  } else {
-    return silentStream();
-  }
-}
-
-std::ostream &stela::Log::info() {
-  return log(LogPri::info);
-}
-
-std::ostream &stela::Log::warn() {
-  return log(LogPri::warning);
-}
-
-std::ostream &stela::Log::error() {
-  return log(LogPri::error);
-}
-
-std::ostream &stela::Log::log(const LogPri pri) {
-  if (canLog(pri)) {
-    return log(category, pri);
-  } else {
-    return silentStream();
-  }
-}
-
-void stela::Log::endInfo() {
-  end(LogPri::info);
-}
-
-void stela::Log::endWarn() {
-  end(LogPri::warning);
-}
-
-void stela::Log::endError() {
-  end(LogPri::error);
-}
-
-void stela::Log::end(const LogPri pri) {
-  if (canLog(pri)) {
-    endLog(category, pri);
-  }
-}
-
-bool stela::Log::canLog(const LogPri pri) const {
-  return static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority);
-}
-
-stela::StreamLog::StreamLog()
-  : StreamLog{std::cerr} {}
-
-stela::StreamLog::StreamLog(std::ostream &stream)
-  : stream{stream} {}
-
-std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri, const Loc loc) {
-  std::ostringstream str;
-  str << loc;
-  stream << std::left << std::setw(8) << str.str();
-  return log(cat, pri);
-}
-
-std::ostream &stela::StreamLog::log(const LogCat cat, const LogPri pri) {
-  return stream << cat << ' ' << pri << ": ";
-}
-
-void stela::StreamLog::endLog(LogCat, LogPri) {
-  stream << '\n';
-}
-
-std::ostream &stela::ColorLog::log(const LogCat cat, const LogPri pri, const Loc loc) {
-  std::ostringstream str;
-  str << loc;
-  Term::intensity(Term::Intensity::BOLD);
-  std::cerr << std::left << std::setw(8) << str.str();
-  Term::intensity(Term::Intensity::NORMAL);
-  return log(cat, pri);
-}
-
-std::ostream &stela::ColorLog::log(const LogCat cat, const LogPri pri) {
-  if (pri == LogPri::info) {
-    Term::textColor(Term::Color::BLUE);
-  } else if (pri == LogPri::warning) {
-    Term::textColor(Term::Color::YELLOW);
-  } else if (pri == LogPri::error) {
-    Term::textColor(Term::Color::RED);
-  }
-  std::cerr << cat << ' ' << pri;
-  Term::defaultTextColor();
-  std::cerr << ": ";
-  Term::intensity(Term::Intensity::FAINT);
-  return std::cerr;
-}
-
-void stela::ColorLog::endLog(LogCat, LogPri) {
-  Term::intensity(Term::Intensity::NORMAL);
-  std::cerr << '\n';
+  return "Fatal error";
 }
 
 namespace {
@@ -183,18 +65,109 @@ public:
 
 }
 
-std::ostream &stela::silentStream() {
+std::streambuf *stela::silentBuf() {
   static SilentBuf buf;
-  static std::ostream stream{&buf};
-  return stream;
+  return &buf;
 }
 
-std::ostream &stela::NoLog::log(LogCat, LogPri, Loc) {
-  return silentStream();
+
+void stela::LogBuf::pri(const LogPri newPri) {
+  priority = newPri;
 }
 
-std::ostream &stela::NoLog::log(LogCat, LogPri) {
-  return silentStream();
+void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const Loc loc) {
+  if (canLog(pri)) {
+    begin(cat, pri, loc);
+  }
 }
 
-void stela::NoLog::endLog(LogCat, LogPri) {}
+void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri) {
+  if (canLog(pri)) {
+    begin(cat, pri);
+  }
+}
+
+void stela::LogBuf::endLog(const LogCat cat, const LogPri pri) {
+  if (canLog(pri)) {
+    end(cat, pri);
+  }
+}
+
+std::streambuf *stela::LogBuf::getStreambuf(const LogCat cat, const LogPri pri) {
+  if (canLog(pri)) {
+    return getBuf(cat, pri);
+  } else {
+    return silentBuf();
+  }
+}
+
+bool stela::LogBuf::canLog(const LogPri pri) const {
+  return static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority);
+}
+
+stela::StreamLog::StreamLog()
+  : StreamLog{std::cerr} {}
+
+stela::StreamLog::StreamLog(const std::ostream &stream)
+  : buf{stream.rdbuf()} {}
+
+std::streambuf *stela::StreamLog::getBuf(LogCat, LogPri) {
+  return buf;
+}
+
+void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
+  std::ostringstream str;
+  str << loc;
+  std::ostream stream{buf};
+  stream << std::left << std::setw(8) << str.str();
+  begin(cat, pri);
+}
+
+void stela::StreamLog::begin(const LogCat cat, const LogPri pri) {
+  std::ostream stream{buf};
+  stream << cat << ' ' << pri << ": ";
+}
+
+void stela::StreamLog::end(LogCat, LogPri) {
+  std::ostream stream{buf};
+  stream << '\n';
+}
+
+std::streambuf *stela::ColorLog::getBuf(LogCat, LogPri) {
+  return std::cerr.rdbuf();
+}
+
+void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
+  std::ostringstream str;
+  str << loc;
+  Term::intensity(Term::Intensity::BOLD);
+  std::cerr << std::left << std::setw(8) << str.str();
+  Term::intensity(Term::Intensity::NORMAL);
+  begin(cat, pri);
+}
+
+void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
+  if (pri == LogPri::info) {
+    Term::textColor(Term::Color::BLUE);
+  } else if (pri == LogPri::warning) {
+    Term::textColor(Term::Color::YELLOW);
+  } else if (pri == LogPri::error || pri == LogPri::fatal_error) {
+    Term::textColor(Term::Color::RED);
+  }
+  std::cerr << cat << ' ' << pri;
+  Term::defaultTextColor();
+  std::cerr << ": ";
+  Term::intensity(Term::Intensity::FAINT);
+}
+
+void stela::ColorLog::end(LogCat, LogPri) {
+  Term::intensity(Term::Intensity::NORMAL);
+  std::cerr << '\n';
+}
+
+std::streambuf *stela::NoLog::getBuf(LogCat, LogPri) {
+  return silentBuf();
+}
+void stela::NoLog::begin(LogCat, LogPri, Loc) {}
+void stela::NoLog::begin(LogCat, LogPri) {}
+void stela::NoLog::end(LogCat, LogPri) {}

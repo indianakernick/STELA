@@ -14,7 +14,7 @@
 
 namespace stela {
 
-Tokens lex(std::string_view, Log &);
+Tokens lex(std::string_view, LogBuf &);
 
 }
 

@@ -11,7 +11,7 @@
 
 #include <STELA/log.hpp>
 
-class CountLogs final : public stela::Log {
+class CountLogs final : public stela::LogBuf {
 public:
   CountLogs() = default;
   
@@ -26,9 +26,10 @@ private:
   uint32_t warnCount = 0;
   uint32_t errorCount = 0;
   
-  std::ostream &log(stela::LogCat, stela::LogPri, stela::Loc) override;
-  std::ostream &log(stela::LogCat, stela::LogPri) override;
-  void endLog(stela::LogCat, stela::LogPri) override;
+  std::streambuf *getBuf(stela::LogCat, stela::LogPri) override;
+  void begin(stela::LogCat, stela::LogPri, stela::Loc) override;
+  void begin(stela::LogCat, stela::LogPri) override;
+  void end(stela::LogCat, stela::LogPri) override;
 };
 
 #endif

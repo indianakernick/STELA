@@ -9,21 +9,14 @@
 #include "lexical analysis.hpp"
 
 #include <cctype>
-#include <iostream>
 #include <algorithm>
+#include "log output.hpp"
 #include <Simpleton/Utils/parse string.hpp>
 
 using namespace stela;
 
 stela::Loc operator+(Utils::LineCol<> lineCol) {
   return {lineCol.line(), lineCol.col()};
-}
-
-#define THROW_LEX(MESSAGE) \
-{                                                                               \
-  log.error(+str.lineCol()) << MESSAGE;                                         \
-  log.endError();                                                               \
-  throw FatalError{};                                                           \
 }
 
 namespace {
@@ -120,7 +113,7 @@ bool parseString(Token &token, Utils::ParseString &str, Log &log) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        THROW_LEX("Unterminated string literal");
+        log.ferror(+str.lineCol()) << "Unterminated string literal" << endlog;
       }
     }
   } else {
@@ -140,7 +133,7 @@ bool parseChar(Token &token, Utils::ParseString &str, Log &log) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        THROW_LEX("Unterminated character literal");
+        log.ferror(+str.lineCol()) << "Unterminated character literal" << endlog;
       }
     }
   } else {
@@ -182,9 +175,7 @@ bool parseMultiComment(Utils::ParseString &str, Log &log) {
       } else if (str.check("/*")) {
         ++depth;
       } else if (str.empty()) {
-        log.error(loc) << "Unterminated multi-line comment";
-        log.endError();
-        throw FatalError{};
+        log.ferror(loc) << "Unterminated multi-line comment" << endlog;
       } else {
         // skipping the '*' or '/' char
         str.advance();
@@ -217,7 +208,7 @@ Tokens lexImpl(const std::string_view source, Log &log) {
     else if (parseNumber(token, str)) {}
     else if (parseString(token, str, log)) {}
     else if (parseChar(token, str, log)) {}
-    else THROW_LEX("Invalid token");
+    else log.ferror(+str.lineCol()) << "Unexpected token" << endlog;
     
     end(token, str);
     tokens.push_back(token);
@@ -226,17 +217,18 @@ Tokens lexImpl(const std::string_view source, Log &log) {
 
 }
 
-Tokens stela::lex(const std::string_view source, Log &log) try {
-  log.cat(stela::LogCat::lexical);
-  return lexImpl(source, log);
-} catch (stela::FatalError &) {
-  throw;
-} catch (Utils::ParsingError &e) {
-  log.error({e.line(), e.column()}) << e.what();
-  log.endError();
-  throw FatalError{};
-} catch (std::exception &e) {
-  log.error() << e.what();
-  log.endError();
-  throw;
+Tokens stela::lex(const std::string_view source, LogBuf &buf) {
+  Log log{buf};
+  try {
+    log.cat(stela::LogCat::lexical);
+    return lexImpl(source, log);
+  } catch (stela::FatalError &) {
+    throw;
+  } catch (Utils::ParsingError &e) {
+    log.ferror({e.line(), e.column()}) << e.what() << endlog;
+  } catch (std::exception &e) {
+    log.error() << e.what() << endlog;
+    throw;
+  }
+  return {};
 }

@@ -18,6 +18,7 @@
 		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1720DDD74500CC3289 /* log counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1520DDD74500CC3289 /* log counter.cpp */; };
+		45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1B20DE72D400CC3289 /* log output.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -85,6 +86,8 @@
 		45EE9C1420DCF92800CC3289 /* location.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = location.hpp; sourceTree = "<group>"; };
 		45EE9C1520DDD74500CC3289 /* log counter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log counter.cpp"; sourceTree = "<group>"; };
 		45EE9C1620DDD74500CC3289 /* log counter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log counter.hpp"; sourceTree = "<group>"; };
+		45EE9C1B20DE72D400CC3289 /* log output.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log output.cpp"; sourceTree = "<group>"; };
+		45EE9C1C20DE72D400CC3289 /* log output.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log output.hpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,6 +147,8 @@
 				45EE9C1020DCF14F00CC3289 /* log.cpp */,
 				45BBA40420D6418B006108C1 /* lexical analysis.cpp */,
 				45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */,
+				45EE9C1B20DE72D400CC3289 /* log output.cpp */,
+				45EE9C1C20DE72D400CC3289 /* log output.hpp */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -337,6 +342,7 @@
 			files = (
 				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
+				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
