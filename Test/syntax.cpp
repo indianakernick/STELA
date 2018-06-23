@@ -14,7 +14,6 @@
 
 TEST_GROUP(Syntax, {
   stela::StreamLog log;
-  log.pri(stela::LogPri::info);
 
   TEST(No tokens, {
     const stela::AST ast = stela::createAST(stela::Tokens{}, log);

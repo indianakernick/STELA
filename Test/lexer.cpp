@@ -54,7 +54,6 @@ void printTokens(const std::vector<stela::Token> &tokens) {
 
 TEST_GROUP(Lexer, {
   stela::StreamLog log;
-  log.pri(stela::LogPri::info);
 
   TEST(Hello world, {
     const std::vector<stela::Token> tokens = stela::lex(R"(func main(argc: Int) {

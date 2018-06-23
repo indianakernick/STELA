@@ -66,7 +66,7 @@ public:
   
 private:
   LogCat category = LogCat::lexical;
-  LogPri priority = LogPri::nothing;
+  LogPri priority = LogPri::info;
 
   virtual std::ostream &log(LogCat, LogPri, Loc) = 0;
   virtual std::ostream &log(LogCat, LogPri) = 0;
