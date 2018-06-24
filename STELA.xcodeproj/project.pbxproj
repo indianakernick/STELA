@@ -19,6 +19,7 @@
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1720DDD74500CC3289 /* log counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1520DDD74500CC3289 /* log counter.cpp */; };
 		45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1B20DE72D400CC3289 /* log output.cpp */; };
+		45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +89,8 @@
 		45EE9C1620DDD74500CC3289 /* log counter.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log counter.hpp"; sourceTree = "<group>"; };
 		45EE9C1B20DE72D400CC3289 /* log output.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log output.cpp"; sourceTree = "<group>"; };
 		45EE9C1C20DE72D400CC3289 /* log output.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "log output.hpp"; sourceTree = "<group>"; };
+		45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse tokens.cpp"; sourceTree = "<group>"; };
+		45EE9C1F20DF19BD00CC3289 /* parse tokens.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse tokens.hpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -149,6 +152,8 @@
 				45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */,
 				45EE9C1B20DE72D400CC3289 /* log output.cpp */,
 				45EE9C1C20DE72D400CC3289 /* log output.hpp */,
+				45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */,
+				45EE9C1F20DF19BD00CC3289 /* parse tokens.hpp */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -340,6 +345,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,
 				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
