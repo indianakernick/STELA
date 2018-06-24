@@ -1,6 +1,7 @@
 # Statically Typed Embeddable LAnguage
 
-This project is just getting started so there isn't really much here yet. Just a few vague plans.
+## Progress
+The lexical analyser is done. The syntax analyser is about halfway done.
 
 ## File Extension
 `.stela` or `.ste` (if the filesystem limits extensions to three characters).
