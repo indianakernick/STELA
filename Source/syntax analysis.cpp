@@ -52,7 +52,7 @@ ast::TypePtr parseType(ParseTokens &tok) {
       // it's a dictionary and `elem` is the key
       ast::TypePtr val = parseType(tok);
       tok.expectOp("]");
-      auto dictType = std::make_unique<ast::DictionaryType>();
+      auto dictType = std::make_unique<ast::DictType>();
       dictType->key = std::move(elem);
       dictType->val = std::move(val);
       return dictType;

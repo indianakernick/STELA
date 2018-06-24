@@ -24,10 +24,6 @@ struct Node {
 };
 using NodePtr = std::unique_ptr<Node>;
 
-struct Block final : Node {
-  std::vector<NodePtr> nodes;
-};
-
 using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
@@ -35,11 +31,11 @@ using Name = std::string_view;
 struct Type : Node {};
 using TypePtr = std::unique_ptr<Type>;
 
-struct ArrayType final : public Type {
+struct ArrayType final : Type {
   TypePtr elem;
 };
 
-struct DictionaryType final : public Type {
+struct DictType final : Type {
   TypePtr key;
   TypePtr val;
 };
@@ -54,12 +50,12 @@ struct ParamType {
   TypePtr type;
 };
 
-struct FuncType final : public Type {
+struct FuncType final : Type {
   std::vector<ParamType> params;
   TypePtr ret;
 };
 
-struct NamedType final : public Type {
+struct NamedType final : Type {
   Name name;
 };
 
@@ -88,50 +84,131 @@ enum class AssignOp {
   assign,
 };
 
-struct BinaryExpr final : public Node {
-  NodePtr left;
+struct Expression : Node {};
+using ExprPtr = std::unique_ptr<Expression>;
+
+struct BinaryExpr final : Expression {
+  ExprPtr left;
   BinOp oper;
-  NodePtr right;
+  ExprPtr right;
 };
 
-struct UnaryExpr final : public Node {
+struct UnaryExpr final : Expression {
   UnOp oper;
-  NodePtr expr;
+  ExprPtr expr;
 };
 
-struct AssignExpr final : public Node {
-  NodePtr left;
+struct AssignExpr final : Expression {
+  ExprPtr left;
   AssignOp oper;
-  NodePtr right;
+  ExprPtr right;
 };
 
 struct FuncArg {
-  NodePtr expr;
+  ExprPtr expr;
 };
 using FuncArgs = std::vector<FuncArg>;
 
-struct FuncCall final : public Node {
-  NodePtr func;
+struct FuncCall final : Expression {
+  ExprPtr func;
   FuncArgs args;
 };
 
-struct ObjectMember final : public Node {
-  NodePtr object;
+struct ObjectMember final : Expression {
+  ExprPtr object;
   Name name;
 };
 
-struct ConstructorCall final : public Node {
+struct ConstructorCall final : Expression {
   TypePtr type;
   FuncArgs args;
 };
 
-struct Subscript final : public Node {
-  NodePtr object;
-  NodePtr index;
+struct Subscript final : Expression {
+  ExprPtr object;
+  ExprPtr index;
 };
 
-struct Identifier final : public Node {
+struct Identifier final : Expression {
   Name name;
+};
+
+struct Ternary final : Expression {
+  ExprPtr cond;
+  ExprPtr tru;
+  ExprPtr fals;
+};
+
+//------------------------------- Statements -----------------------------------
+
+struct Statement : Node {};
+using StatPtr = std::unique_ptr<Statement>;
+
+struct Block final : Statement {
+  std::vector<StatPtr> nodes;
+};
+
+struct Var final : Statement {
+  Name name;
+  TypePtr type;
+  ExprPtr expr;
+};
+
+struct Let final : Statement {
+  Name name;
+  TypePtr type;
+  ExprPtr expr;
+};
+
+struct If final : Statement {
+  ExprPtr cond;
+  Block body;
+  Block elseBody;
+};
+
+struct SwitchCase final : Statement {
+  NodePtr expr;
+};
+
+struct SwitchDefault final : Statement {};
+
+struct Switch final : Statement {
+  NodePtr expr;
+  // pointers point to SwitchCases in block
+  std::vector<SwitchCase *> cases;
+  SwitchDefault *def;
+  Block body; // SwitchCases are in block
+};
+
+struct Break final : Statement {};
+struct Continue final : Statement {};
+struct Fallthrough final : Statement {};
+
+struct Return final : Statement {
+  NodePtr expr;
+};
+
+struct While final : Statement {
+  ExprPtr cond;
+  Block body;
+};
+
+struct RepeatWhile final : Statement {
+  Block body;
+  ExprPtr cond;
+};
+
+struct For final : Statement {
+  ExprPtr init;
+  ExprPtr cond;
+  ExprPtr incr;
+  Block body;
+};
+
+struct ForIn final : Statement {
+  ExprPtr init;
+  ExprPtr source;
+  Block body;
 };
 
 //------------------------------- Functions ------------------------------------
@@ -150,44 +227,7 @@ struct Func final : Node {
   Block body;
 };
 
-struct Return final : Node {
-  NodePtr expr;
-};
-
-//-------------------------------- Literals ------------------------------------
-
-struct StringLiteral final : public Node {
-  std::string_view value;
-};
-
-struct CharLiteral final : public Node {
-  std::string_view value;
-};
-
-struct NumberLiteral final : public Node {
-  std::string_view value;
-};
-
-struct ArrayLiteral final : public Node {
-  std::vector<NodePtr> exprs;
-};
-
-struct DictPair {
-  NodePtr key;
-  NodePtr val;
-};
-
-struct DictLiteral final : public Node {
-  std::vector<DictPair> pairs;
-};
-
-struct Lambda final : public Node {
-  FuncParams params;
-  TypePtr ret;
-  Block body;
-};
-
-//---------------------------------- Data --------------------------------------
+//--------------------------- Type Declarations --------------------------------
 
 enum class MemAccess {
   pub,
@@ -202,19 +242,7 @@ enum class MemScope {
 struct Member final : Node {
   MemAccess access;
   MemScope scope;
-  NodePtr node; // Variable, Constant, Function, Init
-};
-
-struct Variable final : Node {
-  Name name;
-  TypePtr type;
-  NodePtr expr;
-};
-
-struct Constant final : Node {
-  Name name;
-  TypePtr type;
-  NodePtr expr;
+  NodePtr node; // Var, Let, Func, Init
 };
 
 struct Init final : Node {
@@ -222,12 +250,12 @@ struct Init final : Node {
   Block body;
 };
 
-struct TypeAlias final : public Node {
+struct TypeAlias final : Statement {
   Name name;
   TypePtr type;
 };
 
-struct Struct final : Node {
+struct Struct final : Statement {
   Name name;
   Block body;
 };
@@ -237,63 +265,41 @@ struct EnumCase {
   NodePtr value;
 };
 
-struct Enum final : Node {
+struct Enum final : Statement {
   Name name;
   std::vector<EnumCase> cases;
 };
 
-//------------------------------ Control flow ----------------------------------
+//-------------------------------- Literals ------------------------------------
 
-struct If final : Node {
-  NodePtr cond;
-  Block body;
+struct StringLiteral final : Expression {
+  std::string_view value;
 };
 
-struct Else final : Node {
-  Block body;
+struct CharLiteral final : Expression {
+  std::string_view value;
 };
 
-struct Ternary final : Node {
-  NodePtr cond;
-  NodePtr tru;
-  NodePtr fals;
+struct NumberLiteral final : Expression {
+  std::string_view value;
 };
 
-struct SwitchCase {
-  NodePtr expr;
-  Block body;
+struct ArrayLiteral final : Expression {
+  std::vector<ExprPtr> exprs;
 };
 
-struct Switch final : Node {
-  NodePtr expr;
-  std::vector<SwitchCase> cases;
-  Block def;
+struct DictPair {
+  ExprPtr key;
+  ExprPtr val;
 };
 
-struct Break final : Node {};
-struct Continue final : Node {};
-struct Fallthrough final : Node {};
-
-struct While final : Node {
-  NodePtr cond;
-  Block body;
+struct DictLiteral final : Expression {
+  std::vector<DictPair> pairs;
 };
 
-struct RepeatWhile final : Node {
-  Block body;
-  NodePtr cond;
-};
-
-struct For final : Node {
-  NodePtr init;
-  NodePtr cond;
-  NodePtr incr;
-  Block body;
-};
-
-struct ForIn final : Node {
-  NodePtr init;
-  NodePtr source;
+struct Lambda final : Expression {
+  FuncParams params;
+  TypePtr ret;
   Block body;
 };
 
