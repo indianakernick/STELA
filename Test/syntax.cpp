@@ -167,7 +167,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(valElem->name, "Int");
   });
   
-  TEST(Stat - Var, {
+  TEST(Stat - Var and Let, {
     const char *source = R"(
       func dummy() {
         var noInit: Double;
@@ -247,21 +247,36 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         if (cond) {
-          
+          var dummy0 = ident;
         }
         
         if (cond) {
-        
+          var dummy0 = ident;
+          var dummy1 = ident;
         } else {
-        
+          var dummy0 = ident;
+          var dummy1 = ident;
+          var dummy2 = ident;
         }
         
         if (firstCond) {
-          
+          var dummy0 = ident;
+          var dummy1 = ident;
+          var dummy2 = ident;
+          var dummy3 = ident;
         } else if (secondCond) {
-          
+          var dummy0 = ident;
+          var dummy1 = ident;
+          var dummy2 = ident;
+          var dummy3 = ident;
+          var dummy4 = ident;
         } else {
-          
+          var dummy0 = ident;
+          var dummy1 = ident;
+          var dummy2 = ident;
+          var dummy3 = ident;
+          var dummy4 = ident;
+          var dummy5 = ident;
         }
       }
     )";
@@ -271,5 +286,64 @@ TEST_GROUP(Syntax, {
     auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
     const auto &block = blockNode->nodes;
     ASSERT_EQ(block.size(), 3);
+    
+    {
+      auto *ifNode = ASSERT_DOWN_CAST(const If, block[0].get());
+      ASSERT_TRUE(ifNode->cond);
+      auto *block = ASSERT_DOWN_CAST(const Block, ifNode->body.get());
+      ASSERT_EQ(block->nodes.size(), 1);
+      ASSERT_FALSE(ifNode->elseBody);
+    }
+    
+    {
+      auto *ifNode = ASSERT_DOWN_CAST(const If, block[1].get());
+      ASSERT_TRUE(ifNode->cond);
+      auto *block = ASSERT_DOWN_CAST(const Block, ifNode->body.get());
+      ASSERT_EQ(block->nodes.size(), 2);
+      auto *elseBlock = ASSERT_DOWN_CAST(const Block, ifNode->elseBody.get());
+      ASSERT_EQ(elseBlock->nodes.size(), 3);
+    }
+    
+    {
+      auto *ifNode = ASSERT_DOWN_CAST(const If, block[2].get());
+      ASSERT_TRUE(ifNode->cond);
+      auto *block = ASSERT_DOWN_CAST(const Block, ifNode->body.get());
+      ASSERT_EQ(block->nodes.size(), 4);
+      auto *elseIf = ASSERT_DOWN_CAST(const If, ifNode->elseBody.get());
+      ASSERT_TRUE(elseIf->cond);
+      auto *elseIfBlock = ASSERT_DOWN_CAST(const Block, elseIf->body.get());
+      ASSERT_EQ(elseIfBlock->nodes.size(), 5);
+      auto *elseIfElseBlock = ASSERT_DOWN_CAST(const Block, elseIf->elseBody.get());
+      ASSERT_EQ(elseIfElseBlock->nodes.size(), 6);
+    }
+  });
+  
+  TEST(Stat - Keywords, {
+    const char *source = R"(
+      func dummy() {
+        break;
+        continue;
+        fallthrough;
+        return;
+        return expr;
+      }
+    )";
+    
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
+    ASSERT_EQ(block.size(), 5);
+    
+    ASSERT_DOWN_CAST(const Break, block[0].get());
+    ASSERT_DOWN_CAST(const Continue, block[1].get());
+    ASSERT_DOWN_CAST(const Fallthrough, block[2].get());
+    
+    auto *retVoid = ASSERT_DOWN_CAST(const Return, block[3].get());
+    ASSERT_FALSE(retVoid->expr);
+    
+    auto *retExpr = ASSERT_DOWN_CAST(const Return, block[4].get());
+    ASSERT_TRUE(retExpr->expr);
   });
 });
