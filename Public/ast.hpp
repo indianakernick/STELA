@@ -167,13 +167,13 @@ struct If final : Statement {
 };
 
 struct SwitchCase final : Statement {
-  NodePtr expr;
+  ExprPtr expr;
 };
 
 struct SwitchDefault final : Statement {};
 
 struct Switch final : Statement {
-  NodePtr expr;
+  ExprPtr expr;
   // pointers point to SwitchCases in block
   std::vector<SwitchCase *> cases;
   SwitchDefault *def;
@@ -185,7 +185,7 @@ struct Continue final : Statement {};
 struct Fallthrough final : Statement {};
 
 struct Return final : Statement {
-  NodePtr expr;
+  ExprPtr expr;
 };
 
 struct While final : Statement {
@@ -220,7 +220,7 @@ struct FuncParam {
 };
 using FuncParams = std::vector<FuncParam>;
 
-struct Func final : Node {
+struct Func final : Statement {
   Name name;
   FuncParams params;
   TypePtr ret;
@@ -239,13 +239,13 @@ enum class MemScope {
   stat
 };
 
-struct Member final : Node {
+struct Member final : Statement {
   MemAccess access;
   MemScope scope;
-  NodePtr node; // Var, Let, Func, Init
+  StatPtr node; // Var, Let, Func, Init
 };
 
-struct Init final : Node {
+struct Init final : Statement {
   FuncParams params;
   Block body;
 };
@@ -262,7 +262,7 @@ struct Struct final : Statement {
 
 struct EnumCase {
   Name name;
-  NodePtr value;
+  ExprPtr value;
 };
 
 struct Enum final : Statement {
@@ -308,7 +308,7 @@ struct Lambda final : Expression {
 namespace stela {
 
 struct AST {
-  std::vector<ast::NodePtr> topNodes;
+  std::vector<ast::StatPtr> global;
 };
 
 }

@@ -20,7 +20,7 @@ TEST_GROUP(Syntax, {
 
   TEST(No tokens, {
     const AST ast = createAST(Tokens{}, log);
-    ASSERT_TRUE(ast.topNodes.empty());
+    ASSERT_TRUE(ast.global.empty());
   });
   
   TEST(Enum - empty, {
@@ -28,8 +28,8 @@ TEST_GROUP(Syntax, {
       enum NoCases {}
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.global[0].get());
     ASSERT_EQ(enumNode->name, "NoCases");
     ASSERT_TRUE(enumNode->cases.empty());
   });
@@ -44,8 +44,8 @@ TEST_GROUP(Syntax, {
       }
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.global[0].get());
     ASSERT_EQ(enumNode->name, "Dir");
     ASSERT_EQ(enumNode->cases.size(), 4);
     
@@ -80,8 +80,8 @@ TEST_GROUP(Syntax, {
       func empty() {}
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     ASSERT_EQ(func->name, "empty");
     ASSERT_TRUE(func->params.empty());
   });
@@ -91,8 +91,8 @@ TEST_GROUP(Syntax, {
       func oneParam(one: Int) -> [Float] {}
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     ASSERT_EQ(func->name, "oneParam");
     ASSERT_EQ(func->params.size(), 1);
     
@@ -109,8 +109,8 @@ TEST_GROUP(Syntax, {
       func swap(first: inout Int, second: inout Int) {}
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     ASSERT_EQ(func->name, "swap");
     ASSERT_EQ(func->params.size(), 2);
     
@@ -125,8 +125,8 @@ TEST_GROUP(Syntax, {
       typealias dummy = [(inout Int, inout Double) -> Void];
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.topNodes[0].get());
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
     ASSERT_EQ(alias->name, "dummy");
     
     auto *array = ASSERT_DOWN_CAST(const ArrayType, alias->type.get());

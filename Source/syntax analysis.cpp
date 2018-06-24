@@ -104,7 +104,7 @@ ast::TypePtr parseFuncRet(ParseTokens &tok) {
   }
 }
 
-ast::NodePtr parseFunc(ParseTokens &tok) {
+ast::StatPtr parseFunc(ParseTokens &tok) {
   if (!tok.checkKeyword("func")) {
     return nullptr;
   }
@@ -118,11 +118,11 @@ ast::NodePtr parseFunc(ParseTokens &tok) {
   return funcNode;
 }
 
-ast::NodePtr parseExpr(ParseTokens &) {
+ast::ExprPtr parseExpr(ParseTokens &) {
   return nullptr;
 }
 
-ast::NodePtr parseEnum(ParseTokens &tok) {
+ast::StatPtr parseEnum(ParseTokens &tok) {
   if (!tok.checkKeyword("enum")) {
     return nullptr;
   }
@@ -147,11 +147,11 @@ ast::NodePtr parseEnum(ParseTokens &tok) {
   return enumNode;
 }
 
-ast::NodePtr parseStruct(ParseTokens &) {
+ast::StatPtr parseStruct(ParseTokens &) {
   return nullptr;
 }
 
-ast::NodePtr parseTypealias(ParseTokens &tok) {
+ast::StatPtr parseTypealias(ParseTokens &tok) {
   if (!tok.checkKeyword("typealias")) {
     return nullptr;
   }
@@ -163,7 +163,7 @@ ast::NodePtr parseTypealias(ParseTokens &tok) {
   return aliasNode;
 }
 
-ast::NodePtr parseLet(ParseTokens &) {
+ast::StatPtr parseLet(ParseTokens &) {
   return nullptr;
 }
 
@@ -172,7 +172,7 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
   ParseTokens tok(tokens, log);
   
   while (!tok.empty()) {
-    ast::NodePtr node;
+    ast::StatPtr node;
     if ((node = parseFunc(tok))) {}
     else if ((node = parseEnum(tok))) {}
     else if ((node = parseStruct(tok))) {}
@@ -184,7 +184,7 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
         "are allowed at global scope" << endlog;
       log.ferror(token.loc) << "Unexpected token in global scope" << endlog;
     };
-    ast.topNodes.emplace_back(std::move(node));
+    ast.global.emplace_back(std::move(node));
   }
   
   return ast;
