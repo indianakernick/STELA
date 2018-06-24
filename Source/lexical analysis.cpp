@@ -73,7 +73,7 @@ bool continueNumber(const char c) {
 }
 
 bool parseKeyword(Token &token, Utils::ParseString &str) {
-  if (str.tryParseEnum(keywords, numKeywords) != numKeywords) {
+  if (str.tryParseEnum(keywords, numKeywords, std::not_fn(isalpha)) != numKeywords) {
     token.type = Token::Type::keyword;
     return true;
   } else {
@@ -208,7 +208,7 @@ Tokens lexImpl(const std::string_view source, Log &log) {
     else if (parseNumber(token, str)) {}
     else if (parseString(token, str, log)) {}
     else if (parseChar(token, str, log)) {}
-    else log.ferror(+str.lineCol()) << "Unexpected token" << endlog;
+    else log.ferror(+str.lineCol()) << "Invalid token" << endlog;
     
     end(token, str);
     tokens.push_back(token);

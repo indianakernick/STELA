@@ -16,6 +16,8 @@ using namespace stela;
 
 namespace {
 
+//--------------------------------- Types --------------------------------------
+
 ast::ParamRef parseRef(ParseTokens &tok) {
   if (tok.checkKeyword("inout")) {
     return ast::ParamRef::inout;
@@ -74,11 +76,128 @@ ast::TypePtr parseType(ParseTokens &tok) {
   }
 }
 
-ast::Block parseBlock(ParseTokens &tok) {
-  tok.expectOp("{");
-  tok.expectOp("}");
-  return {};
+//------------------------------ Expressions -----------------------------------
+
+ast::ExprPtr parseExpr(ParseTokens &tok) {
+  tok.expectID();
+  return std::make_unique<ast::BinaryExpr>();
 }
+
+//------------------------------- Statements -----------------------------------
+
+ast::Block parseBlock(ParseTokens &);
+
+ast::StatPtr parseVar(ParseTokens &tok) {
+  if (!tok.checkKeyword("var")) {
+    return nullptr;
+  }
+  auto var = std::make_unique<ast::Var>();
+  var->name = tok.expectID();
+  if (tok.checkOp(":")) {
+    var->type = tok.expectNode(parseType, "type after :");
+  }
+  if (tok.checkOp("=")) {
+    var->expr = tok.expectNode(parseExpr, "expression after =");
+  }
+  tok.expectOp(";");
+  return var;
+}
+
+ast::StatPtr parseLet(ParseTokens &tok) {
+  if (!tok.checkKeyword("let")) {
+    return nullptr;
+  }
+  auto let = std::make_unique<ast::Let>();
+  let->name = tok.expectID();
+  if (tok.checkOp(":")) {
+    let->type = tok.expectNode(parseType, "type after :");
+  }
+  tok.expectOp("=");
+  let->expr = tok.expectNode(parseExpr, "expression after =");
+  tok.expectOp(";");
+  return let;
+}
+
+ast::StatPtr parseIf(ParseTokens &tok) {
+  if (!tok.checkKeyword("if")) {
+    return nullptr;
+  }
+  auto ifNode = std::make_unique<ast::If>();
+  tok.expectOp("(");
+  ifNode->cond = parseExpr(tok);
+  tok.expectOp(")");
+  ifNode->body = parseBlock(tok);
+  if (tok.checkKeyword("else")) {
+    ifNode->elseBody = parseBlock(tok);
+  }
+  return ifNode;
+}
+
+template <typename Type>
+ast::StatPtr parseKeywordStatement(ParseTokens &tok, const std::string_view name) {
+  if (tok.checkKeyword(name)) {
+    tok.expectOp(";");
+    return std::make_unique<Type>();
+  } else {
+    return nullptr;
+  }
+}
+
+ast::StatPtr parseBreak(ParseTokens &tok) {
+  return parseKeywordStatement<ast::Break>(tok, "break");
+}
+
+ast::StatPtr parseContinue(ParseTokens &tok) {
+  return parseKeywordStatement<ast::Continue>(tok, "continue");
+}
+
+ast::StatPtr parseFallthrough(ParseTokens &tok) {
+  return parseKeywordStatement<ast::Fallthrough>(tok, "fallthrough");
+}
+
+ast::StatPtr parseReturn(ParseTokens &tok) {
+  if (tok.checkKeyword("return")) {
+    auto ret = std::make_unique<ast::Return>();
+    ret->expr = parseExpr(tok);
+    tok.expectOp(";");
+    return ret;
+  } else {
+    return nullptr;
+  }
+}
+
+ast::StatPtr parseStatement(ParseTokens &tok) {
+  if (ast::StatPtr node = parseVar(tok)) return node;
+  if (ast::StatPtr node = parseLet(tok)) return node;
+  if (ast::StatPtr node = parseIf(tok)) return node;
+  if (ast::StatPtr node = parseBreak(tok)) return node;
+  if (ast::StatPtr node = parseContinue(tok)) return node;
+  if (ast::StatPtr node = parseFallthrough(tok)) return node;
+  if (ast::StatPtr node = parseReturn(tok)) return node;
+  return nullptr;
+}
+
+ast::Block parseBlock(ParseTokens &tok) {
+  ast::Block block;
+  
+  if (tok.checkOp("{")) {
+    while (ast::StatPtr node = parseStatement(tok)) {
+      block.nodes.emplace_back(std::move(node));
+    }
+    tok.expectOp("}");
+  } else {
+    ast::StatPtr node = parseStatement(tok);
+    if (node == nullptr) {
+      tok.log().ferror(tok.front().loc) << "Expected statement" << endlog;
+    } else {
+      block.nodes.emplace_back(std::move(node));
+    }
+  }
+  
+  return block;
+}
+
+//------------------------------- Functions ------------------------------------
 
 ast::FuncParams parseFuncParams(ParseTokens &tok) {
   tok.expectOp("(");
@@ -118,9 +237,7 @@ ast::StatPtr parseFunc(ParseTokens &tok) {
   return funcNode;
 }
 
-ast::ExprPtr parseExpr(ParseTokens &) {
-  return nullptr;
-}
+//--------------------------- Type Declarations --------------------------------
 
 ast::StatPtr parseEnum(ParseTokens &tok) {
   if (!tok.checkKeyword("enum")) {
@@ -163,9 +280,7 @@ ast::StatPtr parseTypealias(ParseTokens &tok) {
   return aliasNode;
 }
 
-ast::StatPtr parseLet(ParseTokens &) {
-  return nullptr;
-}
+//---------------------------------- Base --------------------------------------
 
 AST createASTimpl(const Tokens &tokens, Log &log) {
   AST ast;
@@ -182,7 +297,8 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
       const Token &token = tok.front();
       log.info(token.loc) << "Only functions, type declarations and constants "
         "are allowed at global scope" << endlog;
-      log.ferror(token.loc) << "Unexpected token in global scope" << endlog;
+      log.ferror(token.loc) << "Unexpected token `" << token.view << "` "
+        << static_cast<int>(token.type) << " in global scope" << endlog;
     };
     ast.global.emplace_back(std::move(node));
   }

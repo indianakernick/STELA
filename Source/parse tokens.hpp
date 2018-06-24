@@ -25,6 +25,15 @@ public:
   
   void unget();
   
+  template <typename ParseFunc>
+  auto expectNode(ParseFunc &&parse, const std::string_view msg) {
+    auto node = parse(*this);
+    if (node == nullptr) {
+      log_.ferror(beg->loc) << "Expected " << msg << endlog;
+    }
+    return node;
+  }
+  
   bool check(Token::Type, std::string_view);
   bool checkKeyword(std::string_view);
   bool checkOp(std::string_view);

@@ -142,4 +142,44 @@ TEST_GROUP(Syntax, {
     auto *ret = ASSERT_DOWN_CAST(const NamedType, func->ret.get());
     ASSERT_EQ(ret->name, "Void");
   });
+  
+  TEST(Type - Dictionary, {
+    const char *source = R"(
+      typealias dummy = [String: [Int]];
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "dummy");
+    
+    auto *dict = ASSERT_DOWN_CAST(const DictType, alias->type.get());
+    auto *key = ASSERT_DOWN_CAST(const NamedType, dict->key.get());
+    ASSERT_EQ(key->name, "String");
+    auto *val = ASSERT_DOWN_CAST(const ArrayType, dict->val.get());
+    auto *valElem = ASSERT_DOWN_CAST(const NamedType, val->elem.get());
+    ASSERT_EQ(valElem->name, "Int");
+  });
+  
+  TEST(Stat - Var, {
+    const char *source = R"(
+      func dummy() {
+        var noInit: Double;
+        var initAndType: Int = ident;
+        var deducedVar = ident;
+        let myLet: Double = ident;
+        let deducedLet = ident;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 5);
+    
+    auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
+    ASSERT_EQ(noInit->name, "noInit");
+    ASSERT_EQ(noInit->expr, nullptr);
+    auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
+    ASSERT_EQ(noInitType->name, "Double");
+  });
 });

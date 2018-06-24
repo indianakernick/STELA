@@ -174,10 +174,7 @@ struct SwitchDefault final : Statement {};
 
 struct Switch final : Statement {
   ExprPtr expr;
-  // pointers point to SwitchCases in block
-  std::vector<SwitchCase *> cases;
-  SwitchDefault *def;
-  Block body; // SwitchCases are in block
+  Block body;
 };
 
 struct Break final : Statement {};
