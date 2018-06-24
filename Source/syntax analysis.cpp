@@ -146,6 +146,36 @@ ast::StatPtr parseIf(ParseTokens &tok) {
   return ifNode;
 }
 
+ast::StatPtr parseSwitch(ParseTokens &tok) {
+  if (!tok.checkKeyword("switch")) {
+    return nullptr;
+  }
+  auto switchNode = std::make_unique<ast::Switch>();
+  tok.expectOp("(");
+  switchNode->expr = tok.expectNode(parseExpr, "expression");
+  tok.expectOp(")");
+  tok.expectOp("{");
+  
+  while (!tok.checkOp("}")) {
+    if (ast::StatPtr stat = parseStatement(tok)) {
+      switchNode->body.nodes.emplace_back(std::move(stat));
+    } else if (tok.checkKeyword("case")) {
+      auto scase = std::make_unique<ast::SwitchCase>();
+      scase->expr = tok.expectNode(parseExpr, "expression");
+      tok.expectOp(":");
+      switchNode->body.nodes.emplace_back(std::move(scase));
+    } else if (tok.checkKeyword("default")) {
+      tok.expectOp(":");
+      switchNode->body.nodes.emplace_back(std::make_unique<ast::SwitchDefault>());
+    } else {
+      tok.log().ferror(tok.front().loc) << "Expected case label or statement but found "
+        << tok.front() << endlog;
+    }
+  }
+  
+  return switchNode;
+}
+
 template <typename Type>
 ast::StatPtr parseKeywordStatement(ParseTokens &tok, const std::string_view name) {
   if (tok.checkKeyword(name)) {
@@ -239,6 +269,7 @@ ast::StatPtr parseStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseVar(tok)) return node;
   if (ast::StatPtr node = parseLet(tok)) return node;
   if (ast::StatPtr node = parseIf(tok)) return node;
+  if (ast::StatPtr node = parseSwitch(tok)) return node;
   if (ast::StatPtr node = parseBreak(tok)) return node;
   if (ast::StatPtr node = parseContinue(tok)) return node;
   if (ast::StatPtr node = parseFallthrough(tok)) return node;
@@ -364,8 +395,8 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
       const Token &token = tok.front();
       log.info(token.loc) << "Only functions, type declarations and constants "
         "are allowed at global scope" << endlog;
-      log.ferror(token.loc) << "Unexpected token `" << token.view << "` "
-        << static_cast<int>(token.type) << " in global scope" << endlog;
+      log.ferror(token.loc) << "Unexpected token " << token
+        << " in global scope" << endlog;
     };
     ast.global.emplace_back(std::move(node));
   }

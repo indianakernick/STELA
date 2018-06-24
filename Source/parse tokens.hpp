@@ -14,6 +14,9 @@
 
 namespace stela {
 
+std::ostream &operator<<(std::ostream &, Token::Type);
+std::ostream &operator<<(std::ostream &, const Token &);
+
 class ParseTokens {
 public:
   ParseTokens(const Tokens &, Log &);

@@ -177,7 +177,7 @@ struct SwitchDefault final : Statement {};
 
 struct Switch final : Statement {
   ExprPtr expr;
-  StatPtr body;
+  Block body;
 };
 
 struct Break final : Statement {};
