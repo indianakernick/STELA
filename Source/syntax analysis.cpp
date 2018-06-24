@@ -13,19 +13,57 @@
 #include "lexical analysis.hpp"
 
 using namespace stela;
-using namespace stela::ast;
 
 namespace {
 
-NodePtr parseFunc(ParseTokens &) {
+ast::TypePtr parseType(ParseTokens &tok) {
+  tok.expectID();
   return nullptr;
 }
 
-NodePtr parseExpr(ParseTokens &) {
+ast::Block parseFuncBody(ParseTokens &tok) {
+  tok.expectOp("}");
+  return {};
+}
+
+ast::NodePtr parseFunc(ParseTokens &tok) {
+  if (!tok.checkKeyword("func")) {
+    return nullptr;
+  }
+  
+  auto funcNode = std::make_unique<ast::Func>();
+  funcNode->name = tok.expectID();
+  tok.expectOp("(");
+  
+  if (!tok.checkOp(")")) {
+    do {
+      ast::FuncParam &param = funcNode->params.emplace_back();
+      param.name = tok.expectID();
+      tok.expectOp(":");
+      if (tok.checkKeyword("inout")) {
+        param.ref = ast::ParamRef::inout;
+      } else {
+        param.ref = ast::ParamRef::value;
+      }
+      param.type = parseType(tok);
+    } while (tok.expectEitherOp(")", ",") == ",");
+  }
+  
+  if (tok.expectEitherOp("->", "{") == "->") {
+    funcNode->ret = parseType(tok);
+    tok.expectOp("{");
+  }
+  
+  funcNode->body = parseFuncBody(tok);
+  
+  return funcNode;
+}
+
+ast::NodePtr parseExpr(ParseTokens &) {
   return nullptr;
 }
 
-NodePtr parseEnum(ParseTokens &tok) {
+ast::NodePtr parseEnum(ParseTokens &tok) {
   if (!tok.checkKeyword("enum")) {
     return nullptr;
   }
@@ -35,7 +73,7 @@ NodePtr parseEnum(ParseTokens &tok) {
   
   if (!tok.checkOp("}")) {
     do {
-      EnumCase &ecase = enumNode->cases.emplace_back();
+      ast::EnumCase &ecase = enumNode->cases.emplace_back();
       ecase.name = tok.expectID();
       if (tok.checkOp("=")) {
         ecase.value = parseExpr(tok);
@@ -50,15 +88,15 @@ NodePtr parseEnum(ParseTokens &tok) {
   return enumNode;
 }
 
-NodePtr parseStruct(ParseTokens &) {
+ast::NodePtr parseStruct(ParseTokens &) {
   return nullptr;
 }
 
-NodePtr parseTypealias(ParseTokens &) {
+ast::NodePtr parseTypealias(ParseTokens &) {
   return nullptr;
 }
 
-NodePtr parseLet(ParseTokens &) {
+ast::NodePtr parseLet(ParseTokens &) {
   return nullptr;
 }
 

@@ -110,14 +110,14 @@ struct AssignExpr final : public Node {
   NodePtr right;
 };
 
-struct FunctionArg {
+struct FuncArg {
   NodePtr expr;
 };
-using FunctionArgs = std::vector<FunctionArg>;
+using FuncArgs = std::vector<FuncArg>;
 
-struct FunctionCall final : public Node {
+struct FuncCall final : public Node {
   NodePtr func;
-  FunctionArgs args;
+  FuncArgs args;
 };
 
 struct ObjectMember final : public Node {
@@ -127,7 +127,7 @@ struct ObjectMember final : public Node {
 
 struct ConstructorCall final : public Node {
   TypePtr type;
-  FunctionArgs args;
+  FuncArgs args;
 };
 
 struct Subscript final : public Node {
@@ -141,16 +141,6 @@ struct Identifier final : public Node {
 
 //------------------------------- Functions ------------------------------------
 
-enum class Access {
-  pub,
-  priv
-};
-
-enum class Member {
-  member,
-  stat
-};
-
 struct FuncParam {
   Name name;
   ParamRef ref;
@@ -158,9 +148,7 @@ struct FuncParam {
 };
 using FuncParams = std::vector<FuncParam>;
 
-struct Function final : Node {
-  Member mem;
-  Access access;
+struct Func final : Node {
   Name name;
   FuncParams params;
   TypePtr ret;
@@ -206,17 +194,29 @@ struct Lambda final : public Node {
 
 //---------------------------------- Data --------------------------------------
 
+enum class MemAccess {
+  pub,
+  priv
+};
+
+enum class MemScope {
+  member,
+  stat
+};
+
+struct Member final : Node {
+  MemAccess access;
+  MemScope scope;
+  NodePtr node; // Variable, Constant, Function, Init
+};
+
 struct Variable final : Node {
-  Member mem;
-  Access access;
   Name name;
   TypePtr type;
   NodePtr expr;
 };
 
 struct Constant final : Node {
-  Member mem;
-  Access access;
   Name name;
   TypePtr type;
   NodePtr expr;
