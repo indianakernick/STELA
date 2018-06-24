@@ -122,25 +122,24 @@ TEST_GROUP(Syntax, {
   
   TEST(Type - Array of functions, {
     const char *source = R"(
-      func dummy() -> [(inout Int, inout Double) -> Void] {}
+      typealias dummy = [(inout Int, inout Double) -> Void];
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
-    ASSERT_EQ(func->name, "dummy");
-    ASSERT_TRUE(func->params.empty());
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.topNodes[0].get());
+    ASSERT_EQ(alias->name, "dummy");
     
-    auto *array = ASSERT_DOWN_CAST(const ArrayType, func->ret.get());
-    auto *funcType = ASSERT_DOWN_CAST(const FuncType, array->elem.get());
-    ASSERT_EQ(funcType->params.size(), 2);
-    ASSERT_EQ(funcType->params[0].ref, ParamRef::inout);
-    ASSERT_EQ(funcType->params[1].ref, ParamRef::inout);
+    auto *array = ASSERT_DOWN_CAST(const ArrayType, alias->type.get());
+    auto *func = ASSERT_DOWN_CAST(const FuncType, array->elem.get());
+    ASSERT_EQ(func->params.size(), 2);
+    ASSERT_EQ(func->params[0].ref, ParamRef::inout);
+    ASSERT_EQ(func->params[1].ref, ParamRef::inout);
     
-    auto *first = ASSERT_DOWN_CAST(const NamedType, funcType->params[0].type.get());
+    auto *first = ASSERT_DOWN_CAST(const NamedType, func->params[0].type.get());
     ASSERT_EQ(first->name, "Int");
-    auto *second = ASSERT_DOWN_CAST(const NamedType, funcType->params[1].type.get());
+    auto *second = ASSERT_DOWN_CAST(const NamedType, func->params[1].type.get());
     ASSERT_EQ(second->name, "Double");
-    auto *ret = ASSERT_DOWN_CAST(const NamedType, funcType->ret.get());
+    auto *ret = ASSERT_DOWN_CAST(const NamedType, func->ret.get());
     ASSERT_EQ(ret->name, "Void");
   });
 });

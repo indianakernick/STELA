@@ -151,8 +151,16 @@ ast::NodePtr parseStruct(ParseTokens &) {
   return nullptr;
 }
 
-ast::NodePtr parseTypealias(ParseTokens &) {
-  return nullptr;
+ast::NodePtr parseTypealias(ParseTokens &tok) {
+  if (!tok.checkKeyword("typealias")) {
+    return nullptr;
+  }
+  auto aliasNode = std::make_unique<ast::TypeAlias>();
+  aliasNode->name = tok.expectID();
+  tok.expectOp("=");
+  aliasNode->type = parseType(tok);
+  tok.expectOp(";");
+  return aliasNode;
 }
 
 ast::NodePtr parseLet(ParseTokens &) {
