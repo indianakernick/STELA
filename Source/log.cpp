@@ -11,10 +11,7 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
-#define TERM_STREAM stderr
-#include <Simpleton/Utils/terminal color.hpp>
-
-namespace Term = Utils::Term;
+#include <Simpleton/Utils/console color.hpp>
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
   switch (cat) {
@@ -140,29 +137,24 @@ std::streambuf *stela::ColorLog::getBuf(LogCat, LogPri) {
 void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
   std::ostringstream str;
   str << loc;
-  Term::intensity(Term::Intensity::BOLD);
-  std::cerr << std::left << std::setw(8) << str.str();
-  Term::intensity(Term::Intensity::NORMAL);
+  std::cerr << con::bold << std::left << std::setw(8) << str.str() << con::no_bold_faint;
   begin(cat, pri);
 }
 
 void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
   if (pri == LogPri::info) {
-    Term::textColor(Term::Color::BLUE);
+    std::cerr << con::text_blue;
   } else if (pri == LogPri::warning) {
-    Term::textColor(Term::Color::YELLOW);
+    std::cerr << con::text_yellow;
   } else if (pri == LogPri::error || pri == LogPri::fatal_error) {
-    Term::textColor(Term::Color::RED);
+    std::cerr << con::text_red;
   }
   std::cerr << cat << ' ' << pri;
-  Term::defaultTextColor();
-  std::cerr << ": ";
-  Term::italic(true);
+  std::cerr << con::text_default << ": " << con::italic;
 }
 
 void stela::ColorLog::end(LogCat, LogPri) {
-  Term::italic(false);
-  std::cerr << '\n';
+  std::cerr << con::no_italic << '\n';
 }
 
 std::streambuf *stela::NoLog::getBuf(LogCat, LogPri) {
