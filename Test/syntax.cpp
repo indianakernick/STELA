@@ -120,6 +120,13 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params[1].ref, ParamRef::inout);
   });
   
+  TEST(Func - two param (no comma), {
+    const char *source = R"(
+      func woops(first: String oh_no: Int) {}
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Type - Array of functions, {
     const char *source = R"(
       typealias dummy = [(inout Int, inout Double) -> Void];
@@ -166,20 +173,103 @@ TEST_GROUP(Syntax, {
         var noInit: Double;
         var initAndType: Int = ident;
         var deducedVar = ident;
-        let myLet: Double = ident;
+        let myLet: String = ident;
         let deducedLet = ident;
       }
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    const auto &block = func->body.nodes;
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
     ASSERT_EQ(block.size(), 5);
     
-    auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
-    ASSERT_EQ(noInit->name, "noInit");
-    ASSERT_EQ(noInit->expr, nullptr);
-    auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
-    ASSERT_EQ(noInitType->name, "Double");
+    {
+      auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
+      ASSERT_EQ(noInit->name, "noInit");
+      ASSERT_FALSE(noInit->expr);
+      auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
+      ASSERT_EQ(noInitType->name, "Double");
+    }
+    
+    {
+      auto *initAndType = ASSERT_DOWN_CAST(const Var, block[1].get());
+      ASSERT_EQ(initAndType->name, "initAndType");
+      ASSERT_TRUE(initAndType->expr);
+      auto *initAndTypeT = ASSERT_DOWN_CAST(const NamedType, initAndType->type.get());
+      ASSERT_EQ(initAndTypeT->name, "Int");
+    }
+    
+    {
+      auto *deducedVar = ASSERT_DOWN_CAST(const Var, block[2].get());
+      ASSERT_EQ(deducedVar->name, "deducedVar");
+      ASSERT_TRUE(deducedVar->expr);
+      ASSERT_FALSE(deducedVar->type);
+    }
+    
+    {
+      auto *myLet = ASSERT_DOWN_CAST(const Let, block[3].get());
+      ASSERT_EQ(myLet->name, "myLet");
+      ASSERT_TRUE(myLet->expr);
+      auto *myLetType = ASSERT_DOWN_CAST(const NamedType, myLet->type.get());
+      ASSERT_EQ(myLetType->name, "String");
+    }
+    
+    {
+      auto *deducedLet = ASSERT_DOWN_CAST(const Let, block[4].get());
+      ASSERT_EQ(deducedLet->name, "deducedLet");
+      ASSERT_TRUE(deducedLet->expr);
+      ASSERT_FALSE(deducedLet->type);
+    }
+  });
+  
+  TEST(Stat - Block, {
+    const char *source = R"(
+      func dummy() {
+        var yeah = ident;
+        {
+          let blocks_are_statements = ident;
+          let just_like_C = ident;
+        }
+        let cool = yeah;
+        {}
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
+    ASSERT_EQ(block.size(), 4);
+  });
+  
+  TEST(Stat - If, {
+    const char *source = R"(
+      func dummy() {
+        if (cond) {
+          
+        }
+        
+        if (cond) {
+        
+        } else {
+        
+        }
+        
+        if (firstCond) {
+          
+        } else if (secondCond) {
+          
+        } else {
+          
+        }
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
+    ASSERT_EQ(block.size(), 3);
   });
 });

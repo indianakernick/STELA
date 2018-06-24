@@ -85,7 +85,7 @@ ast::ExprPtr parseExpr(ParseTokens &tok) {
 
 //------------------------------- Statements -----------------------------------
 
-ast::Block parseBlock(ParseTokens &);
+ast::StatPtr parseStatement(ParseTokens &);
 
 ast::StatPtr parseVar(ParseTokens &tok) {
   if (!tok.checkKeyword("var")) {
@@ -124,11 +124,11 @@ ast::StatPtr parseIf(ParseTokens &tok) {
   }
   auto ifNode = std::make_unique<ast::If>();
   tok.expectOp("(");
-  ifNode->cond = parseExpr(tok);
+  ifNode->cond = tok.expectNode(parseExpr, "condition expression");
   tok.expectOp(")");
-  ifNode->body = parseBlock(tok);
+  ifNode->body = tok.expectNode(parseStatement, "statement or block");
   if (tok.checkKeyword("else")) {
-    ifNode->elseBody = parseBlock(tok);
+    ifNode->elseBody = tok.expectNode(parseStatement, "statement or block");
   }
   return ifNode;
 }
@@ -157,14 +157,19 @@ ast::StatPtr parseFallthrough(ParseTokens &tok) {
 
 ast::StatPtr parseReturn(ParseTokens &tok) {
   if (tok.checkKeyword("return")) {
+    if (tok.checkOp(";")) {
+      return std::make_unique<ast::Return>();
+    }
     auto ret = std::make_unique<ast::Return>();
-    ret->expr = parseExpr(tok);
+    ret->expr = tok.expectNode(parseExpr, "expression or ;");
     tok.expectOp(";");
     return ret;
   } else {
     return nullptr;
   }
 }
+
+ast::StatPtr parseBlock(ParseTokens &tok);
 
 ast::StatPtr parseStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseVar(tok)) return node;
@@ -174,27 +179,21 @@ ast::StatPtr parseStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseContinue(tok)) return node;
   if (ast::StatPtr node = parseFallthrough(tok)) return node;
   if (ast::StatPtr node = parseReturn(tok)) return node;
+  if (ast::StatPtr node = parseBlock(tok)) return node;
   return nullptr;
 }
 
-ast::Block parseBlock(ParseTokens &tok) {
-  ast::Block block;
-  
+ast::StatPtr parseBlock(ParseTokens &tok) {
   if (tok.checkOp("{")) {
+    auto block = std::make_unique<ast::Block>();
     while (ast::StatPtr node = parseStatement(tok)) {
-      block.nodes.emplace_back(std::move(node));
+      block->nodes.emplace_back(std::move(node));
     }
     tok.expectOp("}");
+    return block;
   } else {
-    ast::StatPtr node = parseStatement(tok);
-    if (node == nullptr) {
-      tok.log().ferror(tok.front().loc) << "Expected statement" << endlog;
-    } else {
-      block.nodes.emplace_back(std::move(node));
-    }
+    return nullptr;
   }
-  
-  return block;
 }
 
 //------------------------------- Functions ------------------------------------
@@ -210,14 +209,14 @@ ast::FuncParams parseFuncParams(ParseTokens &tok) {
     param.name = tok.expectID();
     tok.expectOp(":");
     param.ref = parseRef(tok);
-    param.type = parseType(tok);
+    param.type = tok.expectNode(parseType, "type");
   } while (tok.expectEitherOp(")", ",") == ",");
   return params;
 }
 
 ast::TypePtr parseFuncRet(ParseTokens &tok) {
   if (tok.checkOp("->")) {
-    return parseType(tok);
+    return tok.expectNode(parseType, "type");
   } else {
     return nullptr;
   }
@@ -252,7 +251,7 @@ ast::StatPtr parseEnum(ParseTokens &tok) {
       ast::EnumCase &ecase = enumNode->cases.emplace_back();
       ecase.name = tok.expectID();
       if (tok.checkOp("=")) {
-        ecase.value = parseExpr(tok);
+        ecase.value = tok.expectNode(parseExpr, "expression or ,");
       }
     } while (tok.expectEitherOp("}", ",") == ",");
   }
@@ -275,7 +274,7 @@ ast::StatPtr parseTypealias(ParseTokens &tok) {
   auto aliasNode = std::make_unique<ast::TypeAlias>();
   aliasNode->name = tok.expectID();
   tok.expectOp("=");
-  aliasNode->type = parseType(tok);
+  aliasNode->type = tok.expectNode(parseType, "type");
   tok.expectOp(";");
   return aliasNode;
 }

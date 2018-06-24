@@ -162,8 +162,8 @@ struct Let final : Statement {
 
 struct If final : Statement {
   ExprPtr cond;
-  Block body;
-  Block elseBody;
+  StatPtr body;
+  StatPtr elseBody;
 };
 
 struct SwitchCase final : Statement {
@@ -174,7 +174,7 @@ struct SwitchDefault final : Statement {};
 
 struct Switch final : Statement {
   ExprPtr expr;
-  Block body;
+  StatPtr body;
 };
 
 struct Break final : Statement {};
@@ -187,11 +187,11 @@ struct Return final : Statement {
 
 struct While final : Statement {
   ExprPtr cond;
-  Block body;
+  StatPtr body;
 };
 
 struct RepeatWhile final : Statement {
-  Block body;
+  StatPtr body;
   ExprPtr cond;
 };
 
@@ -199,13 +199,13 @@ struct For final : Statement {
   ExprPtr init;
   ExprPtr cond;
   ExprPtr incr;
-  Block body;
+  StatPtr body;
 };
 
 struct ForIn final : Statement {
   ExprPtr init;
   ExprPtr source;
-  Block body;
+  StatPtr body;
 };
 
 //------------------------------- Functions ------------------------------------
@@ -221,7 +221,7 @@ struct Func final : Statement {
   Name name;
   FuncParams params;
   TypePtr ret;
-  Block body;
+  StatPtr body;
 };
 
 //--------------------------- Type Declarations --------------------------------
