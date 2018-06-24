@@ -69,7 +69,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       enum ExtraComma {
         first
-        second
+        oh_no
       }
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
@@ -171,10 +171,10 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         var noInit: Double;
-        var initAndType: Int = ident;
-        var deducedVar = ident;
-        let myLet: String = ident;
-        let deducedLet = ident;
+        var initAndType: Int = expr;
+        var deducedVar = expr;
+        let myLet: String = expr;
+        let deducedLet = expr;
       }
     )";
     const AST ast = createAST(source, log);
@@ -226,12 +226,12 @@ TEST_GROUP(Syntax, {
   TEST(Stat - Block, {
     const char *source = R"(
       func dummy() {
-        var yeah = ident;
+        var yeah = expr;
         {
-          let blocks_are_statements = ident;
-          let just_like_C = ident;
+          let blocks_are_statements = expr;
+          let just_like_C = expr;
         }
-        let cool = yeah;
+        let cool = expr;
         {}
       }
     )";
@@ -246,37 +246,37 @@ TEST_GROUP(Syntax, {
   TEST(Stat - If, {
     const char *source = R"(
       func dummy() {
-        if (cond) {
-          var dummy0 = ident;
+        if (expr) {
+          var dummy0 = expr;
         }
         
-        if (cond) {
-          var dummy0 = ident;
-          var dummy1 = ident;
+        if (expr) {
+          var dummy0 = expr;
+          var dummy1 = expr;
         } else {
-          var dummy0 = ident;
-          var dummy1 = ident;
-          var dummy2 = ident;
+          var dummy0 = expr;
+          var dummy1 = expr;
+          var dummy2 = expr;
         }
         
-        if (firstCond) {
-          var dummy0 = ident;
-          var dummy1 = ident;
-          var dummy2 = ident;
-          var dummy3 = ident;
-        } else if (secondCond) {
-          var dummy0 = ident;
-          var dummy1 = ident;
-          var dummy2 = ident;
-          var dummy3 = ident;
-          var dummy4 = ident;
+        if (expr) {
+          var dummy0 = expr;
+          var dummy1 = expr;
+          var dummy2 = expr;
+          var dummy3 = expr;
+        } else if (expr) {
+          var dummy0 = expr;
+          var dummy1 = expr;
+          var dummy2 = expr;
+          var dummy3 = expr;
+          var dummy4 = expr;
         } else {
-          var dummy0 = ident;
-          var dummy1 = ident;
-          var dummy2 = ident;
-          var dummy3 = ident;
-          var dummy4 = ident;
-          var dummy5 = ident;
+          var dummy0 = expr;
+          var dummy1 = expr;
+          var dummy2 = expr;
+          var dummy3 = expr;
+          var dummy4 = expr;
+          var dummy5 = expr;
         }
       }
     )";
@@ -340,10 +340,67 @@ TEST_GROUP(Syntax, {
     ASSERT_DOWN_CAST(const Continue, block[1].get());
     ASSERT_DOWN_CAST(const Fallthrough, block[2].get());
     
-    auto *retVoid = ASSERT_DOWN_CAST(const Return, block[3].get());
-    ASSERT_FALSE(retVoid->expr);
+    {
+      auto *retVoid = ASSERT_DOWN_CAST(const Return, block[3].get());
+      ASSERT_FALSE(retVoid->expr);
+    }
     
-    auto *retExpr = ASSERT_DOWN_CAST(const Return, block[4].get());
-    ASSERT_TRUE(retExpr->expr);
+    {
+      auto *retExpr = ASSERT_DOWN_CAST(const Return, block[4].get());
+      ASSERT_TRUE(retExpr->expr);
+    }
+  });
+  
+  TEST(Stat - Loops, {
+    const char *source = R"(
+      func dummy() {
+        while (expr) {}
+        
+        repeat {} while (expr);
+        
+        for (let initial = expr; expr; expr) {}
+        for (; expr; expr) {}
+        for (; expr; ) {}
+      }
+    )";
+    
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
+    ASSERT_EQ(block.size(), 5);
+    
+    {
+      auto *whileNode = ASSERT_DOWN_CAST(const While, block[0].get());
+      ASSERT_TRUE(whileNode->cond);
+      ASSERT_DOWN_CAST(const Block, whileNode->body.get());
+    }
+    {
+      auto *repeatWhile = ASSERT_DOWN_CAST(const RepeatWhile, block[1].get());
+      ASSERT_DOWN_CAST(const Block, repeatWhile->body.get());
+      ASSERT_TRUE(repeatWhile->cond);
+    }
+    {
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[2].get());
+      ASSERT_DOWN_CAST(const Let, forNode->init.get());
+      ASSERT_TRUE(forNode->cond);
+      ASSERT_TRUE(forNode->incr);
+      ASSERT_DOWN_CAST(const Block, forNode->body.get());
+    }
+    {
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[3].get());
+      ASSERT_FALSE(forNode->init);
+      ASSERT_TRUE(forNode->cond);
+      ASSERT_TRUE(forNode->incr);
+      ASSERT_DOWN_CAST(const Block, forNode->body.get());
+    }
+    {
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[4].get());
+      ASSERT_FALSE(forNode->init);
+      ASSERT_TRUE(forNode->cond);
+      ASSERT_FALSE(forNode->incr);
+      ASSERT_DOWN_CAST(const Block, forNode->body.get());
+    }
   });
 });

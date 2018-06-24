@@ -79,13 +79,26 @@ ast::TypePtr parseType(ParseTokens &tok) {
 //------------------------------ Expressions -----------------------------------
 
 ast::ExprPtr parseExpr(ParseTokens &tok) {
-  tok.expectID();
-  return std::make_unique<ast::BinaryExpr>();
+  if (tok.check(Token::Type::identifier, "expr")) {
+    return std::make_unique<ast::BinaryExpr>();
+  } else {
+    return nullptr;
+  }
 }
 
 //------------------------------- Statements -----------------------------------
 
 ast::StatPtr parseStatement(ParseTokens &);
+
+// an expression followed by a ; is a statement
+ast::StatPtr parseExprStatement(ParseTokens &tok) {
+  if (ast::StatPtr node = parseExpr(tok)) {
+    tok.expectOp(";");
+    return node;
+  } else {
+    return nullptr;
+  }
+}
 
 ast::StatPtr parseVar(ParseTokens &tok) {
   if (!tok.checkKeyword("var")) {
@@ -169,6 +182,57 @@ ast::StatPtr parseReturn(ParseTokens &tok) {
   }
 }
 
+ast::StatPtr parseWhile(ParseTokens &tok) {
+  if (!tok.checkKeyword("while")) {
+    return nullptr;
+  }
+  tok.expectOp("(");
+  auto whileNode = std::make_unique<ast::While>();
+  whileNode->cond = tok.expectNode(parseExpr, "condition expression");
+  tok.expectOp(")");
+  whileNode->body = tok.expectNode(parseStatement, "statement or block");
+  return whileNode;
+}
+
+ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
+  if (!tok.checkKeyword("repeat")) {
+    return nullptr;
+  }
+  auto repeat = std::make_unique<ast::RepeatWhile>();
+  repeat->body = tok.expectNode(parseStatement, "statement or block");
+  tok.expectKeyword("while");
+  tok.expectOp("(");
+  repeat->cond = tok.expectNode(parseExpr, "condition expression");
+  tok.expectOp(")");
+  tok.expectOp(";");
+  return repeat;
+}
+
+ast::StatPtr parseForInit(ParseTokens &tok) {
+  if (ast::StatPtr node = parseVar(tok)) return node;
+  if (ast::StatPtr node = parseLet(tok)) return node;
+  if (ast::StatPtr node = parseExprStatement(tok)) return node;
+  return nullptr;
+}
+
+ast::StatPtr parseFor(ParseTokens &tok) {
+  if (!tok.checkKeyword("for")) {
+    return nullptr;
+  }
+  tok.expectOp("(");
+  auto forNode = std::make_unique<ast::For>();
+  forNode->init = parseForInit(tok); // init statement is optional
+  if (forNode->init == nullptr) {
+    tok.expectOp(";");
+  }
+  forNode->cond = tok.expectNode(parseExpr, "condition expression");
+  tok.expectOp(";");
+  forNode->incr = parseExpr(tok); // incr expression is optional
+  tok.expectOp(")");
+  forNode->body = tok.expectNode(parseStatement, "statement or block");
+  return forNode;
+}
+
 ast::StatPtr parseBlock(ParseTokens &tok);
 
 ast::StatPtr parseStatement(ParseTokens &tok) {
@@ -179,7 +243,12 @@ ast::StatPtr parseStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseContinue(tok)) return node;
   if (ast::StatPtr node = parseFallthrough(tok)) return node;
   if (ast::StatPtr node = parseReturn(tok)) return node;
+  if (ast::StatPtr node = parseWhile(tok)) return node;
+  if (ast::StatPtr node = parseRepeatWhile(tok)) return node;
+  if (ast::StatPtr node = parseFor(tok)) return node;
   if (ast::StatPtr node = parseBlock(tok)) return node;
+  if (ast::StatPtr node = parseExprStatement(tok)) return node;
+  if (tok.checkOp(";")) return std::make_unique<ast::EmptyStatement>();
   return nullptr;
 }
 
@@ -256,10 +325,6 @@ ast::StatPtr parseEnum(ParseTokens &tok) {
     } while (tok.expectEitherOp("}", ",") == ",");
   }
   
-  if (tok.checkOp(";")) {
-    tok.log().warn(tok.lastLoc()) << "Unnecessary ;" << endlog;
-  }
-  
   return enumNode;
 }
 
@@ -292,7 +357,10 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     else if ((node = parseStruct(tok))) {}
     else if ((node = parseTypealias(tok))) {}
     else if ((node = parseLet(tok))) {}
-    else {
+    else if (tok.checkOp(";")) {
+      log.warn(tok.lastLoc()) << "Unnecessary ;" << endlog;
+      continue;
+    } else {
       const Token &token = tok.front();
       log.info(token.loc) << "Only functions, type declarations and constants "
         "are allowed at global scope" << endlog;

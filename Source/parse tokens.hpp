@@ -46,6 +46,7 @@ public:
   std::string_view expectOp();
   void expectOp(std::string_view);
   std::string_view expectEitherOp(std::string_view, std::string_view);
+  void expectKeyword(std::string_view);
 
 private:
   const Token *beg;

@@ -29,7 +29,7 @@ constexpr std::string_view keywords[] = {
   "let", "var",
   "if", "else",
   "switch", "case", "default",
-  "while", "for", "repeat", "in",
+  "while", "for", "repeat",
   "break", "continue", "fallthrough",
   "typealias"
 };

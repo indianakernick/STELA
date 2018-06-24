@@ -24,12 +24,19 @@ struct Node {
 };
 using NodePtr = std::unique_ptr<Node>;
 
+struct Type : Node {};
+using TypePtr = std::unique_ptr<Type>;
+
+struct Statement : Node {};
+using StatPtr = std::unique_ptr<Statement>;
+
+// expressions are allowed where statements are allowed
+struct Expression : Statement {};
+using ExprPtr = std::unique_ptr<Expression>;
+
 using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
-
-struct Type : Node {};
-using TypePtr = std::unique_ptr<Type>;
 
 struct ArrayType final : Type {
   TypePtr elem;
@@ -84,9 +91,6 @@ enum class AssignOp {
   assign,
 };
 
-struct Expression : Node {};
-using ExprPtr = std::unique_ptr<Expression>;
-
 struct BinaryExpr final : Expression {
   ExprPtr left;
   BinOp oper;
@@ -98,7 +102,7 @@ struct UnaryExpr final : Expression {
   ExprPtr expr;
 };
 
-struct AssignExpr final : Expression {
+struct Assignment final : Expression {
   ExprPtr left;
   AssignOp oper;
   ExprPtr right;
@@ -119,7 +123,7 @@ struct ObjectMember final : Expression {
   Name name;
 };
 
-struct ConstructorCall final : Expression {
+struct InitCall final : Expression {
   TypePtr type;
   FuncArgs args;
 };
@@ -141,12 +145,11 @@ struct Ternary final : Expression {
 
 //------------------------------- Statements -----------------------------------
 
-struct Statement : Node {};
-using StatPtr = std::unique_ptr<Statement>;
-
 struct Block final : Statement {
   std::vector<StatPtr> nodes;
 };
+
+struct EmptyStatement final : Statement {};
 
 struct Var final : Statement {
   Name name;
@@ -196,15 +199,9 @@ struct RepeatWhile final : Statement {
 };
 
 struct For final : Statement {
-  ExprPtr init;
+  StatPtr init;
   ExprPtr cond;
   ExprPtr incr;
-  StatPtr body;
-};
-
-struct ForIn final : Statement {
-  ExprPtr init;
-  ExprPtr source;
   StatPtr body;
 };
 

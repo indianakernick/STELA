@@ -121,6 +121,10 @@ std::string_view stela::ParseTokens::expectEitherOp(const std::string_view a, co
   return expectEither(Token::Type::oper, a, b);
 }
 
+void stela::ParseTokens::expectKeyword(const std::string_view view) {
+  expect(Token::Type::keyword, view);
+}
+
 void stela::ParseTokens::expectToken() {
   if (empty()) {
     log_.ferror() << "Unexpected end of input" << endlog;
