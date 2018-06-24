@@ -20,6 +20,13 @@ constexpr endlog_t endlog {};
 class LogStream final : public std::ostream {
 public:
   LogStream(LogBuf &, LogCat, LogPri);
+  
+  #ifndef NDEBUG
+  ~LogStream() {
+    // must << endlog before stream is destroyed
+    assert(ended);
+  }
+  #endif
 
   void operator<<(endlog_t);
   
@@ -33,6 +40,10 @@ private:
   LogBuf &buf;
   LogCat category;
   LogPri priority;
+  
+  #ifndef NDEBUG
+  bool ended = false;
+  #endif
 };
 
 class Log {

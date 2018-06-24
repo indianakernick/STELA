@@ -183,10 +183,9 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     else if ((node = parseLet(tok))) {}
     else {
       const Token &token = tok.front();
-      log.error(token.loc) << "Unexpected token in global scope" << endlog;
       log.info(token.loc) << "Only functions, type declarations and constants "
         "are allowed at global scope" << endlog;
-      throw FatalError{};
+      log.ferror(token.loc) << "Unexpected token in global scope" << endlog;
     };
     ast.topNodes.emplace_back(std::move(node));
   }

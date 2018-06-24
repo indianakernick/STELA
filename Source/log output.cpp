@@ -15,6 +15,9 @@ stela::LogStream::LogStream(LogBuf &buf, const LogCat cat, const LogPri pri)
     priority{pri} {}
 
 void stela::LogStream::operator<<(endlog_t) {
+  #ifndef NDEBUG
+  ended = true;
+  #endif
   buf.endLog(category, priority);
   if (priority == LogPri::fatal_error) {
     throw FatalError{};
