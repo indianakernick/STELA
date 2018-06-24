@@ -16,14 +16,92 @@ using namespace stela;
 
 namespace {
 
-ast::TypePtr parseType(ParseTokens &tok) {
-  tok.expectID();
-  return nullptr;
+ast::ParamRef parseRef(ParseTokens &tok) {
+  if (tok.checkKeyword("inout")) {
+    return ast::ParamRef::inout;
+  } else {
+    return ast::ParamRef::value;
+  }
 }
 
-ast::Block parseFuncBody(ParseTokens &tok) {
+ast::TypePtr parseType(ParseTokens &);
+
+ast::TypePtr parseFuncType(ParseTokens &tok) {
+  auto type = std::make_unique<ast::FuncType>();
+  tok.expectOp("(");
+  if (!tok.checkOp(")")) {
+    do {
+      ast::ParamType &param = type->params.emplace_back();
+      param.ref = parseRef(tok);
+      param.type = parseType(tok);
+    } while (tok.expectEitherOp(")", ",") == ",");
+  }
+  tok.expectOp("->");
+  type->ret = parseType(tok);
+  return type;
+}
+
+ast::TypePtr parseType(ParseTokens &tok) {
+  if (tok.checkOp("(")) {
+    tok.unget();
+    return parseFuncType(tok);
+  } else if (tok.checkOp("[")) {
+    // could be an array or a dictionary
+    ast::TypePtr elem = parseType(tok);
+    if (tok.checkOp(":")) {
+      // it's a dictionary and `elem` is the key
+      ast::TypePtr val = parseType(tok);
+      tok.expectOp("]");
+      auto dictType = std::make_unique<ast::DictionaryType>();
+      dictType->key = std::move(elem);
+      dictType->val = std::move(val);
+      return dictType;
+    } else {
+      // it's an array and `elem` is the element type
+      tok.expectOp("]");
+      auto arrayType = std::make_unique<ast::ArrayType>();
+      arrayType->elem = std::move(elem);
+      return arrayType;
+    }
+  } else {
+    // not a function,
+    // not an array,
+    // not a dictionary
+    // so it must be a named type like `Int` or `MyClass`
+    auto namedType = std::make_unique<ast::NamedType>();
+    namedType->name = tok.expectID();
+    return namedType;
+  }
+}
+
+ast::Block parseBlock(ParseTokens &tok) {
+  tok.expectOp("{");
   tok.expectOp("}");
   return {};
+}
+
+ast::FuncParams parseFuncParams(ParseTokens &tok) {
+  tok.expectOp("(");
+  if (tok.checkOp(")")) {
+    return {};
+  }
+  ast::FuncParams params;
+  do {
+    ast::FuncParam &param = params.emplace_back();
+    param.name = tok.expectID();
+    tok.expectOp(":");
+    param.ref = parseRef(tok);
+    param.type = parseType(tok);
+  } while (tok.expectEitherOp(")", ",") == ",");
+  return params;
+}
+
+ast::TypePtr parseFuncRet(ParseTokens &tok) {
+  if (tok.checkOp("->")) {
+    return parseType(tok);
+  } else {
+    return nullptr;
+  }
 }
 
 ast::NodePtr parseFunc(ParseTokens &tok) {
@@ -33,28 +111,9 @@ ast::NodePtr parseFunc(ParseTokens &tok) {
   
   auto funcNode = std::make_unique<ast::Func>();
   funcNode->name = tok.expectID();
-  tok.expectOp("(");
-  
-  if (!tok.checkOp(")")) {
-    do {
-      ast::FuncParam &param = funcNode->params.emplace_back();
-      param.name = tok.expectID();
-      tok.expectOp(":");
-      if (tok.checkKeyword("inout")) {
-        param.ref = ast::ParamRef::inout;
-      } else {
-        param.ref = ast::ParamRef::value;
-      }
-      param.type = parseType(tok);
-    } while (tok.expectEitherOp(")", ",") == ",");
-  }
-  
-  if (tok.expectEitherOp("->", "{") == "->") {
-    funcNode->ret = parseType(tok);
-    tok.expectOp("{");
-  }
-  
-  funcNode->body = parseFuncBody(tok);
+  funcNode->params = parseFuncParams(tok);
+  funcNode->ret = parseFuncRet(tok);
+  funcNode->body = parseBlock(tok);
   
   return funcNode;
 }

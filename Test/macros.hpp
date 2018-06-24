@@ -68,10 +68,25 @@
       throw;                                                                    \
     }                                                                           \
   }()
+#define ASSERT_DOWN_CAST(TYPE, PTR)                                             \
+  [&] {                                                                         \
+    if (PTR == nullptr) {                                                       \
+      PRINT_ERROR "`" #PTR "` should not be a null pointer\n";                  \
+      ++failCount;                                                              \
+      throw 1;                                                                  \
+    }                                                                           \
+    TYPE *const newPtr = dynamic_cast<TYPE *>(PTR);                             \
+    if (newPtr == nullptr) {                                                    \
+      PRINT_ERROR "`" #PTR "` should have a dynamic type of `" #TYPE "`\n";            \
+      ++failCount;                                                              \
+      throw 1;                                                                  \
+    }                                                                           \
+    return newPtr;                                                              \
+  }()
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
-    std::cout << "  Running " << #NAME << "\n";                                   \
+    std::cout << "  Running " << #NAME << "\n";                                 \
     int failCount = 0;                                                          \
     try {                                                                       \
       __VA_ARGS__                                                               \

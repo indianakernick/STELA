@@ -23,6 +23,8 @@ public:
   const Token &front() const;
   Loc lastLoc() const;
   
+  void unget();
+  
   bool check(Token::Type, std::string_view);
   bool checkKeyword(std::string_view);
   bool checkOp(std::string_view);

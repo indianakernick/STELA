@@ -12,19 +12,14 @@
 #include <STELA/syntax analysis.hpp>
 #include <STELA/lexical analysis.hpp>
 
-#define GET_NODE(NODE_TYPE, NODE_PTR)                                           \
-[&] {                                                                            \
-  ASSERT_TRUE(NODE_PTR);                                                        \
-  const NODE_TYPE *node = dynamic_cast<const NODE_TYPE *>(NODE_PTR.get());      \
-  ASSERT_TRUE(node);                                                            \
-  return node;                                                                  \
-}()
+using namespace stela;
+using namespace stela::ast;
 
 TEST_GROUP(Syntax, {
-  stela::StreamLog log;
+  StreamLog log;
 
   TEST(No tokens, {
-    const stela::AST ast = stela::createAST(stela::Tokens{}, log);
+    const AST ast = createAST(Tokens{}, log);
     ASSERT_TRUE(ast.topNodes.empty());
   });
   
@@ -32,9 +27,9 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       enum NoCases {}
     )";
-    const stela::AST ast = stela::createAST(source, log);
+    const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *enumNode = GET_NODE(stela::ast::Enum, ast.topNodes[0]);
+    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.topNodes[0].get());
     ASSERT_EQ(enumNode->name, "NoCases");
     ASSERT_TRUE(enumNode->cases.empty());
   });
@@ -48,9 +43,9 @@ TEST_GROUP(Syntax, {
         left
       }
     )";
-    const stela::AST ast = stela::createAST(source, log);
+    const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *enumNode = GET_NODE(stela::ast::Enum, ast.topNodes[0]);
+    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.topNodes[0].get());
     ASSERT_EQ(enumNode->name, "Dir");
     ASSERT_EQ(enumNode->cases.size(), 4);
     
@@ -67,7 +62,7 @@ TEST_GROUP(Syntax, {
         second,
       }
     )";
-    ASSERT_THROWS(stela::createAST(source, log), stela::FatalError);
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Enum - missing comma, {
@@ -77,47 +72,75 @@ TEST_GROUP(Syntax, {
         second
       }
     )";
-    ASSERT_THROWS(stela::createAST(source, log), stela::FatalError);
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Func - empty, {
     const char *source = R"(
       func empty() {}
     )";
-    const stela::AST ast = stela::createAST(source, log);
+    const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *funcNode = GET_NODE(stela::ast::Func, ast.topNodes[0]);
-    ASSERT_EQ(funcNode->name, "empty");
-    ASSERT_TRUE(funcNode->params.empty());
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(func->name, "empty");
+    ASSERT_TRUE(func->params.empty());
   });
   
   TEST(Func - one param, {
     const char *source = R"(
-      func oneParam(one: Int) -> Void {}
+      func oneParam(one: Int) -> [Float] {}
     )";
-    const stela::AST ast = stela::createAST(source, log);
+    const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *funcNode = GET_NODE(stela::ast::Func, ast.topNodes[0]);
-    ASSERT_EQ(funcNode->name, "oneParam");
-    ASSERT_EQ(funcNode->params.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(func->name, "oneParam");
+    ASSERT_EQ(func->params.size(), 1);
     
-    ASSERT_EQ(funcNode->params[0].name, "one");
-    ASSERT_EQ(funcNode->params[0].ref, stela::ast::ParamRef::value);
+    ASSERT_EQ(func->params[0].name, "one");
+    ASSERT_EQ(func->params[0].ref, ParamRef::value);
+    
+    auto *array = ASSERT_DOWN_CAST(const ArrayType, func->ret.get());
+    auto *type = ASSERT_DOWN_CAST(const NamedType, array->elem.get());
+    ASSERT_EQ(type->name, "Float");
   });
   
   TEST(Func - two param, {
     const char *source = R"(
       func swap(first: inout Int, second: inout Int) {}
     )";
-    const stela::AST ast = stela::createAST(source, log);
+    const AST ast = createAST(source, log);
     ASSERT_EQ(ast.topNodes.size(), 1);
-    auto *funcNode = GET_NODE(stela::ast::Func, ast.topNodes[0]);
-    ASSERT_EQ(funcNode->name, "swap");
-    ASSERT_EQ(funcNode->params.size(), 2);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(func->name, "swap");
+    ASSERT_EQ(func->params.size(), 2);
     
-    ASSERT_EQ(funcNode->params[0].name, "first");
-    ASSERT_EQ(funcNode->params[1].name, "second");
-    ASSERT_EQ(funcNode->params[0].ref, stela::ast::ParamRef::inout);
-    ASSERT_EQ(funcNode->params[0].ref, stela::ast::ParamRef::inout);
+    ASSERT_EQ(func->params[0].name, "first");
+    ASSERT_EQ(func->params[1].name, "second");
+    ASSERT_EQ(func->params[0].ref, ParamRef::inout);
+    ASSERT_EQ(func->params[1].ref, ParamRef::inout);
+  });
+  
+  TEST(Type - Array of functions, {
+    const char *source = R"(
+      func dummy() -> [(inout Int, inout Double) -> Void] {}
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.topNodes.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.topNodes[0].get());
+    ASSERT_EQ(func->name, "dummy");
+    ASSERT_TRUE(func->params.empty());
+    
+    auto *array = ASSERT_DOWN_CAST(const ArrayType, func->ret.get());
+    auto *funcType = ASSERT_DOWN_CAST(const FuncType, array->elem.get());
+    ASSERT_EQ(funcType->params.size(), 2);
+    ASSERT_EQ(funcType->params[0].ref, ParamRef::inout);
+    ASSERT_EQ(funcType->params[1].ref, ParamRef::inout);
+    
+    auto *first = ASSERT_DOWN_CAST(const NamedType, funcType->params[0].type.get());
+    ASSERT_EQ(first->name, "Int");
+    auto *second = ASSERT_DOWN_CAST(const NamedType, funcType->params[1].type.get());
+    ASSERT_EQ(second->name, "Double");
+    auto *ret = ASSERT_DOWN_CAST(const NamedType, funcType->ret.get());
+    ASSERT_EQ(ret->name, "Void");
   });
 });

@@ -35,11 +35,6 @@ using Name = std::string_view;
 struct Type : Node {};
 using TypePtr = std::unique_ptr<Type>;
 
-struct TypeAlias final : public Node {
-  Name name;
-  TypePtr type;
-};
-
 struct ArrayType final : public Type {
   TypePtr elem;
 };
@@ -59,7 +54,7 @@ struct ParamType {
   TypePtr type;
 };
 
-struct FunctionType final : public Type {
+struct FuncType final : public Type {
   std::vector<ParamType> params;
   TypePtr ret;
 };
@@ -225,6 +220,11 @@ struct Constant final : Node {
 struct Init final : Node {
   FuncParams params;
   Block body;
+};
+
+struct TypeAlias final : public Node {
+  Name name;
+  TypePtr type;
 };
 
 struct Struct final : Node {
