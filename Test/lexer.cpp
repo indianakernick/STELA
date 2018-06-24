@@ -191,6 +191,20 @@ TEST_GROUP(Lexer, {
     ASSERT_THROWS(stela::lex("/* /*", log), stela::FatalError);
     ASSERT_THROWS(stela::lex("/* /* */", log), stela::FatalError);
   });
+  
+  TEST(Keywords in identifiers, {
+    const stela::Tokens tokens = stela::lex(
+      "staticIdent iforeturn in_that_case continue_to_fallthrough let15 vars",
+      log
+    );
+    ASSERT_EQ(tokens.size(), 6);
+    ASSERT_TYPE(0, identifier);
+    ASSERT_TYPE(1, identifier);
+    ASSERT_TYPE(2, identifier);
+    ASSERT_TYPE(3, identifier);
+    ASSERT_TYPE(4, identifier);
+    ASSERT_TYPE(5, identifier);
+  });
 })
 
 #undef ASSERT_VIEW

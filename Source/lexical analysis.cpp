@@ -73,7 +73,7 @@ bool continueNumber(const char c) {
 }
 
 bool parseKeyword(Token &token, Utils::ParseString &str) {
-  if (str.tryParseEnum(keywords, numKeywords, std::not_fn(isalpha)) != numKeywords) {
+  if (str.tryParseEnum(keywords, numKeywords, std::not_fn(continueIdent)) != numKeywords) {
     token.type = Token::Type::keyword;
     return true;
   } else {
