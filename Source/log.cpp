@@ -157,11 +157,11 @@ void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
   std::cerr << cat << ' ' << pri;
   Term::defaultTextColor();
   std::cerr << ": ";
-  Term::intensity(Term::Intensity::FAINT);
+  Term::italic(true);
 }
 
 void stela::ColorLog::end(LogCat, LogPri) {
-  Term::intensity(Term::Intensity::NORMAL);
+  Term::italic(false);
   std::cerr << '\n';
 }
 
