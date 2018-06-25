@@ -48,16 +48,16 @@ private:
 
 class Log {
 public:
-  explicit Log(LogBuf &);
-
-  void cat(LogCat);
+  Log(LogBuf &, LogCat);
   
+  LogStream verbose(Loc);
   LogStream info(Loc);
   LogStream warn(Loc);
   LogStream error(Loc);
   LogStream ferror(Loc);
   LogStream log(LogPri, Loc);
   
+  LogStream verbose();
   LogStream info();
   LogStream warn();
   LogStream error();
@@ -65,8 +65,8 @@ public:
   LogStream log(LogPri);
   
 private:
-  LogCat category = LogCat::lexical;
   LogBuf &buf;
+  LogCat category;
 };
 
 }

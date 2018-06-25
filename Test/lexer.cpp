@@ -11,30 +11,32 @@
 #include "macros.hpp"
 #include <STELA/lexical analysis.hpp>
 
+using namespace stela;
+
 namespace {
 
 [[maybe_unused]]
-void printTokens(const std::vector<stela::Token> &tokens) {
-  for (const stela::Token &token : tokens) {
+void printTokens(const Tokens &tokens) {
+  for (const Token &token : tokens) {
     std::cout << token.loc.l << ':' << token.loc.c << "  \t";
     
     switch (token.type) {
-      case stela::Token::Type::keyword:
+      case Token::Type::keyword:
         std::cout << "KEYWORD     ";
         break;
-      case stela::Token::Type::identifier:
+      case Token::Type::identifier:
         std::cout << "IDENTIFIER  ";
         break;
-      case stela::Token::Type::number:
+      case Token::Type::number:
         std::cout << "NUMBER      ";
         break;
-      case stela::Token::Type::string:
+      case Token::Type::string:
         std::cout << "STRING      ";
         break;
-      case stela::Token::Type::character:
+      case Token::Type::character:
         std::cout << "CHARACTER   ";
         break;
-      case stela::Token::Type::oper:
+      case Token::Type::oper:
         std::cout << "OPERATOR    ";
         break;
       default:
@@ -48,15 +50,15 @@ void printTokens(const std::vector<stela::Token> &tokens) {
 }
 
 #define ASSERT_TYPE(INDEX, TYPE) \
-  ASSERT_EQ(tokens[INDEX].type, stela::Token::Type::TYPE)
+  ASSERT_EQ(tokens[INDEX].type, Token::Type::TYPE)
 #define ASSERT_VIEW(INDEX, VIEW) \
   ASSERT_EQ(tokens[INDEX].view, VIEW)
 
 TEST_GROUP(Lexer, {
-  stela::StreamLog log;
+  StreamLog log;
 
   TEST(Hello world, {
-    const std::vector<stela::Token> tokens = stela::lex(R"(func main(argc: Int) {
+    const std::vector<Token> tokens = lex(R"(func main(argc: Int) {
       print("Hello world!");
       return 0;
     })", log);
@@ -101,7 +103,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Simple strings, {
-    const stela::Tokens tokens = stela::lex(
+    const Tokens tokens = lex(
       R"( "string" "string \" with ' quotes" )",
       log
     );
@@ -116,11 +118,11 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated string, {
-    ASSERT_THROWS(stela::lex("\"unterminated", log), stela::FatalError);
+    ASSERT_THROWS(lex("\"unterminated", log), FatalError);
   });
   
   TEST(Simple characters, {
-    const stela::Tokens tokens = stela::lex(R"( 'c' '\'' )", log);
+    const Tokens tokens = lex(R"( 'c' '\'' )", log);
     
     ASSERT_EQ(tokens.size(), 2);
     
@@ -132,11 +134,11 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated character, {
-    ASSERT_THROWS(stela::lex("'u", log), stela::FatalError);
+    ASSERT_THROWS(lex("'u", log), FatalError);
   });
   
   TEST(Single line comment, {
-    const stela::Tokens tokens = stela::lex(R"(
+    const Tokens tokens = lex(R"(
     // this is a comment
     
     // another comment // with // more // slashes //
@@ -145,7 +147,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Multi line comment, {
-    const stela::Tokens tokens = stela::lex(R"(
+    const Tokens tokens = lex(R"(
     /**/
     
     /* cool comment */
@@ -162,7 +164,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Nested multi line comment, {
-    const stela::Tokens tokens = stela::lex(R"(
+    const Tokens tokens = lex(R"(
     
     /*
     
@@ -187,13 +189,13 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated multi line comment, {
-    ASSERT_THROWS(stela::lex("/*", log), stela::FatalError);
-    ASSERT_THROWS(stela::lex("/* /*", log), stela::FatalError);
-    ASSERT_THROWS(stela::lex("/* /* */", log), stela::FatalError);
+    ASSERT_THROWS(lex("/*", log), FatalError);
+    ASSERT_THROWS(lex("/* /*", log), FatalError);
+    ASSERT_THROWS(lex("/* /* */", log), FatalError);
   });
   
   TEST(Keywords in identifiers, {
-    const stela::Tokens tokens = stela::lex(
+    const Tokens tokens = lex(
       "staticIdent iforeturn in_that_case continue_to_fallthrough let15 vars",
       log
     );

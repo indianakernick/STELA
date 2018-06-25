@@ -378,6 +378,8 @@ ast::StatPtr parseTypealias(ParseTokens &tok) {
 //---------------------------------- Base --------------------------------------
 
 AST createASTimpl(const Tokens &tokens, Log &log) {
+  log.verbose() << "Parsing " << tokens.size() << " tokens" << endlog;
+
   AST ast;
   ParseTokens tok(tokens, log);
   
@@ -401,15 +403,16 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     ast.global.emplace_back(std::move(node));
   }
   
+  log.verbose() << "Created AST with " << ast.global.size() << " global nodes" << endlog;
+  
   return ast;
 }
 
 }
 
 AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
-  Log log{buf};
+  Log log{buf, LogCat::syntax};
   try {
-    log.cat(stela::LogCat::syntax);
     return createASTimpl(tokens, log);
   } catch (FatalError &) {
     throw;

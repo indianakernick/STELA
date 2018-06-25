@@ -187,6 +187,8 @@ bool parseMultiComment(Utils::ParseString &str, Log &log) {
 }
 
 Tokens lexImpl(const std::string_view source, Log &log) {
+  log.verbose() << "Parsing " << source.size() << " characters" << endlog;
+  
   Utils::ParseString str(source);
   std::vector<Token> tokens;
   tokens.reserve(source.size() / 16);
@@ -194,6 +196,7 @@ Tokens lexImpl(const std::string_view source, Log &log) {
   while (true) {
     str.skipWhitespace();
     if (str.empty()) {
+      log.verbose() << "Created " << tokens.size() << " tokens" << endlog;
       return tokens;
     }
     
@@ -218,9 +221,8 @@ Tokens lexImpl(const std::string_view source, Log &log) {
 }
 
 Tokens stela::lex(const std::string_view source, LogBuf &buf) {
-  Log log{buf};
+  Log log{buf, LogCat::lexical};
   try {
-    log.cat(stela::LogCat::lexical);
     return lexImpl(source, log);
   } catch (stela::FatalError &) {
     throw;

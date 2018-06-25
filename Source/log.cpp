@@ -14,6 +14,7 @@
 #include <Simpleton/Utils/console color.hpp>
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
+  // Categories are adjectives
   switch (cat) {
     case LogCat::lexical:
       return stream << "Lexical";
@@ -27,7 +28,10 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
 }
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
+  // Priorities are nouns
   switch (pri) {
+    case LogPri::verbose:
+      return stream << "verbosity";
     case LogPri::info:
       return stream << "info";
     case LogPri::warning:
@@ -142,7 +146,9 @@ void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
 }
 
 void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
-  if (pri == LogPri::info) {
+  if (pri == LogPri::verbose) {
+    std::cerr << con::text_magenta;
+  } else if (pri == LogPri::info) {
     std::cerr << con::text_blue;
   } else if (pri == LogPri::warning) {
     std::cerr << con::text_yellow;
