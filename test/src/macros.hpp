@@ -18,7 +18,7 @@
 #define STRINGIFY_IMPL(X) #X
 #define STRINGIFY(X) STRINGIFY_IMPL(X)
 
-#define PRINT_ERROR std::cout << "  " STRINGIFY(__LINE__) ": "
+#define PRINT_ERROR std::cerr << "  " STRINGIFY(__LINE__) ": "
 
 #define ASSERT_TRUE(EXP)                                                        \
   if (!(EXP)) {                                                                 \
@@ -86,15 +86,15 @@
 
 #define TEST(NAME, ...)                                                         \
   {                                                                             \
-    std::cout << "  Running " << #NAME << "\n";                                 \
+    std::cerr << "  Running " << #NAME << std::endl;                            \
     int failCount = 0;                                                          \
     try {                                                                       \
       __VA_ARGS__                                                               \
     } catch (std::exception &e) {                                               \
-      std::cout << "  EXCEPTION CAUGHT\n  " << e.what() << '\n';                \
+      std::cerr << "  EXCEPTION CAUGHT\n  " << e.what() << '\n';                \
       ++failCount;                                                              \
     } catch (...) {                                                             \
-      std::cout << "  EXCEPTION CAUGHT\n";                                      \
+      std::cerr << "  EXCEPTION CAUGHT\n";                                      \
       ++failCount;                                                              \
     }                                                                           \
     results.emplace_back(#NAME, failCount == 0);                                \
@@ -102,23 +102,23 @@
 
 #define TEST_GROUP(NAME, ...)                                                   \
   bool test##NAME() {                                                           \
-    std::cout << "Testing " #NAME "\n";                                         \
+    std::cerr << "Testing " #NAME "\n";                                         \
     std::vector<std::pair<std::string_view, bool>> results;                     \
     { __VA_ARGS__ }                                                             \
-    std::cout << '\n';                                                          \
+    std::cerr << '\n';                                                          \
     bool passedAll = true;                                                      \
     for (const auto &pair : results) {                                          \
-      std::cout << std::left << std::setw(32) << pair.first;                    \
+      std::cerr << std::left << std::setw(32) << pair.first;                    \
       if (pair.second) {                                                        \
-        std::cout << "PASSED\n";                                                \
+        std::cerr << "PASSED\n";                                                \
       } else {                                                                  \
-        std::cout << "FAILED\n";                                                \
+        std::cerr << "FAILED\n";                                                \
         passedAll = false;                                                      \
       }                                                                         \
     }                                                                           \
-    std::cout << '\n';                                                          \
+    std::cerr << '\n';                                                          \
     if (passedAll) {                                                            \
-      std::cout << "ALL PASSED!\n\n";                                           \
+      std::cerr << "ALL PASSED!\n\n";                                           \
     }                                                                           \
     return passedAll;                                                           \
   }

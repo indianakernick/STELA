@@ -9,5 +9,6 @@
 #include <iostream>
 
 int main(int, const char *[]) {
+  std::cout << "Hello there world! How are you?\n";
   return 0;
 }

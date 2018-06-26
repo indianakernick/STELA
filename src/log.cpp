@@ -131,7 +131,7 @@ void stela::StreamLog::begin(const LogCat cat, const LogPri pri) {
 
 void stela::StreamLog::end(LogCat, LogPri) {
   std::ostream stream{buf};
-  stream << '\n';
+  stream << std::endl;
 }
 
 std::streambuf *stela::ColorLog::getBuf(LogCat, LogPri) {
@@ -160,7 +160,7 @@ void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
 }
 
 void stela::ColorLog::end(LogCat, LogPri) {
-  std::cerr << con::no_italic << '\n';
+  std::cerr << con::no_italic << std::endl;
 }
 
 std::streambuf *stela::NoLog::getBuf(LogCat, LogPri) {
