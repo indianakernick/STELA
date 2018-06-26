@@ -11,6 +11,7 @@
 #include <cctype>
 #include <algorithm>
 #include "log output.hpp"
+#include "number literal.hpp"
 #include <Simpleton/Utils/parse string.hpp>
 
 using namespace stela;
@@ -80,49 +81,8 @@ bool parseIdent(Token &token, Utils::ParseString &str) {
   }
 }
 
-size_t validNumber(const std::string_view str) {
-  // @TODO take a more manual approach to perhaps get better errors when we
-  // encounter an invalid literal
-
-  // check float80
-  // then check int64
-  // then check uint64
-  
-  char *end;
-  
-  {
-    errno = 0;
-    const auto ld = std::strtold(str.data(), &end);
-    if (errno != ERANGE && !(str.data() == end && ld == 0)) {
-      if (end - str.data() <= static_cast<ptrdiff_t>(str.size())) {
-        return end - str.data();
-      }
-    }
-  }
-  {
-    errno = 0;
-    const auto ll = std::strtoll(str.data(), &end, 0);
-    if (errno != ERANGE && !(str.data() == end && ll == 0)) {
-      if (end - str.data() <= static_cast<ptrdiff_t>(str.size())) {
-        return end - str.data();
-      }
-    }
-  }
-  {
-    errno = 0;
-    const auto ull = std::strtoull(str.data(), &end, 0);
-    if (errno != ERANGE && !(str.data() == end && ull == 0)) {
-      if (end - str.data() <= static_cast<ptrdiff_t>(str.size())) {
-        return end - str.data();
-      }
-    }
-  }
-  
-  return 0;
-}
-
-bool parseNumber(Token &token, Utils::ParseString &str) {
-  const size_t numberChars = validNumber(str.view());
+bool parseNumber(Token &token, Utils::ParseString &str, Log &log) {
+  const size_t numberChars = validNumberLiteral(str.view(), log);
   if (numberChars == 0) {
     return false;
   } else {
@@ -237,7 +197,7 @@ Tokens lexImpl(const std::string_view source, Log &log) {
     if (parseLineComment(str)) continue;
     else if (parseMultiComment(str, log)) continue;
     else if (parseKeyword(token, str)) {}
-    else if (parseNumber(token, str)) {}
+    else if (parseNumber(token, str, log)) {}
     else if (parseOper(token, str)) {}
     else if (parseIdent(token, str)) {}
     else if (parseString(token, str, log)) {}
