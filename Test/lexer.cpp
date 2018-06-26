@@ -208,11 +208,7 @@ TEST_GROUP(Lexer, {
     ASSERT_TYPE(5, identifier);
   });
   
-  TEST(Valid number literals, {
-  // 0; 1; 2; -0; -1; -2; 00; 01; 02; -00; -01; -02; 0x0; 0x1; 0x2; -0x0; 0x1; 0x2;
-    //uint64_t max oct dec hex
-    //int64_t max
-    //int64_t min
+  TEST(Number literals, {
     const Tokens tokens = lex(
       // ints
       "0 1 2 -0 -1 -2 00 01 02 -00 -01 -02 0x0 0x1 0x2 -0x0 -0x1 -0x2\n"
@@ -225,8 +221,7 @@ TEST_GROUP(Lexer, {
       // floats
       "0.0 0.1 0.2  4.0 4.1 4.9  -0.0 -0.1 -0.2  1e4 1e+4 1e-4  -1e4 -1e+4 -1e-4\n"
       // hex floats
-      "0x0.0 0x0.1 0x0.2  0x4.0 0x4.1 0x4.9  -0x0.0 -0x0.1 -0x0.2  0x1p4 0x1p+4 0x1p-4  -0x1p4 -0x1p+4 -0x1p-4\n"
-      ,
+      "0x0.0 0x0.1 0x0.2  0x4.0 0x4.1 0x4.9  -0x0.0 -0x0.1 -0x0.2  0x1p4 0x1p+4 0x1p-4  -0x1p4 -0x1p+4 -0x1p-4\n",
       log
     );
     ASSERT_EQ(tokens.size(), 57);
