@@ -18,3 +18,7 @@ Trying to plan this perfectly from the start is just not going to work. I'm goin
 To summarise, I'll implement the very basics like variables, functions, conditionals. Then I'll carefully add things that I think I need.
 
 This is a scripting language, not embedded Swift.
+
+## Dependencies
+
+This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. CMake will automatically download Simpleton and put it in the `deps` directory so you don't have to worry about it.

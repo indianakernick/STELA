@@ -45,7 +45,7 @@
     bool caught = false;                                                        \
     try {                                                                       \
       EXP;                                                                      \
-    } catch (EXCEPTION) {                                                       \
+    } catch (EXCEPTION &) {                                                       \
       caught = true;                                                            \
     } catch (...) {                                                             \
       PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n"      \
