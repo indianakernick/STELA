@@ -8,20 +8,30 @@
 
 #include "log counter.hpp"
 
-uint32_t CountLogs::infos() const {
+#include <cassert>
+
+uint32_t CountLogs::verbose() const {
+  return verboseCount;
+}
+
+uint32_t CountLogs::info() const {
   return infoCount;
 }
 
-uint32_t CountLogs::warnings() const {
+uint32_t CountLogs::warn() const {
   return warnCount;
 }
 
-uint32_t CountLogs::errors() const {
+uint32_t CountLogs::error() const {
   return errorCount;
 }
 
+uint32_t CountLogs::fatalError() const {
+  return fatalErrorCount;
+}
+
 void CountLogs::reset() {
-  infoCount = warnCount = errorCount = 0;
+  verboseCount = infoCount = warnCount = errorCount = fatalErrorCount = 0;
 }
 
 std::streambuf *CountLogs::getBuf(stela::LogCat, stela::LogPri) {
@@ -34,6 +44,9 @@ void CountLogs::begin(const stela::LogCat cat, const stela::LogPri pri, stela::L
 
 void CountLogs::begin(stela::LogCat, const stela::LogPri pri) {
   switch (pri) {
+    case stela::LogPri::verbose:
+      ++verboseCount;
+      break;
     case stela::LogPri::info:
       ++infoCount;
       break;
@@ -43,7 +56,11 @@ void CountLogs::begin(stela::LogCat, const stela::LogPri pri) {
     case stela::LogPri::error:
       ++errorCount;
       break;
-    default: ;
+    case stela::LogPri::fatal_error:
+      ++fatalErrorCount;
+      break;
+    default:
+      assert(false);
   }
 }
 

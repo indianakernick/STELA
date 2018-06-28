@@ -15,16 +15,19 @@ class CountLogs final : public stela::LogBuf {
 public:
   CountLogs() = default;
   
-  // informations!
-  uint32_t infos() const;
-  uint32_t warnings() const;
-  uint32_t errors() const;
+  uint32_t verbose() const;
+  uint32_t info() const;
+  uint32_t warn() const;
+  uint32_t error() const;
+  uint32_t fatalError() const;
   void reset();
   
 private:
+  uint32_t verboseCount = 0;
   uint32_t infoCount = 0;
   uint32_t warnCount = 0;
   uint32_t errorCount = 0;
+  uint32_t fatalErrorCount = 0;
   
   std::streambuf *getBuf(stela::LogCat, stela::LogPri) override;
   void begin(stela::LogCat, stela::LogPri, stela::Loc) override;
