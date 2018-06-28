@@ -34,6 +34,9 @@ using StatPtr = std::unique_ptr<Statement>;
 struct Expression : Statement {};
 using ExprPtr = std::unique_ptr<Expression>;
 
+struct Declaration : Statement {};
+using DeclPtr = std::unique_ptr<Declaration>;
+
 using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
@@ -47,6 +50,7 @@ struct DictType final : Type {
   TypePtr val;
 };
 
+/// A function parameter can be passed by value or by reference (inout)
 enum class ParamRef {
   value,
   inout
@@ -151,18 +155,6 @@ struct Block final : Statement {
 
 struct EmptyStatement final : Statement {};
 
-struct Var final : Statement {
-  Name name;
-  TypePtr type;
-  ExprPtr expr;
-};
-
-struct Let final : Statement {
-  Name name;
-  TypePtr type;
-  ExprPtr expr;
-};
-
 struct If final : Statement {
   ExprPtr cond;
   StatPtr body;
@@ -205,7 +197,7 @@ struct For final : Statement {
   StatPtr body;
 };
 
-//------------------------------- Functions ------------------------------------
+//------------------------------ Declarations ----------------------------------
 
 struct FuncParam {
   Name name;
@@ -214,52 +206,65 @@ struct FuncParam {
 };
 using FuncParams = std::vector<FuncParam>;
 
-struct Func final : Statement {
+struct Func final : Declaration {
   Name name;
   FuncParams params;
   TypePtr ret;
   StatPtr body;
 };
 
-//--------------------------- Type Declarations --------------------------------
-
-enum class MemAccess {
-  pub,
-  priv
+struct Var final : Declaration {
+  Name name;
+  TypePtr type;
+  ExprPtr expr;
 };
 
-enum class MemScope {
-  member,
-  stat
+struct Let final : Declaration {
+  Name name;
+  TypePtr type;
+  ExprPtr expr;
 };
 
-struct Member final : Statement {
-  MemAccess access;
-  MemScope scope;
-  StatPtr node; // Var, Let, Func, Init
-};
-
-struct Init final : Statement {
+struct Init final : Declaration {
   FuncParams params;
   Block body;
 };
 
-struct TypeAlias final : Statement {
+struct TypeAlias final : Declaration {
   Name name;
   TypePtr type;
 };
 
-struct Struct final : Statement {
-  Name name;
-  Block body;
+/// Access level of a member
+enum class MemAccess {
+  public_,
+  private_
 };
 
-struct EnumCase {
+/// The scope of a member is either in the object or on the type
+enum class MemScope {
+  not_applicable, // neither a variable nor a function
+  member,
+  static_
+};
+
+struct Member final : Declaration {
+  MemAccess access;
+  MemScope scope;
+  DeclPtr node;
+};
+
+struct Struct final : Declaration {
+  Name name;
+  std::vector<Member> body;
+};
+
+struct EnumCase final : Declaration {
   Name name;
   ExprPtr value;
 };
 
-struct Enum final : Statement {
+struct Enum final : Declaration {
   Name name;
   std::vector<EnumCase> cases;
 };

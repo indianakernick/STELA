@@ -86,21 +86,49 @@ ast::ExprPtr parseExpr(ParseTokens &tok) {
   }
 }
 
-//------------------------------- Statements -----------------------------------
+//------------------------------ Declarations ----------------------------------
 
-ast::StatPtr parseStatement(ParseTokens &);
+ast::FuncParams parseFuncParams(ParseTokens &tok) {
+  tok.expectOp("(");
+  if (tok.checkOp(")")) {
+    return {};
+  }
+  ast::FuncParams params;
+  do {
+    ast::FuncParam &param = params.emplace_back();
+    param.name = tok.expectID();
+    tok.expectOp(":");
+    param.ref = parseRef(tok);
+    param.type = tok.expectNode(parseType, "type");
+  } while (tok.expectEitherOp(")", ",") == ",");
+  return params;
+}
 
-// an expression followed by a ; is a statement
-ast::StatPtr parseExprStatement(ParseTokens &tok) {
-  if (ast::StatPtr node = parseExpr(tok)) {
-    tok.expectOp(";");
-    return node;
+ast::TypePtr parseFuncRet(ParseTokens &tok) {
+  if (tok.checkOp("->")) {
+    return tok.expectNode(parseType, "type");
   } else {
     return nullptr;
   }
 }
 
-ast::StatPtr parseVar(ParseTokens &tok) {
+ast::StatPtr parseBlock(ParseTokens &);
+
+ast::DeclPtr parseFunc(ParseTokens &tok) {
+  if (!tok.checkKeyword("func")) {
+    return nullptr;
+  }
+  
+  auto funcNode = std::make_unique<ast::Func>();
+  funcNode->name = tok.expectID();
+  funcNode->params = parseFuncParams(tok);
+  funcNode->ret = parseFuncRet(tok);
+  funcNode->body = parseBlock(tok);
+  
+  return funcNode;
+}
+
+ast::DeclPtr parseVar(ParseTokens &tok) {
   if (!tok.checkKeyword("var")) {
     return nullptr;
   }
@@ -116,7 +144,7 @@ ast::StatPtr parseVar(ParseTokens &tok) {
   return var;
 }
 
-ast::StatPtr parseLet(ParseTokens &tok) {
+ast::DeclPtr parseLet(ParseTokens &tok) {
   if (!tok.checkKeyword("let")) {
     return nullptr;
   }
@@ -130,6 +158,67 @@ ast::StatPtr parseLet(ParseTokens &tok) {
   tok.expectOp(";");
   return let;
 }
+
+ast::DeclPtr parseTypealias(ParseTokens &tok) {
+  if (!tok.checkKeyword("typealias")) {
+    return nullptr;
+  }
+  auto aliasNode = std::make_unique<ast::TypeAlias>();
+  aliasNode->name = tok.expectID();
+  tok.expectOp("=");
+  aliasNode->type = tok.expectNode(parseType, "type");
+  tok.expectOp(";");
+  return aliasNode;
+}
+
+ast::DeclPtr parseStruct(ParseTokens &) {
+  return nullptr;
+}
+
+ast::DeclPtr parseEnum(ParseTokens &tok) {
+  if (!tok.checkKeyword("enum")) {
+    return nullptr;
+  }
+  auto enumNode = std::make_unique<ast::Enum>();
+  enumNode->name = tok.expectID();
+  tok.expectOp("{");
+  
+  if (!tok.checkOp("}")) {
+    do {
+      ast::EnumCase &ecase = enumNode->cases.emplace_back();
+      ecase.name = tok.expectID();
+      if (tok.checkOp("=")) {
+        ecase.value = tok.expectNode(parseExpr, "expression or ,");
+      }
+    } while (tok.expectEitherOp("}", ",") == ",");
+  }
+  
+  return enumNode;
+}
+
+ast::DeclPtr parseDecl(ParseTokens &tok) {
+  if (ast::DeclPtr node = parseFunc(tok)) return node;
+  if (ast::DeclPtr node = parseVar(tok)) return node;
+  if (ast::DeclPtr node = parseLet(tok)) return node;
+  if (ast::DeclPtr node = parseTypealias(tok)) return node;
+  if (ast::DeclPtr node = parseStruct(tok)) return node;
+  if (ast::DeclPtr node = parseEnum(tok)) return node;
+  return nullptr;
+}
+
+//------------------------------- Statements -----------------------------------
+
+// an expression followed by a ; is a statement
+ast::StatPtr parseExprStatement(ParseTokens &tok) {
+  if (ast::StatPtr node = parseExpr(tok)) {
+    tok.expectOp(";");
+    return node;
+  } else {
+    return nullptr;
+  }
+}
+
+ast::StatPtr parseStatement(ParseTokens &);
 
 ast::StatPtr parseIf(ParseTokens &tok) {
   if (!tok.checkKeyword("if")) {
@@ -241,7 +330,7 @@ ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
 ast::StatPtr parseForInit(ParseTokens &tok) {
   if (ast::StatPtr node = parseVar(tok)) return node;
   if (ast::StatPtr node = parseLet(tok)) return node;
-  if (ast::StatPtr node = parseExprStatement(tok)) return node;
+  if (ast::StatPtr node = parseExpr(tok)) return node;
   return nullptr;
 }
 
@@ -266,8 +355,6 @@ ast::StatPtr parseFor(ParseTokens &tok) {
 ast::StatPtr parseBlock(ParseTokens &tok);
 
 ast::StatPtr parseStatement(ParseTokens &tok) {
-  if (ast::StatPtr node = parseVar(tok)) return node;
-  if (ast::StatPtr node = parseLet(tok)) return node;
   if (ast::StatPtr node = parseIf(tok)) return node;
   if (ast::StatPtr node = parseSwitch(tok)) return node;
   if (ast::StatPtr node = parseBreak(tok)) return node;
@@ -278,6 +365,7 @@ ast::StatPtr parseStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseRepeatWhile(tok)) return node;
   if (ast::StatPtr node = parseFor(tok)) return node;
   if (ast::StatPtr node = parseBlock(tok)) return node;
+  if (ast::StatPtr node = parseDecl(tok)) return node;
   if (ast::StatPtr node = parseExprStatement(tok)) return node;
   if (tok.checkOp(";")) return std::make_unique<ast::EmptyStatement>();
   return nullptr;
@@ -296,85 +384,6 @@ ast::StatPtr parseBlock(ParseTokens &tok) {
   }
 }
 
-//------------------------------- Functions ------------------------------------
-
-ast::FuncParams parseFuncParams(ParseTokens &tok) {
-  tok.expectOp("(");
-  if (tok.checkOp(")")) {
-    return {};
-  }
-  ast::FuncParams params;
-  do {
-    ast::FuncParam &param = params.emplace_back();
-    param.name = tok.expectID();
-    tok.expectOp(":");
-    param.ref = parseRef(tok);
-    param.type = tok.expectNode(parseType, "type");
-  } while (tok.expectEitherOp(")", ",") == ",");
-  return params;
-}
-
-ast::TypePtr parseFuncRet(ParseTokens &tok) {
-  if (tok.checkOp("->")) {
-    return tok.expectNode(parseType, "type");
-  } else {
-    return nullptr;
-  }
-}
-
-ast::StatPtr parseFunc(ParseTokens &tok) {
-  if (!tok.checkKeyword("func")) {
-    return nullptr;
-  }
-  
-  auto funcNode = std::make_unique<ast::Func>();
-  funcNode->name = tok.expectID();
-  funcNode->params = parseFuncParams(tok);
-  funcNode->ret = parseFuncRet(tok);
-  funcNode->body = parseBlock(tok);
-  
-  return funcNode;
-}
-
-//--------------------------- Type Declarations --------------------------------
-
-ast::StatPtr parseEnum(ParseTokens &tok) {
-  if (!tok.checkKeyword("enum")) {
-    return nullptr;
-  }
-  auto enumNode = std::make_unique<ast::Enum>();
-  enumNode->name = tok.expectID();
-  tok.expectOp("{");
-  
-  if (!tok.checkOp("}")) {
-    do {
-      ast::EnumCase &ecase = enumNode->cases.emplace_back();
-      ecase.name = tok.expectID();
-      if (tok.checkOp("=")) {
-        ecase.value = tok.expectNode(parseExpr, "expression or ,");
-      }
-    } while (tok.expectEitherOp("}", ",") == ",");
-  }
-  
-  return enumNode;
-}
-
-ast::StatPtr parseStruct(ParseTokens &) {
-  return nullptr;
-}
-
-ast::StatPtr parseTypealias(ParseTokens &tok) {
-  if (!tok.checkKeyword("typealias")) {
-    return nullptr;
-  }
-  auto aliasNode = std::make_unique<ast::TypeAlias>();
-  aliasNode->name = tok.expectID();
-  tok.expectOp("=");
-  aliasNode->type = tok.expectNode(parseType, "type");
-  tok.expectOp(";");
-  return aliasNode;
-}
-
 //---------------------------------- Base --------------------------------------
 
 AST createASTimpl(const Tokens &tokens, Log &log) {
@@ -384,23 +393,18 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
   ParseTokens tok(tokens, log);
   
   while (!tok.empty()) {
-    ast::StatPtr node;
-    if ((node = parseFunc(tok))) {}
-    else if ((node = parseEnum(tok))) {}
-    else if ((node = parseStruct(tok))) {}
-    else if ((node = parseTypealias(tok))) {}
-    else if ((node = parseLet(tok))) {}
-    else if (tok.checkOp(";")) {
+    if (tok.checkOp(";")) {
       log.warn(tok.lastLoc()) << "Unnecessary ;" << endlog;
       continue;
+    }
+  
+    if (ast::DeclPtr node = parseDecl(tok)) {
+      ast.global.emplace_back(std::move(node));
     } else {
       const Token &token = tok.front();
-      log.info(token.loc) << "Only functions, type declarations and constants "
-        "are allowed at global scope" << endlog;
-      log.ferror(token.loc) << "Unexpected token " << token
-        << " in global scope" << endlog;
+      log.info(token.loc) << "Only declarations are allowed at global scope" << endlog;
+      log.ferror(token.loc) << "Unexpected token " << token << " in global scope" << endlog;
     };
-    ast.global.emplace_back(std::move(node));
   }
   
   log.verbose() << "Created AST with " << ast.global.size() << " global nodes" << endlog;
