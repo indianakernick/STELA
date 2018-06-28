@@ -52,7 +52,7 @@ target_compile_options(STELA
 )
 
 target_compile_features(STELA
-        PRIVATE
+        PUBLIC
         cxx_std_17
 )
 

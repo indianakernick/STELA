@@ -20,8 +20,3 @@ target_compile_options(Test
         PRIVATE
         -Wall -Wextra -Weffc++ -Wpedantic -Wno-documentation
 )
-
-target_compile_features(Test
-        PRIVATE
-        cxx_std_17
-)

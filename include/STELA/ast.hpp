@@ -30,7 +30,6 @@ using TypePtr = std::unique_ptr<Type>;
 struct Statement : Node {};
 using StatPtr = std::unique_ptr<Statement>;
 
-// expressions are allowed where statements are allowed
 struct Expression : Statement {};
 using ExprPtr = std::unique_ptr<Expression>;
 
@@ -248,7 +247,7 @@ enum class MemScope {
   static_
 };
 
-struct Member final : Declaration {
+struct Member {
   MemAccess access;
   MemScope scope;
   DeclPtr node;
@@ -259,7 +258,7 @@ struct Struct final : Declaration {
   std::vector<Member> body;
 };
 
-struct EnumCase final : Declaration {
+struct EnumCase {
   Name name;
   ExprPtr value;
 };
