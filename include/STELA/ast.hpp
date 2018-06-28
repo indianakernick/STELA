@@ -121,7 +121,7 @@ struct FuncCall final : Expression {
   FuncArgs args;
 };
 
-struct ObjectMember final : Expression {
+struct MemberIdent final : Expression {
   ExprPtr object;
   Name name;
 };
@@ -242,7 +242,6 @@ enum class MemAccess {
 
 /// The scope of a member is either in the object or on the type
 enum class MemScope {
-  not_applicable, // neither a variable nor a function
   member,
   static_
 };

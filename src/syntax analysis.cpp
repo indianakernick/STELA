@@ -171,8 +171,53 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
   return aliasNode;
 }
 
-ast::DeclPtr parseStruct(ParseTokens &) {
-  return nullptr;
+ast::MemAccess parseMemAccess(ParseTokens &tok) {
+  if (tok.checkKeyword("private")) {
+    return ast::MemAccess::private_;
+  } else {
+    tok.checkKeyword("public");
+    return ast::MemAccess::public_;
+  }
+}
+
+ast::MemScope parseMemScope(ParseTokens &tok) {
+  if (tok.checkKeyword("static")) {
+    return ast::MemScope::static_;
+  } else {
+    return ast::MemScope::member;
+  }
+}
+
+ast::DeclPtr parseDecl(ParseTokens &);
+
+ast::Member parseStructMember(ParseTokens &tok) {
+  ast::Member member;
+  member.access = parseMemAccess(tok);
+  member.scope = parseMemScope(tok);
+  member.node = parseDecl(tok);
+  return member;
+}
+
+ast::DeclPtr parseStruct(ParseTokens &tok) {
+  if (!tok.checkKeyword("struct")) {
+    return nullptr;
+  }
+  auto structNode = std::make_unique<ast::Struct>();
+  structNode->name = tok.expectID();
+  tok.expectOp("{");
+  while(!tok.checkOp("}")) {
+    structNode->body.push_back(parseStructMember(tok));
+  }
+  return structNode;
+}
+
+ast::EnumCase parseEnumCase(ParseTokens &tok) {
+  ast::EnumCase ecase;
+  ecase.name = tok.expectID();
+  if (tok.checkOp("=")) {
+    ecase.value = tok.expectNode(parseExpr, "expression or ,");
+  }
+  return ecase;
 }
 
 ast::DeclPtr parseEnum(ParseTokens &tok) {
@@ -185,11 +230,7 @@ ast::DeclPtr parseEnum(ParseTokens &tok) {
   
   if (!tok.checkOp("}")) {
     do {
-      ast::EnumCase &ecase = enumNode->cases.emplace_back();
-      ecase.name = tok.expectID();
-      if (tok.checkOp("=")) {
-        ecase.value = tok.expectNode(parseExpr, "expression or ,");
-      }
+      enumNode->cases.push_back(parseEnumCase(tok));
     } while (tok.expectEitherOp("}", ",") == ",");
   }
   

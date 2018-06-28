@@ -167,62 +167,6 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(valElem->name, "Int");
   });
   
-  TEST(Stat - Var and Let, {
-    const char *source = R"(
-      func dummy() {
-        var noInit: Double;
-        var initAndType: Int = expr;
-        var deducedVar = expr;
-        let myLet: String = expr;
-        let deducedLet = expr;
-      }
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
-    ASSERT_EQ(block.size(), 5);
-    
-    {
-      auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
-      ASSERT_EQ(noInit->name, "noInit");
-      ASSERT_FALSE(noInit->expr);
-      auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
-      ASSERT_EQ(noInitType->name, "Double");
-    }
-    
-    {
-      auto *initAndType = ASSERT_DOWN_CAST(const Var, block[1].get());
-      ASSERT_EQ(initAndType->name, "initAndType");
-      ASSERT_TRUE(initAndType->expr);
-      auto *initAndTypeT = ASSERT_DOWN_CAST(const NamedType, initAndType->type.get());
-      ASSERT_EQ(initAndTypeT->name, "Int");
-    }
-    
-    {
-      auto *deducedVar = ASSERT_DOWN_CAST(const Var, block[2].get());
-      ASSERT_EQ(deducedVar->name, "deducedVar");
-      ASSERT_TRUE(deducedVar->expr);
-      ASSERT_FALSE(deducedVar->type);
-    }
-    
-    {
-      auto *myLet = ASSERT_DOWN_CAST(const Let, block[3].get());
-      ASSERT_EQ(myLet->name, "myLet");
-      ASSERT_TRUE(myLet->expr);
-      auto *myLetType = ASSERT_DOWN_CAST(const NamedType, myLet->type.get());
-      ASSERT_EQ(myLetType->name, "String");
-    }
-    
-    {
-      auto *deducedLet = ASSERT_DOWN_CAST(const Let, block[4].get());
-      ASSERT_EQ(deducedLet->name, "deducedLet");
-      ASSERT_TRUE(deducedLet->expr);
-      ASSERT_FALSE(deducedLet->type);
-    }
-  });
-  
   TEST(Stat - Block, {
     const char *source = R"(
       func dummy() {
@@ -455,6 +399,156 @@ TEST_GROUP(Syntax, {
       ASSERT_DOWN_CAST(const SwitchDefault, body[9].get());
       ASSERT_TRUE(body[10].get());
       ASSERT_DOWN_CAST(const Return, body[11].get());
+    }
+  });
+  
+  TEST(Decl - Var and Let, {
+    const char *source = R"(
+      func dummy() {
+        var noInit: Double;
+        var initAndType: Int = expr;
+        var deducedVar = expr;
+        let myLet: String = expr;
+        let deducedLet = expr;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
+    const auto &block = blockNode->nodes;
+    ASSERT_EQ(block.size(), 5);
+    
+    {
+      auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
+      ASSERT_EQ(noInit->name, "noInit");
+      ASSERT_FALSE(noInit->expr);
+      auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
+      ASSERT_EQ(noInitType->name, "Double");
+    }
+    
+    {
+      auto *initAndType = ASSERT_DOWN_CAST(const Var, block[1].get());
+      ASSERT_EQ(initAndType->name, "initAndType");
+      ASSERT_TRUE(initAndType->expr);
+      auto *initAndTypeT = ASSERT_DOWN_CAST(const NamedType, initAndType->type.get());
+      ASSERT_EQ(initAndTypeT->name, "Int");
+    }
+    
+    {
+      auto *deducedVar = ASSERT_DOWN_CAST(const Var, block[2].get());
+      ASSERT_EQ(deducedVar->name, "deducedVar");
+      ASSERT_TRUE(deducedVar->expr);
+      ASSERT_FALSE(deducedVar->type);
+    }
+    
+    {
+      auto *myLet = ASSERT_DOWN_CAST(const Let, block[3].get());
+      ASSERT_EQ(myLet->name, "myLet");
+      ASSERT_TRUE(myLet->expr);
+      auto *myLetType = ASSERT_DOWN_CAST(const NamedType, myLet->type.get());
+      ASSERT_EQ(myLetType->name, "String");
+    }
+    
+    {
+      auto *deducedLet = ASSERT_DOWN_CAST(const Let, block[4].get());
+      ASSERT_EQ(deducedLet->name, "deducedLet");
+      ASSERT_TRUE(deducedLet->expr);
+      ASSERT_FALSE(deducedLet->type);
+    }
+  });
+  
+  TEST(Struct - empty, {
+    const char *source = R"(
+      struct NoMembers {}
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
+    ASSERT_EQ(structNode->name, "NoMembers");
+    ASSERT_TRUE(structNode->body.empty());
+  });
+
+  TEST(Struct - Vars, {
+    const char *source = R"(
+      struct Vec2 {
+        private var x: Float;
+        private var y: Float;
+        
+        static let zero = expr;
+        public static let zilch = expr;
+        
+        let mem = expr;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
+    ASSERT_EQ(structNode->name, "Vec2");
+    ASSERT_EQ(structNode->body.size(), 5);
+    
+    {
+      const Member &mem = structNode->body[0];
+      ASSERT_EQ(mem.access, MemAccess::private_);
+      ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_DOWN_CAST(const Var, mem.node.get());
+    }
+    {
+      const Member &mem = structNode->body[1];
+      ASSERT_EQ(mem.access, MemAccess::private_);
+      ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_DOWN_CAST(const Var, mem.node.get());
+    }
+    {
+      const Member &mem = structNode->body[2];
+      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.scope, MemScope::static_);
+      ASSERT_DOWN_CAST(const Let, mem.node.get());
+    }
+    {
+      const Member &mem = structNode->body[3];
+      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.scope, MemScope::static_);
+      ASSERT_DOWN_CAST(const Let, mem.node.get());
+    }
+    {
+      const Member &mem = structNode->body[4];
+      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_DOWN_CAST(const Let, mem.node.get());
+    }
+  });
+  
+  TEST(Struct - Functions, {
+    const char *source = R"(
+      struct Vec2 {
+        func add(other: Vec2) {
+          expr;
+          expr;
+        }
+        
+        static func add(a: Vec2, b: Vec2) {
+          return expr;
+        }
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
+    ASSERT_EQ(structNode->name, "Vec2");
+    ASSERT_EQ(structNode->body.size(), 2);
+    
+    {
+      const Member &mem = structNode->body[0];
+      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_DOWN_CAST(const Func, mem.node.get());
+    }
+    {
+      const Member &mem = structNode->body[1];
+      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.scope, MemScope::static_);
+      ASSERT_DOWN_CAST(const Func, mem.node.get());
     }
   });
 });
