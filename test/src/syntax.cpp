@@ -182,8 +182,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 4);
   });
   
@@ -227,8 +226,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 3);
     
     {
@@ -276,8 +274,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 5);
     
     ASSERT_DOWN_CAST(const Break, block[0].get());
@@ -311,8 +308,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 5);
     
     {
@@ -373,8 +369,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 2);
     
     {
@@ -415,8 +410,7 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    auto *blockNode = ASSERT_DOWN_CAST(const Block, func->body.get());
-    const auto &block = blockNode->nodes;
+    const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 5);
     
     {
@@ -467,6 +461,25 @@ TEST_GROUP(Syntax, {
     auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
     ASSERT_EQ(structNode->name, "NoMembers");
     ASSERT_TRUE(structNode->body.empty());
+  });
+  
+  TEST(Struct - Init, {
+    const char *source = R"(
+      struct Number {
+        init(n: Int) {
+          expr;
+        }
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
+    ASSERT_EQ(structNode->name, "Number");
+    ASSERT_EQ(structNode->body.size(), 1);
+    const Member &mem = structNode->body[0];
+    ASSERT_EQ(mem.access, MemAccess::public_);
+    ASSERT_EQ(mem.scope, MemScope::member);
+    ASSERT_DOWN_CAST(const Init, mem.node.get());
   });
 
   TEST(Struct - Vars, {

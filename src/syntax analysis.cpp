@@ -112,7 +112,17 @@ ast::TypePtr parseFuncRet(ParseTokens &tok) {
   }
 }
 
-ast::StatPtr parseBlock(ParseTokens &);
+ast::StatPtr parseStatement(ParseTokens &);
+
+ast::Block parseFuncBody(ParseTokens &tok) {
+  ast::Block body;
+  tok.expectOp("{");
+  while (ast::StatPtr node = parseStatement(tok)) {
+    body.nodes.emplace_back(std::move(node));
+  }
+  tok.expectOp("}");
+  return body;
+}
 
 ast::DeclPtr parseFunc(ParseTokens &tok) {
   if (!tok.checkKeyword("func")) {
@@ -123,7 +133,7 @@ ast::DeclPtr parseFunc(ParseTokens &tok) {
   funcNode->name = tok.expectID();
   funcNode->params = parseFuncParams(tok);
   funcNode->ret = parseFuncRet(tok);
-  funcNode->body = parseBlock(tok);
+  funcNode->body = parseFuncBody(tok);
   
   return funcNode;
 }
@@ -169,6 +179,16 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
   aliasNode->type = tok.expectNode(parseType, "type");
   tok.expectOp(";");
   return aliasNode;
+}
+
+ast::DeclPtr parseInit(ParseTokens &tok) {
+  if (!tok.checkKeyword("init")) {
+    return nullptr;
+  }
+  auto init = std::make_unique<ast::Init>();
+  init->params = parseFuncParams(tok);
+  init->body = parseFuncBody(tok);
+  return init;
 }
 
 ast::MemAccess parseMemAccess(ParseTokens &tok) {
@@ -241,6 +261,7 @@ ast::DeclPtr parseDecl(ParseTokens &tok) {
   if (ast::DeclPtr node = parseFunc(tok)) return node;
   if (ast::DeclPtr node = parseVar(tok)) return node;
   if (ast::DeclPtr node = parseLet(tok)) return node;
+  if (ast::DeclPtr node = parseInit(tok)) return node;
   if (ast::DeclPtr node = parseTypealias(tok)) return node;
   if (ast::DeclPtr node = parseStruct(tok)) return node;
   if (ast::DeclPtr node = parseEnum(tok)) return node;

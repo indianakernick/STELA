@@ -209,7 +209,7 @@ struct Func final : Declaration {
   Name name;
   FuncParams params;
   TypePtr ret;
-  StatPtr body;
+  Block body;
 };
 
 struct Var final : Declaration {
@@ -224,14 +224,14 @@ struct Let final : Declaration {
   ExprPtr expr;
 };
 
-struct Init final : Declaration {
-  FuncParams params;
-  Block body;
-};
-
 struct TypeAlias final : Declaration {
   Name name;
   TypePtr type;
+};
+
+struct Init final : Declaration {
+  FuncParams params;
+  Block body;
 };
 
 /// Access level of a member
