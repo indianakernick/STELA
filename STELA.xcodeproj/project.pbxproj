@@ -155,15 +155,9 @@
 		45BBA3F320D63E7B006108C1 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				45EE9C1020DCF14F00CC3289 /* log.cpp */,
-				45BBA40420D6418B006108C1 /* lexical analysis.cpp */,
-				45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */,
-				45EE9C1B20DE72D400CC3289 /* log output.cpp */,
-				45EE9C1C20DE72D400CC3289 /* log output.hpp */,
-				45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */,
-				45EE9C1F20DF19BD00CC3289 /* parse tokens.hpp */,
-				45EE9C2320E23D1C00CC3289 /* number literal.cpp */,
-				45EE9C2420E23D1C00CC3289 /* number literal.hpp */,
+				45EE9C4820E4D23E00CC3289 /* Syntax Analysis */,
+				45EE9C4720E4D22600CC3289 /* Lexical Analysis */,
+				45EE9C4620E4D21800CC3289 /* Logging */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -247,6 +241,36 @@
 				45EE9C4120E3AB5900CC3289 /* main.cpp */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		45EE9C4620E4D21800CC3289 /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				45EE9C1020DCF14F00CC3289 /* log.cpp */,
+				45EE9C1B20DE72D400CC3289 /* log output.cpp */,
+				45EE9C1C20DE72D400CC3289 /* log output.hpp */,
+			);
+			name = Logging;
+			sourceTree = "<group>";
+		};
+		45EE9C4720E4D22600CC3289 /* Lexical Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				45BBA40420D6418B006108C1 /* lexical analysis.cpp */,
+				45EE9C2320E23D1C00CC3289 /* number literal.cpp */,
+				45EE9C2420E23D1C00CC3289 /* number literal.hpp */,
+			);
+			name = "Lexical Analysis";
+			sourceTree = "<group>";
+		};
+		45EE9C4820E4D23E00CC3289 /* Syntax Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */,
+				45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */,
+				45EE9C1F20DF19BD00CC3289 /* parse tokens.hpp */,
+			);
+			name = "Syntax Analysis";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
