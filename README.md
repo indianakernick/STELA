@@ -1,5 +1,7 @@
 # Statically Typed Embeddable LAnguage
 
+[![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA)
+
 A scripting language with all of the benefits of static typing, without the verbosity of type names.
 
 ## Progress
