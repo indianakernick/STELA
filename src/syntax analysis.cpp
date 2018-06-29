@@ -115,6 +115,53 @@ ast::ExprPtr parseBool(ParseTokens &tok) {
   return literal;
 }
 
+ast::ExprPtr parseExpr(ParseTokens &);
+
+ast::ExprPtr parseArrayOrDict(ParseTokens &tok) {
+  if (!tok.checkOp("[")) {
+    return nullptr;
+  }
+  ast::ExprPtr expr = parseExpr(tok);
+  if (expr == nullptr) {
+    // empty array or dictionary
+    if (tok.checkOp("]")) {
+      return std::make_unique<ast::ArrayLiteral>();
+    } else if (tok.checkOp(":")) {
+      tok.expectOp("]");
+      return std::make_unique<ast::DictLiteral>();
+    }
+    return nullptr;
+  }
+  // array or dictionary with at least one element
+  if (tok.checkOp(",")) {
+    // array
+    auto array = std::make_unique<ast::ArrayLiteral>();
+    array->exprs.emplace_back(std::move(expr));
+    array->exprs.emplace_back(tok.expectNode(parseExpr, "expression in array literal"));
+    while (tok.expectEitherOp(",", "]") == ",") {
+      array->exprs.emplace_back(tok.expectNode(parseExpr, "expression in array literal"));
+    }
+    return array;
+  } else if (tok.checkOp(":")) {
+    // dictionary
+    auto dict = std::make_unique<ast::DictLiteral>();
+    dict->pairs.push_back(ast::DictPair{
+      std::move(expr),
+      tok.expectNode(parseExpr, "key expression in dictionary literal")
+    });
+    while (tok.expectEitherOp(",", "]") == ",") {
+      auto key = tok.expectNode(parseExpr, "key expression in dictionary literal");
+      tok.expectOp(":");
+      dict->pairs.push_back(ast::DictPair{
+        std::move(key),
+        tok.expectNode(parseExpr, "value expression in dictionary literal")
+      });
+    }
+  } else {
+    // erm...
+  }
+}
+
 ast::ExprPtr parseLiteral(ParseTokens &tok) {
   if (ast::ExprPtr node = parseString(tok)) return node;
   if (ast::ExprPtr node = parseChar(tok)) return node;
