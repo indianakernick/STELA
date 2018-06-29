@@ -16,6 +16,22 @@ This language was designed to be fast, minimal and easy to embed in a C++ applic
 ### Influence
 Much of the syntax was influenced by Swift but **this is not embedded Swift**.
 
-### Dependencies
+### Building
 
-This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. CMake will automatically download Simpleton and put it in the `deps` directory so you don't have to worry about it.
+This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. CMake will automatically download Simpleton so you don't have to worry about it.
+
+```bash
+cd build
+cmake ..
+make
+```
+
+This will build a static library, a command-line tool and a test suite. Optionally, you may install these.
+
+```bash
+# might want to run the tests before installing
+test/Test
+make install
+```
+
+This will install `lib/libSTELA.a`, `include/STELA` and `bin/stela`.

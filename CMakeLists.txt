@@ -24,8 +24,6 @@ add_library(STELA STATIC
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
 set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 
-set(FETCHCONTENT_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/deps)
-
 FetchContent_Declare(Simpleton
         GIT_REPOSITORY https://github.com/Kerndog73/Simpleton-Engine.git
 )
