@@ -26,7 +26,7 @@ constexpr std::string_view keywords[] = {
   "func", "inout", "return",
   "struct", "static", "self", "init",
   "public", "private",
-  "enum",
+  "enum", "true", "false",
   "let", "var",
   "if", "else",
   "switch", "case", "default",

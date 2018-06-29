@@ -281,6 +281,10 @@ struct NumberLiteral final : Expression {
   std::string_view value;
 };
 
+struct BoolLiteral final : Expression {
+  bool value;
+};
+
 struct ArrayLiteral final : Expression {
   std::vector<ExprPtr> exprs;
 };

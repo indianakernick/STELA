@@ -7,7 +7,7 @@
 //
 
 // this is the type of a closure
-// (a: Int, b: Int) -> Bool
+// (Int, Int) -> Bool
 // closures act like std::function<> from C++
 
 // closures can be created from lambda expressions
@@ -24,9 +24,9 @@ func isEqual(a: Int, b: Int) {
 // `equal` has the same type as `less`
 let equal = isEqual;
 
-func sort(array: [Int], pred: (a: Int, b: Int) -> Bool) {
+func sort(array: [Int], pred: (Int, Int) -> Bool) {
   // sorting...
 }
 
 // closures can be used as function arguments
-sort(less);
+sort([5, 2, 3, 0, 1, 4], less);

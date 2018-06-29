@@ -564,4 +564,37 @@ TEST_GROUP(Syntax, {
       ASSERT_DOWN_CAST(const Func, mem.node.get());
     }
   });
+  
+  TEST(Expr - Simple literals, {
+    const char *source = R"(
+      func dummy() {
+        "This is a string";
+        'c';
+        73;
+        true;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 4);
+    
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const StringLiteral, block[0].get());
+      ASSERT_EQ(lit->value, "\"This is a string\"");
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const CharLiteral, block[1].get());
+      ASSERT_EQ(lit->value, "'c'");
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const NumberLiteral, block[2].get());
+      ASSERT_EQ(lit->value, "73");
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, block[3].get());
+      ASSERT_EQ(lit->value, true);
+    }
+  });
 });

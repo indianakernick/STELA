@@ -76,14 +76,61 @@ ast::TypePtr parseType(ParseTokens &tok) {
   }
 }
 
+//-------------------------------- Literals ------------------------------------
+
+template <typename Literal>
+ast::ExprPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
+  if (tok.front().type == type) {
+    auto literal = std::make_unique<Literal>();
+    literal->value = tok.expect(type);
+    return literal;
+  } else {
+    return nullptr;
+  }
+}
+
+ast::ExprPtr parseString(ParseTokens &tok) {
+  return parseLiteralToken<ast::StringLiteral>(tok, Token::Type::string);
+}
+
+ast::ExprPtr parseChar(ParseTokens &tok) {
+  return parseLiteralToken<ast::CharLiteral>(tok, Token::Type::character);
+}
+
+ast::ExprPtr parseNumber(ParseTokens &tok) {
+  return parseLiteralToken<ast::NumberLiteral>(tok, Token::Type::number);
+}
+
+ast::ExprPtr parseBool(ParseTokens &tok) {
+  bool value;
+  if (tok.checkKeyword("true")) {
+    value = true;
+  } else if (tok.checkKeyword("false")) {
+    value = false;
+  } else {
+    return nullptr;
+  }
+  auto literal = std::make_unique<ast::BoolLiteral>();
+  literal->value = value;
+  return literal;
+}
+
+ast::ExprPtr parseLiteral(ParseTokens &tok) {
+  if (ast::ExprPtr node = parseString(tok)) return node;
+  if (ast::ExprPtr node = parseChar(tok)) return node;
+  if (ast::ExprPtr node = parseNumber(tok)) return node;
+  if (ast::ExprPtr node = parseBool(tok)) return node;
+  return nullptr;
+}
+
 //------------------------------ Expressions -----------------------------------
 
 ast::ExprPtr parseExpr(ParseTokens &tok) {
   if (tok.check(Token::Type::identifier, "expr")) {
     return std::make_unique<ast::BinaryExpr>();
-  } else {
-    return nullptr;
   }
+  if (ast::ExprPtr node = parseLiteral(tok)) return node;
+  return nullptr;
 }
 
 //------------------------------ Declarations ----------------------------------
