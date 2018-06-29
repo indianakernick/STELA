@@ -9,6 +9,6 @@
 #include <iostream>
 
 int main(int, const char *[]) {
-  std::cout << "Hello there world! How are you?\n";
+  std::cout << "The CLI is yet to be implemented\n";
   return 0;
 }
