@@ -15,6 +15,7 @@ matrix:
     env: CXX=clang++
 
 script:
+- brew upgrade cmake
 - cd build
 - cmake ..
 - make
