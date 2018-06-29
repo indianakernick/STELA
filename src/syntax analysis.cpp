@@ -115,7 +115,7 @@ ast::ExprPtr parseBool(ParseTokens &tok) {
   return literal;
 }
 
-ast::ExprPtr parseExpr(ParseTokens &);
+/*ast::ExprPtr parseExpr(ParseTokens &);
 
 ast::ExprPtr parseArrayOrDict(ParseTokens &tok) {
   if (!tok.checkOp("[")) {
@@ -160,7 +160,7 @@ ast::ExprPtr parseArrayOrDict(ParseTokens &tok) {
   } else {
     // erm...
   }
-}
+}*/
 
 ast::ExprPtr parseLiteral(ParseTokens &tok) {
   if (ast::ExprPtr node = parseString(tok)) return node;
