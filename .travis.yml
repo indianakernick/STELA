@@ -15,7 +15,7 @@ matrix:
     env: CXX=clang++
 
 before_install:
-- brew upgrade cmake
+- brew outdated cmake || brew upgrade cmake
 
 script:
 - cd build
