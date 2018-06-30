@@ -36,7 +36,7 @@ matrix:
     before_script:
       - pip install --user cpp-coveralls
     after_success:
-      - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build --exclude Examples --exclude test --exclude CLI
+      - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build -e Examples -e test -e CLI --extension cpp --extension hpp -i src -i include
 
   # #include <string_view> fails
   # - os: linux
