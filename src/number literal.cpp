@@ -56,12 +56,12 @@ stela::FakeVariant stela::parseNumberLiteral(const std::string_view str, Log &) 
   errno = 0;
   const auto ll = std::strtoll(str.data(), &end, 0);
   if (valid(str, end, ll)) {
-    return FakeVariant{ll};
+    return FakeVariant{static_cast<int64_t>(ll)};
   }
   errno = 0;
   const auto ull = std::strtoull(str.data(), &end, 0);
   if (valid(str, end, ull)) {
-    return FakeVariant{ull};
+    return FakeVariant{static_cast<uint64_t>(ull)};
   }
   return FakeVariant{};
 }
