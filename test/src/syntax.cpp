@@ -167,6 +167,13 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(valElem->name, "Int");
   });
   
+  TEST(Type - Invalid, {
+    const char *source = R"(
+      typealias dummy = {Int};
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Stat - Block, {
     const char *source = R"(
       func dummy() {

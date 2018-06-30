@@ -29,8 +29,10 @@ ast::ParamRef parseRef(ParseTokens &tok) {
 ast::TypePtr parseType(ParseTokens &);
 
 ast::TypePtr parseFuncType(ParseTokens &tok) {
+  if (!tok.checkOp("(")) {
+    return nullptr;
+  }
   auto type = std::make_unique<ast::FuncType>();
-  tok.expectOp("(");
   if (!tok.checkOp(")")) {
     do {
       ast::ParamType &param = type->params.emplace_back();
@@ -70,6 +72,9 @@ ast::TypePtr parseType(ParseTokens &tok) {
     // not an array,
     // not a dictionary
     // so it must be a named type like `Int` or `MyClass`
+    if (tok.front().type != Token::Type::identifier) {
+      return nullptr;
+    }
     auto namedType = std::make_unique<ast::NamedType>();
     namedType->name = tok.expectID();
     return namedType;

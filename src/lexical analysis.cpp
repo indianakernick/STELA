@@ -219,9 +219,9 @@ Tokens stela::lex(const std::string_view source, LogBuf &buf) {
     throw;
   } catch (Utils::ParsingError &e) {
     log.ferror({e.line(), e.column()}) << e.what() << endlog;
+    return {};
   } catch (std::exception &e) {
     log.error() << e.what() << endlog;
     throw;
   }
-  return {};
 }

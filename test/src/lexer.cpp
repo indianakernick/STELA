@@ -229,6 +229,10 @@ TEST_GROUP(Lexer, {
       ASSERT_EQ(tok.type, Token::Type::number);
     }
   });
+  
+  TEST(Invalid token, {
+    ASSERT_THROWS(lex("@", log), FatalError);
+  });
 })
 
 #undef ASSERT_VIEW
