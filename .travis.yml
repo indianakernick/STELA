@@ -24,6 +24,13 @@ matrix:
         sources: ["ubuntu-toolchain-r-test"]
         packages: ["g++-7"]
     env: COMPILER=g++-7
+  - os: linux
+    compiler: clang
+    addons:
+      apt:
+        sources: ['ubuntu-toolchain-r-test']
+        packages: ['clang-5.0']
+    env: COMPILER=clang++-5.0
 
 before_install:
 - export CXX=${COMPILER}
