@@ -13,11 +13,6 @@ target_link_libraries(cli
         STELA
 )
 
-target_compile_options(cli
-        PRIVATE
-        -Wall -Wextra -Wpedantic
-)
-
 install(TARGETS cli
         RUNTIME DESTINATION bin
 )

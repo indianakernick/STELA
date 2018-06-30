@@ -19,8 +19,3 @@ target_link_libraries(Test
         PRIVATE
         STELA
 )
-
-target_compile_options(Test
-        PRIVATE
-        -Wall -Wextra -Wpedantic
-)

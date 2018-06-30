@@ -48,11 +48,6 @@ target_include_directories(STELA
         ${SOURCE_DIR}
 )
 
-target_compile_options(STELA
-        PRIVATE
-        -Wall -Wextra -Wpedantic
-)
-
 target_compile_features(STELA
         PUBLIC
         cxx_std_17
