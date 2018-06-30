@@ -597,4 +597,4 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(lit->value, true);
     }
   });
-});
+})

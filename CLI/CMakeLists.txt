@@ -15,7 +15,7 @@ target_link_libraries(cli
 
 target_compile_options(cli
         PRIVATE
-        -Wall -Wextra -Weffc++ -Wpedantic -Wno-documentation
+        -Wall -Wextra -Wpedantic
 )
 
 install(TARGETS cli

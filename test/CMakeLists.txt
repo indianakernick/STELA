@@ -22,5 +22,5 @@ target_link_libraries(Test
 
 target_compile_options(Test
         PRIVATE
-        -Wall -Wextra -Weffc++ -Wpedantic -Wno-documentation
+        -Wall -Wextra -Wpedantic
 )
