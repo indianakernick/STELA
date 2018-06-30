@@ -12,7 +12,5 @@
 #include "syntax.hpp"
 
 int main() {
-  testLexer();
-  testSyntax();
-  return 0;
+  return !testLexer() + !testSyntax();
 }
