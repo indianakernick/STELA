@@ -45,7 +45,7 @@ This will build a static library, a command-line tool and a test suite. Optional
 
 ```bash
 # might want to run the tests before installing
-test/Test
+test/suite
 make install
 ```
 

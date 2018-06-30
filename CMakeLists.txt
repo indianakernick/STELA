@@ -1,7 +1,10 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.8)
+# need 3.8 for cxx_std_17
+# I commented cxx_std_17 and tested successfully with cmake 3.2
 project(STELA)
 
-include(FetchContent)
+find_package(Git REQUIRED)
+include(ExternalProject)
 
 add_library(STELA STATIC
         "include/STELA/ast.hpp"
@@ -24,14 +27,15 @@ add_library(STELA STATIC
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
 set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 
-FetchContent_Declare(Simpleton
+ExternalProject_Add(
+        Simpleton
         GIT_REPOSITORY https://github.com/Kerndog73/Simpleton-Engine.git
+        UPDATE_COMMAND ${GIT_EXECUTABLE} pull origin master
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
 )
-
-FetchContent_GetProperties(Simpleton)
-if(NOT Simpleton_POPULATED)
-        FetchContent_Populate(Simpleton)
-endif()
+ExternalProject_Get_Property(Simpleton SOURCE_DIR)
 
 target_include_directories(STELA
         INTERFACE
@@ -41,7 +45,7 @@ target_include_directories(STELA
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/STELA>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
-        "${FETCHCONTENT_BASE_DIR}/simpleton-src"
+        ${SOURCE_DIR}
 )
 
 target_compile_options(STELA
