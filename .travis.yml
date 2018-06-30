@@ -24,6 +24,20 @@ matrix:
         sources: ["ubuntu-toolchain-r-test"]
         packages: ["g++-7"]
     env: COMPILER=g++-7
+  - os: linux
+    compiler: gcc
+    addons:
+      apt:
+        sources: ["ubuntu-toolchain-r-test"]
+        packages: ["g++-7"]
+    env:
+      - COMPILER=g++-7
+      - CXXFLAGS="-O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+    before_script:
+      - pip install --user cpp-coveralls
+    after_success:
+      - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build --exclude Examples --exclude test --exclude CLI
+
   # #include <string_view> fails
   # - os: linux
   #   compiler: clang
