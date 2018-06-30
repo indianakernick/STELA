@@ -9,7 +9,7 @@
 #include "log output.hpp"
 
 stela::LogStream::LogStream(LogBuf &buf, const LogCat cat, const LogPri pri)
-  : std::ostream{buf.getStreambuf(cat, pri)},
+  : stream{buf.getStreambuf(cat, pri)},
     buf{buf},
     category{cat},
     priority{pri} {}

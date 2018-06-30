@@ -10,6 +10,7 @@
 #define stela_log_output_hpp
 
 #include "log.hpp"
+#include <cassert>
 #include <iostream>
 
 namespace stela {
@@ -17,7 +18,7 @@ namespace stela {
 struct endlog_t {};
 constexpr endlog_t endlog {};
 
-class LogStream final : public std::ostream {
+class LogStream {
 public:
   LogStream(LogBuf &, LogCat, LogPri);
   
@@ -32,11 +33,12 @@ public:
   
   template <typename T>
   LogStream &operator<<(const T &value) {
-    *static_cast<std::ostream *>(this) << value;
+    stream << value;
     return *this;
   }
 
 private:
+  std::ostream stream;
   LogBuf &buf;
   LogCat category;
   LogPri priority;
