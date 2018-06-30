@@ -29,8 +29,10 @@ matrix:
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-5.0"]
-        packages: ["clang-5.0", "libstdc++-5.0-dev"]
-    env: COMPILER=clang++-5.0
+        packages: ["clang-5.0", "libstdc++-4.9-dev"]
+    env:
+    - COMPILER=clang++-5.0
+    - CXXFLAGS="-stdlib=libstdc++"
 
 before_install:
 - export CXX=${COMPILER}
