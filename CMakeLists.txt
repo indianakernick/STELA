@@ -50,7 +50,7 @@ target_include_directories(STELA
 
 target_compile_options(STELA
         PRIVATE
-        -Wall -Wextra -Weffc++ -Wpedantic -Wno-documentation
+        -Wall -Wextra -Wpedantic
 )
 
 target_compile_features(STELA
