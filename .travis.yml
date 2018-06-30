@@ -28,8 +28,8 @@ matrix:
     compiler: clang
     addons:
       apt:
-        sources: ['llvm-toolchain-trusty-6.0']
-        packages: ['clang-6.0']
+        sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-6.0"]
+        packages: ["clang-6.0", "libstdc++-4.9-dev"]
     env: COMPILER=clang++-6.0
 
 before_install:
