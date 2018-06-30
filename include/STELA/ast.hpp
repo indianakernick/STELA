@@ -10,6 +10,7 @@
 #define stela_ast_hpp
 
 #include <vector>
+#include <memory>
 #include <string_view>
 #include "location.hpp"
 
