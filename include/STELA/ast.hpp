@@ -34,6 +34,9 @@ using StatPtr = std::unique_ptr<Statement>;
 struct Expression : Statement {};
 using ExprPtr = std::unique_ptr<Expression>;
 
+struct Literal : Expression {};
+using LitrPtr = std::unique_ptr<Literal>;
+
 struct Declaration : Statement {};
 using DeclPtr = std::unique_ptr<Declaration>;
 
@@ -295,23 +298,23 @@ struct Enum final : Declaration {
 
 //-------------------------------- Literals ------------------------------------
 
-struct StringLiteral final : Expression {
+struct StringLiteral final : Literal {
   std::string_view value;
 };
 
-struct CharLiteral final : Expression {
+struct CharLiteral final : Literal {
   std::string_view value;
 };
 
-struct NumberLiteral final : Expression {
+struct NumberLiteral final : Literal {
   std::string_view value;
 };
 
-struct BoolLiteral final : Expression {
+struct BoolLiteral final : Literal {
   bool value;
 };
 
-struct ArrayLiteral final : Expression {
+struct ArrayLiteral final : Literal {
   std::vector<ExprPtr> exprs;
 };
 
@@ -320,11 +323,11 @@ struct MapPair {
   ExprPtr val;
 };
 
-struct MapLiteral final : Expression {
+struct MapLiteral final : Literal {
   std::vector<MapPair> pairs;
 };
 
-struct Lambda final : Expression {
+struct Lambda final : Literal {
   FuncParams params;
   TypePtr ret;
   Block body;

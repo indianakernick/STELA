@@ -17,7 +17,7 @@ using namespace stela;
 namespace {
 
 template <typename Literal, bool Trim = false>
-ast::ExprPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
+ast::LitrPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   if (tok.front().type == type) {
     auto literal = std::make_unique<Literal>();
     literal->value = tok.expect(type);
@@ -31,19 +31,19 @@ ast::ExprPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   }
 }
 
-ast::ExprPtr parseString(ParseTokens &tok) {
+ast::LitrPtr parseString(ParseTokens &tok) {
   return parseLiteralToken<ast::StringLiteral, true>(tok, Token::Type::string);
 }
 
-ast::ExprPtr parseChar(ParseTokens &tok) {
+ast::LitrPtr parseChar(ParseTokens &tok) {
   return parseLiteralToken<ast::CharLiteral, true>(tok, Token::Type::character);
 }
 
-ast::ExprPtr parseNumber(ParseTokens &tok) {
+ast::LitrPtr parseNumber(ParseTokens &tok) {
   return parseLiteralToken<ast::NumberLiteral>(tok, Token::Type::number);
 }
 
-ast::ExprPtr parseBool(ParseTokens &tok) {
+ast::LitrPtr parseBool(ParseTokens &tok) {
   bool value;
   if (tok.checkKeyword("true")) {
     value = true;
@@ -57,7 +57,7 @@ ast::ExprPtr parseBool(ParseTokens &tok) {
   return literal;
 }
 
-ast::ExprPtr parseArray(ParseTokens &tok) {
+ast::LitrPtr parseArray(ParseTokens &tok) {
   if (!tok.checkOp("[")) {
     return nullptr;
   }
@@ -71,7 +71,7 @@ ast::ExprPtr parseArray(ParseTokens &tok) {
   return array;
 }
 
-ast::ExprPtr parseMap(ParseTokens &tok) {
+ast::LitrPtr parseMap(ParseTokens &tok) {
   if (!tok.checkOp("[{")) {
     return nullptr;
   }
@@ -99,7 +99,7 @@ ast::Block parseLambdaBody(ParseTokens &tok) {
   return body;
 }
 
-ast::ExprPtr parseLambda(ParseTokens &tok) {
+ast::LitrPtr parseLambda(ParseTokens &tok) {
   if (!tok.checkOp("{")) {
     return nullptr;
   }
@@ -113,13 +113,13 @@ ast::ExprPtr parseLambda(ParseTokens &tok) {
 
 }
 
-ast::ExprPtr stela::parseLitr(ParseTokens &tok) {
-  if (ast::ExprPtr node = parseString(tok)) return node;
-  if (ast::ExprPtr node = parseChar(tok)) return node;
-  if (ast::ExprPtr node = parseNumber(tok)) return node;
-  if (ast::ExprPtr node = parseBool(tok)) return node;
-  if (ast::ExprPtr node = parseArray(tok)) return node;
-  if (ast::ExprPtr node = parseMap(tok)) return node;
-  if (ast::ExprPtr node = parseLambda(tok)) return node;
+ast::LitrPtr stela::parseLitr(ParseTokens &tok) {
+  if (ast::LitrPtr node = parseString(tok)) return node;
+  if (ast::LitrPtr node = parseChar(tok)) return node;
+  if (ast::LitrPtr node = parseNumber(tok)) return node;
+  if (ast::LitrPtr node = parseBool(tok)) return node;
+  if (ast::LitrPtr node = parseArray(tok)) return node;
+  if (ast::LitrPtr node = parseMap(tok)) return node;
+  if (ast::LitrPtr node = parseLambda(tok)) return node;
   return nullptr;
 }

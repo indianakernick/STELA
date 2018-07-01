@@ -14,7 +14,7 @@
 
 namespace stela {
 
-ast::ExprPtr parseLitr(ParseTokens &);
+ast::LitrPtr parseLitr(ParseTokens &);
 
 }
 
