@@ -12,5 +12,11 @@
 #include "syntax.hpp"
 
 int main() {
-  return !testLexer() + !testSyntax();
+  const int failures = !testLexer() + !testSyntax();
+  if (failures == 0) {
+    std::cout << "ALL PASSED!\n";
+  } else {
+    std::cout << "SOME TESTS FAILED!\n";
+  }
+  return failures;
 }

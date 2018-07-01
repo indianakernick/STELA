@@ -70,7 +70,7 @@ TEST_GROUP(Lexer, {
     ASSERT_TYPE(2, oper);
     ASSERT_TYPE(3, identifier);
     ASSERT_TYPE(4, oper);
-    ASSERT_TYPE(5, identifier);
+    ASSERT_TYPE(5, keyword);
     ASSERT_TYPE(6, oper);
     ASSERT_TYPE(7, oper);
     ASSERT_TYPE(8, identifier);

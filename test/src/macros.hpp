@@ -45,7 +45,7 @@
     bool caught = false;                                                        \
     try {                                                                       \
       EXP;                                                                      \
-    } catch (EXCEPTION &) {                                                       \
+    } catch (EXCEPTION &) {                                                     \
       caught = true;                                                            \
     } catch (...) {                                                             \
       PRINT_ERROR "`" #EXP "` should throw a `" #EXCEPTION "` exception\n"      \
@@ -77,7 +77,7 @@
     }                                                                           \
     TYPE *const newPtr = dynamic_cast<TYPE *>(PTR);                             \
     if (newPtr == nullptr) {                                                    \
-      PRINT_ERROR "`" #PTR "` should have a dynamic type of `" #TYPE "`\n";            \
+      PRINT_ERROR "`" #PTR "` should have a dynamic type of `" #TYPE "`\n";     \
       ++failCount;                                                              \
       throw 1;                                                                  \
     }                                                                           \
@@ -118,7 +118,7 @@
     }                                                                           \
     std::cerr << '\n';                                                          \
     if (passedAll) {                                                            \
-      std::cerr << "ALL PASSED!\n\n";                                           \
+      std::cerr << #NAME " PASSED!\n\n";                                        \
     }                                                                           \
     return passedAll;                                                           \
   }
