@@ -787,4 +787,30 @@ TEST_GROUP(Syntax, {
       ASSERT_TRUE(returnStat->expr);
     }
   });
+  
+  TEST(Expr - make, {
+    const char *source = R"(
+      let myObj = make MyStruct();
+      let myInt = make Int(5); // this is valid
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 2);
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      auto *make = ASSERT_DOWN_CAST(const InitCall, let->expr.get());
+      auto *type = ASSERT_DOWN_CAST(const NamedType, make->type.get());
+      ASSERT_EQ(type->name, "MyStruct");
+      ASSERT_TRUE(make->args.empty());
+    }
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      auto *make = ASSERT_DOWN_CAST(const InitCall, let->expr.get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, make->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Int);
+      ASSERT_EQ(make->args.size(), 1);
+      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].expr.get());
+      ASSERT_EQ(num->value, "5");
+    }
+  });
 })

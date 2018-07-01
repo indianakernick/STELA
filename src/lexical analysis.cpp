@@ -24,7 +24,7 @@ namespace {
 
 constexpr std::string_view keywords[] = {
   "func", "inout", "return", "in",
-  "struct", "static", "self", "init",
+  "struct", "static", "self", "init", "make",
   "public", "private",
   "enum", "true", "false",
   "let", "var",
