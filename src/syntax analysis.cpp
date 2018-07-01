@@ -45,26 +45,58 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
   return type;
 }
 
-ast::TypePtr parseArrayOrDictType(ParseTokens &tok) {
+ast::TypePtr parseArrayType(ParseTokens &tok) {
   if (!tok.checkOp("[")) {
     return nullptr;
   }
-  ast::TypePtr elem = parseType(tok);
-  if (tok.checkOp(":")) {
-    // it's a dictionary and `elem` is the key
-    ast::TypePtr val = parseType(tok);
-    tok.expectOp("]");
-    auto dictType = std::make_unique<ast::DictType>();
-    dictType->key = std::move(elem);
-    dictType->val = std::move(val);
-    return dictType;
-  } else {
-    // it's an array and `elem` is the element type
-    tok.expectOp("]");
-    auto arrayType = std::make_unique<ast::ArrayType>();
-    arrayType->elem = std::move(elem);
-    return arrayType;
+  auto arrayType = std::make_unique<ast::ArrayType>();
+  arrayType->elem = tok.expectNode(parseType, "element type in array type");
+  tok.expectOp("]");
+  return arrayType;
+}
+
+ast::TypePtr parseDictType(ParseTokens &tok) {
+  if (!tok.checkOp("[{")) {
+    return nullptr;
   }
+  auto dictType = std::make_unique<ast::DictType>();
+  dictType->key = tok.expectNode(parseType, "key type in dictionary type");
+  tok.expectOp(":");
+  dictType->val = tok.expectNode(parseType, "value type in dictioary type");
+  tok.expectOp("}]");
+  return dictType;
+}
+
+ast::TypePtr parseBuiltinType(ParseTokens &tok) {
+  #define CHECK(NAME)                                                           \
+    if (tok.checkKeyword(#NAME)) {                                              \
+      auto type = std::make_unique<ast::BuiltinType>();                         \
+      type->value = ast::BuiltinType::NAME;                                     \
+      return type;                                                              \
+    }
+
+  CHECK(Void)
+  CHECK(Int)
+  CHECK(Char)
+  CHECK(Bool)
+  CHECK(Float)
+  CHECK(Double)
+  CHECK(String)
+
+  /*
+  CHECK(Int8)
+  CHECK(Int16)
+  CHECK(Int32)
+  CHECK(Int64)
+  CHECK(UInt8)
+  CHECK(UInt16)
+  CHECK(UInt32)
+  CHECK(UInt64)
+  */
+
+  return nullptr;
+  
+  #undef CHECK
 }
 
 ast::TypePtr parseNamedType(ParseTokens &tok) {
@@ -77,13 +109,11 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
 }
 
 ast::TypePtr parseType(ParseTokens &tok) {
-  if (ast::TypePtr type = parseFuncType(tok)) {
-    return type;
-  } else if (ast::TypePtr type = parseArrayOrDictType(tok)) {
-    return type;
-  } else {
-    return parseNamedType(tok);
-  }
+  if (ast::TypePtr type = parseFuncType(tok)) return type;
+  if (ast::TypePtr type = parseArrayType(tok)) return type;
+  if (ast::TypePtr type = parseDictType(tok)) return type;
+  if (ast::TypePtr type = parseBuiltinType(tok)) return type;
+  return parseNamedType(tok);
 }
 
 //-------------------------------- Literals ------------------------------------

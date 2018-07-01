@@ -108,10 +108,12 @@ TEST_GROUP(Syntax, {
     
     ASSERT_EQ(func->params[0].name, "one");
     ASSERT_EQ(func->params[0].ref, ParamRef::value);
+    auto *intType = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
+    ASSERT_EQ(intType->value, BuiltinType::Int);
     
     auto *array = ASSERT_DOWN_CAST(const ArrayType, func->ret.get());
-    auto *type = ASSERT_DOWN_CAST(const NamedType, array->elem.get());
-    ASSERT_EQ(type->name, "Float");
+    auto *type = ASSERT_DOWN_CAST(const BuiltinType, array->elem.get());
+    ASSERT_EQ(type->value, BuiltinType::Float);
   });
   
   TEST(Func - two param, {
@@ -137,6 +139,59 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
+  TEST(Type - Builtins, {
+    const char *source = R"(
+      // Semantic analyser will catch this.
+      // Valid syntax, invalid semantics
+      var myVoid: Void;
+    
+      var myInt: Int;
+      var myChar: Char;
+      var myBool: Bool;
+      var myFloat: Float;
+      var myDouble: Double;
+      var myString: String;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 7);
+    
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[0].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Void);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[1].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Int);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[2].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Char);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[3].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Bool);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[4].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Float);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[5].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::Double);
+    }
+    {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[6].get());
+      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
+      ASSERT_EQ(type->value, BuiltinType::String);
+    }
+  });
+  
   TEST(Type - Array of functions, {
     const char *source = R"(
       typealias dummy = [(inout Int, inout Double) -> Void];
@@ -152,17 +207,17 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params[0].ref, ParamRef::inout);
     ASSERT_EQ(func->params[1].ref, ParamRef::inout);
     
-    auto *first = ASSERT_DOWN_CAST(const NamedType, func->params[0].type.get());
-    ASSERT_EQ(first->name, "Int");
-    auto *second = ASSERT_DOWN_CAST(const NamedType, func->params[1].type.get());
-    ASSERT_EQ(second->name, "Double");
-    auto *ret = ASSERT_DOWN_CAST(const NamedType, func->ret.get());
-    ASSERT_EQ(ret->name, "Void");
+    auto *first = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
+    ASSERT_EQ(first->value, BuiltinType::Int);
+    auto *second = ASSERT_DOWN_CAST(const BuiltinType, func->params[1].type.get());
+    ASSERT_EQ(second->value, BuiltinType::Double);
+    auto *ret = ASSERT_DOWN_CAST(const BuiltinType, func->ret.get());
+    ASSERT_EQ(ret->value, BuiltinType::Void);
   });
   
   TEST(Type - Dictionary, {
     const char *source = R"(
-      typealias dummy = [String: [Int]];
+      typealias dummy = [{String: [Int]}];
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
@@ -170,11 +225,11 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(alias->name, "dummy");
     
     auto *dict = ASSERT_DOWN_CAST(const DictType, alias->type.get());
-    auto *key = ASSERT_DOWN_CAST(const NamedType, dict->key.get());
-    ASSERT_EQ(key->name, "String");
+    auto *key = ASSERT_DOWN_CAST(const BuiltinType, dict->key.get());
+    ASSERT_EQ(key->value, BuiltinType::String);
     auto *val = ASSERT_DOWN_CAST(const ArrayType, dict->val.get());
-    auto *valElem = ASSERT_DOWN_CAST(const NamedType, val->elem.get());
-    ASSERT_EQ(valElem->name, "Int");
+    auto *valElem = ASSERT_DOWN_CAST(const BuiltinType, val->elem.get());
+    ASSERT_EQ(valElem->value, BuiltinType::Int);
   });
   
   TEST(Type - Invalid, {
@@ -432,7 +487,7 @@ TEST_GROUP(Syntax, {
         var noInit: Double;
         var initAndType: Int = expr;
         var deducedVar = expr;
-        let myLet: String = expr;
+        let myLet: MyClass = expr;
         let deducedLet = expr;
       }
     )";
@@ -446,16 +501,16 @@ TEST_GROUP(Syntax, {
       auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
       ASSERT_EQ(noInit->name, "noInit");
       ASSERT_FALSE(noInit->expr);
-      auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
-      ASSERT_EQ(noInitType->name, "Double");
+      auto *noInitType = ASSERT_DOWN_CAST(const BuiltinType, noInit->type.get());
+      ASSERT_EQ(noInitType->value, BuiltinType::Double);
     }
     
     {
       auto *initAndType = ASSERT_DOWN_CAST(const Var, block[1].get());
       ASSERT_EQ(initAndType->name, "initAndType");
       ASSERT_TRUE(initAndType->expr);
-      auto *initAndTypeT = ASSERT_DOWN_CAST(const NamedType, initAndType->type.get());
-      ASSERT_EQ(initAndTypeT->name, "Int");
+      auto *initAndTypeT = ASSERT_DOWN_CAST(const BuiltinType, initAndType->type.get());
+      ASSERT_EQ(initAndTypeT->value, BuiltinType::Int);
     }
     
     {
@@ -470,7 +525,7 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(myLet->name, "myLet");
       ASSERT_TRUE(myLet->expr);
       auto *myLetType = ASSERT_DOWN_CAST(const NamedType, myLet->type.get());
-      ASSERT_EQ(myLetType->name, "String");
+      ASSERT_EQ(myLetType->name, "MyClass");
     }
     
     {

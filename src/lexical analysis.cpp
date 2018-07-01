@@ -32,13 +32,21 @@ constexpr std::string_view keywords[] = {
   "switch", "case", "default",
   "while", "for", "repeat",
   "break", "continue", "fallthrough",
-  "typealias"
+  "typealias",
+  
+  "Void",
+  "Int",
+  "Char",
+  "Bool",
+  "Float",
+  "Double",
+  "String"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
 constexpr std::string_view oper[] = {
   "<<=", ">>=", "==", "!=", "<=", ">=", "&&", "||", "--", "++", "->", "+=",
-  "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>", "=", "!", "<", ">", "&",
+  "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>", "[{", "}]", "=", "!", "<", ">", "&",
   "|", "^", "~", "{", "}", "(", ")", "[", "]", "+", "-", "*", "/", "%", ".",
   ",", "?", ":", ";"
 };

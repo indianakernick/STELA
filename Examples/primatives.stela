@@ -31,11 +31,15 @@ String     a collection of Characters
 Array<Int> is not valid STELA
 since STELA doesn't have generics, it wouldn't make sense to use them here
 
-no sets
+This is where we diverge from Swift a far bit. To make the language easier to
+parse and produce better error messages,
 
-[Int: String] is a dictionary where the key is Int and the value is String
+[  means array
+[{ means dictionary
+[( could mean tuple if I decide that tuples are necessary
+[{Int: String}] denotes a dictionary
+
+[{Int: String}] is a dictionary where the key is Int and the value is String
 once again, Dictionary<Int, String> is not valid STELA
-
-no tuples
 
 */
