@@ -651,11 +651,11 @@ TEST_GROUP(Syntax, {
     
     {
       const auto *lit = ASSERT_DOWN_CAST(const StringLiteral, block[0].get());
-      ASSERT_EQ(lit->value, "\"This is a string\"");
+      ASSERT_EQ(lit->value, "This is a string");
     }
     {
       const auto *lit = ASSERT_DOWN_CAST(const CharLiteral, block[1].get());
-      ASSERT_EQ(lit->value, "'c'");
+      ASSERT_EQ(lit->value, "c");
     }
     {
       const auto *lit = ASSERT_DOWN_CAST(const NumberLiteral, block[2].get());
@@ -730,7 +730,7 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(lit->pairs.size(), 1);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
-      ASSERT_EQ(sevenKey->value, "\"seven\"");
+      ASSERT_EQ(sevenKey->value, "seven");
       const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
       ASSERT_EQ(sevenVal->value, "7");
     }
@@ -739,17 +739,17 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(lit->pairs.size(), 3);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
-      ASSERT_EQ(sevenKey->value, "\"seven\"");
+      ASSERT_EQ(sevenKey->value, "seven");
       const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
       ASSERT_EQ(sevenVal->value, "7");
       
       const auto *eightKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[1].key.get());
-      ASSERT_EQ(eightKey->value, "\"eight\"");
+      ASSERT_EQ(eightKey->value, "eight");
       const auto *eightVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[1].val.get());
       ASSERT_EQ(eightVal->value, "8");
       
       const auto *nineKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[2].key.get());
-      ASSERT_EQ(nineKey->value, "\"nine\"");
+      ASSERT_EQ(nineKey->value, "nine");
       const auto *nineVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[2].val.get());
       ASSERT_EQ(nineVal->value, "9");
     }

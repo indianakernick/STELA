@@ -119,11 +119,15 @@ ast::TypePtr parseType(ParseTokens &tok) {
 
 //-------------------------------- Literals ------------------------------------
 
-template <typename Literal>
+template <typename Literal, bool Trim = false>
 ast::ExprPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   if (tok.front().type == type) {
     auto literal = std::make_unique<Literal>();
     literal->value = tok.expect(type);
+    if constexpr (Trim) {
+      literal->value.remove_prefix(1);
+      literal->value.remove_suffix(1);
+    }
     return literal;
   } else {
     return nullptr;
@@ -131,11 +135,11 @@ ast::ExprPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
 }
 
 ast::ExprPtr parseString(ParseTokens &tok) {
-  return parseLiteralToken<ast::StringLiteral>(tok, Token::Type::string);
+  return parseLiteralToken<ast::StringLiteral, true>(tok, Token::Type::string);
 }
 
 ast::ExprPtr parseChar(ParseTokens &tok) {
-  return parseLiteralToken<ast::CharLiteral>(tok, Token::Type::character);
+  return parseLiteralToken<ast::CharLiteral, true>(tok, Token::Type::character);
 }
 
 ast::ExprPtr parseNumber(ParseTokens &tok) {
