@@ -754,4 +754,37 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(nineVal->value, "9");
     }
   });
+  
+  TEST(Expr - Lambda, {
+    const char *source = R"(
+      let nothing = {() in };
+      let identity = {(n: Int) -> Int in
+        return expr;
+      };
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 2);
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      auto *lambda = ASSERT_DOWN_CAST(const Lambda, let->expr.get());
+      ASSERT_TRUE(lambda->params.empty());
+      ASSERT_FALSE(lambda->ret);
+      ASSERT_TRUE(lambda->body.nodes.empty());
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      auto *lambda = ASSERT_DOWN_CAST(const Lambda, let->expr.get());
+      ASSERT_EQ(lambda->params.size(), 1);
+      
+      ASSERT_EQ(lambda->params[0].name, "n");
+      auto *n = ASSERT_DOWN_CAST(const BuiltinType, lambda->params[0].type.get());
+      ASSERT_EQ(n->value, BuiltinType::Int);
+      
+      ASSERT_EQ(lambda->body.nodes.size(), 1);
+      auto *returnStat = ASSERT_DOWN_CAST(const Return, lambda->body.nodes[0].get());
+      ASSERT_TRUE(returnStat->expr);
+    }
+  });
 })

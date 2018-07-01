@@ -197,6 +197,34 @@ ast::ExprPtr parseMap(ParseTokens &tok) {
   return map;
 }
 
+ast::StatPtr parseStatement(ParseTokens &);
+
+ast::Block parseLambdaBody(ParseTokens &tok) {
+  ast::Block body;
+  Context ctx = tok.context("in body");
+  tok.expectKeyword("in");
+  while (ast::StatPtr node = parseStatement(tok)) {
+    body.nodes.emplace_back(std::move(node));
+  }
+  tok.expectOp("}");
+  return body;
+}
+
+ast::FuncParams parseFuncParams(ParseTokens &);
+ast::TypePtr parseFuncRet(ParseTokens &);
+
+ast::ExprPtr parseLambda(ParseTokens &tok) {
+  if (!tok.checkOp("{")) {
+    return nullptr;
+  }
+  Context ctx = tok.context("in lambda expression");
+  auto lambda = std::make_unique<ast::Lambda>();
+  lambda->params = parseFuncParams(tok);
+  lambda->ret = parseFuncRet(tok);
+  lambda->body = parseLambdaBody(tok);
+  return lambda;
+}
+
 ast::ExprPtr parseLiteral(ParseTokens &tok) {
   if (ast::ExprPtr node = parseString(tok)) return node;
   if (ast::ExprPtr node = parseChar(tok)) return node;
@@ -204,6 +232,7 @@ ast::ExprPtr parseLiteral(ParseTokens &tok) {
   if (ast::ExprPtr node = parseBool(tok)) return node;
   if (ast::ExprPtr node = parseArray(tok)) return node;
   if (ast::ExprPtr node = parseMap(tok)) return node;
+  if (ast::ExprPtr node = parseLambda(tok)) return node;
   return nullptr;
 }
 
@@ -238,6 +267,7 @@ ast::FuncParams parseFuncParams(ParseTokens &tok) {
 
 ast::TypePtr parseFuncRet(ParseTokens &tok) {
   if (tok.checkOp("->")) {
+    tok.context("after ->");
     return tok.expectNode(parseType, "type");
   } else {
     return nullptr;
@@ -248,6 +278,7 @@ ast::StatPtr parseStatement(ParseTokens &);
 
 ast::Block parseFuncBody(ParseTokens &tok) {
   ast::Block body;
+  Context ctx = tok.context("in body");
   tok.expectOp("{");
   while (ast::StatPtr node = parseStatement(tok)) {
     body.nodes.emplace_back(std::move(node));

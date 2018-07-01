@@ -34,7 +34,7 @@ public:
   auto expectNode(ParseFunc &&parse, const std::string_view msg) {
     auto node = parse(*this);
     if (node == nullptr) {
-      log_.ferror(beg->loc) << "Expected " << msg << ctxStack << endlog;
+      logger.ferror(beg->loc) << "Expected " << msg << ctxStack << endlog;
     }
     return node;
   }
@@ -56,7 +56,7 @@ public:
 private:
   const Token *beg;
   const Token *end;
-  Log &log_;
+  Log &logger;
   ContextStack ctxStack;
   
   void expectToken();
