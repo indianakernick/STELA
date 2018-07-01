@@ -26,8 +26,6 @@ public:
   const Token &front() const;
   Loc lastLoc() const;
   
-  void unget();
-  
   template <typename ParseFunc>
   auto expectNode(ParseFunc &&parse, const std::string_view msg) {
     auto node = parse(*this);

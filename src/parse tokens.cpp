@@ -54,10 +54,6 @@ stela::Loc stela::ParseTokens::lastLoc() const {
   return beg[-1].loc;
 }
 
-void stela::ParseTokens::unget() {
-  --beg;
-}
-
 bool stela::ParseTokens::check(const Token::Type type, const std::string_view view) {
   if (empty() || beg->type != type || beg->view != view) {
     return false;
