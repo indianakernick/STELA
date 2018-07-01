@@ -63,7 +63,6 @@
 
 /* Begin PBXFileReference section */
 		450E327720E65D5400F222F1 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
-		450E327820E846EF00F222F1 /* appveyor.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = appveyor.yml; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -135,7 +134,6 @@
 				45BBA3F420D64086006108C1 /* README.md */,
 				45EE9C3020E3AAF500CC3289 /* CMakeLists.txt */,
 				450E327720E65D5400F222F1 /* .travis.yml */,
-				450E327820E846EF00F222F1 /* appveyor.yml */,
 				45BBA40B20D72E33006108C1 /* Examples */,
 				45BBA40720D642C7006108C1 /* include */,
 				45BBA3F320D63E7B006108C1 /* src */,
