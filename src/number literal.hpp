@@ -19,7 +19,6 @@ namespace stela {
 size_t validNumberLiteral(std::string_view, Log &);
 
 // Xcode doesn't have std::variant yet
-// maybe I should use CLion for this project
 struct FakeVariant {
   union {
     double f;

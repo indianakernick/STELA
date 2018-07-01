@@ -670,4 +670,88 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(lit->value, false);
     }
   });
+  
+  TEST(Expr - Array, {
+    const char *source = R"(
+      func dummy() {
+        [];
+        [7];
+        [7, 8, 9];
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 3);
+    
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[0].get());
+      ASSERT_TRUE(lit->exprs.empty());
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[1].get());
+      ASSERT_EQ(lit->exprs.size(), 1);
+      const auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
+      ASSERT_EQ(seven->value, "7");
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[2].get());
+      ASSERT_EQ(lit->exprs.size(), 3);
+      const auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
+      ASSERT_EQ(seven->value, "7");
+      const auto *eight = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[1].get());
+      ASSERT_EQ(eight->value, "8");
+      const auto *nine = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[2].get());
+      ASSERT_EQ(nine->value, "9");
+    }
+  });
+  
+  TEST(Expr - Dict, {
+    const char *source = R"(
+      func dummy() {
+        [{}];
+        [{"seven": 7}];
+        [{"seven": 7, "eight": 8, "nine": 9}];
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 3);
+    
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[0].get());
+      ASSERT_TRUE(lit->pairs.empty());
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[1].get());
+      ASSERT_EQ(lit->pairs.size(), 1);
+      
+      const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
+      ASSERT_EQ(sevenKey->value, "\"seven\"");
+      const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
+      ASSERT_EQ(sevenVal->value, "7");
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[2].get());
+      ASSERT_EQ(lit->pairs.size(), 3);
+      
+      const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
+      ASSERT_EQ(sevenKey->value, "\"seven\"");
+      const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
+      ASSERT_EQ(sevenVal->value, "7");
+      
+      const auto *eightKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[1].key.get());
+      ASSERT_EQ(eightKey->value, "\"eight\"");
+      const auto *eightVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[1].val.get());
+      ASSERT_EQ(eightVal->value, "8");
+      
+      const auto *nineKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[2].key.get());
+      ASSERT_EQ(nineKey->value, "\"nine\"");
+      const auto *nineVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[2].val.get());
+      ASSERT_EQ(nineVal->value, "9");
+    }
+  });
 })
