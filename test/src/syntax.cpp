@@ -155,40 +155,10 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 7);
     
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[0].get());
+    for (int i = 0; i != 7; ++i) {
+      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[i].get());
       auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Void);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[1].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Int);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[2].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Char);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[3].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Bool);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[4].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Float);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[5].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Double);
-    }
-    {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[6].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, BuiltinType::String);
+      ASSERT_EQ(type->value, static_cast<BuiltinType::Enum>(i));
     }
   });
   
