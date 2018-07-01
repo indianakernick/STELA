@@ -8,6 +8,7 @@
 
 #include "context stack.hpp"
 
+#include <cassert>
 #include <iostream>
 
 stela::Context::~Context() {
