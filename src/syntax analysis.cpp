@@ -45,39 +45,44 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
   return type;
 }
 
-ast::TypePtr parseType(ParseTokens &tok) {
-  if (tok.checkOp("(")) {
-    tok.unget();
-    return parseFuncType(tok);
-  } else if (tok.checkOp("[")) {
-    // could be an array or a dictionary
-    ast::TypePtr elem = parseType(tok);
-    if (tok.checkOp(":")) {
-      // it's a dictionary and `elem` is the key
-      ast::TypePtr val = parseType(tok);
-      tok.expectOp("]");
-      auto dictType = std::make_unique<ast::DictType>();
-      dictType->key = std::move(elem);
-      dictType->val = std::move(val);
-      return dictType;
-    } else {
-      // it's an array and `elem` is the element type
-      tok.expectOp("]");
-      auto arrayType = std::make_unique<ast::ArrayType>();
-      arrayType->elem = std::move(elem);
-      return arrayType;
-    }
+ast::TypePtr parseArrayOrDictType(ParseTokens &tok) {
+  if (!tok.checkOp("[")) {
+    return nullptr;
+  }
+  ast::TypePtr elem = parseType(tok);
+  if (tok.checkOp(":")) {
+    // it's a dictionary and `elem` is the key
+    ast::TypePtr val = parseType(tok);
+    tok.expectOp("]");
+    auto dictType = std::make_unique<ast::DictType>();
+    dictType->key = std::move(elem);
+    dictType->val = std::move(val);
+    return dictType;
   } else {
-    // not a function,
-    // not an array,
-    // not a dictionary
-    // so it must be a named type like `Int` or `MyClass`
-    if (tok.front().type != Token::Type::identifier) {
-      return nullptr;
-    }
-    auto namedType = std::make_unique<ast::NamedType>();
-    namedType->name = tok.expectID();
-    return namedType;
+    // it's an array and `elem` is the element type
+    tok.expectOp("]");
+    auto arrayType = std::make_unique<ast::ArrayType>();
+    arrayType->elem = std::move(elem);
+    return arrayType;
+  }
+}
+
+ast::TypePtr parseNamedType(ParseTokens &tok) {
+  if (tok.front().type != Token::Type::identifier) {
+    return nullptr;
+  }
+  auto namedType = std::make_unique<ast::NamedType>();
+  namedType->name = tok.expectID();
+  return namedType;
+}
+
+ast::TypePtr parseType(ParseTokens &tok) {
+  if (ast::TypePtr type = parseFuncType(tok)) {
+    return type;
+  } else if (ast::TypePtr type = parseArrayOrDictType(tok)) {
+    return type;
+  } else {
+    return parseNamedType(tok);
   }
 }
 
@@ -564,7 +569,7 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
     } else {
       const Token &token = tok.front();
       log.info(token.loc) << "Only declarations are allowed at global scope" << endlog;
-      log.ferror(token.loc) << "Unexpected token " << token << " in global scope" << endlog;
+      log.ferror(token.loc) << "Unexpected " << token << " in global scope" << endlog;
     };
   }
   

@@ -75,6 +75,16 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
+  TEST(Enum - bad value, {
+    const char *source = R"(
+      enum BadValue {
+        five = 5,
+        oh_no = ;
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Func - empty, {
     const char *source = R"(
       func empty() {}
@@ -351,7 +361,7 @@ TEST_GROUP(Syntax, {
     }
   });
   
-  TEST(Stat - Switch, {
+  TEST(Switch - standard, {
     const char *source = R"(
       func dummy() {
         switch (expr) {}
@@ -402,6 +412,18 @@ TEST_GROUP(Syntax, {
       ASSERT_TRUE(body[10].get());
       ASSERT_DOWN_CAST(const Return, body[11].get());
     }
+  });
+  
+  TEST(Switch - no statement, {
+    const char *source = R"(
+      func dummy() {
+        switch (expr) {
+          case expr:
+            |; // wait, that's not a statement
+        }
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Decl - Var and Let, {
@@ -457,6 +479,20 @@ TEST_GROUP(Syntax, {
       ASSERT_TRUE(deducedLet->expr);
       ASSERT_FALSE(deducedLet->type);
     }
+  });
+  
+  TEST(Decl - global, {
+    const char *source = R"(
+      ;;; // a few extra semicolons never hurt anyone
+    
+      if (expr) {} // that's not a declaration
+    )";
+    // good test for the color logger because all priorities are used
+    // can't use color logger for everything because Xcode Console doesn't
+    // support color. ;-(
+    ColorLog colorLog;
+    colorLog.pri(LogPri::verbose);
+    ASSERT_THROWS(createAST(source, colorLog), FatalError);
   });
   
   TEST(Struct - empty, {
@@ -579,13 +615,14 @@ TEST_GROUP(Syntax, {
         'c';
         73;
         true;
+        false;
       }
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 4);
+    ASSERT_EQ(block.size(), 5);
     
     {
       const auto *lit = ASSERT_DOWN_CAST(const StringLiteral, block[0].get());
@@ -602,6 +639,10 @@ TEST_GROUP(Syntax, {
     {
       const auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, block[3].get());
       ASSERT_EQ(lit->value, true);
+    }
+    {
+      const auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, block[4].get());
+      ASSERT_EQ(lit->value, false);
     }
   });
 })

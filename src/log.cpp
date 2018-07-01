@@ -8,6 +8,7 @@
 
 #include "log.hpp"
 
+#include <cassert>
 #include <iomanip>
 #include <sstream>
 #include <iostream>
@@ -22,8 +23,6 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
       return stream << "Syntax";
     case LogCat::semantic:
       return stream << "Semantic";
-    default:
-      return stream;
   }
 }
 
@@ -39,7 +38,8 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
     case LogPri::error:
     case LogPri::fatal_error:
       return stream << "error";
-    default:
+    case LogPri::nothing:
+      assert(false);
       return stream;
   }
 }
@@ -59,9 +59,6 @@ public:
   std::streamsize xsputn(const char_type *, const std::streamsize n) override {
     return n;
   }
-  int_type overflow(const int_type c) override {
-    return c;
-  }
 };
 
 }
@@ -70,7 +67,6 @@ std::streambuf *stela::silentBuf() {
   static SilentBuf buf;
   return &buf;
 }
-
 
 void stela::LogBuf::pri(const LogPri newPri) {
   priority = newPri;
