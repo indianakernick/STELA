@@ -32,6 +32,7 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
   if (!tok.checkOp("(")) {
     return nullptr;
   }
+  Context ctx = tok.context("in function type");
   auto type = std::make_unique<ast::FuncType>();
   if (!tok.checkOp(")")) {
     do {
@@ -40,6 +41,7 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
       param.type = parseType(tok);
     } while (tok.expectEitherOp(")", ",") == ",");
   }
+  ctx.desc("after function parameter types");
   tok.expectOp("->");
   type->ret = parseType(tok);
   return type;
@@ -49,8 +51,9 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
   if (!tok.checkOp("[")) {
     return nullptr;
   }
+  Context ctx = tok.context("in array type");
   auto arrayType = std::make_unique<ast::ArrayType>();
-  arrayType->elem = tok.expectNode(parseType, "element type in array type");
+  arrayType->elem = tok.expectNode(parseType, "element type");
   tok.expectOp("]");
   return arrayType;
 }
@@ -59,10 +62,11 @@ ast::TypePtr parseMapType(ParseTokens &tok) {
   if (!tok.checkOp("[{")) {
     return nullptr;
   }
+  Context ctx = tok.context("in map type");
   auto mapType = std::make_unique<ast::MapType>();
-  mapType->key = tok.expectNode(parseType, "key type in map type");
+  mapType->key = tok.expectNode(parseType, "key type");
   tok.expectOp(":");
-  mapType->val = tok.expectNode(parseType, "value type in map type");
+  mapType->val = tok.expectNode(parseType, "value type");
   tok.expectOp("}]");
   return mapType;
 }
@@ -166,10 +170,11 @@ ast::ExprPtr parseArray(ParseTokens &tok) {
   if (!tok.checkOp("[")) {
     return nullptr;
   }
+  Context ctx = tok.context("in array literal");
   auto array = std::make_unique<ast::ArrayLiteral>();
   if (!tok.checkOp("]")) {
     do {
-      array->exprs.push_back(tok.expectNode(parseExpr, "expression in array literal"));
+      array->exprs.push_back(tok.expectNode(parseExpr, "expression"));
     } while (tok.expectEitherOp(",", "]") == ",");
   }
   return array;
@@ -179,13 +184,14 @@ ast::ExprPtr parseMap(ParseTokens &tok) {
   if (!tok.checkOp("[{")) {
     return nullptr;
   }
+  Context ctx = tok.context("in map literal");
   auto map = std::make_unique<ast::MapLiteral>();
   if (!tok.checkOp("}]")) {
     do {
       ast::MapPair &pair = map->pairs.emplace_back();
-      pair.key = tok.expectNode(parseExpr, "key expression in map literal");
+      pair.key = tok.expectNode(parseExpr, "key expression");
       tok.expectOp(":");
-      pair.val = tok.expectNode(parseExpr, "value expression in map literal");
+      pair.val = tok.expectNode(parseExpr, "value expression");
     } while (tok.expectEitherOp(",", "}]") == ",");
   }
   return map;
@@ -214,6 +220,7 @@ ast::ExprPtr parseExpr(ParseTokens &tok) {
 //------------------------------ Declarations ----------------------------------
 
 ast::FuncParams parseFuncParams(ParseTokens &tok) {
+  Context ctx = tok.context("in parameter list");
   tok.expectOp("(");
   if (tok.checkOp(")")) {
     return {};
@@ -254,8 +261,10 @@ ast::DeclPtr parseFunc(ParseTokens &tok) {
     return nullptr;
   }
   
+  Context ctx = tok.context("in function declaration");
   auto funcNode = std::make_unique<ast::Func>();
   funcNode->name = tok.expectID();
+  ctx.ident(funcNode->name);
   funcNode->params = parseFuncParams(tok);
   funcNode->ret = parseFuncRet(tok);
   funcNode->body = parseFuncBody(tok);
@@ -267,6 +276,7 @@ ast::DeclPtr parseVar(ParseTokens &tok) {
   if (!tok.checkKeyword("var")) {
     return nullptr;
   }
+  Context ctx = tok.context("in var declaration");
   auto var = std::make_unique<ast::Var>();
   var->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -283,6 +293,7 @@ ast::DeclPtr parseLet(ParseTokens &tok) {
   if (!tok.checkKeyword("let")) {
     return nullptr;
   }
+  Context ctx = tok.context("in var declaration");
   auto let = std::make_unique<ast::Let>();
   let->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -298,6 +309,7 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
   if (!tok.checkKeyword("typealias")) {
     return nullptr;
   }
+  Context ctx = tok.context("in type alias");
   auto aliasNode = std::make_unique<ast::TypeAlias>();
   aliasNode->name = tok.expectID();
   tok.expectOp("=");
@@ -310,6 +322,7 @@ ast::DeclPtr parseInit(ParseTokens &tok) {
   if (!tok.checkKeyword("init")) {
     return nullptr;
   }
+  Context ctx = tok.context("in init function");
   auto init = std::make_unique<ast::Init>();
   init->params = parseFuncParams(tok);
   init->body = parseFuncBody(tok);
@@ -347,8 +360,10 @@ ast::DeclPtr parseStruct(ParseTokens &tok) {
   if (!tok.checkKeyword("struct")) {
     return nullptr;
   }
+  Context ctx = tok.context("in struct");
   auto structNode = std::make_unique<ast::Struct>();
   structNode->name = tok.expectID();
+  ctx.desc(structNode->name);
   tok.expectOp("{");
   while(!tok.checkOp("}")) {
     structNode->body.push_back(parseStructMember(tok));
@@ -369,8 +384,10 @@ ast::DeclPtr parseEnum(ParseTokens &tok) {
   if (!tok.checkKeyword("enum")) {
     return nullptr;
   }
+  Context ctx = tok.context("in enum");
   auto enumNode = std::make_unique<ast::Enum>();
   enumNode->name = tok.expectID();
+  ctx.ident(enumNode->name);
   tok.expectOp("{");
   
   if (!tok.checkOp("}")) {
@@ -398,6 +415,7 @@ ast::DeclPtr parseDecl(ParseTokens &tok) {
 // an expression followed by a ; is a statement
 ast::StatPtr parseExprStatement(ParseTokens &tok) {
   if (ast::StatPtr node = parseExpr(tok)) {
+    Context ctx = tok.context("after expression");
     tok.expectOp(";");
     return node;
   } else {
@@ -411,6 +429,7 @@ ast::StatPtr parseIf(ParseTokens &tok) {
   if (!tok.checkKeyword("if")) {
     return nullptr;
   }
+  Context ctx = tok.context("in if statement");
   auto ifNode = std::make_unique<ast::If>();
   tok.expectOp("(");
   ifNode->cond = tok.expectNode(parseExpr, "condition expression");
@@ -426,6 +445,7 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
   if (!tok.checkKeyword("switch")) {
     return nullptr;
   }
+  Context ctx = tok.context("in switch statement");
   auto switchNode = std::make_unique<ast::Switch>();
   tok.expectOp("(");
   switchNode->expr = tok.expectNode(parseExpr, "expression");
@@ -445,7 +465,7 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
       switchNode->body.nodes.emplace_back(std::make_unique<ast::SwitchDefault>());
     } else {
       tok.log().ferror(tok.front().loc) << "Expected case label or statement but found "
-        << tok.front() << endlog;
+        << tok.front() << tok.contextStack() << endlog;
     }
   }
   
@@ -455,6 +475,8 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
 template <typename Type>
 ast::StatPtr parseKeywordStatement(ParseTokens &tok, const std::string_view name) {
   if (tok.checkKeyword(name)) {
+    Context ctx = tok.context("after keyword");
+    ctx.ident(name);
     tok.expectOp(";");
     return std::make_unique<Type>();
   } else {
@@ -476,6 +498,7 @@ ast::StatPtr parseFallthrough(ParseTokens &tok) {
 
 ast::StatPtr parseReturn(ParseTokens &tok) {
   if (tok.checkKeyword("return")) {
+    Context ctx = tok.context("in return statement");
     if (tok.checkOp(";")) {
       return std::make_unique<ast::Return>();
     }
@@ -492,6 +515,7 @@ ast::StatPtr parseWhile(ParseTokens &tok) {
   if (!tok.checkKeyword("while")) {
     return nullptr;
   }
+  Context ctx = tok.context("in while statement");
   tok.expectOp("(");
   auto whileNode = std::make_unique<ast::While>();
   whileNode->cond = tok.expectNode(parseExpr, "condition expression");
@@ -504,6 +528,7 @@ ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
   if (!tok.checkKeyword("repeat")) {
     return nullptr;
   }
+  Context ctx = tok.context("in repeat statement");
   auto repeat = std::make_unique<ast::RepeatWhile>();
   repeat->body = tok.expectNode(parseStatement, "statement or block");
   tok.expectKeyword("while");
@@ -525,6 +550,7 @@ ast::StatPtr parseFor(ParseTokens &tok) {
   if (!tok.checkKeyword("for")) {
     return nullptr;
   }
+  Context ctx = tok.context("in for statement");
   tok.expectOp("(");
   auto forNode = std::make_unique<ast::For>();
   forNode->init = parseForInit(tok); // init statement is optional
@@ -560,6 +586,7 @@ ast::StatPtr parseStatement(ParseTokens &tok) {
 
 ast::StatPtr parseBlock(ParseTokens &tok) {
   if (tok.checkOp("{")) {
+    Context ctx = tok.context("in block");
     auto block = std::make_unique<ast::Block>();
     while (ast::StatPtr node = parseStatement(tok)) {
       block->nodes.emplace_back(std::move(node));

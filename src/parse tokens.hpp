@@ -17,6 +17,38 @@ namespace stela {
 std::ostream &operator<<(std::ostream &, Token::Type);
 std::ostream &operator<<(std::ostream &, const Token &);
 
+class ContextStack;
+
+class Context {
+  friend ContextStack;
+public:
+  ~Context();
+  
+  void desc(std::string_view);
+  void ident(std::string_view);
+  
+private:
+  Context(ContextStack &, size_t);
+  ContextStack &stack;
+  size_t index;
+};
+
+class ContextStack {
+  friend Context;
+public:
+  Context context(std::string_view);
+  
+private:
+  struct ContextData {
+    std::string_view desc;
+    std::string_view ident;
+  };
+  
+  std::vector<ContextData> stack;
+  
+  friend std::ostream &operator<<(std::ostream &, const ContextStack &);
+};
+
 class ParseTokens {
 public:
   ParseTokens(const Tokens &, Log &);
@@ -26,11 +58,14 @@ public:
   const Token &front() const;
   Loc lastLoc() const;
   
+  Context context(std::string_view);
+  const ContextStack &contextStack() const;
+  
   template <typename ParseFunc>
   auto expectNode(ParseFunc &&parse, const std::string_view msg) {
     auto node = parse(*this);
     if (node == nullptr) {
-      log_.ferror(beg->loc) << "Expected " << msg << endlog;
+      log_.ferror(beg->loc) << "Expected " << msg << ctxStack << endlog;
     }
     return node;
   }
@@ -53,6 +88,7 @@ private:
   const Token *beg;
   const Token *end;
   Log &log_;
+  ContextStack ctxStack;
   
   void expectToken();
 };

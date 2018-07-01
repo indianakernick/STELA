@@ -35,6 +35,46 @@ std::ostream &operator<<(std::ostream &stream, const Token &tok) {
 
 }
 
+stela::Context::~Context() {
+  assert(stack.stack.size() == index + 1);
+  stack.stack.pop_back();
+}
+
+void stela::Context::desc(const std::string_view desc) {
+  assert(index < stack.stack.size());
+  stack.stack[index].desc = desc;
+}
+
+void stela::Context::ident(const std::string_view ident) {
+  assert(index < stack.stack.size());
+  stack.stack[index].ident = ident;
+}
+
+stela::Context::Context(ContextStack &stack, const size_t index)
+  : stack{stack}, index{index} {}
+
+stela::Context stela::ContextStack::context(const std::string_view desc) {
+  const size_t index = stack.size();
+  stack.push_back(ContextData{desc, {}});
+  return Context{*this, index};
+}
+
+std::ostream &stela::operator<<(std::ostream &stream, const ContextStack &stack) {
+  if (!stack.stack.empty()) {
+    stream << ' ';
+  }
+  for (auto c = stack.stack.crbegin(); c != stack.stack.crend(); ++c) {
+    stream << c->desc;
+    if (!c->ident.empty()) {
+      stream << " \"" << c->ident << '"';
+    }
+    if (c != stack.stack.crend() - 1) {
+      stream << ", ";
+    }
+  }
+  return stream;
+}
+
 stela::ParseTokens::ParseTokens(const Tokens &tokens, Log &log)
   : beg{tokens.data()}, end{tokens.data() + tokens.size()}, log_{log} {}
 
@@ -52,6 +92,14 @@ const stela::Token &stela::ParseTokens::front() const {
 
 stela::Loc stela::ParseTokens::lastLoc() const {
   return beg[-1].loc;
+}
+
+stela::Context stela::ParseTokens::context(const std::string_view desc) {
+  return ctxStack.context(desc);
+}
+
+const stela::ContextStack &stela::ParseTokens::contextStack() const {
+  return ctxStack;
 }
 
 bool stela::ParseTokens::check(const Token::Type type, const std::string_view view) {
@@ -74,7 +122,8 @@ bool stela::ParseTokens::checkOp(const std::string_view view) {
 std::string_view stela::ParseTokens::expect(const Token::Type type) {
   expectToken();
   if (beg->type != type) {
-    log_.ferror(beg->loc) << "Expected " << type << " but found " << *beg << endlog;
+    log_.ferror(beg->loc) << "Expected " << type << " but found " << *beg
+      << ctxStack << endlog;
   }
   const std::string_view view = beg->view;
   ++beg;
@@ -85,16 +134,18 @@ void stela::ParseTokens::expect(const Token::Type type, const std::string_view v
   expectToken();
   if (beg->type != type || beg->view != view) {
     log_.ferror(beg->loc) << "Expected " << type << ' ' << view
-      << " but found " << *beg << endlog;
+      << " but found " << *beg << ctxStack << endlog;
   }
   ++beg;
 }
 
-std::string_view stela::ParseTokens::expectEither(const Token::Type type, const std::string_view a, const std::string_view b) {
+std::string_view stela::ParseTokens::expectEither(
+  const Token::Type type, const std::string_view a, const std::string_view b
+) {
   expectToken();
   if (beg->type != type || (beg->view != a && beg->view != b)) {
     log_.ferror(beg->loc) << "Expected " << type << ' ' << a << " or " << b
-      << " but found " << *beg << endlog;
+      << " but found " << *beg << ctxStack << endlog;
   }
   const std::string_view view = beg->view;
   ++beg;
@@ -123,6 +174,6 @@ void stela::ParseTokens::expectKeyword(const std::string_view view) {
 
 void stela::ParseTokens::expectToken() {
   if (empty()) {
-    log_.ferror() << "Unexpected end of input" << endlog;
+    log_.ferror() << "Unexpected end of input" << ctxStack << endlog;
   }
 }
