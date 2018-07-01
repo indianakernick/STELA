@@ -55,16 +55,16 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
   return arrayType;
 }
 
-ast::TypePtr parseDictType(ParseTokens &tok) {
+ast::TypePtr parseMapType(ParseTokens &tok) {
   if (!tok.checkOp("[{")) {
     return nullptr;
   }
-  auto dictType = std::make_unique<ast::DictType>();
-  dictType->key = tok.expectNode(parseType, "key type in dictionary type");
+  auto mapType = std::make_unique<ast::MapType>();
+  mapType->key = tok.expectNode(parseType, "key type in map type");
   tok.expectOp(":");
-  dictType->val = tok.expectNode(parseType, "value type in dictioary type");
+  mapType->val = tok.expectNode(parseType, "value type in map type");
   tok.expectOp("}]");
-  return dictType;
+  return mapType;
 }
 
 ast::TypePtr parseBuiltinType(ParseTokens &tok) {
@@ -111,7 +111,7 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
 ast::TypePtr parseType(ParseTokens &tok) {
   if (ast::TypePtr type = parseFuncType(tok)) return type;
   if (ast::TypePtr type = parseArrayType(tok)) return type;
-  if (ast::TypePtr type = parseDictType(tok)) return type;
+  if (ast::TypePtr type = parseMapType(tok)) return type;
   if (ast::TypePtr type = parseBuiltinType(tok)) return type;
   if (ast::TypePtr type = parseNamedType(tok)) return type;
   return nullptr;
@@ -175,20 +175,20 @@ ast::ExprPtr parseArray(ParseTokens &tok) {
   return array;
 }
 
-ast::ExprPtr parseDict(ParseTokens &tok) {
+ast::ExprPtr parseMap(ParseTokens &tok) {
   if (!tok.checkOp("[{")) {
     return nullptr;
   }
-  auto dict = std::make_unique<ast::DictLiteral>();
+  auto map = std::make_unique<ast::MapLiteral>();
   if (!tok.checkOp("}]")) {
     do {
-      ast::DictPair &pair = dict->pairs.emplace_back();
-      pair.key = tok.expectNode(parseExpr, "key expression in dictionary literal");
+      ast::MapPair &pair = map->pairs.emplace_back();
+      pair.key = tok.expectNode(parseExpr, "key expression in map literal");
       tok.expectOp(":");
-      pair.val = tok.expectNode(parseExpr, "value expression in dictionary literal");
+      pair.val = tok.expectNode(parseExpr, "value expression in map literal");
     } while (tok.expectEitherOp(",", "}]") == ",");
   }
-  return dict;
+  return map;
 }
 
 ast::ExprPtr parseLiteral(ParseTokens &tok) {
@@ -197,7 +197,7 @@ ast::ExprPtr parseLiteral(ParseTokens &tok) {
   if (ast::ExprPtr node = parseNumber(tok)) return node;
   if (ast::ExprPtr node = parseBool(tok)) return node;
   if (ast::ExprPtr node = parseArray(tok)) return node;
-  if (ast::ExprPtr node = parseDict(tok)) return node;
+  if (ast::ExprPtr node = parseMap(tok)) return node;
   return nullptr;
 }
 

@@ -45,7 +45,7 @@ struct ArrayType final : Type {
   TypePtr elem;
 };
 
-struct DictType final : Type {
+struct MapType final : Type {
   TypePtr key;
   TypePtr val;
 };
@@ -315,13 +315,13 @@ struct ArrayLiteral final : Expression {
   std::vector<ExprPtr> exprs;
 };
 
-struct DictPair {
+struct MapPair {
   ExprPtr key;
   ExprPtr val;
 };
 
-struct DictLiteral final : Expression {
-  std::vector<DictPair> pairs;
+struct MapLiteral final : Expression {
+  std::vector<MapPair> pairs;
 };
 
 struct Lambda final : Expression {

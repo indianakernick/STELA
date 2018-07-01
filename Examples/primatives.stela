@@ -35,11 +35,11 @@ This is where we diverge from Swift a far bit. To make the language easier to
 parse and produce better error messages,
 
 [  means array
-[{ means dictionary
+[{ means map
 [( could mean tuple if I decide that tuples are necessary
-[{Int: String}] denotes a dictionary
+[{Int: String}] denotes a map
 
-[{Int: String}] is a dictionary where the key is Int and the value is String
-once again, Dictionary<Int, String> is not valid STELA
+[{Int: String}] is a map where the key is Int and the value is String
+once again, Map<Int, String> is not valid STELA
 
 */

@@ -14,7 +14,7 @@ The lexical analyser is done. The syntax analyser is about halfway done. I'm hop
    * Naturally makes the language a little faster. 
    * Usually makes code easier to understand. 
    * More errors can be caught at compile time, like `"a string" + 5`.
-   * Function overloading, real classes that aren't just dictionaries, type safety, awesome stuff.
+   * Function overloading, real classes that aren't just maps, type safety, awesome stuff.
    * Type inference is used as much as possible. If the type can be infered unambiguously, then the type will be infered. That's the type inference promise! 
  * Embeddable
    * A C++ API is exposed for embedding the language into a C++ application. I think that there is something wrong with exposing a C interface and then having write a C++ wrapper. Sol2 for Lua, Pybind for Python, etc.

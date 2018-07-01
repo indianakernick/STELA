@@ -185,7 +185,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ret->value, BuiltinType::Void);
   });
   
-  TEST(Type - Dictionary, {
+  TEST(Type - Map, {
     const char *source = R"(
       typealias dummy = [{String: [Int]}];
     )";
@@ -194,10 +194,10 @@ TEST_GROUP(Syntax, {
     auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
     ASSERT_EQ(alias->name, "dummy");
     
-    auto *dict = ASSERT_DOWN_CAST(const DictType, alias->type.get());
-    auto *key = ASSERT_DOWN_CAST(const BuiltinType, dict->key.get());
+    auto *map = ASSERT_DOWN_CAST(const MapType, alias->type.get());
+    auto *key = ASSERT_DOWN_CAST(const BuiltinType, map->key.get());
     ASSERT_EQ(key->value, BuiltinType::String);
-    auto *val = ASSERT_DOWN_CAST(const ArrayType, dict->val.get());
+    auto *val = ASSERT_DOWN_CAST(const ArrayType, map->val.get());
     auto *valElem = ASSERT_DOWN_CAST(const BuiltinType, val->elem.get());
     ASSERT_EQ(valElem->value, BuiltinType::Int);
   });
@@ -707,7 +707,7 @@ TEST_GROUP(Syntax, {
     }
   });
   
-  TEST(Expr - Dict, {
+  TEST(Expr - Map, {
     const char *source = R"(
       func dummy() {
         [{}];
@@ -722,11 +722,11 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(block.size(), 3);
     
     {
-      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[0].get());
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[0].get());
       ASSERT_TRUE(lit->pairs.empty());
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[1].get());
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[1].get());
       ASSERT_EQ(lit->pairs.size(), 1);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
@@ -735,7 +735,7 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(sevenVal->value, "7");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const DictLiteral, block[2].get());
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[2].get());
       ASSERT_EQ(lit->pairs.size(), 3);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
