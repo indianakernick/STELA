@@ -102,7 +102,7 @@ struct BuiltinType final : Type {
 
 /// Binary operator
 enum class BinOp {
-  eq, ne, ls, ge, lt, gt,
+  eq, ne, le, ge, lt, gt,
   bool_and, bool_or,
   bit_and, bit_or, bit_xor, bit_shl, bit_shr,
   add, sub, mul, div, mod

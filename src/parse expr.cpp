@@ -39,13 +39,21 @@ ast::ExprPtr parseInitCall(ParseTokens &tok) {
   return init;
 }
 
+ast::ExprPtr parseIdent(ParseTokens &tok) {
+  if (tok.front().type == Token::Type::identifier) {
+    auto ident = std::make_unique<ast::Identifier>();
+    ident->name = tok.expectID();
+    return ident;
+  } else {
+    return nullptr;
+  }
+}
+
 }
 
 ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
-  if (tok.check(Token::Type::identifier, "expr")) {
-    return std::make_unique<ast::BinaryExpr>();
-  }
   if (ast::ExprPtr node = parseInitCall(tok)) return node;
   if (ast::ExprPtr node = parseLitr(tok)) return node;
+  if (ast::ExprPtr node = parseIdent(tok)) return node;
   return nullptr;
 }

@@ -791,7 +791,7 @@ TEST_GROUP(Syntax, {
   TEST(Expr - make, {
     const char *source = R"(
       let myObj = make MyStruct();
-      let myInt = make Int(5); // this is valid
+      let myInt = make Int(5); // this is valid. Wierd, but valid
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 2);
@@ -811,6 +811,27 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(make->args.size(), 1);
       auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].expr.get());
       ASSERT_EQ(num->value, "5");
+    }
+  });
+  
+  TEST(Expr - identifier, {
+    const char *source = R"(
+      let five = 5;
+      let alsoFive = five;
+    )";
+    
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 2);
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, let->expr.get());
+      ASSERT_EQ(num->value, "5");
+    }
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr.get());
+      ASSERT_EQ(ident->name, "five");
     }
   });
 })
