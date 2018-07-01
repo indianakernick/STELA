@@ -13,6 +13,16 @@ target_link_libraries(cli
         STELA
 )
 
+target_compile_options(cli
+        PRIVATE
+        -O3
+)
+
+target_compile_definitions(cli
+        PRIVATE
+        -DNDEBUG
+)
+
 install(TARGETS cli
         RUNTIME DESTINATION bin
 )
