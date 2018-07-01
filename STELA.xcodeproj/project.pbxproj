@@ -7,7 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		450E327E20E88E1A00F222F1 /* context stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E327C20E88E1900F222F1 /* context stack.cpp */; };
+		450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328E20E89D2F00F222F1 /* parse expr.cpp */; };
+		450E329120E89D6100F222F1 /* context stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E327C20E88E1900F222F1 /* context stack.cpp */; };
+		450E329220E89D6100F222F1 /* parse type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E327F20E8989300F222F1 /* parse type.cpp */; };
+		450E329320E89D6100F222F1 /* parse func.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328220E8996900F222F1 /* parse func.cpp */; };
+		450E329420E89D6100F222F1 /* parse stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328520E89A4700F222F1 /* parse stat.cpp */; };
+		450E329520E89D6100F222F1 /* parse decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328820E89B5C00F222F1 /* parse decl.cpp */; };
+		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -66,6 +72,18 @@
 		450E327720E65D5400F222F1 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		450E327C20E88E1900F222F1 /* context stack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "context stack.cpp"; sourceTree = "<group>"; };
 		450E327D20E88E1A00F222F1 /* context stack.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "context stack.hpp"; sourceTree = "<group>"; };
+		450E327F20E8989300F222F1 /* parse type.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse type.cpp"; sourceTree = "<group>"; };
+		450E328020E8989300F222F1 /* parse type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse type.hpp"; sourceTree = "<group>"; };
+		450E328220E8996900F222F1 /* parse func.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse func.cpp"; sourceTree = "<group>"; };
+		450E328320E8996900F222F1 /* parse func.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse func.hpp"; sourceTree = "<group>"; };
+		450E328520E89A4700F222F1 /* parse stat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse stat.cpp"; sourceTree = "<group>"; };
+		450E328620E89A4700F222F1 /* parse stat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse stat.hpp"; sourceTree = "<group>"; };
+		450E328820E89B5C00F222F1 /* parse decl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse decl.cpp"; sourceTree = "<group>"; };
+		450E328920E89B5C00F222F1 /* parse decl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse decl.hpp"; sourceTree = "<group>"; };
+		450E328B20E89C9500F222F1 /* parse litr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse litr.cpp"; sourceTree = "<group>"; };
+		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
+		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
+		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -276,6 +294,18 @@
 				45EE9C1F20DF19BD00CC3289 /* parse tokens.hpp */,
 				450E327C20E88E1900F222F1 /* context stack.cpp */,
 				450E327D20E88E1A00F222F1 /* context stack.hpp */,
+				450E327F20E8989300F222F1 /* parse type.cpp */,
+				450E328020E8989300F222F1 /* parse type.hpp */,
+				450E328220E8996900F222F1 /* parse func.cpp */,
+				450E328320E8996900F222F1 /* parse func.hpp */,
+				450E328520E89A4700F222F1 /* parse stat.cpp */,
+				450E328620E89A4700F222F1 /* parse stat.hpp */,
+				450E328820E89B5C00F222F1 /* parse decl.cpp */,
+				450E328920E89B5C00F222F1 /* parse decl.hpp */,
+				450E328B20E89C9500F222F1 /* parse litr.cpp */,
+				450E328C20E89C9500F222F1 /* parse litr.hpp */,
+				450E328E20E89D2F00F222F1 /* parse expr.cpp */,
+				450E328F20E89D2F00F222F1 /* parse expr.hpp */,
 			);
 			name = "Syntax Analysis";
 			sourceTree = "<group>";
@@ -413,6 +443,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				450E329120E89D6100F222F1 /* context stack.cpp in Sources */,
+				450E329220E89D6100F222F1 /* parse type.cpp in Sources */,
+				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,
+				450E329420E89D6100F222F1 /* parse stat.cpp in Sources */,
+				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
+				450E329620E89D6100F222F1 /* parse litr.cpp in Sources */,
+				450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */,
 				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,
 				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
@@ -428,7 +465,6 @@
 			files = (
 				45EE9C3B20E3AB1600CC3289 /* lexer.cpp in Sources */,
 				45EE9C3A20E3AB1600CC3289 /* log counter.cpp in Sources */,
-				450E327E20E88E1A00F222F1 /* context stack.cpp in Sources */,
 				45EE9C3D20E3AB1600CC3289 /* main.cpp in Sources */,
 				45EE9C3C20E3AB1600CC3289 /* syntax.cpp in Sources */,
 			);

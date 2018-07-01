@@ -1,6 +1,6 @@
 //
 //  context stack.hpp
-//  Test
+//  STELA
 //
 //  Created by Indi Kernick on 1/7/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.

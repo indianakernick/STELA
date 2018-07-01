@@ -24,6 +24,18 @@ add_library(STELA STATIC
         "src/syntax analysis.cpp"
         "src/context stack.cpp"
         "src/context stack.hpp"
+        "src/parse type.cpp"
+        "src/parse type.hpp"
+        "src/parse func.cpp"
+        "src/parse func.hpp"
+        "src/parse stat.cpp"
+        "src/parse stat.hpp"
+        "src/parse decl.cpp"
+        "src/parse decl.hpp"
+        "src/parse litr.cpp"
+        "src/parse litr.hpp"
+        "src/parse expr.cpp"
+        "src/parse expr.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
