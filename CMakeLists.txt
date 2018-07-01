@@ -22,6 +22,8 @@ add_library(STELA STATIC
         "src/parse tokens.cpp"
         "src/parse tokens.hpp"
         "src/syntax analysis.cpp"
+        "src/context stack.cpp"
+        "src/context stack.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

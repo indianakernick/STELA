@@ -11,43 +11,12 @@
 
 #include "token.hpp"
 #include "log output.hpp"
+#include "context stack.hpp"
 
 namespace stela {
 
 std::ostream &operator<<(std::ostream &, Token::Type);
 std::ostream &operator<<(std::ostream &, const Token &);
-
-class ContextStack;
-
-class Context {
-  friend ContextStack;
-public:
-  ~Context();
-  
-  void desc(std::string_view);
-  void ident(std::string_view);
-  
-private:
-  Context(ContextStack &, size_t);
-  ContextStack &stack;
-  size_t index;
-};
-
-class ContextStack {
-  friend Context;
-public:
-  Context context(std::string_view);
-  
-private:
-  struct ContextData {
-    std::string_view desc;
-    std::string_view ident;
-  };
-  
-  std::vector<ContextData> stack;
-  
-  friend std::ostream &operator<<(std::ostream &, const ContextStack &);
-};
 
 class ParseTokens {
 public:
