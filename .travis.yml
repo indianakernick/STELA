@@ -54,6 +54,6 @@ before_install:
 
 script:
 - cd build
-- cmake ..
+- cmake -DCMAKE_BUILD_TYPE=Debug ..
 - make
 - test/suite

@@ -37,7 +37,7 @@ This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engin
 
 ```bash
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 

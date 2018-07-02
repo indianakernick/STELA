@@ -67,16 +67,6 @@ target_compile_features(STELA
         cxx_std_17
 )
 
-target_compile_options(STELA
-        PRIVATE
-        -O3
-)
-
-target_compile_definitions(STELA
-        PRIVATE
-        -DNDEBUG
-)
-
 install(TARGETS STELA
         ARCHIVE DESTINATION lib
         PUBLIC_HEADER DESTINATION include/STELA
