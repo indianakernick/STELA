@@ -36,6 +36,7 @@ TEST_GROUP(Syntax, {
     )";
     try {
       NoLog noLog;
+      noLog.pri(LogPri::verbose);
       createAST(source, noLog);
     } catch (FatalError &e) {
       std::cout << "Should have got nothing but this " << e.what() << " exception\n";
