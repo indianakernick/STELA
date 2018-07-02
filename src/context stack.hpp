@@ -31,6 +31,8 @@ private:
   size_t index;
 };
 
+std::ostream &operator<<(std::ostream &, const ContextStack &);
+
 class ContextStack {
   friend Context;
 public:

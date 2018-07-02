@@ -23,6 +23,20 @@ TEST_GROUP(Syntax, {
     ASSERT_TRUE(ast.global.empty());
   });
   
+  TEST(EOF, {
+    ASSERT_THROWS(createAST("typealias", log), FatalError);
+  });
+  
+  TEST(Silent Logger, {
+    std::cout << "Testing silent logger\n";
+    try {
+      NoLog noLog;
+      createAST("typealias", noLog);
+    } catch (FatalError &e) {
+      std::cout << "Should have got nothing but this " << e.what() << " exception\n";
+    }
+  });
+  
   TEST(Enum - empty, {
     const char *source = R"(
       enum NoCases {}
@@ -79,7 +93,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       enum BadValue {
         five = 5,
-        oh_no = ;
+        oh_no '='
       }
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
@@ -134,7 +148,7 @@ TEST_GROUP(Syntax, {
   
   TEST(Func - two param (no comma), {
     const char *source = R"(
-      func woops(first: String oh_no: Int) {}
+      func woops(first: String "oh_no": Int) {}
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
@@ -183,6 +197,13 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(second->value, BuiltinType::Double);
     auto *ret = ASSERT_DOWN_CAST(const BuiltinType, func->ret.get());
     ASSERT_EQ(ret->value, BuiltinType::Void);
+  });
+  
+  TEST(Type - Function no ret type, {
+    const char *source = R"(
+      typealias dummy = (Int, Char) 5
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Type - Map, {
