@@ -829,9 +829,10 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       let myObj = make MyStruct();
       let myInt = make Int(5); // this is valid. Wierd, but valid
+      let whoa = make MyComplexStruct("string", 'a', 7);
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 2);
+    ASSERT_EQ(ast.global.size(), 3);
     
     {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
@@ -848,6 +849,19 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(make->args.size(), 1);
       auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].expr.get());
       ASSERT_EQ(num->value, "5");
+    }
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[2].get());
+      auto *make = ASSERT_DOWN_CAST(const InitCall, let->expr.get());
+      auto *type = ASSERT_DOWN_CAST(const NamedType, make->type.get());
+      ASSERT_EQ(type->name, "MyComplexStruct");
+      ASSERT_EQ(make->args.size(), 3);
+      auto *str = ASSERT_DOWN_CAST(const StringLiteral, make->args[0].expr.get());
+      ASSERT_EQ(str->value, "string");
+      auto *c = ASSERT_DOWN_CAST(const CharLiteral, make->args[1].expr.get());
+      ASSERT_EQ(c->value, "a");
+      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[2].expr.get());
+      ASSERT_EQ(num->value, "7");
     }
   });
   
