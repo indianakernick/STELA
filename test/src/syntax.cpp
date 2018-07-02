@@ -230,6 +230,22 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
+  TEST(Stat - Empty, {
+    const char *source = R"(
+      func dummy() {
+        if (true);
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *ifStat = ASSERT_DOWN_CAST(const If, block[0].get());
+    ASSERT_DOWN_CAST(const EmptyStatement, ifStat->body.get());
+  });
+  
   TEST(Stat - Block, {
     const char *source = R"(
       func dummy() {
