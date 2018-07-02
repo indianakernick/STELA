@@ -1,6 +1,6 @@
 # Statically Typed Embeddable LAnguage
 
-[![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA) [![Coverage Status](https://img.shields.io/coveralls/github/Kerndog73/STELA.svg)](https://coveralls.io/github/Kerndog73/STELA)
+[![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA) [![Coverage Status](https://coveralls.io/repos/github/Kerndog73/STELA/badge.svg?branch=master)](https://coveralls.io/github/Kerndog73/STELA?branch=master)
 
 A scripting language with all of the benefits of static typing, without the verbosity of type names.
 
