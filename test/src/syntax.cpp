@@ -29,9 +29,14 @@ TEST_GROUP(Syntax, {
   
   TEST(Silent Logger, {
     std::cout << "Testing silent logger\n";
+    const char *source = R"(
+      ;;;
+    
+      if (expr) {}
+    )";
     try {
       NoLog noLog;
-      createAST("typealias", noLog);
+      createAST(source, noLog);
     } catch (FatalError &e) {
       std::cout << "Should have got nothing but this " << e.what() << " exception\n";
     }
