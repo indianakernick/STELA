@@ -15,6 +15,19 @@
 using namespace stela;
 using namespace stela::ast;
 
+#define IS_OP(EXP, OPERATOR) \
+  [&] { \
+    auto *op = ASSERT_DOWN_CAST(const BinaryExpr, EXP.get()); \
+    ASSERT_EQ(op->oper, BinOp::OPERATOR); \
+    return op; \
+  }()
+
+#define IS_NUM(EXP, NUMBER) \
+  { \
+    auto *num = ASSERT_DOWN_CAST(const NumberLiteral, EXP.get()); \
+    ASSERT_EQ(num->value, NUMBER); \
+  } do{}while(0)
+
 TEST_GROUP(Syntax, {
   StreamLog log;
 
@@ -890,5 +903,33 @@ TEST_GROUP(Syntax, {
       auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr.get());
       ASSERT_EQ(ident->name, "five");
     }
+  });
+  
+  TEST(Expression, {
+    /*
+    
+      +
+     / \
+    3    /
+       /   \
+      *     -
+     / \   / \
+    4   2 1   5
+    
+    */
+  
+    const char *source = "let a = 3 + 4 * 2 / (1 - 5);";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+    auto *add = IS_OP(let->expr, add);
+    IS_NUM(add->left, "3");
+    auto *div = IS_OP(add->right, div);
+    auto *mul = IS_OP(div->left, mul);
+    IS_NUM(mul->left, "4");
+    IS_NUM(mul->right, "2");
+    auto *sub = IS_OP(div->right, sub);
+    IS_NUM(sub->left, "1");
+    IS_NUM(sub->right, "5");
   });
 })

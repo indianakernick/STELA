@@ -110,6 +110,10 @@ std::string_view stela::ParseTokens::expectID() {
   return expect(Token::Type::identifier);
 }
 
+std::string_view stela::ParseTokens::expectOp() {
+  return expect(Token::Type::oper);
+}
+
 void stela::ParseTokens::expectOp(const std::string_view view) {
   expect(Token::Type::oper, view);
 }

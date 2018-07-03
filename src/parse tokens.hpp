@@ -48,6 +48,7 @@ public:
   std::string_view expectEither(Token::Type, std::string_view, std::string_view);
   
   std::string_view expectID();
+  std::string_view expectOp();
   void expectOp(std::string_view);
   std::string_view expectEitherOp(std::string_view, std::string_view);
   void expectKeyword(std::string_view);
