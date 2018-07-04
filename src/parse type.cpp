@@ -88,7 +88,7 @@ ast::TypePtr parseBuiltinType(ParseTokens &tok) {
 }
 
 ast::TypePtr parseNamedType(ParseTokens &tok) {
-  if (tok.front().type != Token::Type::identifier) {
+  if (!tok.peekIdentType()) {
     return nullptr;
   }
   auto namedType = std::make_unique<ast::NamedType>();

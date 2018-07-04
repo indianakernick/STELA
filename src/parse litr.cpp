@@ -18,7 +18,7 @@ namespace {
 
 template <typename Literal, bool Trim = false>
 ast::LitrPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
-  if (tok.front().type == type) {
+  if (tok.peekType(type)) {
     auto literal = std::make_unique<Literal>();
     literal->value = tok.expect(type);
     if constexpr (Trim) {

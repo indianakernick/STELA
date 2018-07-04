@@ -126,6 +126,18 @@ void stela::ParseTokens::expectKeyword(const std::string_view view) {
   expect(Token::Type::keyword, view);
 }
 
+bool stela::ParseTokens::peekType(const Token::Type type) const {
+  return !empty() && front().type == type;
+}
+
+bool stela::ParseTokens::peekOpType() const {
+  return peekType(Token::Type::oper);
+}
+
+bool stela::ParseTokens::peekIdentType() const {
+  return peekType(Token::Type::identifier);
+}
+
 void stela::ParseTokens::expectToken() {
   if (empty()) {
     logger.ferror() << "Unexpected end of input" << ctxStack << endlog;

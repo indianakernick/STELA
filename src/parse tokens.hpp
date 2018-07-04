@@ -52,6 +52,10 @@ public:
   void expectOp(std::string_view);
   std::string_view expectEitherOp(std::string_view, std::string_view);
   void expectKeyword(std::string_view);
+  
+  bool peekType(Token::Type) const;
+  bool peekOpType() const;
+  bool peekIdentType() const;
 
 private:
   const Token *beg;
