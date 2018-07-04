@@ -5,7 +5,9 @@
 A scripting language with all of the benefits of static typing, without the verbosity of type names.
 
 ## Progress
-The lexical analyser is done. The syntax analyser is about halfway done. I'm hoping to start semantic analysis some time in July.
+ * The lexical analyser is done.
+ * The syntax analyser is mostly done. All that is left to do is expression parsing, e.g. `x = 5 * 2 - y`. The current expression parser can only handle simple binary expressions.
+ * I'm hoping to start semantic analysis some time in July.
 
 ## About
 
