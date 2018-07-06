@@ -75,6 +75,13 @@ struct AssignOp {
   ast::AssignOp op;
 };
 
+struct UnOp {
+  std::string_view view;
+  int prec;
+  Assoc assoc;
+  ast::UnOp op;
+};
+
 struct PrecAssoc {
   int prec;
   Assoc assoc;
@@ -96,8 +103,7 @@ constexpr AssignOp assign_ops[] = {
   {">>=", ast::AssignOp::bit_shr}
 };
 
-constexpr int assign_prec = 0;
-constexpr Assoc assign_assoc = Assoc::RTL;
+constexpr PrecAssoc assign = {0, Assoc::RTL};
 
 constexpr BinOp bin_ops[] = {
   {"||", 1,  Assoc::LTR, ast::BinOp::bool_or},
@@ -120,6 +126,20 @@ constexpr BinOp bin_ops[] = {
   {"%",  10, Assoc::LTR, ast::BinOp::mod},
   {"**", 11, Assoc::RTL, ast::BinOp::pow}
 };
+
+constexpr UnOp un_ops[] = {
+  {"!",  12, Assoc::RTL, ast::UnOp::bool_not},
+  {"~",  12, Assoc::RTL, ast::UnOp::bit_not},
+  {"-",  12, Assoc::RTL, ast::UnOp::neg},
+  {"++", 12, Assoc::RTL, ast::UnOp::pre_incr},
+  {"--", 12, Assoc::RTL, ast::UnOp::pre_decr},
+  {"++", 13, Assoc::LTR, ast::UnOp::post_incr},
+  {"--", 13, Assoc::LTR, ast::UnOp::post_decr}
+};
+
+constexpr PrecAssoc member = {13, Assoc::LTR};
+constexpr PrecAssoc subscript = {13, Assoc::LTR};
+constexpr PrecAssoc funCall = {13, Assoc::LTR};
 
 constexpr size_t npos = size_t(-1);
 
@@ -144,7 +164,7 @@ bool getBinOp(PrecAssoc &pa, const std::string_view view) {
   
   index = lookup<assign_ops>(view);
   if (index != npos) {
-    pa = {assign_prec, assign_assoc};
+    pa = assign;
     return true;
   }
   return false;
