@@ -74,7 +74,7 @@ constexpr Operator op_table[] = {
   {"*",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mul},
   {"/",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::div},
   {"%",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mod},
-  {"**", 3, Assoc::RIGHT_TO_LEFT, ast::BinOp::pow},
+  {"**", 3, Assoc::RIGHT_TO_LEFT, ast::BinOp::pow}
 };
 
 constexpr size_t null_op = std::numeric_limits<size_t>::max();

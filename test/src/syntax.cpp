@@ -912,11 +912,11 @@ TEST_GROUP(Syntax, {
      /   \
     3    div
        /     \
-     mul      pow1
-    /  \     /   \
-   4    2  sub   pow2
-          /  \   /  \
-         1    5 2    3
+    mul       pow1
+   /   \     /    \
+  4     2 sub      pow2
+         /   \    /   \
+        1     5  2     3
     
     */
   

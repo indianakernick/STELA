@@ -46,22 +46,22 @@ size_t stela::validNumberLiteral(const std::string_view str, Log &) {
   return valid(str, end, ull);
 }
 
-stela::FakeVariant stela::parseNumberLiteral(const std::string_view str, Log &) {
+stela::NumberVariant stela::parseNumberLiteral(const std::string_view str, Log &) {
   char *end;
   errno = 0;
   const auto d = std::strtod(str.data(), &end);
   if (valid(str, end, d)) {
-    return FakeVariant{d};
+    return NumberVariant{d};
   }
   errno = 0;
   const auto ll = std::strtoll(str.data(), &end, 0);
   if (valid(str, end, ll)) {
-    return FakeVariant{static_cast<int64_t>(ll)};
+    return NumberVariant{static_cast<int64_t>(ll)};
   }
   errno = 0;
   const auto ull = std::strtoull(str.data(), &end, 0);
   if (valid(str, end, ull)) {
-    return FakeVariant{static_cast<uint64_t>(ull)};
+    return NumberVariant{static_cast<uint64_t>(ull)};
   }
-  return FakeVariant{};
+  return NumberVariant{};
 }

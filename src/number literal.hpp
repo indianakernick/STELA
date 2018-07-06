@@ -19,7 +19,7 @@ namespace stela {
 size_t validNumberLiteral(std::string_view, Log &);
 
 // Xcode doesn't have std::variant yet
-struct FakeVariant {
+struct NumberVariant {
   union {
     double f;
     int64_t i;
@@ -32,17 +32,17 @@ struct FakeVariant {
     UInt
   } type;
   
-  FakeVariant()
+  NumberVariant()
     : type{Invalid} {}
-  explicit FakeVariant(const double f) {
+  explicit NumberVariant(const double f) {
     value.f = f;
     type = Float;
   }
-  explicit FakeVariant(const int64_t i) {
+  explicit NumberVariant(const int64_t i) {
     value.i = i;
     type = Int;
   }
-  explicit FakeVariant(const uint64_t u) {
+  explicit NumberVariant(const uint64_t u) {
     value.u = u;
     type = UInt;
   }
@@ -51,7 +51,7 @@ struct FakeVariant {
 /// Parses the number literal at the start of the string. Returns a FakeVariant
 /// that holds the number literal in a type that most accuratly represents it
 /// or FakeVariant::Invalid if the number cannot be parsed
-FakeVariant parseNumberLiteral(std::string_view, Log &);
+NumberVariant parseNumberLiteral(std::string_view, Log &);
 
 }
 
