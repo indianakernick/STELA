@@ -15,17 +15,30 @@
 using namespace stela;
 using namespace stela::ast;
 
-#define IS_OP(EXP, OPERATOR) \
-  [&] { \
-    auto *op = ASSERT_DOWN_CAST(const BinaryExpr, EXP.get()); \
-    ASSERT_EQ(op->oper, BinOp::OPERATOR); \
-    return op; \
+#define IS_BOP(EXP, OPERATOR)                                                   \
+  [&] {                                                                         \
+    auto *op = ASSERT_DOWN_CAST(const BinaryExpr, EXP.get());                   \
+    ASSERT_EQ(op->oper, BinOp::OPERATOR);                                       \
+    return op;                                                                  \
   }()
 
-#define IS_NUM(EXP, NUMBER) \
-  { \
-    auto *num = ASSERT_DOWN_CAST(const NumberLiteral, EXP.get()); \
-    ASSERT_EQ(num->value, NUMBER); \
+#define IS_AOP(EXP, OPERATOR)                                                   \
+  [&] {                                                                         \
+    auto *op = ASSERT_DOWN_CAST(const Assignment, EXP.get());                   \
+    ASSERT_EQ(op->oper, AssignOp::OPERATOR);                                    \
+    return op;                                                                  \
+  }()
+
+#define IS_NUM(EXP, NUMBER)                                                     \
+  {                                                                             \
+    auto *num = ASSERT_DOWN_CAST(const NumberLiteral, EXP.get());               \
+    ASSERT_EQ(num->value, NUMBER);                                              \
+  } do{}while(0)
+
+#define IS_ID(EXP, IDENTIFIER)                                                  \
+  {                                                                             \
+    auto *id = ASSERT_DOWN_CAST(const Identifier, EXP.get());                   \
+    ASSERT_EQ(id->name, IDENTIFIER);                                            \
   } do{}while(0)
 
 TEST_GROUP(Syntax, {
@@ -905,7 +918,7 @@ TEST_GROUP(Syntax, {
     }
   });
   
-  TEST(Expression, {
+  TEST(Expr - math, {
     /*
     
       add
@@ -924,18 +937,57 @@ TEST_GROUP(Syntax, {
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
-    auto *add = IS_OP(let->expr, add);
-    IS_NUM(add->left, "3");
-    auto *div = IS_OP(add->right, div);
-    auto *mul = IS_OP(div->left, mul);
-    IS_NUM(mul->left, "4");
-    IS_NUM(mul->right, "2");
-    auto *pow1 = IS_OP(div->right, pow);
-    auto *sub = IS_OP(pow1->left, sub);
-    IS_NUM(sub->left, "1");
-    IS_NUM(sub->right, "5");
-    auto *pow2 = IS_OP(pow1->right, pow);
-    IS_NUM(pow2->left, "2");
-    IS_NUM(pow2->right, "3");
+      auto *add = IS_BOP(let->expr, add);
+        IS_NUM(add->left, "3");
+        auto *div = IS_BOP(add->right, div);
+          auto *mul = IS_BOP(div->left, mul);
+            IS_NUM(mul->left, "4");
+            IS_NUM(mul->right, "2");
+          auto *pow1 = IS_BOP(div->right, pow);
+            auto *sub = IS_BOP(pow1->left, sub);
+              IS_NUM(sub->left, "1");
+              IS_NUM(sub->right, "5");
+            auto *pow2 = IS_BOP(pow1->right, pow);
+              IS_NUM(pow2->left, "2");
+              IS_NUM(pow2->right, "3");
+  });
+  
+  TEST(Expr - assign and compare, {
+    /*
+    
+      assign_div
+     /          \
+  yeah        assign
+             /      \
+          val        bool_and
+                    /        \
+                  eq          lt
+                 /  \        /  \
+                1    two  four   5
+    
+    */
+    
+    const char *source = R"(
+      func dummy() {
+        yeah /= val = 1 == two && four < 5;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *assign_div = IS_AOP(block[0], div);
+      IS_ID(assign_div->left, "yeah");
+      auto *assign = IS_AOP(assign_div->right, assign);
+        IS_ID(assign->left, "val");
+        auto *bool_and = IS_BOP(assign->right, bool_and);
+          auto *eq = IS_BOP(bool_and->left, eq);
+            IS_NUM(eq->left, "1");
+            IS_ID(eq->right, "two");
+          auto *lt = IS_BOP(bool_and->right, lt);
+            IS_ID(lt->left, "four");
+            IS_NUM(lt->right, "5");
   });
 })
