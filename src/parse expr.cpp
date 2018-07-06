@@ -57,45 +57,104 @@ ast::ExprPtr parseUnaryExpr(ParseTokens &tok) {
 }
 
 enum class Assoc {
-  LEFT_TO_RIGHT,
-  RIGHT_TO_LEFT
+  /// Left to right
+  LTR,
+  /// Right to left
+  RTL
 };
 
-struct Operator {
+struct BinOp {
   std::string_view view;
   int prec;
   Assoc assoc;
   ast::BinOp op;
 };
 
-constexpr Operator op_table[] = {
-  {"+",  1, Assoc::LEFT_TO_RIGHT, ast::BinOp::add},
-  {"-",  1, Assoc::LEFT_TO_RIGHT, ast::BinOp::sub},
-  {"*",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mul},
-  {"/",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::div},
-  {"%",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mod},
-  {"**", 3, Assoc::RIGHT_TO_LEFT, ast::BinOp::pow}
+struct AssignOp {
+  std::string_view view;
+  ast::AssignOp op;
 };
 
-constexpr size_t null_op = std::numeric_limits<size_t>::max();
+struct PrecAssoc {
+  int prec;
+  Assoc assoc;
+};
 
-/// Get the index of an operator on the operator table. Return null_op if the
-/// operator was not found
-size_t lookupOp(const std::string_view view) {
-  for (size_t i = 0; i != sizeof(op_table) / sizeof(op_table[0]); ++i) {
-    if (op_table[i].view == view) {
+// https://en.cppreference.com/w/cpp/language/operator_precedence
+
+constexpr AssignOp assign_ops[] = {
+  {"=",   ast::AssignOp::assign},
+  {"+=",  ast::AssignOp::add},
+  {"-=",  ast::AssignOp::sub},
+  {"*=",  ast::AssignOp::mul},
+  {"/=",  ast::AssignOp::div},
+  {"%=",  ast::AssignOp::mod},
+  {"&=",  ast::AssignOp::bit_and},
+  {"|=",  ast::AssignOp::bit_or},
+  {"^=",  ast::AssignOp::bit_xor},
+  {"<<=", ast::AssignOp::bit_shl},
+  {">>=", ast::AssignOp::bit_shr}
+};
+
+constexpr int assign_prec = 0;
+constexpr Assoc assign_assoc = Assoc::RTL;
+
+constexpr BinOp bin_ops[] = {
+  {"||", 1,  Assoc::LTR, ast::BinOp::bool_or},
+  {"&&", 2,  Assoc::LTR, ast::BinOp::bool_and},
+  {"|",  3,  Assoc::LTR, ast::BinOp::bit_or},
+  {"^",  4,  Assoc::LTR, ast::BinOp::bit_xor},
+  {"&",  5,  Assoc::LTR, ast::BinOp::bit_and},
+  {"==", 6,  Assoc::LTR, ast::BinOp::eq},
+  {"!=", 6,  Assoc::LTR, ast::BinOp::ne},
+  {"<",  7,  Assoc::LTR, ast::BinOp::lt},
+  {"<=", 7,  Assoc::LTR, ast::BinOp::le},
+  {">",  7,  Assoc::LTR, ast::BinOp::gt},
+  {">=", 7,  Assoc::LTR, ast::BinOp::ge},
+  {"<<", 8,  Assoc::LTR, ast::BinOp::bit_shl},
+  {">>", 8,  Assoc::LTR, ast::BinOp::bit_shr},
+  {"+",  9,  Assoc::LTR, ast::BinOp::add},
+  {"-",  9,  Assoc::LTR, ast::BinOp::sub},
+  {"*",  10, Assoc::LTR, ast::BinOp::mul},
+  {"/",  10, Assoc::LTR, ast::BinOp::div},
+  {"%",  10, Assoc::LTR, ast::BinOp::mod},
+  {"**", 11, Assoc::RTL, ast::BinOp::pow}
+};
+
+constexpr size_t npos = size_t(-1);
+
+/// Get the index of an operator in the table. Return npos if the operator was
+/// not found
+template <auto &Table>
+size_t lookup(const std::string_view view) {
+  for (size_t i = 0; i != sizeof(Table) / sizeof(Table[0]); ++i) {
+    if (Table[i].view == view) {
       return i;
     }
   }
-  return null_op;
+  return npos;
 }
 
-/// Get an operator from the operator table. Assert that the given token
-/// is valid
-const Operator &getOp(const std::string_view view) {
-  const size_t index = lookupOp(view);
-  assert(index != null_op);
-  return op_table[index];
+bool getBinOp(PrecAssoc &pa, const std::string_view view) {
+  size_t index = lookup<bin_ops>(view);
+  if (index != npos) {
+    pa = {bin_ops[index].prec, bin_ops[index].assoc};
+    return true;
+  }
+  
+  index = lookup<assign_ops>(view);
+  if (index != npos) {
+    pa = {assign_prec, assign_assoc};
+    return true;
+  }
+  return false;
+}
+
+PrecAssoc getBinOp(const std::string_view view) {
+  PrecAssoc pa;
+  const bool got [[maybe_unused]] = getBinOp(pa, view);
+  assert(got);
+  return pa;
 }
 
 /// Pop the top element from the stack and return it
@@ -113,20 +172,32 @@ using OpStack = std::vector<std::string_view>;
 /// Pop an operator from the top of the stack to the expression stack. The top
 /// two expressions become operands
 void popOper(ExprPtrs &exprs, OpStack &opStack) {
-  auto binExpr = std::make_unique<ast::BinaryExpr>();
-  binExpr->right = pop(exprs);
-  binExpr->left = pop(exprs);
-  binExpr->oper = getOp(pop(opStack)).op;
-  exprs.push_back(std::move(binExpr));
+  const std::string_view oper = pop(opStack);
+  
+  if (const size_t index = lookup<bin_ops>(oper); index != npos) {
+    auto binExpr = std::make_unique<ast::BinaryExpr>();
+    binExpr->right = pop(exprs);
+    binExpr->left = pop(exprs);
+    binExpr->oper = bin_ops[index].op;
+    exprs.push_back(std::move(binExpr));
+  } else if (const size_t index = lookup<assign_ops>(oper); index != npos) {
+    auto assign = std::make_unique<ast::Assignment>();
+    assign->right = pop(exprs);
+    assign->left = pop(exprs);
+    assign->oper = assign_ops[index].op;
+    exprs.push_back(std::move(assign));
+  } else {
+    assert(false);
+  }
 }
 
 /// Determine whether the operator on the top of the stack should be popped by
 /// compare precedence and associativity with the given operator
-bool shouldPop(const Operator &curr, const std::string_view topOper) {
-  const Operator &top = getOp(topOper);
+bool shouldPop(const PrecAssoc curr, const std::string_view topOper) {
+  const PrecAssoc top = getBinOp(topOper);
   return curr.prec < top.prec || (
     curr.prec == top.prec &&
-    curr.assoc == Assoc::LEFT_TO_RIGHT
+    curr.assoc == Assoc::LTR
   );
 }
 
@@ -138,7 +209,7 @@ bool topNeq(const Stack &stack, const Element &elem) {
 
 /// Make room on the operator stack for a given operator. Checks precedence and
 /// associativity
-void makeRoomForOp(ExprPtrs &exprs, OpStack &opStack, const Operator &curr) {
+void makeRoomForOp(ExprPtrs &exprs, OpStack &opStack, const PrecAssoc curr) {
   while (topNeq(opStack, "(") && shouldPop(curr, opStack.back())) {
     popOper(exprs, opStack);
   }
@@ -146,9 +217,9 @@ void makeRoomForOp(ExprPtrs &exprs, OpStack &opStack, const Operator &curr) {
 
 /// Push a binary operator. Return true if pushed
 bool pushBinaryOp(ExprPtrs &exprs, OpStack &opStack, const std::string_view token) {
-  const size_t index = lookupOp(token);
-  if (index != null_op) {
-    makeRoomForOp(exprs, opStack, op_table[index]);
+  PrecAssoc pa;
+  if (getBinOp(pa, token)) {
+    makeRoomForOp(exprs, opStack, pa);
     opStack.push_back(token);
     return true;
   }
@@ -205,6 +276,8 @@ ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
   ExprPtrs exprs;
   OpStack opStack;
   
+  const Token *const startPos = tok.pos();
+  
   while (true) {
     if (ast::ExprPtr expr = parseUnaryExpr(tok)) {
       exprs.push_back(std::move(expr));
@@ -227,6 +300,10 @@ ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
     }
   }
   
-  return finalExpr(exprs, opStack);
+  ast::ExprPtr expr = finalExpr(exprs, opStack);
+  if (expr == nullptr) {
+    tok.pos(startPos);
+  }
+  return expr;
 }
 

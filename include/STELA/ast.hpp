@@ -118,9 +118,9 @@ enum class UnOp {
 
 /// Assignment operator
 enum class AssignOp {
-  add, sub, mul, div, mod,
-  bit_and, bit_or, bit_xor, bit_shl, bit_shr,
   assign,
+  add, sub, mul, div, mod,
+  bit_and, bit_or, bit_xor, bit_shl, bit_shr
 };
 
 struct BinaryExpr final : Expression {

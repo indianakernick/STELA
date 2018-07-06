@@ -27,6 +27,9 @@ public:
   const Token &front() const;
   Loc lastLoc() const;
   
+  const Token *pos() const;
+  void pos(const Token *);
+  
   Context context(std::string_view);
   const ContextStack &contextStack() const;
   

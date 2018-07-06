@@ -48,6 +48,14 @@ stela::Loc stela::ParseTokens::lastLoc() const {
   return beg[-1].loc;
 }
 
+const stela::Token *stela::ParseTokens::pos() const {
+  return beg;
+}
+
+void stela::ParseTokens::pos(const Token *pos) {
+  beg = pos;
+}
+
 stela::Context stela::ParseTokens::context(const std::string_view desc) {
   return ctxStack.context(desc);
 }
