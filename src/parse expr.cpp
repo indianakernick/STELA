@@ -175,6 +175,7 @@ bool popUntilLeftBracket(ExprPtrs &exprs, OpStack &opStack) {
 /// Clear all operators from the stack
 void clearOps(ExprPtrs &exprs, OpStack &opStack) {
   while (!opStack.empty()) {
+    // if top op is ( then there are mismatched brackets
     popOper(exprs, opStack);
   }
 }
@@ -188,7 +189,11 @@ ast::ExprPtr finalExpr(ExprPtrs &exprs, OpStack &opStack) {
   if (exprs.size() == 1) {
     return std::move(exprs.back());
   } else {
-    // um...
+    /*
+    
+    WRITE AN ERROR MESSAGE!!!
+    
+    */
     assert(false);
   }
 }
