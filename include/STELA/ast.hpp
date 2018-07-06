@@ -105,7 +105,7 @@ enum class BinOp {
   eq, ne, le, ge, lt, gt,
   bool_and, bool_or,
   bit_and, bit_or, bit_xor, bit_shl, bit_shr,
-  add, sub, mul, div, mod
+  add, sub, mul, div, mod, pow
 };
 
 /// Unary operator

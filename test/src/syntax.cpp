@@ -908,17 +908,19 @@ TEST_GROUP(Syntax, {
   TEST(Expression, {
     /*
     
-      +
-     / \
-    3    /
-       /   \
-      *     -
-     / \   / \
-    4   2 1   5
+      add
+     /   \
+    3    div
+       /     \
+     mul      pow1
+    /  \     /   \
+   4    2  sub   pow2
+          /  \   /  \
+         1    5 2    3
     
     */
   
-    const char *source = "let a = 3 + 4 * 2 / (1 - 5);";
+    const char *source = "let a = 3 + 4 * 2 / (1 - 5) ** 2 ** 3;";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
@@ -928,8 +930,12 @@ TEST_GROUP(Syntax, {
     auto *mul = IS_OP(div->left, mul);
     IS_NUM(mul->left, "4");
     IS_NUM(mul->right, "2");
-    auto *sub = IS_OP(div->right, sub);
+    auto *pow1 = IS_OP(div->right, pow);
+    auto *sub = IS_OP(pow1->left, sub);
     IS_NUM(sub->left, "1");
     IS_NUM(sub->right, "5");
+    auto *pow2 = IS_OP(pow1->right, pow);
+    IS_NUM(pow2->left, "2");
+    IS_NUM(pow2->right, "3");
   });
 })

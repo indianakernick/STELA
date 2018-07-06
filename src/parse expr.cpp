@@ -69,11 +69,12 @@ struct Operator {
 };
 
 constexpr Operator op_table[] = {
-  {"+", 1, Assoc::LEFT_TO_RIGHT, ast::BinOp::add},
-  {"-", 1, Assoc::LEFT_TO_RIGHT, ast::BinOp::sub},
-  {"*", 2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mul},
-  {"/", 2, Assoc::LEFT_TO_RIGHT, ast::BinOp::div},
-  {"%", 2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mod},
+  {"+",  1, Assoc::LEFT_TO_RIGHT, ast::BinOp::add},
+  {"-",  1, Assoc::LEFT_TO_RIGHT, ast::BinOp::sub},
+  {"*",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mul},
+  {"/",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::div},
+  {"%",  2, Assoc::LEFT_TO_RIGHT, ast::BinOp::mod},
+  {"**", 3, Assoc::RIGHT_TO_LEFT, ast::BinOp::pow},
 };
 
 constexpr size_t null_op = std::numeric_limits<size_t>::max();
