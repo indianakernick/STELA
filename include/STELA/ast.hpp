@@ -95,27 +95,63 @@ struct BuiltinType final : Type {
 
 //------------------------------ Expressions -----------------------------------
 
+// NOTE:
+//
+// Update the ops table in parseExpr if the order of the operator enums changes
+//
+
+/// Assignment operator
+enum class AssignOp {
+  beg_ = 0,
+
+  assign = beg_,
+  add, sub, mul, div, mod, pow,
+  bit_or, bit_xor, bit_and, bit_shl, bit_shr,
+  
+  end_
+};
+
 /// Binary operator
 enum class BinOp {
-  eq, ne, le, ge, lt, gt,
-  bool_and, bool_or,
-  bit_and, bit_or, bit_xor, bit_shl, bit_shr,
-  add, sub, mul, div, mod, pow
+  beg_ = static_cast<int>(AssignOp::end_),
+
+  bool_or = beg_, bool_and,
+  bit_or, bit_xor, bit_and,
+  eq, ne, lt, le, gt, ge,
+  bit_shl, bit_shr,
+  add, sub, mul, div, mod, pow,
+  
+  end_
 };
 
 /// Unary operator
 enum class UnOp {
+  beg_ = static_cast<int>(BinOp::end_),
+  
+  neg = beg_,
   bool_not, bit_not,
   pre_incr, pre_decr,
   post_incr, post_decr,
-  neg
+  
+  end_
 };
 
-/// Assignment operator
-enum class AssignOp {
-  assign,
-  add, sub, mul, div, mod,
-  bit_and, bit_or, bit_xor, bit_shl, bit_shr
+constexpr int next_op_enum_beg = static_cast<int>(UnOp::end_);
+
+constexpr int operator+(const AssignOp op) {
+  return static_cast<int>(op);
+}
+constexpr int operator+(const BinOp op) {
+  return static_cast<int>(op);
+}
+constexpr int operator+(const UnOp op) {
+  return static_cast<int>(op);
+}
+
+struct Assignment final : Expression {
+  ExprPtr left;
+  AssignOp oper;
+  ExprPtr right;
 };
 
 struct BinaryExpr final : Expression {
@@ -127,12 +163,6 @@ struct BinaryExpr final : Expression {
 struct UnaryExpr final : Expression {
   UnOp oper;
   ExprPtr expr;
-};
-
-struct Assignment final : Expression {
-  ExprPtr left;
-  AssignOp oper;
-  ExprPtr right;
 };
 
 struct FuncArg {
