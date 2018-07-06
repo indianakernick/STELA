@@ -40,7 +40,15 @@ constexpr std::string_view keywords[] = {
   "Bool",
   "Float",
   "Double",
-  "String"
+  "String",
+  "Int8",
+  "Int16",
+  "Int32",
+  "Int64",
+  "UInt8",
+  "UInt16",
+  "UInt32",
+  "UInt64"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 

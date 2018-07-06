@@ -70,8 +70,6 @@ ast::TypePtr parseBuiltinType(ParseTokens &tok) {
   CHECK(Float)
   CHECK(Double)
   CHECK(String)
-
-  /*
   CHECK(Int8)
   CHECK(Int16)
   CHECK(Int32)
@@ -80,7 +78,6 @@ ast::TypePtr parseBuiltinType(ParseTokens &tok) {
   CHECK(UInt16)
   CHECK(UInt32)
   CHECK(UInt64)
-  */
 
   return nullptr;
   

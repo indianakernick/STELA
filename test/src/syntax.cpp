@@ -197,11 +197,19 @@ TEST_GROUP(Syntax, {
       var myFloat: Float;
       var myDouble: Double;
       var myString: String;
+      var myInt8: Int8;
+      var myInt16: Int16;
+      var myInt32: Int32;
+      var myInt64: Int64;
+      var myUInt8: UInt8;
+      var myUInt16: UInt16;
+      var myUInt32: UInt32;
+      var myUInt64: UInt64;
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 7);
+    ASSERT_EQ(ast.global.size(), 15);
     
-    for (int i = 0; i != 7; ++i) {
+    for (int i = 0; i != 15; ++i) {
       auto *var = ASSERT_DOWN_CAST(const Var, ast.global[i].get());
       auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
       ASSERT_EQ(type->value, static_cast<BuiltinType::Enum>(i));

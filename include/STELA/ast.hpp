@@ -81,11 +81,7 @@ struct BuiltinType final : Type {
     Bool,
     Float,
     Double,
-    String
-    
-    /*
-    Do we really need these?
-    
+    String,
     Int8,
     Int16,
     Int32,
@@ -94,7 +90,6 @@ struct BuiltinType final : Type {
     UInt16,
     UInt32,
     UInt64
-    */
   } value;
 };
 
