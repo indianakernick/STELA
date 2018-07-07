@@ -40,6 +40,10 @@ bool stela::ParseTokens::empty() const {
   return beg == end;
 }
 
+size_t stela::ParseTokens::size() const {
+  return end - beg;
+}
+
 const stela::Token &stela::ParseTokens::front() const {
   return *beg;
 }
@@ -144,6 +148,11 @@ bool stela::ParseTokens::peekOpType() const {
 
 bool stela::ParseTokens::peekIdentType() const {
   return peekType(Token::Type::identifier);
+}
+
+void stela::ParseTokens::consume() {
+  expectToken();
+  ++beg;
 }
 
 void stela::ParseTokens::expectToken() {

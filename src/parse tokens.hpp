@@ -24,6 +24,7 @@ public:
   
   Log &log() const;
   bool empty() const;
+  size_t size() const;
   const Token &front() const;
   Loc lastLoc() const;
   
@@ -59,6 +60,8 @@ public:
   bool peekType(Token::Type) const;
   bool peekOpType() const;
   bool peekIdentType() const;
+
+  void consume();
 
 private:
   const Token *beg;

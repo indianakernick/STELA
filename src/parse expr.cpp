@@ -139,12 +139,11 @@ constexpr Operator ops[] = {
 
 constexpr int npos = -1;
 
-/// Get the index of an operator in the table. Return npos if the operator was
-/// not found
-int lookup(const std::string_view view) {
-  for (int i = 0; i != sizeof(ops) / sizeof(ops[0]); ++i) {
-    if (ops[i].view == view) {
-      return i;
+/// Get the index of an operator in the table. Return npos if not found
+int lookup(const int beg, const int end, const std::string_view view) {
+  for (int o = beg; o != end; ++o) {
+    if (ops[o].view == view) {
+      return o;
     }
   }
   return npos;
@@ -152,7 +151,7 @@ int lookup(const std::string_view view) {
 
 template <typename Enum>
 bool inRange(const int oper) {
-  return static_cast<int>(Enum::beg_) <= oper && oper < static_cast<int>(Enum::end_);
+  return +Enum::beg_ <= oper && oper < +Enum::end_;
 }
 
 /// Pop the top element from the stack and return it
@@ -235,27 +234,64 @@ bool shouldPop(const PrecAssoc curr, const int topOper) {
   );
 }
 
-/// Return true if the top element is not equal to the given element
-bool topNeq(const OpStack &stack, const int elem) {
-  return !stack.empty() && stack.back() != elem;
+/// Return true if the top operator is not OtherOp::l_paren
+bool topNotLParen(const OpStack &stack) {
+  return !stack.empty() && stack.back() != +OtherOp::l_paren;
 }
 
 /// Make room on the operator stack for a given operator. Checks precedence and
 /// associativity
 void makeRoomForOp(ExprPtrs &exprs, OpStack &opStack, const PrecAssoc curr) {
-  while (topNeq(opStack, +OtherOp::l_paren) && shouldPop(curr, opStack.back())) {
+  while (topNotLParen(opStack) && shouldPop(curr, opStack.back())) {
     popOper(exprs, opStack);
   }
 }
 
-/// Push a binary operator. Return true if pushed
-bool pushBinaryOp(ExprPtrs &exprs, OpStack &opStack, const std::string_view token) {
-  if (const int index = lookup(token); index != npos) {
-    makeRoomForOp(exprs, opStack, ops[index].pa);
-    opStack.push_back(index);
+/// Given the previous token, is the current operator a prefix unary operator?
+bool isPreUnary(const Token *const prev) {
+  return prev == nullptr || (
+    prev->type == Token::Type::oper &&
+    prev->view != ")"
+  );
+}
+
+/// Given the previous token, is the current operator a postfix unary operator?
+bool isPostUnary(const Token *const prev) {
+  return prev != nullptr && (
+    prev->type == Token::Type::identifier ||
+    (prev->type == Token::Type::oper && prev->view == ")")
+  );
+}
+
+/// Push an operator to the operator stack. Return true if pushed
+bool pushOp(ExprPtrs &exprs, OpStack &opStack, const int oper) {
+  if (oper != npos) {
+    makeRoomForOp(exprs, opStack, ops[oper].pa);
+    opStack.push_back(oper);
     return true;
   }
   return false;
+}
+
+/// Push a prefix unary operator. Return true if pushed
+bool pushPreUnOp(ExprPtrs &exprs, OpStack &opStack, const std::string_view token) {
+  return pushOp(exprs, opStack, lookup(
+    +ast::UnOp::beg_, +ast::UnOp::post_incr, token
+  ));
+}
+
+/// Push a prefix unary operator. Return true if pushed
+bool pushPostUnOp(ExprPtrs &exprs, OpStack &opStack, const std::string_view token) {
+  return pushOp(exprs, opStack, lookup(
+    +ast::UnOp::post_incr, +ast::UnOp::end_, token
+  ));
+}
+
+/// Push a binary operator. Return true if pushed
+bool pushBinOp(ExprPtrs &exprs, OpStack &opStack, const std::string_view token) {
+  return pushOp(exprs, opStack, lookup(
+    +ast::AssignOp::beg_, +ast::BinOp::end_, token
+  ));
 }
 
 /// Pop a left bracket from the top of the operator stack. Return true if popped
@@ -270,7 +306,7 @@ bool popLeftBracket(OpStack &opStack) {
 /// Pop from the operator stack until a left bracket is reached or the stack
 /// is emptied. Return true if a left bracket was reached
 bool popUntilLeftBracket(ExprPtrs &exprs, OpStack &opStack) {
-  while (topNeq(opStack, +OtherOp::l_paren)) {
+  while (topNotLParen(opStack)) {
     popOper(exprs, opStack);
   }
   return popLeftBracket(opStack);
@@ -302,6 +338,18 @@ ast::ExprPtr finalExpr(ExprPtrs &exprs, OpStack &opStack) {
   }
 }
 
+bool consumeOper(ExprPtrs &exprs, OpStack &opStack, ParseTokens &tok) {
+  const std::string_view token = tok.front().view;
+  const Token *prevToken = tok.size() == 1 ? nullptr : &tok.front() - 1;
+  if (token == ")" && popUntilLeftBracket(exprs, opStack)) {}
+  else if (isPreUnary(prevToken) && pushPreUnOp(exprs, opStack, token)) {}
+  else if (isPostUnary(prevToken) && pushPostUnOp(exprs, opStack, token)) {}
+  else if (pushBinOp(exprs, opStack, token)) {}
+  else return false;
+  tok.consume();
+  return true;
+}
+
 }
 
 ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
@@ -316,11 +364,7 @@ ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
     } else if (tok.checkOp("(")) {
       opStack.push_back(+OtherOp::l_paren);
     } else if (tok.peekOpType()) {
-      if (tok.front().view == ")" && popUntilLeftBracket(exprs, opStack)) {
-        tok.expectOp();
-      } else if (pushBinaryOp(exprs, opStack, tok.front().view)) {
-        tok.expectOp();
-      } else {
+      if (!consumeOper(exprs, opStack, tok)) {
         // extraneous ) or
         // invalid binary operator
         break;

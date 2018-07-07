@@ -29,6 +29,13 @@ using namespace stela::ast;
     return op;                                                                  \
   }()
 
+#define IS_UOP(EXP, OPERATOR)                                                   \
+  [&] {                                                                         \
+    auto *op = ASSERT_DOWN_CAST(const UnaryExpr, EXP.get());                    \
+    ASSERT_EQ(op->oper, UnOp::OPERATOR);                                        \
+    return op;                                                                  \
+  }()
+
 #define IS_NUM(EXP, NUMBER)                                                     \
   {                                                                             \
     auto *num = ASSERT_DOWN_CAST(const NumberLiteral, EXP.get());               \
@@ -997,5 +1004,50 @@ TEST_GROUP(Syntax, {
           auto *lt = IS_BOP(bool_and->right, lt);
             IS_ID(lt->left, "four");
             IS_NUM(lt->right, "5");
+  });
+  
+  TEST(Expr - unary, {
+    /*
+    
+       assign
+      /      \
+     n       sub
+            /   \
+          neg   neg
+           |     |
+           n    add
+               /   \
+        bit_not     bool_not
+            |         |
+            5         0
+    
+    */
+  
+    const char *source = R"(
+      func dummy() {
+        ++n;
+        n--;
+        n = -n - -(~5 + !0);
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 3);
+    
+    IS_UOP(block[0], pre_incr);
+    IS_UOP(block[1], post_decr);
+    auto *assign = IS_AOP(block[2], assign);
+      IS_ID(assign->left, "n");
+      auto *sub = IS_BOP(assign->right, sub);
+        auto *lneg = IS_UOP(sub->left, neg);
+          IS_ID(lneg->expr, "n");
+        auto *rneg = IS_UOP(sub->right, neg);
+          auto *add = IS_BOP(rneg->expr, add);
+            auto *bitNot = IS_UOP(add->left, bit_not);
+              IS_NUM(bitNot->expr, "5");
+            auto *boolNot = IS_UOP(add->right, bool_not);
+              IS_NUM(boolNot->expr, "0");
   });
 })
