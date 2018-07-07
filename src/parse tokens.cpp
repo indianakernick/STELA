@@ -150,6 +150,10 @@ bool stela::ParseTokens::peekIdentType() const {
   return peekType(Token::Type::identifier);
 }
 
+bool stela::ParseTokens::peekOp(const std::string_view view) const {
+  return peekOpType() && front().view == view;
+}
+
 void stela::ParseTokens::consume() {
   expectToken();
   ++beg;

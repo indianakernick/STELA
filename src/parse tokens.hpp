@@ -60,6 +60,8 @@ public:
   bool peekType(Token::Type) const;
   bool peekOpType() const;
   bool peekIdentType() const;
+  
+  bool peekOp(std::string_view) const;
 
   void consume();
 

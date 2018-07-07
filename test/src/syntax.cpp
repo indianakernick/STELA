@@ -51,7 +51,7 @@ using namespace stela::ast;
 TEST_GROUP(Syntax, {
   StreamLog log;
 
-  TEST(No tokens, {
+  /*TEST(No tokens, {
     const AST ast = createAST(Tokens{}, log);
     ASSERT_TRUE(ast.global.empty());
   });
@@ -931,7 +931,7 @@ TEST_GROUP(Syntax, {
       auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr.get());
       ASSERT_EQ(ident->name, "five");
     }
-  });
+  });*/
   
   TEST(Expr - math, {
     /*
