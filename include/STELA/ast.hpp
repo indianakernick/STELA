@@ -165,10 +165,7 @@ struct UnaryExpr final : Expression {
   ExprPtr expr;
 };
 
-struct FuncArg {
-  ExprPtr expr;
-};
-using FuncArgs = std::vector<FuncArg>;
+using FuncArgs = std::vector<ExprPtr>;
 
 struct FuncCall final : Expression {
   ExprPtr func;

@@ -894,7 +894,7 @@ TEST_GROUP(Syntax, {
       auto *type = ASSERT_DOWN_CAST(const BuiltinType, make->type.get());
       ASSERT_EQ(type->value, BuiltinType::Int);
       ASSERT_EQ(make->args.size(), 1);
-      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].expr.get());
+      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].get());
       ASSERT_EQ(num->value, "5");
     }
     {
@@ -903,11 +903,11 @@ TEST_GROUP(Syntax, {
       auto *type = ASSERT_DOWN_CAST(const NamedType, make->type.get());
       ASSERT_EQ(type->name, "MyComplexStruct");
       ASSERT_EQ(make->args.size(), 3);
-      auto *str = ASSERT_DOWN_CAST(const StringLiteral, make->args[0].expr.get());
+      auto *str = ASSERT_DOWN_CAST(const StringLiteral, make->args[0].get());
       ASSERT_EQ(str->value, "string");
-      auto *c = ASSERT_DOWN_CAST(const CharLiteral, make->args[1].expr.get());
+      auto *c = ASSERT_DOWN_CAST(const CharLiteral, make->args[1].get());
       ASSERT_EQ(c->value, "a");
-      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[2].expr.get());
+      auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[2].get());
       ASSERT_EQ(num->value, "7");
     }
   });

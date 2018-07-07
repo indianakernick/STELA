@@ -23,7 +23,7 @@ ast::FuncArgs parseFuncArgs(ParseTokens &tok) {
   }
   ast::FuncArgs args;
   do {
-    args.push_back(ast::FuncArg{tok.expectNode(parseExpr, "expression")});
+    args.push_back(tok.expectNode(parseExpr, "expression"));
   } while (tok.expectEitherOp(",", ")") == ",");
   return args;
 }
