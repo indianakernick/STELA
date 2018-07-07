@@ -74,10 +74,14 @@ struct Operator {
 };
 
 enum class OtherOp {
-  member = ast::next_op_enum_beg,
+  beg_ = ast::next_op_enum_beg,
+
+  member = beg_,
   subscript,
   fun_call,
-  l_paren
+  l_paren,
+  
+  end_
 };
 constexpr int operator+(const OtherOp op) {
   return static_cast<int>(op);
@@ -163,24 +167,60 @@ Element pop(std::vector<Element> &elems) {
 using ExprPtrs = std::vector<ast::ExprPtr>;
 using OpStack = std::vector<int>;
 
-/// Pop an operator from the top of the stack to the expression stack. The top
-/// two expressions become operands
-void popOper(ExprPtrs &exprs, OpStack &opStack) {
-  const int oper = pop(opStack);
-  
+bool popBinOp(ExprPtrs &exprs, const int oper) {
   if (inRange<ast::BinOp>(oper)) {
     auto binExpr = std::make_unique<ast::BinaryExpr>();
     binExpr->right = pop(exprs);
     binExpr->left = pop(exprs);
     binExpr->oper = static_cast<ast::BinOp>(oper);
     exprs.push_back(std::move(binExpr));
-  } else if (inRange<ast::AssignOp>(oper)) {
+    return true;
+  }
+  return false;
+}
+
+bool popAssignOp(ExprPtrs &exprs, const int oper) {
+  if (inRange<ast::AssignOp>(oper)) {
     auto assign = std::make_unique<ast::Assignment>();
     assign->right = pop(exprs);
     assign->left = pop(exprs);
     assign->oper = static_cast<ast::AssignOp>(oper);
     exprs.push_back(std::move(assign));
-  } else {
+    return true;
+  }
+  return false;
+}
+
+bool popUnaryOp(ExprPtrs &exprs, const int oper) {
+  if (inRange<ast::UnOp>(oper)) {
+    auto unary = std::make_unique<ast::UnaryExpr>();
+    unary->expr = pop(exprs);
+    unary->oper = static_cast<ast::UnOp>(oper);
+    exprs.push_back(std::move(unary));
+    return true;
+  }
+  return false;
+}
+
+bool popOtherOp(ExprPtrs &exprs, const int oper) {
+  if (oper == +OtherOp::member) {
+    auto member = std::make_unique<ast::MemberIdent>();
+    member->member = pop(exprs);
+    member->object = pop(exprs);
+    exprs.push_back(std::move(member));
+    return true;
+  }
+  return false;
+}
+
+/// Pop an operator from the top of the stack to the expression stack
+void popOper(ExprPtrs &exprs, OpStack &opStack) {
+  const int oper = pop(opStack);
+  if (popBinOp(exprs, oper)) {}
+  else if (popAssignOp(exprs, oper)) {}
+  else if (popUnaryOp(exprs, oper)) {}
+  else if (popOtherOp(exprs, oper)) {}
+  else {
     assert(false);
   }
 }
