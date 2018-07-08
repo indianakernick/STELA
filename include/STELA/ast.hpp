@@ -145,7 +145,7 @@ struct FuncCall final : Expression {
 
 struct MemberIdent final : Expression {
   ExprPtr object;
-  ExprPtr member;
+  Name member;
 };
 
 struct InitCall final : Expression {

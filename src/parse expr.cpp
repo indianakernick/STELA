@@ -68,29 +68,32 @@ ast::ExprPtr parseMisc(ParseTokens &tok) {
   if (!(left = parseTerm(tok))) {
     return nullptr;
   }
-  if (tok.checkOp("++")) {
-    return makeUnary(ast::UnOp::post_incr, std::move(left));
-  } else if (tok.checkOp("--")) {
-    return makeUnary(ast::UnOp::post_decr, std::move(left));
-  } else if (tok.peekOp("(")) {
-    auto call = std::make_unique<ast::FuncCall>();
-    call->func = std::move(left);
-    call->args = parseFuncArgs(tok);
-    return call;
-  } else if (tok.checkOp("[")) {
-    auto sub = std::make_unique<ast::Subscript>();
-    sub->object = std::move(left);
-    sub->index = expectExpr(tok, parseExpr);
-    tok.expectOp("]");
-    return sub;
-  } else if (tok.checkOp(".")) {
-    auto mem = std::make_unique<ast::MemberIdent>();
-    mem->object = std::move(left);
-    mem->member = tok.expectNode(parseIdent, "identifier");
-    return mem;
-  } else {
-    return left;
+  while (true) {
+    if (tok.checkOp("++")) {
+      left = makeUnary(ast::UnOp::post_incr, std::move(left));
+    } else if (tok.checkOp("--")) {
+      left = makeUnary(ast::UnOp::post_decr, std::move(left));
+    } else if (tok.peekOp("(")) {
+      auto call = std::make_unique<ast::FuncCall>();
+      call->func = std::move(left);
+      call->args = parseFuncArgs(tok);
+      left = std::move(call);
+    } else if (tok.checkOp("[")) {
+      auto sub = std::make_unique<ast::Subscript>();
+      sub->object = std::move(left);
+      sub->index = expectExpr(tok, parseExpr);
+      tok.expectOp("]");
+      left = std::move(sub);
+    } else if (tok.checkOp(".")) {
+      auto mem = std::make_unique<ast::MemberIdent>();
+      mem->object = std::move(left);
+      mem->member = tok.expectID();
+      left = std::move(mem);
+    } else {
+      break;
+    }
   }
+  return left;
 }
 
 ast::ExprPtr parseUnary(ParseTokens &);

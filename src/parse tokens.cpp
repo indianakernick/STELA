@@ -40,24 +40,12 @@ bool stela::ParseTokens::empty() const {
   return beg == end;
 }
 
-size_t stela::ParseTokens::size() const {
-  return end - beg;
-}
-
 const stela::Token &stela::ParseTokens::front() const {
   return *beg;
 }
 
 stela::Loc stela::ParseTokens::lastLoc() const {
   return beg[-1].loc;
-}
-
-const stela::Token *stela::ParseTokens::pos() const {
-  return beg;
-}
-
-void stela::ParseTokens::pos(const Token *pos) {
-  beg = pos;
 }
 
 stela::Context stela::ParseTokens::context(const std::string_view desc) {
@@ -122,10 +110,6 @@ std::string_view stela::ParseTokens::expectID() {
   return expect(Token::Type::identifier);
 }
 
-std::string_view stela::ParseTokens::expectOp() {
-  return expect(Token::Type::oper);
-}
-
 void stela::ParseTokens::expectOp(const std::string_view view) {
   expect(Token::Type::oper, view);
 }
@@ -152,11 +136,6 @@ bool stela::ParseTokens::peekIdentType() const {
 
 bool stela::ParseTokens::peekOp(const std::string_view view) const {
   return peekOpType() && front().view == view;
-}
-
-void stela::ParseTokens::consume() {
-  expectToken();
-  ++beg;
 }
 
 void stela::ParseTokens::expectToken() {

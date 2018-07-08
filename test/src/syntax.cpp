@@ -944,11 +944,12 @@ TEST_GROUP(Syntax, {
    /   \     /    \
   4     2 sub      pow2
          /   \    /   \
-        1     5  2     3
-    
+        1    mod 2     3
+            /   \
+           5     6
     */
   
-    const char *source = "let a = 3 + 4 * 2 / (1 - 5) ** 2 ** 3;";
+    const char *source = "let a = 3 + 4 * 2 / (1 - 5 % 6) ** 2 ** 3;";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
@@ -961,7 +962,9 @@ TEST_GROUP(Syntax, {
           auto *pow1 = IS_BOP(div->right, pow);
             auto *sub = IS_BOP(pow1->left, sub);
               IS_NUM(sub->left, "1");
-              IS_NUM(sub->right, "5");
+              auto *mod = IS_BOP(sub->right, mod);
+                IS_NUM(mod->left, "5");
+                IS_NUM(mod->right, "6");
             auto *pow2 = IS_BOP(pow1->right, pow);
               IS_NUM(pow2->left, "2");
               IS_NUM(pow2->right, "3");
@@ -970,7 +973,7 @@ TEST_GROUP(Syntax, {
   TEST(Expr - assign and compare, {
     /*
     
-      assign_div
+      assign_add
      /          \
   yeah        assign
              /      \
@@ -984,7 +987,7 @@ TEST_GROUP(Syntax, {
     
     const char *source = R"(
       func dummy() {
-        yeah /= val = 1 == two && four < 5;
+        yeah += val = 1 == two && four < 5;
       }
     )";
     const AST ast = createAST(source, log);
@@ -993,9 +996,9 @@ TEST_GROUP(Syntax, {
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);
     
-    auto *assign_div = IS_AOP(block[0], div);
-      IS_ID(assign_div->left, "yeah");
-      auto *assign = IS_AOP(assign_div->right, assign);
+    auto *assign_add = IS_AOP(block[0], add);
+      IS_ID(assign_add->left, "yeah");
+      auto *assign = IS_AOP(assign_add->right, assign);
         IS_ID(assign->left, "val");
         auto *bool_and = IS_BOP(assign->right, bool_and);
           auto *eq = IS_BOP(bool_and->left, eq);
@@ -1009,36 +1012,40 @@ TEST_GROUP(Syntax, {
   TEST(Expr - unary, {
     /*
     
-       assign
-      /      \
-     n       sub
-            /   \
-          neg   neg
-           |     |
-           n    add
-               /   \
-        bit_not     bool_not
-            |         |
-            5         0
+       assign_sub
+      /          \
+     n           sub
+                /   \
+              neg   neg
+               |     |
+               n    add
+                   /   \
+            bit_not     bool_not
+                |         |
+                5         0
     
     */
   
     const char *source = R"(
       func dummy() {
         ++n;
+        --n;
+        n++;
         n--;
-        n = -n - -(~5 + !0);
+        n -= -n - -(~5 + !0);
       }
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 3);
+    ASSERT_EQ(block.size(), 5);
     
     IS_UOP(block[0], pre_incr);
-    IS_UOP(block[1], post_decr);
-    auto *assign = IS_AOP(block[2], assign);
+    IS_UOP(block[1], pre_decr);
+    IS_UOP(block[2], post_incr);
+    IS_UOP(block[3], post_decr);
+    auto *assign = IS_AOP(block[4], sub);
       IS_ID(assign->left, "n");
       auto *sub = IS_BOP(assign->right, sub);
         auto *lneg = IS_UOP(sub->left, neg);
@@ -1049,5 +1056,179 @@ TEST_GROUP(Syntax, {
               IS_NUM(bitNot->expr, "5");
             auto *boolNot = IS_UOP(add->right, bool_not);
               IS_NUM(boolNot->expr, "0");
+  });
+  
+  TEST(Expr - ternary, {
+    /*
+    
+     assign_mul
+    /          \
+   e         ternary
+            /   |   \
+          le  po_inc assign_div
+         /  \   |   /          \
+        a    d  a  a          pr_dec
+                                |
+                                d
+    
+    */
+  
+    const char *source = R"(
+      func dummy() {
+        e *= a <= d ? a++ : a /= --d;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *assignMul = IS_AOP(block[0], mul);
+      IS_ID(assignMul->left, "e");
+      auto *tern = ASSERT_DOWN_CAST(const Ternary, assignMul->right.get());
+        auto *le = IS_BOP(tern->cond, le);
+          IS_ID(le->left, "a");
+          IS_ID(le->right, "d");
+        auto *poInc = IS_UOP(tern->tru, post_incr);
+          IS_ID(poInc->expr, "a");
+        auto *assignDiv = IS_AOP(tern->fals, div);
+          IS_ID(assignDiv->left, "a");
+          auto *prDec = IS_UOP(assignDiv->right, pre_decr);
+            IS_ID(prDec->expr, "d");
+  });
+  
+  TEST(Expr - member and subscript, {
+    /*
+                       subscript1
+                      /          \
+            subscript2            h
+           /          \
+       mem1            subscript3
+      /    \          /          \
+     mem2   c     mem3            g
+    /    \       /    \
+   a      b     e      f
+    
+    */
+    
+    const char *source = R"(
+      func dummy() {
+        a.b.c[e.f[g]][h];
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *sub1 = ASSERT_DOWN_CAST(const Subscript, block[0].get());
+      auto *sub2 = ASSERT_DOWN_CAST(const Subscript, sub1->object.get());
+        auto *mem1 = ASSERT_DOWN_CAST(const MemberIdent, sub2->object.get());
+          auto *mem2 = ASSERT_DOWN_CAST(const MemberIdent, mem1->object.get());
+            IS_ID(mem2->object, "a");
+            ASSERT_EQ(mem2->member, "b");
+          ASSERT_EQ(mem1->member, "c");
+        auto *sub3 = ASSERT_DOWN_CAST(const Subscript, sub2->index.get());
+          auto *mem3 = ASSERT_DOWN_CAST(const MemberIdent, sub3->object.get());
+            IS_ID(mem3->object, "e");
+            ASSERT_EQ(mem3->member, "f");
+          IS_ID(sub3->index, "g");
+      IS_ID(sub1->index, "h");
+  });
+  
+  TEST(Expr - bits, {
+    /*
+    
+               bool_or
+              /       \
+            /           \
+          ne             bit_or
+         /  \           /      \
+      not   shr      and        xor
+     /     /   \    /   \      /   \
+    a   shl     3  c     d    e     f
+       /   \
+      b     2
+    
+    */
+  
+    const char *source = R"(
+      func dummy() {
+        ~a != b << 2 >> 3 || c & d | e ^ f;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *boolOr = IS_BOP(block[0], bool_or);
+      auto *ne = IS_BOP(boolOr->left, ne);
+        auto *bnot = IS_UOP(ne->left, bit_not);
+          IS_ID(bnot->expr, "a");
+        auto *shr = IS_BOP(ne->right, bit_shr);
+          auto *shl = IS_BOP(shr->left, bit_shl);
+            IS_ID(shl->left, "b");
+            IS_NUM(shl->right, "2");
+          IS_NUM(shr->right, "3");
+      auto *bor = IS_BOP(boolOr->right, bit_or);
+        auto *band = IS_BOP(bor->left, bit_and);
+          IS_ID(band->left, "c");
+          IS_ID(band->right, "d");
+        auto *bxor = IS_BOP(bor->right, bit_xor);
+          IS_ID(bxor->left, "e");
+          IS_ID(bxor->right, "f");
+  });
+  
+  TEST(Expr - function call, {
+    /*
+    
+                  call1
+                 /     \
+               /         \
+           mem1           args
+          /    \         /    \
+       sub      b   call2      4
+      /   \        /     \
+     a     2   mem2       args
+              /    \
+         call3      d
+        /     \
+       c       args
+                |
+                3
+    
+    */
+    
+    const char *source = R"(
+      func dummy() {
+        a[2].b(c(3).d(), 4);
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *call1 = ASSERT_DOWN_CAST(const FuncCall, block[0].get());
+      auto *mem1 = ASSERT_DOWN_CAST(const MemberIdent, call1->func.get());
+        auto *sub = ASSERT_DOWN_CAST(const Subscript, mem1->object.get());
+          IS_ID(sub->object, "a");
+          IS_NUM(sub->index, "2");
+        ASSERT_EQ(mem1->member, "b");
+      ASSERT_EQ(call1->args.size(), 2);
+        auto *call2 = ASSERT_DOWN_CAST(const FuncCall, call1->args[0].get());
+          auto *mem2 = ASSERT_DOWN_CAST(const MemberIdent, call2->func.get());
+            auto *call3 = ASSERT_DOWN_CAST(const FuncCall, mem2->object.get());
+              IS_ID(call3->func, "c");
+              ASSERT_EQ(call3->args.size(), 1);
+                IS_NUM(call3->args[0], "3");
+            ASSERT_EQ(mem2->member, "d");
+          ASSERT_TRUE(call2->args.empty());
+        IS_NUM(call1->args[1], "4");
   });
 })

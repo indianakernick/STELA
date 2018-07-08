@@ -24,12 +24,8 @@ public:
   
   Log &log() const;
   bool empty() const;
-  size_t size() const;
   const Token &front() const;
   Loc lastLoc() const;
-  
-  const Token *pos() const;
-  void pos(const Token *);
   
   Context context(std::string_view);
   const ContextStack &contextStack() const;
@@ -52,7 +48,6 @@ public:
   std::string_view expectEither(Token::Type, std::string_view, std::string_view);
   
   std::string_view expectID();
-  std::string_view expectOp();
   void expectOp(std::string_view);
   std::string_view expectEitherOp(std::string_view, std::string_view);
   void expectKeyword(std::string_view);
@@ -62,8 +57,6 @@ public:
   bool peekIdentType() const;
   
   bool peekOp(std::string_view) const;
-
-  void consume();
 
 private:
   const Token *beg;
