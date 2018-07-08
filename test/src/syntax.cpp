@@ -1231,4 +1231,60 @@ TEST_GROUP(Syntax, {
           ASSERT_TRUE(call2->args.empty());
         IS_NUM(call1->args[1], "4");
   });
+  
+  TEST(Expr - assign, {
+    /*
+    
+      mod
+     /   \
+    a     pow
+         /   \
+        b     shl
+             /   \
+            c     shr
+                 /   \
+                d     and
+                     /   \
+                    e     xor
+                         /   \
+                        f     or
+                             /  \
+                            g    ge
+                                /  \
+                              gt    j
+                             /  \
+                            h    i
+    
+    */
+    const char *source = R"(
+      func dummy() {
+        a %= b **= c <<= d >>= e &= f ^= g |= h > i >= j;
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    
+    auto *mod = IS_AOP(block[0], mod);
+      IS_ID(mod->left, "a");
+      auto *pow = IS_AOP(mod->right, pow);
+        IS_ID(pow->left, "b");
+        auto *shl = IS_AOP(pow->right, bit_shl);
+          IS_ID(shl->left, "c");
+          auto *shr = IS_AOP(shl->right, bit_shr);
+            IS_ID(shr->left, "d");
+            auto *band = IS_AOP(shr->right, bit_and);
+              IS_ID(band->left, "e");
+              auto *bxor = IS_AOP(band->right, bit_xor);
+                IS_ID(bxor->left, "f");
+                auto *bor = IS_AOP(bxor->right, bit_or);
+                  IS_ID(bor->left, "g");
+                  auto *ge = IS_BOP(bor->right, ge);
+                    auto *gt = IS_BOP(ge->left, gt);
+                      IS_ID(gt->left, "h");
+                      IS_ID(gt->right, "i");
+                    IS_ID(ge->right, "j");
+  });
 })
