@@ -14,9 +14,8 @@
 
 using namespace stela;
 
-namespace {
-
-AST createASTimpl(const Tokens &tokens, Log &log) {
+AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
+  Log log{buf, LogCat::syntax};
   log.verbose() << "Parsing " << tokens.size() << " tokens" << endlog;
 
   AST ast;
@@ -40,20 +39,6 @@ AST createASTimpl(const Tokens &tokens, Log &log) {
   log.verbose() << "Created AST with " << ast.global.size() << " global nodes" << endlog;
   
   return ast;
-}
-
-}
-
-AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
-  Log log{buf, LogCat::syntax};
-  try {
-    return createASTimpl(tokens, log);
-  } catch (FatalError &) {
-    throw;
-  } catch (std::exception &e) {
-    log.error() << e.what() << endlog;
-    throw;
-  }
 }
 
 AST stela::createAST(const std::string_view source, LogBuf &buf) {

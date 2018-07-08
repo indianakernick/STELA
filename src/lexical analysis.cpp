@@ -193,7 +193,10 @@ bool parseMultiComment(Utils::ParseString &str, Log &log) {
   }
 }
 
-Tokens lexImpl(const std::string_view source, Log &log) {
+}
+
+Tokens stela::lex(const std::string_view source, LogBuf &buf) {
+  Log log{buf, LogCat::lexical};
   log.verbose() << "Parsing " << source.size() << " characters" << endlog;
   
   Utils::ParseString str(source);
@@ -222,22 +225,5 @@ Tokens lexImpl(const std::string_view source, Log &log) {
     
     end(token, str);
     tokens.push_back(token);
-  }
-}
-
-}
-
-Tokens stela::lex(const std::string_view source, LogBuf &buf) {
-  Log log{buf, LogCat::lexical};
-  try {
-    return lexImpl(source, log);
-  } catch (stela::FatalError &) {
-    throw;
-  } catch (Utils::ParsingError &e) {
-    log.ferror({e.line(), e.column()}) << e.what() << endlog;
-    return {};
-  } catch (std::exception &e) {
-    log.error() << e.what() << endlog;
-    throw;
   }
 }
