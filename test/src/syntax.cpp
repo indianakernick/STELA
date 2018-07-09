@@ -160,12 +160,12 @@ TEST_GROUP(Syntax, {
     
     ASSERT_EQ(func->params[0].name, "one");
     ASSERT_EQ(func->params[0].ref, ParamRef::value);
-    auto *intType = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
-    ASSERT_EQ(intType->value, BuiltinType::Int);
+    auto *intType = ASSERT_DOWN_CAST(const NamedType, func->params[0].type.get());
+    ASSERT_EQ(intType->name, "Int");
     
     auto *array = ASSERT_DOWN_CAST(const ArrayType, func->ret.get());
-    auto *type = ASSERT_DOWN_CAST(const BuiltinType, array->elem.get());
-    ASSERT_EQ(type->value, BuiltinType::Float);
+    auto *type = ASSERT_DOWN_CAST(const NamedType, array->elem.get());
+    ASSERT_EQ(type->name, "Float");
   });
   
   TEST(Func - two param, {
@@ -191,37 +191,6 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
-  TEST(Type - Builtins, {
-    const char *source = R"(
-      // Semantic analyser will catch this.
-      // Valid syntax, invalid semantics
-      var myVoid: Void;
-    
-      var myInt: Int;
-      var myChar: Char;
-      var myBool: Bool;
-      var myFloat: Float;
-      var myDouble: Double;
-      var myString: String;
-      var myInt8: Int8;
-      var myInt16: Int16;
-      var myInt32: Int32;
-      var myInt64: Int64;
-      var myUInt8: UInt8;
-      var myUInt16: UInt16;
-      var myUInt32: UInt32;
-      var myUInt64: UInt64;
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 15);
-    
-    for (int i = 0; i != 15; ++i) {
-      auto *var = ASSERT_DOWN_CAST(const Var, ast.global[i].get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, var->type.get());
-      ASSERT_EQ(type->value, static_cast<BuiltinType::Enum>(i));
-    }
-  });
-  
   TEST(Type - Array of functions, {
     const char *source = R"(
       typealias dummy = [(inout Int, inout Double) -> Void];
@@ -237,12 +206,12 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params[0].ref, ParamRef::inout);
     ASSERT_EQ(func->params[1].ref, ParamRef::inout);
     
-    auto *first = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
-    ASSERT_EQ(first->value, BuiltinType::Int);
-    auto *second = ASSERT_DOWN_CAST(const BuiltinType, func->params[1].type.get());
-    ASSERT_EQ(second->value, BuiltinType::Double);
-    auto *ret = ASSERT_DOWN_CAST(const BuiltinType, func->ret.get());
-    ASSERT_EQ(ret->value, BuiltinType::Void);
+    auto *first = ASSERT_DOWN_CAST(const NamedType, func->params[0].type.get());
+    ASSERT_EQ(first->name, "Int");
+    auto *second = ASSERT_DOWN_CAST(const NamedType, func->params[1].type.get());
+    ASSERT_EQ(second->name, "Double");
+    auto *ret = ASSERT_DOWN_CAST(const NamedType, func->ret.get());
+    ASSERT_EQ(ret->name, "Void");
   });
   
   TEST(Type - Function no ret type, {
@@ -262,11 +231,11 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(alias->name, "dummy");
     
     auto *map = ASSERT_DOWN_CAST(const MapType, alias->type.get());
-    auto *key = ASSERT_DOWN_CAST(const BuiltinType, map->key.get());
-    ASSERT_EQ(key->value, BuiltinType::String);
+    auto *key = ASSERT_DOWN_CAST(const NamedType, map->key.get());
+    ASSERT_EQ(key->name, "String");
     auto *val = ASSERT_DOWN_CAST(const ArrayType, map->val.get());
-    auto *valElem = ASSERT_DOWN_CAST(const BuiltinType, val->elem.get());
-    ASSERT_EQ(valElem->value, BuiltinType::Int);
+    auto *valElem = ASSERT_DOWN_CAST(const NamedType, val->elem.get());
+    ASSERT_EQ(valElem->name, "Int");
   });
   
   TEST(Type - Invalid, {
@@ -554,16 +523,16 @@ TEST_GROUP(Syntax, {
       auto *noInit = ASSERT_DOWN_CAST(const Var, block[0].get());
       ASSERT_EQ(noInit->name, "noInit");
       ASSERT_FALSE(noInit->expr);
-      auto *noInitType = ASSERT_DOWN_CAST(const BuiltinType, noInit->type.get());
-      ASSERT_EQ(noInitType->value, BuiltinType::Double);
+      auto *noInitType = ASSERT_DOWN_CAST(const NamedType, noInit->type.get());
+      ASSERT_EQ(noInitType->name, "Double");
     }
     
     {
       auto *initAndType = ASSERT_DOWN_CAST(const Var, block[1].get());
       ASSERT_EQ(initAndType->name, "initAndType");
       ASSERT_TRUE(initAndType->expr);
-      auto *initAndTypeT = ASSERT_DOWN_CAST(const BuiltinType, initAndType->type.get());
-      ASSERT_EQ(initAndTypeT->value, BuiltinType::Int);
+      auto *initAndTypeT = ASSERT_DOWN_CAST(const NamedType, initAndType->type.get());
+      ASSERT_EQ(initAndTypeT->name, "Int");
     }
     
     {
@@ -862,8 +831,8 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(lambda->params.size(), 1);
       
       ASSERT_EQ(lambda->params[0].name, "n");
-      auto *n = ASSERT_DOWN_CAST(const BuiltinType, lambda->params[0].type.get());
-      ASSERT_EQ(n->value, BuiltinType::Int);
+      auto *n = ASSERT_DOWN_CAST(const NamedType, lambda->params[0].type.get());
+      ASSERT_EQ(n->name, "Int");
       
       ASSERT_EQ(lambda->body.nodes.size(), 1);
       auto *returnStat = ASSERT_DOWN_CAST(const Return, lambda->body.nodes[0].get());
@@ -890,8 +859,8 @@ TEST_GROUP(Syntax, {
     {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
       auto *make = ASSERT_DOWN_CAST(const InitCall, let->expr.get());
-      auto *type = ASSERT_DOWN_CAST(const BuiltinType, make->type.get());
-      ASSERT_EQ(type->value, BuiltinType::Int);
+      auto *type = ASSERT_DOWN_CAST(const NamedType, make->type.get());
+      ASSERT_EQ(type->name, "Int");
       ASSERT_EQ(make->args.size(), 1);
       auto *num = ASSERT_DOWN_CAST(const NumberLiteral, make->args[0].get());
       ASSERT_EQ(num->value, "5");
@@ -1319,8 +1288,8 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params.size(), 1);
       ASSERT_EQ(func->params[0].name, "n");
       ASSERT_EQ(func->params[0].ref, ParamRef::value);
-      auto *inttype = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
-        ASSERT_EQ(inttype->value, BuiltinType::Int);
+      auto *inttype = ASSERT_DOWN_CAST(const NamedType, func->params[0].type.get());
+        ASSERT_EQ(inttype->name, "Int");
     ASSERT_FALSE(func->ret);
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);

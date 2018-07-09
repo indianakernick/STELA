@@ -75,26 +75,6 @@ struct NamedType final : Type {
   Name name;
 };
 
-struct BuiltinType final : Type {
-  enum Enum {
-    Void,
-    Int,
-    Char,
-    Bool,
-    Float,
-    Double,
-    String,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64
-  } value;
-};
-
 //------------------------------ Expressions -----------------------------------
 
 /// Assignment operator

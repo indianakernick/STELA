@@ -32,23 +32,7 @@ constexpr std::string_view keywords[] = {
   "switch", "case", "default",
   "while", "for", "repeat",
   "break", "continue", "fallthrough",
-  "typealias",
-  
-  "Void",
-  "Int",
-  "Char",
-  "Bool",
-  "Float",
-  "Double",
-  "String",
-  "Int8",
-  "Int16",
-  "Int32",
-  "Int64",
-  "UInt8",
-  "UInt16",
-  "UInt32",
-  "UInt64"
+  "typealias"
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 

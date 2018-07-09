@@ -55,35 +55,6 @@ ast::TypePtr parseMapType(ParseTokens &tok) {
   return mapType;
 }
 
-ast::TypePtr parseBuiltinType(ParseTokens &tok) {
-  #define CHECK(NAME)                                                           \
-    if (tok.checkKeyword(#NAME)) {                                              \
-      auto type = std::make_unique<ast::BuiltinType>();                         \
-      type->value = ast::BuiltinType::NAME;                                     \
-      return type;                                                              \
-    }
-
-  CHECK(Void)
-  CHECK(Int)
-  CHECK(Char)
-  CHECK(Bool)
-  CHECK(Float)
-  CHECK(Double)
-  CHECK(String)
-  CHECK(Int8)
-  CHECK(Int16)
-  CHECK(Int32)
-  CHECK(Int64)
-  CHECK(UInt8)
-  CHECK(UInt16)
-  CHECK(UInt32)
-  CHECK(UInt64)
-
-  return nullptr;
-  
-  #undef CHECK
-}
-
 ast::TypePtr parseNamedType(ParseTokens &tok) {
   if (!tok.peekIdentType()) {
     return nullptr;
@@ -107,7 +78,6 @@ ast::TypePtr stela::parseType(ParseTokens &tok) {
   if (ast::TypePtr type = parseFuncType(tok)) return type;
   if (ast::TypePtr type = parseArrayType(tok)) return type;
   if (ast::TypePtr type = parseMapType(tok)) return type;
-  if (ast::TypePtr type = parseBuiltinType(tok)) return type;
   if (ast::TypePtr type = parseNamedType(tok)) return type;
   return nullptr;
 }
