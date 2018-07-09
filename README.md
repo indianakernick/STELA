@@ -6,8 +6,8 @@ A scripting language with all of the benefits of static typing, without the verb
 
 ## Progress
  * The lexical analyser is done.
- * The syntax analyser is pretty much done. It's pretty well tested but more tests can't hurt.
- * I should be able to start semantic analysis in July.
+ * The syntax analyser is done.
+ * I'll start the semantic analyser very soon!
 
 ## About
 

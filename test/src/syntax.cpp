@@ -1287,4 +1287,57 @@ TEST_GROUP(Syntax, {
                       IS_ID(gt->right, "i");
                     IS_ID(ge->right, "j");
   });
+  
+  TEST(Factorial, {
+    /*
+    
+          fac
+         /   \
+   params     body
+      |          |
+      0       return
+   /  |  \       |
+  n  val Int  ternary
+             /   |   \
+           eq    1    mul
+          /  \       /   \
+         n    0     n     call
+                            |
+                           sub
+                          /   \
+                         n     1
+    
+    */
+    const char *source = R"(
+      func fac(n: Int) {
+        return n == 0 ? 1 : n * fac(n - 1);
+      }
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
+    ASSERT_EQ(func->name, "fac");
+    ASSERT_EQ(func->params.size(), 1);
+      ASSERT_EQ(func->params[0].name, "n");
+      ASSERT_EQ(func->params[0].ref, ParamRef::value);
+      auto *inttype = ASSERT_DOWN_CAST(const BuiltinType, func->params[0].type.get());
+        ASSERT_EQ(inttype->value, BuiltinType::Int);
+    ASSERT_FALSE(func->ret);
+    const auto &block = func->body.nodes;
+    ASSERT_EQ(block.size(), 1);
+    auto *ret = ASSERT_DOWN_CAST(const Return, block[0].get());
+      auto *ternary = ASSERT_DOWN_CAST(const Ternary, ret->expr.get());
+        auto *eq = IS_BOP(ternary->cond, eq);
+          IS_ID(eq->left, "n");
+          IS_NUM(eq->right, "0");
+        IS_NUM(ternary->tru, "1");
+        auto *mul = IS_BOP(ternary->fals, mul);
+          IS_ID(mul->left, "n");
+          auto *call = ASSERT_DOWN_CAST(const FuncCall, mul->right.get());
+            IS_ID(call->func, "fac");
+            ASSERT_EQ(call->args.size(), 1);
+              auto *sub = IS_BOP(call->args[0], sub);
+                IS_ID(sub->left, "n");
+                IS_NUM(sub->right, "1");
+  });
 })
