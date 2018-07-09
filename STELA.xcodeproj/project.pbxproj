@@ -16,6 +16,7 @@
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
 		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
+		4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6C20F35B3E00EA1A56 /* ast.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -91,6 +92,7 @@
 		4572CA6720F32D3C00EA1A56 /* semantics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = semantics.hpp; sourceTree = "<group>"; };
 		4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "semantic analysis.cpp"; sourceTree = "<group>"; };
 		4572CA6B20F32DEA00EA1A56 /* symbols.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = symbols.hpp; sourceTree = "<group>"; };
+		4572CA6C20F35B3E00EA1A56 /* ast.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ast.cpp; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -160,6 +162,7 @@
 			isa = PBXGroup;
 			children = (
 				4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */,
+				4572CA6C20F35B3E00EA1A56 /* ast.cpp */,
 			);
 			name = "Semantic Analysis";
 			sourceTree = "<group>";
@@ -469,6 +472,7 @@
 				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,
 				450E329420E89D6100F222F1 /* parse stat.cpp in Sources */,
 				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
+				4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */,
 				450E329620E89D6100F222F1 /* parse litr.cpp in Sources */,
 				450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */,
 				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,

@@ -14,14 +14,15 @@
 #include <string_view>
 #include "location.hpp"
 
-// @TODO visitor
-
 namespace stela::ast {
+
+class Visitor;
 
 //---------------------------------- Base --------------------------------------
 
 struct Node {
   virtual ~Node() = default;
+  virtual void accept(Visitor &) = 0;
   
   Loc loc;
 };
@@ -48,11 +49,15 @@ using Name = std::string_view;
 
 struct ArrayType final : Type {
   TypePtr elem;
+  
+  void accept(Visitor &) override;
 };
 
 struct MapType final : Type {
   TypePtr key;
   TypePtr val;
+  
+  void accept(Visitor &) override;
 };
 
 /// A function parameter can be passed by value or by reference (inout)
@@ -69,10 +74,14 @@ struct ParamType {
 struct FuncType final : Type {
   std::vector<ParamType> params;
   TypePtr ret;
+  
+  void accept(Visitor &) override;
 };
 
 struct NamedType final : Type {
   Name name;
+  
+  void accept(Visitor &) override;
 };
 
 //------------------------------ Expressions -----------------------------------
@@ -105,17 +114,23 @@ struct Assignment final : Expression {
   ExprPtr left;
   AssignOp oper;
   ExprPtr right;
+  
+  void accept(Visitor &) override;
 };
 
 struct BinaryExpr final : Expression {
   ExprPtr left;
   BinOp oper;
   ExprPtr right;
+  
+  void accept(Visitor &) override;
 };
 
 struct UnaryExpr final : Expression {
   UnOp oper;
   ExprPtr expr;
+  
+  void accept(Visitor &) override;
 };
 
 using FuncArgs = std::vector<ExprPtr>;
@@ -123,74 +138,110 @@ using FuncArgs = std::vector<ExprPtr>;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
+  
+  void accept(Visitor &) override;
 };
 
 struct MemberIdent final : Expression {
   ExprPtr object;
   Name member;
+  
+  void accept(Visitor &) override;
 };
 
 struct InitCall final : Expression {
   TypePtr type;
   FuncArgs args;
+  
+  void accept(Visitor &) override;
 };
 
 struct Subscript final : Expression {
   ExprPtr object;
   ExprPtr index;
+  
+  void accept(Visitor &) override;
 };
 
 struct Identifier final : Expression {
   Name name;
+  
+  void accept(Visitor &) override;
 };
 
 struct Ternary final : Expression {
   ExprPtr cond;
   ExprPtr tru;
   ExprPtr fals;
+  
+  void accept(Visitor &) override;
 };
 
 //------------------------------- Statements -----------------------------------
 
 struct Block final : Statement {
   std::vector<StatPtr> nodes;
+  
+  void accept(Visitor &) override;
 };
 
-struct EmptyStatement final : Statement {};
+struct EmptyStatement final : Statement {
+  void accept(Visitor &) override;
+};
 
 struct If final : Statement {
   ExprPtr cond;
   StatPtr body;
   StatPtr elseBody;
+  
+  void accept(Visitor &) override;
 };
 
 struct SwitchCase final : Statement {
   ExprPtr expr;
+  
+  void accept(Visitor &) override;
 };
 
-struct SwitchDefault final : Statement {};
+struct SwitchDefault final : Statement {
+  void accept(Visitor &) override;
+};
 
 struct Switch final : Statement {
   ExprPtr expr;
   Block body;
+  
+  void accept(Visitor &) override;
 };
 
-struct Break final : Statement {};
-struct Continue final : Statement {};
-struct Fallthrough final : Statement {};
+struct Break final : Statement {
+  void accept(Visitor &) override;
+};
+struct Continue final : Statement {
+  void accept(Visitor &) override;
+};
+struct Fallthrough final : Statement {
+  void accept(Visitor &) override;
+};
 
 struct Return final : Statement {
   ExprPtr expr;
+  
+  void accept(Visitor &) override;
 };
 
 struct While final : Statement {
   ExprPtr cond;
   StatPtr body;
+  
+  void accept(Visitor &) override;
 };
 
 struct RepeatWhile final : Statement {
   StatPtr body;
   ExprPtr cond;
+  
+  void accept(Visitor &) override;
 };
 
 struct For final : Statement {
@@ -198,6 +249,8 @@ struct For final : Statement {
   ExprPtr cond;
   ExprPtr incr;
   StatPtr body;
+  
+  void accept(Visitor &) override;
 };
 
 //------------------------------ Declarations ----------------------------------
@@ -214,28 +267,38 @@ struct Func final : Declaration {
   FuncParams params;
   TypePtr ret;
   Block body;
+  
+  void accept(Visitor &) override;
 };
 
 struct Var final : Declaration {
   Name name;
   TypePtr type;
   ExprPtr expr;
+  
+  void accept(Visitor &) override;
 };
 
 struct Let final : Declaration {
   Name name;
   TypePtr type;
   ExprPtr expr;
+  
+  void accept(Visitor &) override;
 };
 
 struct TypeAlias final : Declaration {
   Name name;
   TypePtr type;
+  
+  void accept(Visitor &) override;
 };
 
 struct Init final : Declaration {
   FuncParams params;
   Block body;
+  
+  void accept(Visitor &) override;
 };
 
 /// Access level of a member
@@ -259,6 +322,8 @@ struct Member {
 struct Struct final : Declaration {
   Name name;
   std::vector<Member> body;
+  
+  void accept(Visitor &) override;
 };
 
 struct EnumCase {
@@ -269,28 +334,40 @@ struct EnumCase {
 struct Enum final : Declaration {
   Name name;
   std::vector<EnumCase> cases;
+  
+  void accept(Visitor &) override;
 };
 
 //-------------------------------- Literals ------------------------------------
 
 struct StringLiteral final : Literal {
   std::string_view value;
+  
+  void accept(Visitor &) override;
 };
 
 struct CharLiteral final : Literal {
   std::string_view value;
+  
+  void accept(Visitor &) override;
 };
 
 struct NumberLiteral final : Literal {
   std::string_view value;
+  
+  void accept(Visitor &) override;
 };
 
 struct BoolLiteral final : Literal {
   bool value;
+  
+  void accept(Visitor &) override;
 };
 
 struct ArrayLiteral final : Literal {
   std::vector<ExprPtr> exprs;
+  
+  void accept(Visitor &) override;
 };
 
 struct MapPair {
@@ -300,12 +377,68 @@ struct MapPair {
 
 struct MapLiteral final : Literal {
   std::vector<MapPair> pairs;
+  
+  void accept(Visitor &) override;
 };
 
 struct Lambda final : Literal {
   FuncParams params;
   TypePtr ret;
   Block body;
+  
+  void accept(Visitor &) override;
+};
+
+//--------------------------------- Visitor ------------------------------------
+
+class Visitor {
+public:
+  virtual ~Visitor() = default;
+  
+  virtual void visit(ArrayType &) {}
+  virtual void visit(MapType &) {}
+  virtual void visit(FuncType &) {}
+  virtual void visit(NamedType &) {}
+  
+  virtual void visit(Assignment &) {}
+  virtual void visit(BinaryExpr &) {}
+  virtual void visit(UnaryExpr &) {}
+  virtual void visit(FuncCall &) {}
+  virtual void visit(MemberIdent &) {}
+  virtual void visit(InitCall &) {}
+  virtual void visit(Subscript &) {}
+  virtual void visit(Identifier &) {}
+  virtual void visit(Ternary &) {}
+  
+  virtual void visit(Block &) {}
+  virtual void visit(EmptyStatement &) {}
+  virtual void visit(If &) {}
+  virtual void visit(SwitchCase &) {}
+  virtual void visit(SwitchDefault &) {}
+  virtual void visit(Switch &) {}
+  virtual void visit(Break &) {}
+  virtual void visit(Continue &) {}
+  virtual void visit(Fallthrough &) {}
+  virtual void visit(Return &) {}
+  virtual void visit(While &) {}
+  virtual void visit(RepeatWhile &) {}
+  virtual void visit(For &) {}
+  
+  virtual void visit(Func &) {}
+  virtual void visit(Var &) {}
+  virtual void visit(Let &) {}
+  virtual void visit(TypeAlias &) {}
+  virtual void visit(Init &) {}
+  virtual void visit(Struct &) {}
+  virtual void visit(Enum &) {}
+  
+  virtual void visit(StringLiteral &) {}
+  virtual void visit(CharLiteral &) {}
+  virtual void visit(NumberLiteral &) {}
+  virtual void visit(BoolLiteral &) {}
+  virtual void visit(ArrayLiteral &) {}
+  virtual void visit(MapLiteral &) {}
+  virtual void visit(Lambda &) {}
 };
 
 }
@@ -313,7 +446,7 @@ struct Lambda final : Literal {
 namespace stela {
 
 struct AST {
-  std::vector<ast::StatPtr> global;
+  std::vector<ast::DeclPtr> global;
 };
 
 }
