@@ -10,9 +10,10 @@
 
 #include "lexer.hpp"
 #include "syntax.hpp"
+#include "semantics.hpp"
 
 int main() {
-  const int failures = !testLexer() + !testSyntax();
+  const int failures = !testLexer() + !testSyntax() + !testSemantics();
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
   } else {

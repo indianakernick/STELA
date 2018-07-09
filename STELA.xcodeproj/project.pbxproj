@@ -14,6 +14,8 @@
 		450E329420E89D6100F222F1 /* parse stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328520E89A4700F222F1 /* parse stat.cpp */; };
 		450E329520E89D6100F222F1 /* parse decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328820E89B5C00F222F1 /* parse decl.cpp */; };
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
+		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
+		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -84,6 +86,11 @@
 		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
+		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
+		4572CA6620F32D3C00EA1A56 /* semantics.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = semantics.cpp; sourceTree = "<group>"; };
+		4572CA6720F32D3C00EA1A56 /* semantics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = semantics.hpp; sourceTree = "<group>"; };
+		4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "semantic analysis.cpp"; sourceTree = "<group>"; };
+		4572CA6B20F32DEA00EA1A56 /* symbols.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = symbols.hpp; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -149,6 +156,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4572CA6120F32C8000EA1A56 /* Semantic Analysis */ = {
+			isa = PBXGroup;
+			children = (
+				4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */,
+			);
+			name = "Semantic Analysis";
+			sourceTree = "<group>";
+		};
 		45BBA3E320D63E3D006108C1 = {
 			isa = PBXGroup;
 			children = (
@@ -178,6 +193,7 @@
 		45BBA3F320D63E7B006108C1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4572CA6120F32C8000EA1A56 /* Semantic Analysis */,
 				45EE9C4820E4D23E00CC3289 /* Syntax Analysis */,
 				45EE9C4720E4D22600CC3289 /* Lexical Analysis */,
 				45EE9C4620E4D21800CC3289 /* Logging */,
@@ -235,10 +251,12 @@
 			children = (
 				45EE9C2A20E3AAE300CC3289 /* token.hpp */,
 				45EE9C2F20E3AAE300CC3289 /* ast.hpp */,
+				4572CA6B20F32DEA00EA1A56 /* symbols.hpp */,
 				45EE9C2D20E3AAE300CC3289 /* location.hpp */,
 				45EE9C2E20E3AAE300CC3289 /* log.hpp */,
 				45EE9C2C20E3AAE300CC3289 /* lexical analysis.hpp */,
 				45EE9C2B20E3AAE300CC3289 /* syntax analysis.hpp */,
+				4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */,
 			);
 			path = STELA;
 			sourceTree = "<group>";
@@ -251,6 +269,8 @@
 				45EE9C3620E3AB1600CC3289 /* lexer.hpp */,
 				45EE9C3720E3AB1600CC3289 /* syntax.cpp */,
 				45EE9C3220E3AB1600CC3289 /* syntax.hpp */,
+				4572CA6620F32D3C00EA1A56 /* semantics.cpp */,
+				4572CA6720F32D3C00EA1A56 /* semantics.hpp */,
 				45EE9C3320E3AB1600CC3289 /* log counter.cpp */,
 				45EE9C3820E3AB1600CC3289 /* log counter.hpp */,
 				45EE9C3920E3AB1600CC3289 /* main.cpp */,
@@ -443,6 +463,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */,
 				450E329120E89D6100F222F1 /* context stack.cpp in Sources */,
 				450E329220E89D6100F222F1 /* parse type.cpp in Sources */,
 				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,
@@ -465,6 +486,7 @@
 			files = (
 				45EE9C3B20E3AB1600CC3289 /* lexer.cpp in Sources */,
 				45EE9C3A20E3AB1600CC3289 /* log counter.cpp in Sources */,
+				4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */,
 				45EE9C3D20E3AB1600CC3289 /* main.cpp in Sources */,
 				45EE9C3C20E3AB1600CC3289 /* syntax.cpp in Sources */,
 			);

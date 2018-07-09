@@ -13,6 +13,8 @@ add_library(STELA STATIC
         "include/STELA/log.hpp"
         "include/STELA/syntax analysis.hpp"
         "include/STELA/token.hpp"
+        "include/STELA/symbols.hpp"
+        "include/STELA/semantic analysis.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -36,6 +38,7 @@ add_library(STELA STATIC
         "src/parse litr.hpp"
         "src/parse expr.cpp"
         "src/parse expr.hpp"
+        "src/semantic analysis.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

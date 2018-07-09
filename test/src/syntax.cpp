@@ -10,7 +10,6 @@
 
 #include "macros.hpp"
 #include <STELA/syntax analysis.hpp>
-#include <STELA/lexical analysis.hpp>
 
 using namespace stela;
 using namespace stela::ast;
