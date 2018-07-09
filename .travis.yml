@@ -38,7 +38,7 @@ matrix:
     after_success:
       - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build -e Examples -e test -e CLI --extension cpp --extension hpp -i src -i include
 
-before_script:
+before_install:
 - export CXX=${COMPILER}
 
 script:
