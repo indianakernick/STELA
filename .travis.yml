@@ -19,7 +19,7 @@ matrix:
     install:
     - brew install gcc || true
     - brew link --overwrite gcc
-    env: COMPILER=g++8
+    env: COMPILER=g++-8
   - os: osx
     osx_image: xcode9
     compiler: clang
