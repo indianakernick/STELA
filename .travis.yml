@@ -37,21 +37,6 @@ matrix:
       - pip install --user cpp-coveralls
     after_success:
       - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build -e Examples -e test -e CLI --extension cpp --extension hpp -i src -i include
-  - os: linux
-    compiler: gcc
-    addons:
-      aps:
-        sources: ["ubuntu-toolchain-r-test"]
-        packages: ["g++-8"]
-    env: COMPILER=g++-8
-  - os: linux
-    compiler: clang
-    addons:
-      apt:
-        sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-5.0"]
-        packages: ["clang-6.0", "libstdc++-4.9-dev"]
-    env:
-    - COMPILER=clang++-6.0
 
 before_install:
 - export CXX=${COMPILER}
