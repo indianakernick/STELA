@@ -18,6 +18,7 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
   }
   Context ctx = tok.context("in function type");
   auto type = std::make_unique<ast::FuncType>();
+  type->loc = tok.lastLoc();
   if (!tok.checkOp(")")) {
     do {
       ast::ParamType &param = type->params.emplace_back();
@@ -37,6 +38,7 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
   }
   Context ctx = tok.context("in array type");
   auto arrayType = std::make_unique<ast::ArrayType>();
+  arrayType->loc = tok.lastLoc();
   arrayType->elem = tok.expectNode(parseType, "element type");
   tok.expectOp("]");
   return arrayType;
@@ -48,6 +50,7 @@ ast::TypePtr parseMapType(ParseTokens &tok) {
   }
   Context ctx = tok.context("in map type");
   auto mapType = std::make_unique<ast::MapType>();
+  mapType->loc = tok.lastLoc();
   mapType->key = tok.expectNode(parseType, "key type");
   tok.expectOp(":");
   mapType->val = tok.expectNode(parseType, "value type");
@@ -60,6 +63,7 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
     return nullptr;
   }
   auto namedType = std::make_unique<ast::NamedType>();
+  namedType->loc = tok.loc();
   namedType->name = tok.expectID();
   return namedType;
 }

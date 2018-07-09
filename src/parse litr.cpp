@@ -20,6 +20,7 @@ template <typename Literal, bool Trim = false>
 ast::LitrPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   if (tok.peekType(type)) {
     auto literal = std::make_unique<Literal>();
+    literal->loc = tok.loc();
     literal->value = tok.expect(type);
     if constexpr (Trim) {
       literal->value.remove_prefix(1);
@@ -53,6 +54,7 @@ ast::LitrPtr parseBool(ParseTokens &tok) {
     return nullptr;
   }
   auto literal = std::make_unique<ast::BoolLiteral>();
+  literal->loc = tok.lastLoc();
   literal->value = value;
   return literal;
 }
@@ -63,6 +65,7 @@ ast::LitrPtr parseArray(ParseTokens &tok) {
   }
   Context ctx = tok.context("in array literal");
   auto array = std::make_unique<ast::ArrayLiteral>();
+  array->loc = tok.lastLoc();
   if (!tok.checkOp("]")) {
     do {
       array->exprs.push_back(tok.expectNode(parseExpr, "expression"));
@@ -77,6 +80,7 @@ ast::LitrPtr parseMap(ParseTokens &tok) {
   }
   Context ctx = tok.context("in map literal");
   auto map = std::make_unique<ast::MapLiteral>();
+  map->loc = tok.lastLoc();
   if (!tok.checkOp("}]")) {
     do {
       ast::MapPair &pair = map->pairs.emplace_back();
@@ -92,6 +96,7 @@ ast::Block parseLambdaBody(ParseTokens &tok) {
   ast::Block body;
   Context ctx = tok.context("in body");
   tok.expectKeyword("in");
+  body.loc = tok.lastLoc();
   while (ast::StatPtr node = parseStat(tok)) {
     body.nodes.emplace_back(std::move(node));
   }
@@ -105,6 +110,7 @@ ast::LitrPtr parseLambda(ParseTokens &tok) {
   }
   Context ctx = tok.context("in lambda expression");
   auto lambda = std::make_unique<ast::Lambda>();
+  lambda->loc = tok.lastLoc();
   lambda->params = parseFuncParams(tok);
   lambda->ret = parseFuncRet(tok);
   lambda->body = parseLambdaBody(tok);

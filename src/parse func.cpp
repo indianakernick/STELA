@@ -41,6 +41,7 @@ ast::TypePtr parseFuncRet(ParseTokens &tok) {
 
 ast::Block parseFuncBody(ParseTokens &tok) {
   ast::Block body;
+  body.loc = tok.loc();
   Context ctx = tok.context("in body");
   tok.expectOp("{");
   while (ast::StatPtr node = parseStat(tok)) {
@@ -57,6 +58,7 @@ ast::DeclPtr parseFunc(ParseTokens &tok) {
   
   Context ctx = tok.context("in function declaration");
   auto funcNode = std::make_unique<ast::Func>();
+  funcNode->loc = tok.lastLoc();
   funcNode->name = tok.expectID();
   ctx.ident(funcNode->name);
   funcNode->params = parseFuncParams(tok);

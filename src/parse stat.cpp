@@ -32,6 +32,7 @@ ast::StatPtr parseIf(ParseTokens &tok) {
   }
   Context ctx = tok.context("in if statement");
   auto ifNode = std::make_unique<ast::If>();
+  ifNode->loc = tok.lastLoc();
   tok.expectOp("(");
   ifNode->cond = tok.expectNode(parseExpr, "condition expression");
   tok.expectOp(")");
@@ -48,6 +49,7 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
   }
   Context ctx = tok.context("in switch statement");
   auto switchNode = std::make_unique<ast::Switch>();
+  switchNode->loc = tok.lastLoc();
   tok.expectOp("(");
   switchNode->expr = tok.expectNode(parseExpr, "expression");
   tok.expectOp(")");
@@ -58,14 +60,17 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
       switchNode->body.nodes.emplace_back(std::move(stat));
     } else if (tok.checkKeyword("case")) {
       auto scase = std::make_unique<ast::SwitchCase>();
+      scase->loc = tok.lastLoc();
       scase->expr = tok.expectNode(parseExpr, "expression");
       tok.expectOp(":");
       switchNode->body.nodes.emplace_back(std::move(scase));
     } else if (tok.checkKeyword("default")) {
+      auto def = std::make_unique<ast::SwitchDefault>();
+      def->loc = tok.lastLoc();
       tok.expectOp(":");
-      switchNode->body.nodes.emplace_back(std::make_unique<ast::SwitchDefault>());
+      switchNode->body.nodes.emplace_back(std::move(def));
     } else {
-      tok.log().ferror(tok.front().loc) << "Expected case label or statement but found "
+      tok.log().ferror(tok.loc()) << "Expected case label or statement but found "
         << tok.front() << tok.contextStack() << endlog;
     }
   }
@@ -78,8 +83,10 @@ ast::StatPtr parseKeywordStatement(ParseTokens &tok, const std::string_view name
   if (tok.checkKeyword(name)) {
     Context ctx = tok.context("after keyword");
     ctx.ident(name);
+    auto type = std::make_unique<Type>();
+    type->loc = tok.lastLoc();
     tok.expectOp(";");
-    return std::make_unique<Type>();
+    return type;
   } else {
     return nullptr;
   }
@@ -100,10 +107,11 @@ ast::StatPtr parseFallthrough(ParseTokens &tok) {
 ast::StatPtr parseReturn(ParseTokens &tok) {
   if (tok.checkKeyword("return")) {
     Context ctx = tok.context("in return statement");
-    if (tok.checkOp(";")) {
-      return std::make_unique<ast::Return>();
-    }
     auto ret = std::make_unique<ast::Return>();
+    ret->loc = tok.lastLoc();
+    if (tok.checkOp(";")) {
+      return ret;
+    }
     ret->expr = tok.expectNode(parseExpr, "expression or ;");
     tok.expectOp(";");
     return ret;
@@ -117,8 +125,9 @@ ast::StatPtr parseWhile(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in while statement");
-  tok.expectOp("(");
   auto whileNode = std::make_unique<ast::While>();
+  whileNode->loc = tok.lastLoc();
+  tok.expectOp("(");
   whileNode->cond = tok.expectNode(parseExpr, "condition expression");
   tok.expectOp(")");
   whileNode->body = tok.expectNode(parseStat, "statement or block");
@@ -131,6 +140,7 @@ ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
   }
   Context ctx = tok.context("in repeat statement");
   auto repeat = std::make_unique<ast::RepeatWhile>();
+  repeat->loc = tok.lastLoc();
   repeat->body = tok.expectNode(parseStat, "statement or block");
   tok.expectKeyword("while");
   tok.expectOp("(");
@@ -151,8 +161,9 @@ ast::StatPtr parseFor(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in for statement");
-  tok.expectOp("(");
   auto forNode = std::make_unique<ast::For>();
+  forNode->loc = tok.lastLoc();
+  tok.expectOp("(");
   forNode->init = parseForInit(tok); // init statement is optional
   if (forNode->init == nullptr) {
     tok.expectOp(";");
@@ -169,6 +180,7 @@ ast::StatPtr parseBlock(ParseTokens &tok) {
   if (tok.checkOp("{")) {
     Context ctx = tok.context("in block");
     auto block = std::make_unique<ast::Block>();
+    block->loc = tok.lastLoc();
     while (ast::StatPtr node = parseStat(tok)) {
       block->nodes.emplace_back(std::move(node));
     }

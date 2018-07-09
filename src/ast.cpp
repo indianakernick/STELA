@@ -8,11 +8,8 @@
 
 #include "ast.hpp"
 
-using namespace stela;
-using namespace stela::ast;
-
 #define ACCEPT(TYPE)                                                            \
-  void TYPE::accept(Visitor &visitor) {                                         \
+  void stela::ast::TYPE::accept(Visitor &visitor) {                             \
     visitor.visit(*this);                                                       \
   }
 

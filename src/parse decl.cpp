@@ -23,6 +23,7 @@ ast::DeclPtr parseVar(ParseTokens &tok) {
   }
   Context ctx = tok.context("in var declaration");
   auto var = std::make_unique<ast::Var>();
+  var->loc = tok.lastLoc();
   var->name = tok.expectID();
   if (tok.checkOp(":")) {
     var->type = tok.expectNode(parseType, "type after :");
@@ -40,6 +41,7 @@ ast::DeclPtr parseLet(ParseTokens &tok) {
   }
   Context ctx = tok.context("in var declaration");
   auto let = std::make_unique<ast::Let>();
+  let->loc = tok.lastLoc();
   let->name = tok.expectID();
   if (tok.checkOp(":")) {
     let->type = tok.expectNode(parseType, "type after :");
@@ -56,6 +58,7 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
   }
   Context ctx = tok.context("in type alias");
   auto aliasNode = std::make_unique<ast::TypeAlias>();
+  aliasNode->loc = tok.lastLoc();
   aliasNode->name = tok.expectID();
   tok.expectOp("=");
   aliasNode->type = tok.expectNode(parseType, "type");
@@ -69,6 +72,7 @@ ast::DeclPtr parseInit(ParseTokens &tok) {
   }
   Context ctx = tok.context("in init function");
   auto init = std::make_unique<ast::Init>();
+  init->loc = tok.lastLoc();
   init->params = parseFuncParams(tok);
   init->body = parseFuncBody(tok);
   return init;
@@ -105,6 +109,7 @@ ast::DeclPtr parseStruct(ParseTokens &tok) {
   }
   Context ctx = tok.context("in struct");
   auto structNode = std::make_unique<ast::Struct>();
+  structNode->loc = tok.lastLoc();
   structNode->name = tok.expectID();
   ctx.desc(structNode->name);
   tok.expectOp("{");
@@ -129,6 +134,7 @@ ast::DeclPtr parseEnum(ParseTokens &tok) {
   }
   Context ctx = tok.context("in enum");
   auto enumNode = std::make_unique<ast::Enum>();
+  enumNode->loc = tok.lastLoc();
   enumNode->name = tok.expectID();
   ctx.ident(enumNode->name);
   tok.expectOp("{");

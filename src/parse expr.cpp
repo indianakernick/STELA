@@ -15,6 +15,8 @@ using namespace stela;
 
 namespace {
 
+// https://en.cppreference.com/w/cpp/language/operator_precedence
+
 template <typename ParseFunc>
 ast::ExprPtr expectExpr(ParseTokens &tok, ParseFunc &&parse) {
   return tok.expectNode(parse, "expression");
@@ -36,6 +38,7 @@ ast::FuncArgs parseFuncArgs(ParseTokens &tok) {
 ast::ExprPtr parseIdent(ParseTokens &tok) {
   if (tok.peekIdentType()) {
     auto ident = std::make_unique<ast::Identifier>();
+    ident->loc = tok.loc();
     ident->name = tok.expectID();
     return ident;
   } else {
@@ -57,6 +60,7 @@ ast::ExprPtr parseTerm(ParseTokens &tok) {
 
 ast::ExprPtr makeUnary(const ast::UnOp oper, ast::ExprPtr expr) {
   auto unary = std::make_unique<ast::UnaryExpr>();
+  unary->loc = expr->loc;
   unary->oper = oper;
   unary->expr = std::move(expr);
   return unary;
@@ -125,10 +129,9 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
   }
 }
 
-// https://en.cppreference.com/w/cpp/language/operator_precedence
-
 ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr left, ast::ExprPtr right) {
   auto bin = std::make_unique<ast::BinaryExpr>();
+  bin->loc = left->loc;
   bin->left = std::move(left);
   bin->oper = oper;
   bin->right = std::move(right);
@@ -299,6 +302,7 @@ ast::ExprPtr parseBoolOr(ParseTokens &tok) {
 
 ast::ExprPtr makeAssign(const ast::AssignOp op, ast::ExprPtr left, ast::ExprPtr right) {
   auto assign = std::make_unique<ast::Assignment>();
+  assign->loc = left->loc;
   assign->left = std::move(left);
   assign->oper = op;
   assign->right = std::move(right);
@@ -319,6 +323,7 @@ ast::ExprPtr parseAssign(ParseTokens &tok) {
   }
   if (tok.checkOp("?")) {
     auto tern = std::make_unique<ast::Ternary>();
+    tern->loc = left->loc;
     tern->cond = std::move(left);
     tern->tru = expectExpr(tok, parseAssign);
     tok.expectOp(":");

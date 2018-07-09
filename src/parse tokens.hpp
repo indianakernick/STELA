@@ -26,6 +26,7 @@ public:
   bool empty() const;
   const Token &front() const;
   Loc lastLoc() const;
+  Loc loc() const;
   
   Context context(std::string_view);
   const ContextStack &contextStack() const;
