@@ -942,8 +942,8 @@ TEST_GROUP(Syntax, {
     mul       pow1
    /   \     /    \
   4     2 sub      pow2
-         /   \    /   \
-        1    mod 2     3
+         /   \    /    \
+        1    mod 2      3
             /   \
            5     6
     */

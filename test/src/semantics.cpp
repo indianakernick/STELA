@@ -19,7 +19,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Empty source, {
     const auto [symbols, ast] = annotateAST("", log);
-    ASSERT_TRUE(symbols.global.empty());
+    ASSERT_TRUE(symbols.scopes.empty());
     ASSERT_TRUE(ast.global.empty());
   });
 });
