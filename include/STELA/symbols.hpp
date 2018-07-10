@@ -19,6 +19,7 @@ struct Symbol {
   // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
 };
+using SymbolPtr = std::unique_ptr<Symbol>;
 
 struct BuiltinType final : Symbol {
   enum Enum {
@@ -55,10 +56,12 @@ struct Func final : Symbol {
 };
 
 using Name = std::string_view;
-using Table = std::unordered_map<Name, Symbol>;
+using Table = std::unordered_map<Name, SymbolPtr>;
 
 struct Scope {
+  Name name;
   Table table;
+  size_t parent;
 };
 using Scopes = std::vector<Scope>;
 using ScopeStack = std::vector<size_t>;

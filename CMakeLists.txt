@@ -39,6 +39,8 @@ add_library(STELA STATIC
         "src/parse expr.cpp"
         "src/parse expr.hpp"
         "src/semantic analysis.cpp"
+        "src/clone ast.cpp"
+        "src/clone ast.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
