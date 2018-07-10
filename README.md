@@ -2,12 +2,14 @@
 
 [![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA) [![Coverage Status](https://coveralls.io/repos/github/Kerndog73/STELA/badge.svg?branch=master)](https://coveralls.io/github/Kerndog73/STELA?branch=master)
 
-A scripting language with all of the benefits of static typing, without the verbosity of type names.
+A scripting language built for speed in world where JavaScript runs on web servers.
+
+__If a compilers expert is reading this, I'll would love some advice!__ I'm creating the language to learn about compilers. I don't really know what I'm doing!
 
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * I'll start the semantic analyser very soon!
+ * Writing the semantic analyser is way harder than I thought it would be! I think I'm going to implement a small subset of the language first. By "small subset", I mean functions, variables and expressions. I'll generate LLVM code for it and try it out. Once I have the tiny subset running, I'll add more features.
 
 ## About
 

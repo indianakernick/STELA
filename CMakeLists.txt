@@ -41,8 +41,13 @@ add_library(STELA STATIC
         "src/semantic analysis.cpp"
         "src/clone ast.cpp"
         "src/clone ast.hpp"
-        "scr/scan decl.cpp"
-        "scr/scan decl.hpp"
+        "src/scan decl.cpp"
+        "src/scan decl.hpp"
+        "src/compare ast.cpp"
+        "src/compare ast.hpp"
+        "src/lookup.cpp"
+        "src/lookup.hpp"
+        "src/ast.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

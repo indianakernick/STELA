@@ -19,6 +19,8 @@
 		4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6C20F35B3E00EA1A56 /* ast.cpp */; };
 		4572CA7020F4684200EA1A56 /* clone ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6E20F4684200EA1A56 /* clone ast.cpp */; };
 		4572CA7320F4732C00EA1A56 /* scan decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7120F4732C00EA1A56 /* scan decl.cpp */; };
+		4572CA7920F4819800EA1A56 /* lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7720F4819800EA1A56 /* lookup.cpp */; };
+		4572CA7C20F486CD00EA1A56 /* compare ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7A20F486CD00EA1A56 /* compare ast.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -99,6 +101,10 @@
 		4572CA6F20F4684200EA1A56 /* clone ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "clone ast.hpp"; sourceTree = "<group>"; };
 		4572CA7120F4732C00EA1A56 /* scan decl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scan decl.cpp"; sourceTree = "<group>"; };
 		4572CA7220F4732C00EA1A56 /* scan decl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scan decl.hpp"; sourceTree = "<group>"; };
+		4572CA7720F4819800EA1A56 /* lookup.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lookup.cpp; sourceTree = "<group>"; };
+		4572CA7820F4819800EA1A56 /* lookup.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = lookup.hpp; sourceTree = "<group>"; };
+		4572CA7A20F486CD00EA1A56 /* compare ast.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "compare ast.cpp"; sourceTree = "<group>"; };
+		4572CA7B20F486CD00EA1A56 /* compare ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "compare ast.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -171,8 +177,12 @@
 				4572CA6C20F35B3E00EA1A56 /* ast.cpp */,
 				4572CA6E20F4684200EA1A56 /* clone ast.cpp */,
 				4572CA6F20F4684200EA1A56 /* clone ast.hpp */,
+				4572CA7A20F486CD00EA1A56 /* compare ast.cpp */,
+				4572CA7B20F486CD00EA1A56 /* compare ast.hpp */,
 				4572CA7120F4732C00EA1A56 /* scan decl.cpp */,
 				4572CA7220F4732C00EA1A56 /* scan decl.hpp */,
+				4572CA7720F4819800EA1A56 /* lookup.cpp */,
+				4572CA7820F4819800EA1A56 /* lookup.hpp */,
 			);
 			name = "Semantic Analysis";
 			sourceTree = "<group>";
@@ -476,6 +486,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4572CA7C20F486CD00EA1A56 /* compare ast.cpp in Sources */,
 				4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */,
 				450E329120E89D6100F222F1 /* context stack.cpp in Sources */,
 				450E329220E89D6100F222F1 /* parse type.cpp in Sources */,
@@ -491,6 +502,7 @@
 				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
+				4572CA7920F4819800EA1A56 /* lookup.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
 				45EE9C2520E23D1C00CC3289 /* number literal.cpp in Sources */,
 			);

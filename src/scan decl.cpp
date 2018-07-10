@@ -8,6 +8,7 @@
 
 #include "scan decl.hpp"
 
+#include "lookup.hpp"
 #include "clone ast.hpp"
 
 using namespace stela;
@@ -26,15 +27,18 @@ public:
       funcSym->ret = clone(func.ret);
     } else {
       // @TODO infer return type
-      assert(false);
+      log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
+      return;
     }
     for (const ast::FuncParam &param : func.params) {
       funcSym->params.push_back(clone(param.type));
     }
-    const auto [iter, inserted] = scope.table.insert({func.name, std::move(funcSym)});
-    if (!inserted) {
-      log.ferror(func.loc) << "Redefinition of " << func.name
-        << ". First declared at " << iter->second->loc << endlog;
+    sym::Func *dupFunc = lookup(scope.table, func.name, funcSym->params);
+    if (!dupFunc) {
+      scope.table.insert({func.name, std::move(funcSym)});
+    } else {
+      log.ferror(func.loc) << "Redefinition of function " << func.name
+        << " previously declared at " << dupFunc->loc << endlog;
     }
   }
   

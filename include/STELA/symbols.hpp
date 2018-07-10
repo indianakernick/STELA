@@ -15,7 +15,11 @@
 
 namespace stela::sym {
 
+class Visitor;
+
 struct Symbol {
+  virtual ~Symbol() = default;
+
   Loc loc;
   // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
@@ -57,7 +61,7 @@ struct Func final : Symbol {
 };
 
 using Name = std::string_view;
-using Table = std::unordered_map<Name, SymbolPtr>;
+using Table = std::unordered_multimap<Name, SymbolPtr>;
 
 struct Scope {
   Name name;
