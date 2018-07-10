@@ -11,15 +11,15 @@
 #include "log output.hpp"
 #include "syntax analysis.hpp"
 
-stela::Symbols stela::annotateAST(AST &, LogBuf &buf) {
+stela::Symbols stela::createSym(AST &, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   
   return {};
 }
 
-stela::SymbolsAST stela::annotateAST(const std::string_view source, LogBuf &buf) {
+stela::SymbolsAST stela::createSym(const std::string_view source, LogBuf &buf) {
   SymbolsAST sa;
   sa.ast = createAST(source, buf);
-  sa.sym = annotateAST(sa.ast, buf);
+  sa.sym = createSym(sa.ast, buf);
   return sa;
 }

@@ -15,14 +15,14 @@
 
 namespace stela {
 
-Symbols annotateAST(AST &, LogBuf &);
+Symbols createSym(AST &, LogBuf &);
 
 struct SymbolsAST {
   Symbols sym;
   AST ast;
 };
 
-SymbolsAST annotateAST(std::string_view, LogBuf &);
+SymbolsAST createSym(std::string_view, LogBuf &);
 
 }
 

@@ -18,7 +18,7 @@ TEST_GROUP(Semantics, {
   StreamLog log;
   
   TEST(Empty source, {
-    const auto [symbols, ast] = annotateAST("", log);
+    const auto [symbols, ast] = createSym("", log);
     ASSERT_TRUE(symbols.scopes.empty());
     ASSERT_TRUE(ast.global.empty());
   });
