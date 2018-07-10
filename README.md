@@ -4,7 +4,7 @@
 
 A scripting language built for speed in world where JavaScript runs on web servers.
 
-__If a compilers expert is reading this, I'll would love some advice!__ I'm creating the language to learn about compilers. I don't really know what I'm doing!
+__If a compilers expert is reading this, I would love some advice!__
 
 ## Progress
  * The lexical analyser is done.
