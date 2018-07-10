@@ -23,26 +23,16 @@ TEST_GROUP(Semantics, {
     ASSERT_TRUE(ast.global.empty());
   });
   
-  TEST(Declarations, {
+  TEST(Redefinition of function, {
     const char *source = R"(
-      func myFunction() {
+      func myFunction() -> Void {
         
       }
     
-      struct MyStruct {
-      
+      func myFunction() -> Void {
+        
       }
-    
-      enum MyEnum {
-      
-      }
-    
-      let myGlobalConstant = 8;
-    
-      var myGlobalVariable;
     )";
-    const auto [sym, ast] = createSym(source, log);
-    ASSERT_EQ(ast.global.size(), 5);
-    ASSERT_EQ(sym.scopes.size(), 1);
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
 });

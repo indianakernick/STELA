@@ -8,8 +8,8 @@
 
 #include "semantic analysis.hpp"
 
+#include "scan decl.hpp"
 #include "log output.hpp"
-#include "clone ast.hpp"
 #include "syntax analysis.hpp"
 
 using namespace stela;
@@ -67,44 +67,13 @@ sym::Scope createGlobalScope(Log &log) {
   return global;
 }
 
-class DeclVisitor final : public ast::Visitor {
-public:
-  DeclVisitor(sym::Scope &scope, Log &log)
-    : scope{scope}, log{log} {}
-
-  void visit(ast::Func &func) override {
-    auto funcSym = std::make_unique<sym::Func>();
-    if (func.ret) {
-      funcSym->ret = clone(func.ret);
-    }
-    for (const ast::FuncParam &param : func.params) {
-      funcSym->params.push_back(clone(param.type));
-    }
-    insert(scope.table, func.name, std::move(funcSym), log);
-  }
-  
-  void visit(ast::Var &) override {}
-  void visit(ast::Let &) override{}
-  void visit(ast::TypeAlias &) override{}
-  void visit(ast::Init &) override{}
-  void visit(ast::Struct &) override{}
-  void visit(ast::Enum &) override{}
-
-private:
-  sym::Scope &scope;
-  Log &log;
-};
-
 }
 
 stela::Symbols stela::createSym(const AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   Symbols syms;
   syms.scopes.push_back(createGlobalScope(log));
-  DeclVisitor declVisitor(syms.scopes[0], log);
-  for (const ast::DeclPtr &decl : ast.global) {
-    decl->accept(declVisitor);
-  }
+  scanDecl(syms.scopes[0], ast, log);
   return syms;
 }
 

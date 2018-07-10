@@ -16,6 +16,7 @@
 namespace stela::sym {
 
 struct Symbol {
+  Loc loc;
   // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
 };
