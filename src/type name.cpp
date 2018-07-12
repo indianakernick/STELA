@@ -1,21 +1,20 @@
 //
-//  compare ast.cpp
+//  type name.cpp
 //  STELA
 //
 //  Created by Indi Kernick on 10/7/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "compare ast.hpp"
+#include "type name.hpp"
 
-#include <string>
 #include <cassert>
 
 using namespace stela;
 
 namespace {
 
-class TypeEqualVisitor final : public ast::Visitor {
+class TypeNameVisitor final : public ast::Visitor {
 public:
   void visit(ast::ArrayType &array) override {
     std::string newName;
@@ -53,7 +52,7 @@ public:
         p->type->accept(*this);
         newName += std::move(name);
         if (p != func.params.end() - 1) {
-          newName += ",";
+          newName += ',';
         }
       }
     }
@@ -73,10 +72,16 @@ public:
 
 }
 
-bool stela::equal(const ast::TypePtr &a, const ast::TypePtr &b) {
-  TypeEqualVisitor visA;
-  TypeEqualVisitor visB;
-  a->accept(visA);
-  b->accept(visB);
-  return visA.name == visB.name;
+std::string stela::typeName(const ast::TypePtr &type) {
+  TypeNameVisitor visitor;
+  type->accept(visitor);
+  return visitor.name;
+}
+
+sym::FuncParams stela::funcParams(const ast::FuncParams &params) {
+  sym::FuncParams symParams;
+  for (const ast::FuncParam &param : params) {
+    symParams.push_back(typeName(param.type));
+  }
+  return symParams;
 }

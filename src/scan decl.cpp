@@ -9,7 +9,7 @@
 #include "scan decl.hpp"
 
 #include "lookup.hpp"
-#include "clone ast.hpp"
+#include "type name.hpp"
 
 using namespace stela;
 
@@ -24,16 +24,14 @@ public:
     auto funcSym = std::make_unique<sym::Func>();
     funcSym->loc = func.loc;
     if (func.ret) {
-      funcSym->ret = clone(func.ret);
+      funcSym->ret = typeName(func.ret);
     } else {
       // @TODO infer return type
       log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
       return;
     }
-    for (const ast::FuncParam &param : func.params) {
-      funcSym->params.push_back(clone(param.type));
-    }
-    sym::Func *dupFunc = lookup(scope.table, func.name, funcSym->params);
+    funcSym->params = funcParams(func.params);
+    sym::Func *dupFunc = lookupDup(scope.table, func.name, funcSym->params);
     if (!dupFunc) {
       scope.table.insert({func.name, std::move(funcSym)});
     } else {

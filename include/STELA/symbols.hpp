@@ -10,7 +10,8 @@
 #define stela_symbols_hpp
 
 #include <vector>
-#include "ast.hpp"
+#include <string>
+#include "location.hpp"
 #include <unordered_map>
 
 namespace stela::sym {
@@ -47,16 +48,16 @@ struct BuiltinType final : Symbol {
 };
 
 struct Var final : Symbol {
-  ast::TypePtr type;
+  std::string type;
 };
 
 struct Let final : Symbol {
-  ast::TypePtr type;
+  std::string type;
 };
 
-using FuncParams = std::vector<ast::TypePtr>;
+using FuncParams = std::vector<std::string>;
 struct Func final : Symbol {
-  ast::TypePtr ret;
+  std::string ret;
   FuncParams params;
 };
 
@@ -67,9 +68,10 @@ struct Scope {
   Name name;
   Table table;
   size_t parent;
+  
+  static constexpr size_t no_parent = size_t(-1);
 };
 using Scopes = std::vector<Scope>;
-using ScopeStack = std::vector<size_t>;
 
 }
 

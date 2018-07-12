@@ -8,11 +8,9 @@
 
 #include "lookup.hpp"
 
-#include "compare ast.hpp"
-
 using namespace stela;
 
-sym::Func *stela::lookup(
+sym::Func *stela::lookupDup(
   const sym::Table &table,
   const sym::Name name,
   const sym::FuncParams &params
@@ -31,7 +29,7 @@ sym::Func *stela::lookup(
     }
     bool eq = true;
     for (size_t i = 0; i != params.size(); ++i) {
-      if (!equal(params[i], func->params[i])) {
+      if (params[i] != func->params[i]) {
         eq = false;
         break;
       }
@@ -43,3 +41,10 @@ sym::Func *stela::lookup(
   return nullptr;
 }
 
+sym::Symbol *stela::lookupDup(const sym::Table &table, const sym::Name name) {
+  const auto [begin, end] = table.equal_range(name);
+  if (begin == end) {
+    return nullptr;
+  }
+  return begin->second.get();
+}

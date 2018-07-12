@@ -25,7 +25,7 @@ sym::SymbolPtr makeBuiltinType(const sym::BuiltinType::Enum e) {
 
 sym::Scope createGlobalScope() {
   sym::Scope global;
-  global.parent = size_t(-1);
+  global.parent = sym::Scope::no_parent;
   
   #define INSERT(TYPE)                                                          \
     global.table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})
