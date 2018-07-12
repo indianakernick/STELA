@@ -68,13 +68,12 @@ public:
   }
   
   void visit(ast::NamedType &namedType) override {
-    std::string strName = std::string(namedType.name);
-    sym::Symbol *sym = lookupUse(scope, strName, namedType.loc, log);
+    sym::Symbol *sym = lookupUse(scope, namedType.name, namedType.loc, log);
     assert(sym);
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(sym); alias) {
       name = alias->type;
     } else {
-      name = strName;
+      name = std::string(namedType.name);
     }
   }
   

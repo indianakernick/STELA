@@ -126,10 +126,26 @@ TEST_GROUP(Semantics, {
   TEST(Variables, {
     const char *source = R"(
       let num: Int = 0;
-      var f: (Float) -> Void;
+      var f: (Float, inout String) -> [Double];
       var m: [{Float: Int}];
       let a: [Float] = [1.2, 3.4, 5.6];
     )";
     createSym(source, log);
+  });
+  
+  TEST(Redefine var, {
+    const char *source = R"(
+      var x: Int;
+      var x: Float;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Redefine let, {
+    const char *source = R"(
+      let x: Int;
+      let x: Float;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
 });

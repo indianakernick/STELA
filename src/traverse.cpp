@@ -86,9 +86,11 @@ public:
     aliasSym->type = typeName(*current, alias.type, log);
     current->table.insert({std::string(alias.name), std::move(aliasSym)});
   }
+  /* LCOV_EXCL_START */
   void visit(ast::Init &) override {}
   void visit(ast::Struct &) override {}
   void visit(ast::Enum &) override {}
+  /* LCOV_EXCL_END */
 
 private:
   sym::Scopes &scopes;

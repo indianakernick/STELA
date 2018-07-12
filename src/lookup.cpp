@@ -33,7 +33,6 @@ sym::Symbol *stela::lookupUse(
       return lookupUse(*scope.parent, name, loc, log);
     } else {
       log.ferror(loc) << "Use of undefined symbol \"" << name << '"' << endlog;
-      return nullptr;
     }
   }
   iter->second->referenced = true;
