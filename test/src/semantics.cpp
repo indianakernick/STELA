@@ -32,7 +32,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Redefinition of function, {
+  TEST(Redef func, {
     const char *source = R"(
       func myFunction() -> Void {
         
@@ -44,9 +44,62 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Redef func with params, {
+    const char *source = R"(
+      func myFunction(i: Int, f: Float) -> Void {
+        
+      }
+      func myFunction(i: Int, f: Float) -> Void {
+        
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Redef func alias, {
+    const char *source = R"(
+      typealias Number = Int;
+      func myFunction(i: Number) -> Void {
+        
+      }
+      func myFunction(i: Int) -> Void {
+        
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Redef func multi alias, {
+    const char *source = R"(
+      typealias Integer = Int;
+      typealias Number = Integer;
+      typealias SpecialNumber = Number;
+      typealias TheNumber = SpecialNumber;
+      func myFunction(i: TheNumber) -> Void {
+        
+      }
+      func myFunction(i: Int) -> Void {
+        
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+
+  TEST(Undefined symbol, {
+    const char *source = R"(
+      func myFunction(i: Number) -> Void {
+        
+      }
+      func myFunction(i: Int) -> Void {
+        
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+
   TEST(Function overloading, {
     const char *source = R"(
-      func myFunction() -> Void {
+      func myFunction(n: Float) -> Void {
         
       }
       func myFunction(n: Int) -> Void {

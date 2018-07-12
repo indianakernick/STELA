@@ -33,5 +33,6 @@ sym::Symbol *stela::lookupUse(
       return nullptr;
     }
   }
+  iter->second->referenced = true;
   return iter->second.get();
 }

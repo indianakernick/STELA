@@ -56,13 +56,17 @@ struct Let final : Symbol {
   std::string type;
 };
 
+struct TypeAlias final : Symbol {
+  std::string type;
+};
+
 using FuncParams = std::vector<std::string>;
 struct Func final : Symbol {
   std::string ret;
   FuncParams params;
 };
 
-using Table = std::unordered_multimap<std::string, SymbolPtr>;
+using Table = std::unordered_map<std::string, SymbolPtr>;
 
 struct Scope {
   Table table;

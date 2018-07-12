@@ -9,6 +9,7 @@
 #include "type name.hpp"
 
 #include <cassert>
+#include "lookup.hpp"
 
 using namespace stela;
 
@@ -16,8 +17,8 @@ namespace {
 
 class TypeNameVisitor final : public ast::Visitor {
 public:
-  explicit TypeNameVisitor(const sym::Scope &scope)
-    : scope{scope} {}
+  TypeNameVisitor(const sym::Scope &scope, Log &log)
+    : scope{scope}, log{log} {}
 
   void visit(ast::ArrayType &array) override {
     std::string newName;
@@ -67,21 +68,27 @@ public:
   }
   
   void visit(ast::NamedType &namedType) override {
-    // could be typealias, struct or enum
-    // need to check symbol table to find out
-    name = std::string(namedType.name);
+    std::string strName = std::string(namedType.name);
+    sym::Symbol *sym = lookupUse(scope, strName, namedType.loc, log);
+    assert(sym);
+    if (auto *alias = dynamic_cast<sym::TypeAlias *>(sym); alias) {
+      name = alias->type;
+    } else {
+      name = strName;
+    }
   }
   
   std::string name;
 
 private:
   const sym::Scope &scope;
+  Log &log;
 };
 
 }
 
-std::string stela::typeName(const sym::Scope &scope, const ast::TypePtr &type) {
-  TypeNameVisitor visitor{scope};
+std::string stela::typeName(const sym::Scope &scope, const ast::TypePtr &type, Log &log) {
+  TypeNameVisitor visitor{scope, log};
   type->accept(visitor);
   return visitor.name;
 }
@@ -89,22 +96,23 @@ std::string stela::typeName(const sym::Scope &scope, const ast::TypePtr &type) {
 std::string stela::funcName(
   const sym::Scope &scope,
   const std::string_view name,
-  const ast::FuncParams &params
+  const ast::FuncParams &params,
+  Log &log
 ) {
   // might need to implement a proper name mangling algorithm that produces
   // valid identifiers
   std::string str = std::string(name);
   for (const ast::FuncParam &param : params) {
     str += ' ';
-    str += (typeName(scope, param.type));
+    str += (typeName(scope, param.type, log));
   }
   return str;
 }
 
-sym::FuncParams stela::funcParams(const sym::Scope &scope, const ast::FuncParams &params) {
+sym::FuncParams stela::funcParams(const sym::Scope &scope, const ast::FuncParams &params, Log &log) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {
-    symParams.push_back(typeName(scope, param.type));
+    symParams.push_back(typeName(scope, param.type, log));
   }
   return symParams;
 }

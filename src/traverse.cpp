@@ -24,14 +24,14 @@ public:
     auto funcSym = std::make_unique<sym::Func>();
     funcSym->loc = func.loc;
     if (func.ret) {
-      funcSym->ret = typeName(*current, func.ret);
+      funcSym->ret = typeName(*current, func.ret, log);
     } else {
       // @TODO infer return type
       log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
       return;
     }
-    funcSym->params = funcParams(*current, func.params);
-    std::string name = funcName(*current, func.name, func.params);
+    funcSym->params = funcParams(*current, func.params, log);
+    std::string name = funcName(*current, func.name, func.params, log);
     sym::Symbol *dup = lookupDup(current->table, name);
     if (!dup) {
       current->table.insert({name, std::move(funcSym)});
@@ -50,7 +50,12 @@ public:
   
   void visit(ast::Var &) override {}
   void visit(ast::Let &) override {}
-  void visit(ast::TypeAlias &) override {}
+  void visit(ast::TypeAlias &alias) override {
+    auto aliasSym = std::make_unique<sym::TypeAlias>();
+    aliasSym->loc = alias.loc;
+    aliasSym->type = typeName(*current, alias.type, log);
+    current->table.insert({std::string(alias.name), std::move(aliasSym)});
+  }
   void visit(ast::Init &) override {}
   void visit(ast::Struct &) override {}
   void visit(ast::Enum &) override {}
