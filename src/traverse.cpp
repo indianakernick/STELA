@@ -1,12 +1,12 @@
 //
-//  scan decl.cpp
+//  traverse.cpp
 //  STELA
 //
 //  Created by Indi Kernick on 10/7/18.
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "scan decl.hpp"
+#include "traverse.hpp"
 
 #include "lookup.hpp"
 #include "type name.hpp"
@@ -15,10 +15,10 @@ using namespace stela;
 
 namespace {
 
-class DeclVisitor final : public ast::Visitor {
+class Visitor final : public ast::Visitor {
 public:
-  DeclVisitor(sym::Scope &scope, Log &log)
-    : scope{scope}, log{log} {}
+  Visitor(sym::Scopes &scopes, Log &log)
+    : scopes{scopes}, log{log}, current{scopes.back().get()} {}
 
   void visit(ast::Func &func) override {
     auto funcSym = std::make_unique<sym::Func>();
@@ -31,13 +31,20 @@ public:
       return;
     }
     funcSym->params = funcParams(func.params);
-    sym::Func *dupFunc = lookupDup(scope.table, func.name, funcSym->params);
+    sym::Func *dupFunc = lookupDup(current->table, func.name, funcSym->params);
     if (!dupFunc) {
-      scope.table.insert({func.name, std::move(funcSym)});
+      current->table.insert({func.name, std::move(funcSym)});
     } else {
       log.ferror(func.loc) << "Redefinition of function " << func.name
         << " previously declared at " << dupFunc->loc << endlog;
     }
+    
+    sym::ScopePtr funcScope = std::make_unique<sym::Scope>();
+    funcScope->parent = current;
+    current = funcScope.get();
+    // process parameters and body
+    current = funcScope->parent;
+    scopes.push_back(std::move(funcScope));
   }
   
   void visit(ast::Var &) override {}
@@ -48,14 +55,15 @@ public:
   void visit(ast::Enum &) override {}
 
 private:
-  sym::Scope &scope;
+  sym::Scopes &scopes;
   Log &log;
+  sym::Scope *current;
 };
 
 }
 
-void stela::scanDecl(sym::Scope &scope, const AST &ast, Log &log) {
-  DeclVisitor visitor{scope, log};
+void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log) {
+  Visitor visitor{scopes, log};
   for (const ast::DeclPtr &decl : ast.global) {
     decl->accept(visitor);
   }

@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <string>
+#include <memory>
 #include "location.hpp"
 #include <unordered_map>
 
@@ -65,13 +66,11 @@ using Name = std::string_view;
 using Table = std::unordered_multimap<Name, SymbolPtr>;
 
 struct Scope {
-  Name name;
   Table table;
-  size_t parent;
-  
-  static constexpr size_t no_parent = size_t(-1);
+  Scope *parent = nullptr;
 };
-using Scopes = std::vector<Scope>;
+using ScopePtr = std::unique_ptr<Scope>;
+using Scopes = std::vector<ScopePtr>;
 
 }
 

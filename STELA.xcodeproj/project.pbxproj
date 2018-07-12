@@ -18,7 +18,7 @@
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
 		4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6C20F35B3E00EA1A56 /* ast.cpp */; };
 		4572CA7020F4684200EA1A56 /* clone ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6E20F4684200EA1A56 /* clone ast.cpp */; };
-		4572CA7320F4732C00EA1A56 /* scan decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7120F4732C00EA1A56 /* scan decl.cpp */; };
+		4572CA7320F4732C00EA1A56 /* traverse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7120F4732C00EA1A56 /* traverse.cpp */; };
 		4572CA7920F4819800EA1A56 /* lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7720F4819800EA1A56 /* lookup.cpp */; };
 		4572CA7C20F486CD00EA1A56 /* type name.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7A20F486CD00EA1A56 /* type name.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
@@ -99,8 +99,8 @@
 		4572CA6C20F35B3E00EA1A56 /* ast.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ast.cpp; sourceTree = "<group>"; };
 		4572CA6E20F4684200EA1A56 /* clone ast.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "clone ast.cpp"; sourceTree = "<group>"; };
 		4572CA6F20F4684200EA1A56 /* clone ast.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "clone ast.hpp"; sourceTree = "<group>"; };
-		4572CA7120F4732C00EA1A56 /* scan decl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scan decl.cpp"; sourceTree = "<group>"; };
-		4572CA7220F4732C00EA1A56 /* scan decl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scan decl.hpp"; sourceTree = "<group>"; };
+		4572CA7120F4732C00EA1A56 /* traverse.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = traverse.cpp; sourceTree = "<group>"; };
+		4572CA7220F4732C00EA1A56 /* traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = traverse.hpp; sourceTree = "<group>"; };
 		4572CA7720F4819800EA1A56 /* lookup.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = lookup.cpp; sourceTree = "<group>"; };
 		4572CA7820F4819800EA1A56 /* lookup.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = lookup.hpp; sourceTree = "<group>"; };
 		4572CA7A20F486CD00EA1A56 /* type name.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "type name.cpp"; sourceTree = "<group>"; };
@@ -179,8 +179,8 @@
 				4572CA6F20F4684200EA1A56 /* clone ast.hpp */,
 				4572CA7A20F486CD00EA1A56 /* type name.cpp */,
 				4572CA7B20F486CD00EA1A56 /* type name.hpp */,
-				4572CA7120F4732C00EA1A56 /* scan decl.cpp */,
-				4572CA7220F4732C00EA1A56 /* scan decl.hpp */,
+				4572CA7120F4732C00EA1A56 /* traverse.cpp */,
+				4572CA7220F4732C00EA1A56 /* traverse.hpp */,
 				4572CA7720F4819800EA1A56 /* lookup.cpp */,
 				4572CA7820F4819800EA1A56 /* lookup.hpp */,
 			);
@@ -495,7 +495,7 @@
 				450E329420E89D6100F222F1 /* parse stat.cpp in Sources */,
 				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
 				4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */,
-				4572CA7320F4732C00EA1A56 /* scan decl.cpp in Sources */,
+				4572CA7320F4732C00EA1A56 /* traverse.cpp in Sources */,
 				450E329620E89D6100F222F1 /* parse litr.cpp in Sources */,
 				450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */,
 				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,

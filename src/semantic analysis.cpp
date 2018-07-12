@@ -8,7 +8,7 @@
 
 #include "semantic analysis.hpp"
 
-#include "scan decl.hpp"
+#include "traverse.hpp"
 #include "log output.hpp"
 #include "syntax analysis.hpp"
 
@@ -23,12 +23,12 @@ sym::SymbolPtr makeBuiltinType(const sym::BuiltinType::Enum e) {
   return type;
 }
 
-sym::Scope createGlobalScope() {
-  sym::Scope global;
-  global.parent = sym::Scope::no_parent;
+sym::ScopePtr createGlobalScope() {
+  sym::ScopePtr global = std::make_unique<sym::Scope>();
+  global->parent = nullptr;
   
   #define INSERT(TYPE)                                                          \
-    global.table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})
+    global->table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})
   
   INSERT(Void);
   INSERT(Int);
@@ -57,7 +57,7 @@ stela::Symbols stela::createSym(const AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   Symbols syms;
   syms.scopes.push_back(createGlobalScope());
-  scanDecl(syms.scopes[0], ast, log);
+  traverse(syms.scopes, ast, log);
   return syms;
 }
 
