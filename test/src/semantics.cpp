@@ -108,4 +108,28 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Var type inference, {
+    const char *source = R"(
+      var num = 5;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Let type inference, {
+    const char *source = R"(
+      let num = 5;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Variables, {
+    const char *source = R"(
+      let num: Int = 0;
+      var f: (Float) -> Void;
+      var m: [{Float: Int}];
+      let a: [Float] = [1.2, 3.4, 5.6];
+    )";
+    createSym(source, log);
+  });
 });
