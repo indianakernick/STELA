@@ -16,6 +16,9 @@ namespace {
 
 class TypeNameVisitor final : public ast::Visitor {
 public:
+  explicit TypeNameVisitor(const sym::Scope &scope)
+    : scope{scope} {}
+
   void visit(ast::ArrayType &array) override {
     std::string newName;
     newName += '[';
@@ -64,24 +67,44 @@ public:
   }
   
   void visit(ast::NamedType &namedType) override {
+    // could be typealias, struct or enum
+    // need to check symbol table to find out
     name = std::string(namedType.name);
   }
   
   std::string name;
+
+private:
+  const sym::Scope &scope;
 };
 
 }
 
-std::string stela::typeName(const ast::TypePtr &type) {
-  TypeNameVisitor visitor;
+std::string stela::typeName(const sym::Scope &scope, const ast::TypePtr &type) {
+  TypeNameVisitor visitor{scope};
   type->accept(visitor);
   return visitor.name;
 }
 
-sym::FuncParams stela::funcParams(const ast::FuncParams &params) {
+std::string stela::funcName(
+  const sym::Scope &scope,
+  const std::string_view name,
+  const ast::FuncParams &params
+) {
+  // might need to implement a proper name mangling algorithm that produces
+  // valid identifiers
+  std::string str = std::string(name);
+  for (const ast::FuncParam &param : params) {
+    str += ' ';
+    str += (typeName(scope, param.type));
+  }
+  return str;
+}
+
+sym::FuncParams stela::funcParams(const sym::Scope &scope, const ast::FuncParams &params) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {
-    symParams.push_back(typeName(param.type));
+    symParams.push_back(typeName(scope, param.type));
   }
   return symParams;
 }

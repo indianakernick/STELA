@@ -10,41 +10,28 @@
 
 using namespace stela;
 
-sym::Func *stela::lookupDup(
-  const sym::Table &table,
-  const sym::Name name,
-  const sym::FuncParams &params
-) {
-  const auto [begin, end] = table.equal_range(name);
-  if (begin == end) {
+sym::Symbol *stela::lookupDup(const sym::Table &table, const std::string &name) {
+  const auto iter = table.find(name);
+  if (iter == table.end()) {
     return nullptr;
   }
-  for (auto f = begin; f != end; ++f) {
-    sym::Func *const func = dynamic_cast<sym::Func *>(f->second.get());
-    if (!func) {
-      continue;
-    }
-    if (func->params.size() != params.size()) {
-      continue;
-    }
-    bool eq = true;
-    for (size_t i = 0; i != params.size(); ++i) {
-      if (params[i] != func->params[i]) {
-        eq = false;
-        break;
-      }
-    }
-    if (eq) {
-      return func;
-    }
-  }
-  return nullptr;
+  return iter->second.get();
 }
 
-sym::Symbol *stela::lookupDup(const sym::Table &table, const sym::Name name) {
-  const auto [begin, end] = table.equal_range(name);
-  if (begin == end) {
-    return nullptr;
+sym::Symbol *stela::lookupUse(
+  const sym::Scope &scope,
+  const std::string &name,
+  const Loc loc,
+  Log &log
+) {
+  const auto iter = scope.table.find(name);
+  if (iter == scope.table.end()) {
+    if (scope.parent) {
+      return lookupUse(*scope.parent, name, loc, log);
+    } else {
+      log.ferror(loc) << "Use of undefined symbol \"" << name << '"' << endlog;
+      return nullptr;
+    }
   }
-  return begin->second.get();
+  return iter->second.get();
 }

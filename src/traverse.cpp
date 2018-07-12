@@ -24,19 +24,20 @@ public:
     auto funcSym = std::make_unique<sym::Func>();
     funcSym->loc = func.loc;
     if (func.ret) {
-      funcSym->ret = typeName(func.ret);
+      funcSym->ret = typeName(*current, func.ret);
     } else {
       // @TODO infer return type
       log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
       return;
     }
-    funcSym->params = funcParams(func.params);
-    sym::Func *dupFunc = lookupDup(current->table, func.name, funcSym->params);
-    if (!dupFunc) {
-      current->table.insert({func.name, std::move(funcSym)});
+    funcSym->params = funcParams(*current, func.params);
+    std::string name = funcName(*current, func.name, func.params);
+    sym::Symbol *dup = lookupDup(current->table, name);
+    if (!dup) {
+      current->table.insert({name, std::move(funcSym)});
     } else {
       log.ferror(func.loc) << "Redefinition of function " << func.name
-        << " previously declared at " << dupFunc->loc << endlog;
+        << " previously declared at " << dup->loc << endlog;
     }
     
     sym::ScopePtr funcScope = std::make_unique<sym::Scope>();
