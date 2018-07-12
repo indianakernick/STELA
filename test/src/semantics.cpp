@@ -143,8 +143,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Redefine let, {
     const char *source = R"(
-      let x: Int;
-      let x: Float;
+      let x: Int = 0;
+      let x: Float = 0.0;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });

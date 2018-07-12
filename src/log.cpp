@@ -38,9 +38,11 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
     case LogPri::error:
     case LogPri::fatal_error:
       return stream << "error";
+    /* LCOV_EXCL_START */
     case LogPri::nothing:
       assert(false);
       return stream;
+    /* LCOV_EXCL_END */
   }
 }
 
