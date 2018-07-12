@@ -395,6 +395,8 @@ class Visitor {
 public:
   virtual ~Visitor() = default;
   
+  /* LCOV_EXCL_START */
+  
   virtual void visit(ArrayType &) {}
   virtual void visit(MapType &) {}
   virtual void visit(FuncType &) {}
@@ -439,6 +441,8 @@ public:
   virtual void visit(ArrayLiteral &) {}
   virtual void visit(MapLiteral &) {}
   virtual void visit(Lambda &) {}
+  
+  /* LCOV_EXCL_END */
 };
 
 }

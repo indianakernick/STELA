@@ -13,6 +13,8 @@
     visitor.visit(*this);                                                       \
   }
 
+/* LCOV_EXCL_START */
+
 ACCEPT(ArrayType)
 ACCEPT(MapType)
 ACCEPT(FuncType)
@@ -57,5 +59,7 @@ ACCEPT(BoolLiteral)
 ACCEPT(ArrayLiteral)
 ACCEPT(MapLiteral)
 ACCEPT(Lambda)
+
+/* LCOV_EXCL_END */
 
 #undef ACCEPT
