@@ -93,22 +93,6 @@ std::string stela::typeName(const sym::Scope &scope, const ast::TypePtr &type, L
   return visitor.name;
 }
 
-std::string stela::funcName(
-  const sym::Scope &scope,
-  const std::string_view name,
-  const ast::FuncParams &params,
-  Log &log
-) {
-  // might need to implement a proper name mangling algorithm that produces
-  // valid identifiers
-  std::string str = std::string(name);
-  for (const ast::FuncParam &param : params) {
-    str += ' ';
-    str += (typeName(scope, param.type, log));
-  }
-  return str;
-}
-
 sym::FuncParams stela::funcParams(const sym::Scope &scope, const ast::FuncParams &params, Log &log) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {

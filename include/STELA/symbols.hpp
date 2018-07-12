@@ -66,7 +66,7 @@ struct Func final : Symbol {
   FuncParams params;
 };
 
-using Table = std::unordered_map<std::string, SymbolPtr>;
+using Table = std::unordered_multimap<std::string_view, SymbolPtr>;
 
 struct Scope {
   Table table;

@@ -17,7 +17,6 @@
 namespace stela {
 
 std::string typeName(const sym::Scope &, const ast::TypePtr &, Log &);
-std::string funcName(const sym::Scope &, std::string_view, const ast::FuncParams &, Log &);
 sym::FuncParams funcParams(const sym::Scope &, const ast::FuncParams &, Log &);
 
 }

@@ -31,10 +31,9 @@ public:
       return;
     }
     funcSym->params = funcParams(*current, func.params, log);
-    std::string name = funcName(*current, func.name, func.params, log);
-    sym::Symbol *dup = lookupDup(current->table, name);
+    sym::Symbol *dup = lookupDup(current->table, func.name, funcSym->params);
     if (!dup) {
-      current->table.insert({name, std::move(funcSym)});
+      current->table.insert({func.name, std::move(funcSym)});
     } else {
       log.ferror(func.loc) << "Redefinition of function " << func.name
         << " previously declared at " << dup->loc << endlog;
