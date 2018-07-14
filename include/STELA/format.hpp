@@ -15,15 +15,20 @@
 
 namespace stela::fmt {
 
+#define TAGS                                                                    \
+  TAG(plain)                                                                    \
+  TAG(oper)                                                                     \
+  TAG(string)                                                                   \
+  TAG(character)                                                                \
+  TAG(number)                                                                   \
+  TAG(keyword)                                                                  \
+  TAG(type_name)                                                                \
+  TAG(member)
+
 enum class Tag {
-  plain,
-  oper,
-  string,
-  character,
-  number,
-  keyword,
-  type_name,
-  member,
+  #define TAG(NAME) NAME,
+  TAGS
+  #undef TAG
   
   newline,
   indent
@@ -39,6 +44,32 @@ struct Token {
 };
 
 using Tokens = std::vector<Token>;
+
+template <typename Style>
+struct Styles {
+  #define TAG(NAME) Style NAME;
+  TAGS
+  #undef TAG
+  
+  uint32_t indentSize = 2;
+  
+  const Style *get(const Tag tag) const {
+    switch (tag) {
+      #define TAG(NAME) case Tag::NAME: return &NAME;
+      TAGS
+      #undef TAG
+      default:
+        return nullptr;
+    }
+  }
+  Style *get(const Tag tag) {
+    return const_cast<Style *>(
+      static_cast<const Styles *>(this)->get(tag)
+    );
+  }
+};
+
+#undef TAGS
 
 }
 

@@ -1,0 +1,92 @@
+//
+//  console format.cpp
+//  STELA
+//
+//  Created by Indi Kernick on 14/7/18.
+//  Copyright © 2018 Indi Kernick. All rights reserved.
+//
+
+#include "console format.hpp"
+
+#include <Simpleton/Utils/console color.hpp>
+
+namespace {
+
+void write(const stela::ConStyle &style, const std::string_view text) {
+  if (style.bold) {
+    std::cout << con::bold;
+  }
+  if (style.faint) {
+    std::cout << con::faint;
+  }
+  if (style.italic) {
+    std::cout << con::italic;
+  }
+  if (style.underline) {
+    std::cout << con::underline;
+  }
+  using Color = stela::ConStyle::Color;
+  switch (style.text) {
+    case Color::black:
+      std::cout << con::text_black; break;
+    case Color::red:
+      std::cout << con::text_red; break;
+    case Color::green:
+      std::cout << con::text_green; break;
+    case Color::yellow:
+      std::cout << con::text_yellow; break;
+    case Color::blue:
+      std::cout << con::text_blue; break;
+    case Color::magenta:
+      std::cout << con::text_magenta; break;
+    case Color::cyan:
+      std::cout << con::text_cyan; break;
+    case Color::white:
+      std::cout << con::text_white; break;
+  }
+  switch (style.back) {
+    case Color::black:
+      std::cout << con::back_black; break;
+    case Color::red:
+      std::cout << con::back_red; break;
+    case Color::green:
+      std::cout << con::back_green; break;
+    case Color::yellow:
+      std::cout << con::back_yellow; break;
+    case Color::blue:
+      std::cout << con::back_blue; break;
+    case Color::magenta:
+      std::cout << con::back_magenta; break;
+    case Color::cyan:
+      std::cout << con::back_cyan; break;
+    case Color::white:
+      std::cout << con::back_white; break;
+  }
+  std::cout << text << con::reset;
+}
+
+void writeNewlines(uint32_t count) {
+  while (count--) {
+    std::cout << '\n';
+  }
+}
+
+void writeSpaces(uint32_t count) {
+  while (count--) {
+    std::cout << ' ';
+  }
+}
+
+}
+
+void stela::conFormat(const fmt::Tokens &tokens, const ConStyles &styles) {
+  for (const fmt::Token &tok : tokens) {
+    if (const auto *style = styles.get(tok.tag)) {
+      write(*style, tok.text);
+    } else if (tok.tag == fmt::Tag::newline) {
+      writeNewlines(tok.count);
+    } else if (tok.tag == fmt::Tag::indent) {
+      writeSpaces(tok.count * styles.indentSize);
+    }
+  }
+}
