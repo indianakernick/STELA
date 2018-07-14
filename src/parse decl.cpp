@@ -81,9 +81,10 @@ ast::DeclPtr parseInit(ParseTokens &tok) {
 ast::MemAccess parseMemAccess(ParseTokens &tok) {
   if (tok.checkKeyword("private")) {
     return ast::MemAccess::private_;
-  } else {
-    tok.checkKeyword("public");
+  } else if (tok.checkKeyword("public")) {
     return ast::MemAccess::public_;
+  } else {
+    return ast::MemAccess::default_;
   }
 }
 

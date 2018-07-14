@@ -597,7 +597,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(structNode->name, "Number");
     ASSERT_EQ(structNode->body.size(), 1);
     const Member &mem = structNode->body[0];
-    ASSERT_EQ(mem.access, MemAccess::public_);
+    ASSERT_EQ(mem.access, MemAccess::default_);
     ASSERT_EQ(mem.scope, MemScope::member);
     ASSERT_DOWN_CAST(const Init, mem.node.get());
   });
@@ -634,7 +634,7 @@ TEST_GROUP(Syntax, {
     }
     {
       const Member &mem = structNode->body[2];
-      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.access, MemAccess::default_);
       ASSERT_EQ(mem.scope, MemScope::static_);
       ASSERT_DOWN_CAST(const Let, mem.node.get());
     }
@@ -673,13 +673,13 @@ TEST_GROUP(Syntax, {
     
     {
       const Member &mem = structNode->body[0];
-      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.access, MemAccess::default_);
       ASSERT_EQ(mem.scope, MemScope::member);
       ASSERT_DOWN_CAST(const Func, mem.node.get());
     }
     {
       const Member &mem = structNode->body[1];
-      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.access, MemAccess::default_);
       ASSERT_EQ(mem.scope, MemScope::static_);
       ASSERT_DOWN_CAST(const Func, mem.node.get());
     }

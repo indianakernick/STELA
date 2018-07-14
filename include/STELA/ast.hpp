@@ -304,7 +304,8 @@ struct Init final : Declaration {
 /// Access level of a member
 enum class MemAccess {
   public_,
-  private_
+  private_,
+  default_
 };
 
 /// The scope of a member is either in the object or on the type
