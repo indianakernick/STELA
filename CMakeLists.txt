@@ -15,6 +15,7 @@ add_library(STELA STATIC
         "include/STELA/token.hpp"
         "include/STELA/symbols.hpp"
         "include/STELA/semantic analysis.hpp"
+        "include/STELA/format.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -46,6 +47,7 @@ add_library(STELA STATIC
         "src/lookup.cpp"
         "src/lookup.hpp"
         "src/ast.cpp"
+        "src/format.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

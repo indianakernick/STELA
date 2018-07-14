@@ -70,8 +70,7 @@ public:
   void visit(ast::NamedType &namedType) override {
     sym::Symbol *sym = lookupUse(scope, namedType.name, namedType.loc, log);
     assert(sym);
-    auto *alias = dynamic_cast<sym::TypeAlias *>(sym);
-    if (alias) {
+    if (auto *alias = dynamic_cast<sym::TypeAlias *>(sym); alias) {
       name = alias->type;
     } else {
       name = std::string(namedType.name);
