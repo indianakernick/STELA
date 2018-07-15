@@ -587,7 +587,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       struct Number {
         init(n: Int) {
-          expr;
+          self;
         }
       }
     )";
@@ -599,7 +599,9 @@ TEST_GROUP(Syntax, {
     const Member &mem = structNode->body[0];
     ASSERT_EQ(mem.access, MemAccess::default_);
     ASSERT_EQ(mem.scope, MemScope::member);
-    ASSERT_DOWN_CAST(const Init, mem.node.get());
+    auto *init = ASSERT_DOWN_CAST(const Init, mem.node.get());
+    ASSERT_EQ(init->body.nodes.size(), 1);
+    ASSERT_DOWN_CAST(const Self, init->body.nodes[0].get());
   });
 
   TEST(Struct - Vars, {
@@ -646,7 +648,7 @@ TEST_GROUP(Syntax, {
     }
     {
       const Member &mem = structNode->body[4];
-      ASSERT_EQ(mem.access, MemAccess::public_);
+      ASSERT_EQ(mem.access, MemAccess::default_);
       ASSERT_EQ(mem.scope, MemScope::member);
       ASSERT_DOWN_CAST(const Let, mem.node.get());
     }

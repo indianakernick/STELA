@@ -169,6 +169,10 @@ struct Identifier final : Expression {
   void accept(Visitor &) override;
 };
 
+struct Self final : Expression {
+  void accept(Visitor &) override;
+};
+
 struct Ternary final : Expression {
   ExprPtr cond;
   ExprPtr tru;
@@ -411,6 +415,7 @@ public:
   virtual void visit(InitCall &) {}
   virtual void visit(Subscript &) {}
   virtual void visit(Identifier &) {}
+  virtual void visit(Self &) {}
   virtual void visit(Ternary &) {}
   
   virtual void visit(Block &) {}

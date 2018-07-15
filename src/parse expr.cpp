@@ -46,6 +46,14 @@ ast::ExprPtr parseIdent(ParseTokens &tok) {
   }
 }
 
+ast::ExprPtr parseSelf(ParseTokens &tok) {
+  if (tok.checkKeyword("self")) {
+    return std::make_unique<ast::Self>();
+  } else {
+    return nullptr;
+  }
+}
+
 ast::ExprPtr parseTerm(ParseTokens &tok) {
   // 1
   if (tok.checkOp("(")) {
@@ -54,6 +62,7 @@ ast::ExprPtr parseTerm(ParseTokens &tok) {
     return node;
   }
   if (ast::ExprPtr node = parseIdent(tok)) return node;
+  if (ast::ExprPtr node = parseSelf(tok)) return node;
   if (ast::ExprPtr node = parseLitr(tok)) return node;
   return nullptr;
 }

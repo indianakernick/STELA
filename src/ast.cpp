@@ -28,6 +28,7 @@ ACCEPT(MemberIdent)
 ACCEPT(InitCall)
 ACCEPT(Subscript)
 ACCEPT(Identifier)
+ACCEPT(Self)
 ACCEPT(Ternary)
 
 ACCEPT(Block)
