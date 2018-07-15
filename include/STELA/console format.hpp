@@ -27,11 +27,14 @@ struct ConStyle {
     magenta,
     cyan,
     white
-  } text, back;
+  };
+  Color text = Color::white;
+  Color back = Color::black;
 };
 using ConStyles = fmt::Styles<ConStyle>;
 
 void conFormat(const fmt::Tokens &, const ConStyles &);
+void conFormat(const fmt::Tokens &);
 
 }
 

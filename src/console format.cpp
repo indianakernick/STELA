@@ -90,3 +90,16 @@ void stela::conFormat(const fmt::Tokens &tokens, const ConStyles &styles) {
     }
   }
 }
+
+void stela::conFormat(const fmt::Tokens &tokens) {
+  ConStyles styles;
+  styles.indentSize = 2;
+  styles.oper.bold = true;
+  styles.string.text = ConStyle::Color::red;
+  styles.character.text = ConStyle::Color::cyan;
+  styles.number.text =  ConStyle::Color::cyan;
+  styles.keyword.text = ConStyle::Color::magenta;
+  styles.type_name.text = ConStyle::Color::blue;
+  styles.member.text = ConStyle::Color::green;
+  conFormat(tokens, styles);
+}
