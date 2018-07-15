@@ -172,6 +172,9 @@ public:
   void visit(ast::Identifier &id) override {
     push(Tag::plain, id.name);
   }
+  void visit(ast::Self &) override {
+    push(Tag::keyword, "self");
+  }
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
     pushSpace();
@@ -190,6 +193,7 @@ public:
     ++indent;
     pushBlockBody(block);
     --indent;
+    pushIndent();
     pushOp("}");
   }
   void visit(ast::EmptyStatement &) override {
@@ -308,6 +312,7 @@ public:
       var.expr->accept(*this);
     }
     pushOp(";");
+    pushNewline();
   }
   void visit(ast::Let &let) override {
     pushKeyName("let", let.name);
@@ -321,6 +326,7 @@ public:
     pushSpace();
     let.expr->accept(*this);
     pushOp(";");
+    pushNewline();
   }
   void visit(ast::TypeAlias &alias) override {
     pushKeyName("typealias", alias.name);
@@ -332,7 +338,6 @@ public:
   }
   void visit(ast::Init &init) override {
     push(Tag::keyword, "init");
-    pushSpace();
     pushParams(init.params);
     pushSpace();
     init.body.accept(*this);
@@ -340,10 +345,12 @@ public:
   }
   void visit(ast::Struct &strt) override {
     pushKeyName("struct", strt.name);
+    pushSpace();
     pushOp("{");
     pushNewline();
     ++indent;
     for (const ast::Member &mem : strt.body) {
+      pushIndent();
       if (mem.access == ast::MemAccess::public_) {
         pushKey("public");
       } else if (mem.access == ast::MemAccess::private_) {
@@ -355,6 +362,9 @@ public:
       mem.node->accept(*this);
     }
     --indent;
+    pushIndent();
+    pushOp("}");
+    pushNewline();
   }
   void visit(ast::Enum &enm) override {
     pushKeyName("enum", enm.name);
