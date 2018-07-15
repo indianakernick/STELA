@@ -34,6 +34,16 @@ enum class Tag {
   indent
 };
 
+inline const char *tagName(const Tag tag) {
+  switch (tag) {
+    #define TAG(NAME) case Tag::NAME: return #NAME;
+    TAGS
+    #undef TAG
+    default:
+      return nullptr;
+  }
+}
+
 struct Token {
   union {
     // valid if tag is Tag::newline or Tag::indent

@@ -8,6 +8,8 @@
 
 #include "format.hpp"
 
+#include <fstream>
+#include "html format.hpp"
 #include "console format.hpp"
 
 bool testFormat() {
@@ -205,6 +207,15 @@ func anotherDummy(dir: Dir) {
   stela::StreamLog log;
   stela::fmt::Tokens tokens = stela::format(source, log);
   stela::conFormat(tokens);
+  
+  stela::HTMLstyles styles;
+  styles.doc = true;
+  styles.def = true;
+  const std::string html = stela::htmlFormat(tokens, styles);
+  std::ofstream file("code.html", std::ios::ate);
+  if (file.is_open()) {
+    file << html;
+  }
   
   return true;
 }

@@ -65,15 +65,9 @@ void write(const stela::ConStyle &style, const std::string_view text) {
   std::cout << text << con::reset;
 }
 
-void writeNewlines(uint32_t count) {
+void repeat(const char c, uint32_t count) {
   while (count--) {
-    std::cout << '\n';
-  }
-}
-
-void writeSpaces(uint32_t count) {
-  while (count--) {
-    std::cout << ' ';
+    std::cout << c;
   }
 }
 
@@ -84,9 +78,9 @@ void stela::conFormat(const fmt::Tokens &tokens, const ConStyles &styles) {
     if (const auto *style = styles.get(tok.tag)) {
       write(*style, tok.text);
     } else if (tok.tag == fmt::Tag::newline) {
-      writeNewlines(tok.count);
+      repeat('\n', tok.count);
     } else if (tok.tag == fmt::Tag::indent) {
-      writeSpaces(tok.count * styles.indentSize);
+      repeat(' ', tok.count * styles.indentSize);
     }
   }
 }
