@@ -29,8 +29,8 @@ public:
   sym::Symbol *lookup(sym::Name, Loc);
   sym::Func *lookup(sym::Name, const sym::FuncParams &, Loc);
   
-  void insert(sym::Name, sym::SymbolPtr, Loc);
-  void insert(sym::Name, sym::FuncPtr, Loc);
+  void insert(sym::Name, sym::SymbolPtr);
+  void insert(sym::Name, sym::FuncPtr);
 
 private:
   sym::Scopes &scopes;

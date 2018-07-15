@@ -170,26 +170,26 @@ sym::Func *SymbolMan::lookup(
   return nullptr;
 }
 
-void SymbolMan::insert(const sym::Name name, sym::SymbolPtr symbol, const Loc loc) {
+void SymbolMan::insert(const sym::Name name, sym::SymbolPtr symbol) {
   const auto iter = scope->table.find(name);
   if (iter == scope->table.end()) {
     scope->table.insert({name, std::move(symbol)});
   } else {
-    log.ferror(loc) << "Redefinition of symbol \"" << name << "\" "
+    log.ferror(symbol->loc) << "Redefinition of symbol \"" << name << "\" "
       << iter->second->loc << endlog;
   }
 }
 
-void SymbolMan::insert(const sym::Name name, sym::FuncPtr func, const Loc loc) {
+void SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
   const auto [begin, end] = scope->table.equal_range(name);
   for (auto i = begin; i != end; ++i) {
     sym::Func *otherFunc = dynamic_cast<sym::Func *>(i->second.get());
     if (otherFunc == nullptr) {
-      log.ferror(loc) << "Redefinition of function \"" << name
+      log.ferror(func->loc) << "Redefinition of function \"" << name
         << "\" as a different kind of symbol. " << i->second->loc << endlog;
     } else {
       if (otherFunc->params == func->params) {
-        log.ferror(loc) << "Redefinition of function \"" << name << "\". "
+        log.ferror(func->loc) << "Redefinition of function \"" << name << "\". "
           << i->second->loc << endlog;
       }
     }

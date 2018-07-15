@@ -60,6 +60,11 @@ struct TypeAlias final : Symbol {
   std::string type;
 };
 
+struct FuncParam final : Symbol {
+  std::string type;
+  bool inout;
+};
+
 using FuncParams = std::vector<std::string>;
 struct Func final : Symbol {
   std::string ret;
