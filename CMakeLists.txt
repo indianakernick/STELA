@@ -17,6 +17,7 @@ add_library(STELA STATIC
         "include/STELA/semantic analysis.hpp"
         "include/STELA/format.hpp"
         "include/STELA/console format.hpp"
+        "include/STELA/html format.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -43,13 +44,12 @@ add_library(STELA STATIC
         "src/semantic analysis.cpp"
         "src/traverse.cpp"
         "src/traverse.hpp"
-        "src/type name.cpp"
-        "src/type name.hpp"
-        "src/lookup.cpp"
-        "src/lookup.hpp"
         "src/ast.cpp"
         "src/format.cpp"
         "src/console format.cpp"
+        "src/html format.cpp"
+        "src/symbol manager.cpp"
+        "src/symbol manager.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

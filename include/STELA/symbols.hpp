@@ -65,8 +65,10 @@ struct Func final : Symbol {
   std::string ret;
   FuncParams params;
 };
-
-using Table = std::unordered_multimap<std::string_view, SymbolPtr>;
+using FuncPtr = std::unique_ptr<Func>;
+            
+using Name = std::string_view;
+using Table = std::unordered_multimap<Name, SymbolPtr>;
 
 struct Scope {
   Table table;
