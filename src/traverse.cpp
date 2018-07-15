@@ -33,10 +33,10 @@ public:
     
     man.enterScope();
     for (const ast::FuncParam &param : func.params) {
-      auto paramSym = std::make_unique<sym::FuncParam>();
+      auto paramSym = std::make_unique<sym::Object>();
       paramSym->loc = param.loc;
       paramSym->type = man.typeName(param.type);
-      paramSym->inout = (param.ref == ast::ParamRef::inout);
+      paramSym->mut = (param.ref == ast::ParamRef::inout);
       man.insert(param.name, std::move(paramSym));
     }
     for (const ast::StatPtr &stat : func.body.nodes) {
@@ -46,8 +46,9 @@ public:
   }
   
   void visit(ast::Var &var) override {
-    auto varSym = std::make_unique<sym::Var>();
+    auto varSym = std::make_unique<sym::Object>();
     varSym->loc = var.loc;
+    varSym->mut = true;
     if (var.type) {
       varSym->type = man.typeName(var.type);
     } else {
@@ -57,8 +58,9 @@ public:
     man.insert(var.name, std::move(varSym));
   }
   void visit(ast::Let &let) override {
-    auto letSym = std::make_unique<sym::Let>();
+    auto letSym = std::make_unique<sym::Object>();
     letSym->loc = let.loc;
+    letSym->mut = false;
     if (let.type) {
       letSym->type = man.typeName(let.type);
     } else {

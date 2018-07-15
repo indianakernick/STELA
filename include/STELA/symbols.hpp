@@ -48,21 +48,13 @@ struct BuiltinType final : Symbol {
   } value;
 };
 
-struct Var final : Symbol {
-  std::string type;
-};
-
-struct Let final : Symbol {
-  std::string type;
-};
-
 struct TypeAlias final : Symbol {
   std::string type;
 };
 
-struct FuncParam final : Symbol {
+struct Object final : Symbol {
   std::string type;
-  bool inout;
+  bool mut;
 };
 
 using FuncParams = std::vector<std::string>;
