@@ -15,9 +15,7 @@
 
 using namespace stela;
 
-namespace {
-
-ast::DeclPtr parseVar(ParseTokens &tok) {
+ast::DeclPtr stela::parseVar(ParseTokens &tok) {
   if (!tok.checkKeyword("var")) {
     return nullptr;
   }
@@ -35,7 +33,7 @@ ast::DeclPtr parseVar(ParseTokens &tok) {
   return var;
 }
 
-ast::DeclPtr parseLet(ParseTokens &tok) {
+ast::DeclPtr stela::parseLet(ParseTokens &tok) {
   if (!tok.checkKeyword("let")) {
     return nullptr;
   }
@@ -51,6 +49,8 @@ ast::DeclPtr parseLet(ParseTokens &tok) {
   tok.expectOp(";");
   return let;
 }
+
+namespace {
 
 ast::DeclPtr parseTypealias(ParseTokens &tok) {
   if (!tok.checkKeyword("typealias")) {

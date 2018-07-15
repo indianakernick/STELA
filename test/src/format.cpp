@@ -81,7 +81,7 @@ struct IntStack {
   arrays have very similar interfaces to std::vector<> from C++
   */
   
-  // init() {}  implicitly generated
+   init() {} // implicitly generated
   
   // member functions are implicitly public
   // you can mark them public if you want
@@ -100,6 +100,105 @@ struct IntStack {
     return data.empty();
   }
 };
+
+let map: [{String: [Int]}] = [{
+  "one_two_three": [1, 2, 3],
+  "four_five_six": [4, 5, 6],
+  "seven": [7],
+  "eight_nine": [8, 9]
+}];
+
+let empty = [{}];
+
+let less = {(a: Int, b: Int) in
+  return a < b;
+};
+
+func isEqual(a: Int, b: Int) {
+  return a == b;
+}
+
+let equal = isEqual;
+
+func sort(array: [Int], pred: (Int, Int) -> Bool) {
+  // sorting...
+}
+
+func ifs() {
+  if (expr) {
+    var dummy = 'e';
+  }
+
+  if (expr) {
+    var dummy = expr;
+  } else {
+    var dummy = expr;
+  }
+
+  if (expr) {
+    var dummy = expr;
+  } else if (expr) {
+    var dummy = expr;
+  } else {
+    var dummy = expr;
+  }
+  
+  {
+    let blocks_are_statements = 5;
+    let just_like_C = "yeah";
+  }
+  
+  if (true);
+  
+  typealias StrInt = [{String:Int}];
+  
+  while (expr) {
+    ++thing;
+    thing += ~yeah;
+  }
+  
+  repeat {
+    ++thing;
+    thing += ~yeah;
+  } while (expr);
+
+  for (var i = 0; i != 10; ++i) {
+    ++thing;
+    thing += ~yeah;
+  }
+  for (i = 0; i != 10; ++i) {
+    ++thing;
+    thing += ~yeah;
+  }
+  for (; false; ) {
+    ++thing;
+    thing += ~yeah;
+  }
+}
+
+enum Dir {
+  up, right, down, left
+}
+
+func anotherDummy(dir: Dir) {
+  var value = 5;
+  switch (dir) {
+    case Dir.up:
+      value += 2;
+      fallthrough;
+    case Dir.right:
+      value <<= 2;
+      break;
+    case Dir.down:
+      ++value;
+      return value & 3;
+    case Dir.left:
+      return 5;
+    default:
+      value--;
+  }
+  return value;
+}
 
 )";
 

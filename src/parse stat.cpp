@@ -151,8 +151,13 @@ ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
 }
 
 ast::StatPtr parseForInit(ParseTokens &tok) {
-  if (ast::StatPtr node = parseDecl(tok)) return node;
-  if (ast::StatPtr node = parseExpr(tok)) return node;
+  if (ast::StatPtr node = parseVar(tok)) return node;
+  if (ast::StatPtr node = parseLet(tok)) return node;
+  if (ast::StatPtr node = parseExpr(tok)) {
+    tok.expectOp(";");
+    return node;
+  }
+  tok.expectOp(";");
   return nullptr;
 }
 
@@ -165,9 +170,6 @@ ast::StatPtr parseFor(ParseTokens &tok) {
   forNode->loc = tok.lastLoc();
   tok.expectOp("(");
   forNode->init = parseForInit(tok); // init statement is optional
-  if (forNode->init == nullptr) {
-    tok.expectOp(";");
-  }
   forNode->cond = tok.expectNode(parseExpr, "condition expression");
   tok.expectOp(";");
   forNode->incr = parseExpr(tok); // incr expression is optional

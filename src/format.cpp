@@ -127,6 +127,8 @@ public:
       case ast::BinOp::pow:
         pushOp("**"); break;
     }
+    pushSpace();
+    bin.right->accept(*this);
   }
   void visit(ast::UnaryExpr &un) override {
     switch (un.oper) {
@@ -189,6 +191,10 @@ public:
   
   void visit(ast::Block &block) override {
     pushOp("{");
+    if (block.nodes.empty()) {
+      pushOp("}");
+      return;
+    }
     pushNewline();
     ++indent;
     pushBlockBody(block);
@@ -197,6 +203,9 @@ public:
     pushOp("}");
   }
   void visit(ast::EmptyStatement &) override {
+    if (tokens.back().tag == Tag::plain && tokens.back().text == " ") {
+      tokens.pop_back();
+    }
     pushOp(";");
   }
   void visit(ast::If &fi) override {
@@ -227,7 +236,37 @@ public:
     swtch.expr->accept(*this);
     pushOp(")");
     pushSpace();
-    swtch.body.accept(*this);
+    pushOp("{");
+    if (swtch.body.nodes.empty()) {
+      pushOp("}");
+      return;
+    }
+    pushNewline();
+    indent += 2;
+    for (const ast::StatPtr &stat : swtch.body.nodes) {
+      if (auto *cs = dynamic_cast<ast::SwitchCase *>(stat.get())) {
+        --indent;
+        pushIndent();
+        visit(*cs);
+        ++indent;
+      } else if (auto *df = dynamic_cast<ast::SwitchDefault *>(stat.get())) {
+        --indent;
+        pushIndent();
+        visit(*df);
+        ++indent;
+      } else if (auto *ex = dynamic_cast<ast::Expression *>(stat.get())) {
+        pushIndent();
+        ex->accept(*this);
+        pushOp(";");
+      } else {
+        pushIndent();
+        stat->accept(*this);
+      }
+      pushNewline();
+    }
+    indent -= 2;
+    pushIndent();
+    pushOp("}");
   }
   void visit(ast::Break &) override {
     push(Tag::keyword, "break");
@@ -254,6 +293,7 @@ public:
     pushOp("(");
     whl.cond->accept(*this);
     pushOp(")");
+    pushSpace();
     whl.body->accept(*this);
   }
   void visit(ast::RepeatWhile &rep) override {
@@ -271,8 +311,12 @@ public:
     pushOp("(");
     if (fr.init) {
       fr.init->accept(*this);
+      if (dynamic_cast<ast::Expression *>(fr.init.get())) {
+        pushOp(";");
+      }
+    } else {
+      pushOp(";");
     }
-    pushOp(";");
     pushSpace();
     fr.cond->accept(*this);
     pushOp(";");
@@ -296,7 +340,6 @@ public:
       pushSpace();
     }
     func.body.accept(*this);
-    pushNewline();
   }
   void visit(ast::Var &var) override {
     pushKeyName("var", var.name);
@@ -312,7 +355,6 @@ public:
       var.expr->accept(*this);
     }
     pushOp(";");
-    pushNewline();
   }
   void visit(ast::Let &let) override {
     pushKeyName("let", let.name);
@@ -326,7 +368,6 @@ public:
     pushSpace();
     let.expr->accept(*this);
     pushOp(";");
-    pushNewline();
   }
   void visit(ast::TypeAlias &alias) override {
     pushKeyName("typealias", alias.name);
@@ -341,12 +382,15 @@ public:
     pushParams(init.params);
     pushSpace();
     init.body.accept(*this);
-    pushNewline();
   }
   void visit(ast::Struct &strt) override {
     pushKeyName("struct", strt.name);
     pushSpace();
     pushOp("{");
+    if (strt.body.empty()) {
+      pushOp("}");
+      return;
+    }
     pushNewline();
     ++indent;
     for (const ast::Member &mem : strt.body) {
@@ -360,29 +404,39 @@ public:
         pushKey("static");
       }
       mem.node->accept(*this);
+      pushNewline();
     }
     --indent;
     pushIndent();
     pushOp("}");
-    pushNewline();
   }
   void visit(ast::Enum &enm) override {
     pushKeyName("enum", enm.name);
+    pushSpace();
     pushOp("{");
+    if (enm.cases.empty()) {
+      pushOp("}");
+      return;
+    }
     pushNewline();
     ++indent;
-    for (const ast::EnumCase &cs : enm.cases) {
+    for (auto cs = enm.cases.cbegin(); cs != enm.cases.cend(); ++cs) {
       pushIndent();
-      push(Tag::plain, cs.name);
-      if (cs.value) {
+      push(Tag::plain, cs->name);
+      if (cs->value) {
         pushSpace();
         pushOp("=");
         pushSpace();
-        cs.value->accept(*this);
+        cs->value->accept(*this);
       }
-      pushOp(",");
+      if (cs != enm.cases.cend() - 1) {
+        pushOp(",");
+      }
+      pushNewline();
     }
     --indent;
+    pushIndent();
+    pushOp("}");
   }
   
   void visit(ast::StringLiteral &str) override {
@@ -418,6 +472,10 @@ public:
   }
   void visit(ast::MapLiteral &map) override {
     pushOp("[{");
+    if (map.pairs.empty()) {
+      pushOp("}]");
+      return;
+    }
     pushNewline();
     ++indent;
     for (auto p = map.pairs.cbegin(); p != map.pairs.cend(); ++p) {
@@ -433,6 +491,7 @@ public:
       pushNewline();
     }
     --indent;
+    pushIndent();
     pushOp("}]");
   }
   void visit(ast::Lambda &lam) override {
@@ -545,6 +604,11 @@ stela::fmt::Tokens stela::format(const std::string_view source, LogBuf &buf) {
   Visitor visitor;
   for (const ast::DeclPtr &node : ast.global) {
     node->accept(visitor);
+    visitor.tokens.push_back(fmt::Token{{1}, fmt::Tag::newline});
+    visitor.tokens.push_back(fmt::Token{{1}, fmt::Tag::newline});
+  }
+  if (!ast.global.empty()) {
+    visitor.tokens.pop_back();
   }
   return visitor.tokens;
 }
