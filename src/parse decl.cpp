@@ -122,6 +122,7 @@ ast::DeclPtr parseStruct(ParseTokens &tok) {
 
 ast::EnumCase parseEnumCase(ParseTokens &tok) {
   ast::EnumCase ecase;
+  ecase.loc = tok.loc();
   ecase.name = tok.expectID();
   if (tok.checkOp("=")) {
     ecase.value = tok.expectNode(parseExpr, "expression or ,");

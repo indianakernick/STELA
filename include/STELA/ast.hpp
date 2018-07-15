@@ -263,6 +263,7 @@ struct FuncParam {
   Name name;
   ParamRef ref;
   TypePtr type;
+  Loc loc;
 };
 using FuncParams = std::vector<FuncParam>;
 
@@ -334,6 +335,7 @@ struct Struct final : Declaration {
 struct EnumCase {
   Name name;
   ExprPtr value;
+  Loc loc;
 };
 
 struct Enum final : Declaration {

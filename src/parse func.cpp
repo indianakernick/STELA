@@ -22,6 +22,7 @@ ast::FuncParams parseFuncParams(ParseTokens &tok) {
   ast::FuncParams params;
   do {
     ast::FuncParam &param = params.emplace_back();
+    param.loc = tok.loc();
     param.name = tok.expectID();
     tok.expectOp(":");
     param.ref = parseRef(tok);
