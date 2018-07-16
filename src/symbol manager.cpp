@@ -140,11 +140,12 @@ sym::FuncParams SymbolMan::funcParams(const ast::FuncParams &params) {
   return symParams;
 }
 
-void SymbolMan::enterScope() {
+sym::Scope *SymbolMan::enterScope() {
   sym::ScopePtr newScope = std::make_unique<sym::Scope>();
   newScope->parent = scope;
   scope = newScope.get();
   scopes.push_back(std::move(newScope));
+  return scope;
 }
 
 void SymbolMan::leaveScope() {

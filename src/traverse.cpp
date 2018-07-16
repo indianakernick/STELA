@@ -76,8 +76,31 @@ public:
   }
   
   void visit(ast::Init &) override {}
-  void visit(ast::Struct &) override {}
-  void visit(ast::Enum &e) override {}
+  void visit(ast::Struct &strut) override {
+    auto structSym = std::make_unique<sym::StructType>();
+    structSym->loc = strut.loc;
+    structSym->scope = man.enterScope();
+    for (const ast::Member &mem : strut.body) {
+      // @TODO member, static, public, private
+      mem.node->accept(*this);
+    }
+    man.leaveScope();
+    man.insert(strut.name, std::move(structSym));
+  }
+  void visit(ast::Enum &num) override {
+    auto enumSym = std::make_unique<sym::EnumType>();
+    enumSym->loc = num.loc;
+    enumSym->scope = man.enterScope();
+    for (const ast::EnumCase &cs : num.cases) {
+      auto caseSym = std::make_unique<sym::Object>();
+      caseSym->loc = cs.loc;
+      caseSym->mut = false;
+      caseSym->type = enumSym.get();
+      man.insert(cs.name, std::move(caseSym));
+    }
+    man.leaveScope();
+    man.insert(num.name, std::move(enumSym));
+  }
 
 private:
   SymbolMan man;

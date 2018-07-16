@@ -25,7 +25,7 @@ public:
   sym::Symbol *type(const ast::TypePtr &);
   sym::FuncParams funcParams(const ast::FuncParams &);
   
-  void enterScope();
+  sym::Scope *enterScope();
   void leaveScope();
   
   sym::Symbol *lookup(sym::Name, Loc);
