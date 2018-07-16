@@ -21,7 +21,6 @@ sym::SymbolPtr makeBuiltinType(const sym::BuiltinType::Enum e) {
 }
 
 sym::Symbol *Void = nullptr;
-sym::Symbol *Int = nullptr;
 sym::Symbol *Char = nullptr;
 sym::Symbol *Bool = nullptr;
 sym::Symbol *Float = nullptr;
@@ -41,7 +40,6 @@ void insertTypes(sym::Table &table) {
     TYPE = table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})->second.get()
   
   INSERT(Void);
-  INSERT(Int);
   INSERT(Char);
   INSERT(Bool);
   INSERT(Float);
@@ -56,11 +54,14 @@ void insertTypes(sym::Table &table) {
   INSERT(UInt32);
   INSERT(UInt64);
   
+  auto intType = std::make_unique<sym::TypeAlias>();
+  intType->type = Int64;
+  table.insert({"Int", std::move(intType)});
+  
   #undef INSERT
 }
 
 #define INSERT_INT(OP) \
-  INSERT(OP, Int); \
   INSERT(OP, Char); \
   INSERT(OP, Int8); \
   INSERT(OP, Int16); \
