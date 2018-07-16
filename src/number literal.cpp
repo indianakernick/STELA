@@ -63,5 +63,6 @@ stela::NumberVariant stela::parseNumberLiteral(const std::string_view str, Log &
   if (valid(str, end, d) == str.size()) {
     return NumberVariant{d};
   }
-  return NumberVariant{};
+  assert(false);
+  return NumberVariant{0.0};
 }

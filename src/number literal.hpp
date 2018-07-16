@@ -26,14 +26,11 @@ struct NumberVariant {
     uint64_t u;
   } value;
   enum {
-    Invalid,
     Float,
     Int,
     UInt
   } type;
   
-  NumberVariant()
-    : type{Invalid} {}
   explicit NumberVariant(const double f) {
     value.f = f;
     type = Float;
@@ -48,9 +45,9 @@ struct NumberVariant {
   }
 };
 
-/// Parses the number literal at the start of the string. Returns a FakeVariant
+/// Parses the number literal at the start of the string. Returns a NumberVariant
 /// that holds the number literal in a type that most accuratly represents it
-/// or FakeVariant::Invalid if the number cannot be parsed
+/// or NumberVariant::Invalid if the number cannot be parsed
 NumberVariant parseNumberLiteral(std::string_view, Log &);
 
 }

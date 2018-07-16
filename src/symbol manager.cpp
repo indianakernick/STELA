@@ -251,14 +251,6 @@ void SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
   scope->table.insert({name, std::move(func)});
 }
 
-namespace {
-
-bool compat(const sym::ValueCat param, const sym::ValueCat arg) {
-  return static_cast<int>(param) <= static_cast<int>(arg);
-}
-
-}
-
 /// Argument types are convertible to parameter types
 bool SymbolMan::convParams(
   const sym::FuncParams &params,
@@ -268,7 +260,7 @@ bool SymbolMan::convParams(
     return false;
   }
   for (size_t i = 0; i != params.size(); ++i) {
-    if (compat(params[i].cat, args[i].cat)) {
+    if (convertibleTo(args[i].cat, params[i].cat)) {
       if (params[i].cat == sym::ValueCat::rvalue) {
         // @TODO lookup type conversions
      // if (args[i].type is not convertible to params[i].type) {
@@ -294,7 +286,7 @@ bool SymbolMan::compatParams(
     return false;
   }
   for (size_t i = 0; i != params.size(); ++i) {
-    if (!compat(params[i].cat, args[i].cat) || params[i].type != args[i].type) {
+    if (!convertibleTo(args[i].cat, params[i].cat) || params[i].type != args[i].type) {
       return false;
     }
   }

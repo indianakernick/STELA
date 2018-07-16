@@ -73,12 +73,19 @@ struct TypeAlias final : Symbol {
 
 enum class ValueCat {
   // order from most restrictive to least restrictive
-  // less restrictive values can be converted to more restrictive values
-  // e.g. lvalue_var is convertible to lvalue_let but not the other way around
   rvalue,
   lvalue_let,
   lvalue_var
 };
+
+constexpr ValueCat mostRestrictive(const ValueCat a, const ValueCat b) {
+  const int min = std::min(static_cast<int>(a), static_cast<int>(b));
+  return static_cast<ValueCat>(min);
+}
+
+constexpr bool convertibleTo(const ValueCat from, const ValueCat to) {
+  return static_cast<int>(from) >= static_cast<int>(to);
+}
 
 struct ExprType {
   Symbol *type;
