@@ -20,6 +20,8 @@ class SymbolMan {
 public:
   SymbolMan(sym::Scopes &, Log &);
   
+  Log &logger();
+  
   std::string typeName(const ast::TypePtr &);
   sym::FuncParams funcParams(const ast::FuncParams &);
   

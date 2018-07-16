@@ -84,6 +84,10 @@ private:
 SymbolMan::SymbolMan(sym::Scopes &scopes, Log &log)
   : scopes{scopes}, scope{scopes.front().get()}, log{log} {}
 
+Log &SymbolMan::logger() {
+  return log;
+}
+
 std::string SymbolMan::typeName(const ast::TypePtr &type) {
   TypeNameVisitor visitor{*this};
   type->accept(visitor);

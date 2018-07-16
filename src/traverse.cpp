@@ -44,7 +44,6 @@ public:
     }
     man.leaveScope();
   }
-  
   void visit(ast::Var &var) override {
     auto varSym = std::make_unique<sym::Object>();
     varSym->loc = var.loc;
@@ -78,7 +77,7 @@ public:
   /* LCOV_EXCL_START */
   void visit(ast::Init &) override {}
   void visit(ast::Struct &) override {}
-  void visit(ast::Enum &) override {}
+  void visit(ast::Enum &e) override {}
   /* LCOV_EXCL_END */
 
 private:
