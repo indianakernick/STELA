@@ -25,19 +25,17 @@ public:
     if (!type.mut) {
       log.ferror(as.loc) << "Left side of assignment must be mutable" << endlog;
     }
-    std::string left = type.type;
-    const bool leftOb = type.object;
+    sym::Symbol *left = type.type;
     as.right->accept(*this);
     if (left != type.type) {
       log.ferror(as.loc) << "Both operands of assignment must have the same type" << endlog;
     }
     type.type = left;
-    type.object = leftOb;
     type.mut = true;
   }
   void visit(BinaryExpr &bin) override {
     bin.left->accept(*this);
-    std::string left = type.type;
+    sym::Symbol *left = type.type;
     bin.right->accept(*this);
     if (left != type.type) {
       log.ferror(bin.loc) << "Both operands of binary operator must have the same type" << endlog;
@@ -53,7 +51,6 @@ public:
       }
       sym::Func *func = man.lookup(id->name, params, call.loc);
       type.type = func->ret;
-      //type.object = dunno;
       type.mut = false;
     } else {
       assert(false);
@@ -61,14 +58,10 @@ public:
   }
   void visit(MemberIdent &mem) override {
     mem.object->accept(*this);
-    if (!type.object) {
-      log.ferror(mem.loc) << "Left operand to operator . is not an object" << endlog;
-    }
     // lookup members
   }
   void visit(InitCall &init) override {
-    type.type = man.typeName(init.type);
-    type.object = true;
+    type.type = man.type(init.type);
     type.mut = false;
   }
   void visit(Identifier &) override {

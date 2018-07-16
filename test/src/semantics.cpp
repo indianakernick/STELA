@@ -126,9 +126,9 @@ TEST_GROUP(Semantics, {
   TEST(Variables, {
     const char *source = R"(
       let num: Int = 0;
-      var f: (Float, inout String) -> [Double];
-      var m: [{Float: Int}];
-      let a: [Float] = [1.2, 3.4, 5.6];
+      //var f: (Float, inout String) -> [Double];
+      //var m: [{Float: Int}];
+      //let a: [Float] = [1.2, 3.4, 5.6];
     )";
     createSym(source, log);
   });

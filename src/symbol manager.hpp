@@ -22,7 +22,7 @@ public:
   
   Log &logger();
   
-  std::string typeName(const ast::TypePtr &);
+  sym::Symbol *type(const ast::TypePtr &);
   sym::FuncParams funcParams(const ast::FuncParams &);
   
   void enterScope();

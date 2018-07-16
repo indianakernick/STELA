@@ -15,8 +15,7 @@
 namespace stela {
 
 struct ExprType {
-  std::string type;
-  bool object = false;
+  sym::Symbol *type = nullptr;
   bool mut = false;
 };
 

@@ -23,7 +23,7 @@ public:
     auto funcSym = std::make_unique<sym::Func>();
     funcSym->loc = func.loc;
     if (func.ret) {
-      funcSym->ret = man.typeName(func.ret);
+      funcSym->ret = man.type(func.ret);
     } else {
       // @TODO infer return type
       log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
@@ -35,7 +35,7 @@ public:
     for (const ast::FuncParam &param : func.params) {
       auto paramSym = std::make_unique<sym::Object>();
       paramSym->loc = param.loc;
-      paramSym->type = man.typeName(param.type);
+      paramSym->type = man.type(param.type);
       paramSym->mut = (param.ref == ast::ParamRef::inout);
       man.insert(param.name, std::move(paramSym));
     }
@@ -49,7 +49,7 @@ public:
     varSym->loc = var.loc;
     varSym->mut = true;
     if (var.type) {
-      varSym->type = man.typeName(var.type);
+      varSym->type = man.type(var.type);
     } else {
       // @TODO infer variable type
       log.ferror(var.loc) << "Type inference has not been implemented" << endlog;
@@ -61,7 +61,7 @@ public:
     letSym->loc = let.loc;
     letSym->mut = false;
     if (let.type) {
-      letSym->type = man.typeName(let.type);
+      letSym->type = man.type(let.type);
     } else {
       // @TODO infer variable type
       log.ferror(let.loc) << "Type inference has not been implemented" << endlog;
@@ -71,14 +71,13 @@ public:
   void visit(ast::TypeAlias &alias) override {
     auto aliasSym = std::make_unique<sym::TypeAlias>();
     aliasSym->loc = alias.loc;
-    aliasSym->type = man.typeName(alias.type);
+    aliasSym->type = man.type(alias.type);
     man.insert(alias.name, std::move(aliasSym));
   }
-  /* LCOV_EXCL_START */
+  
   void visit(ast::Init &) override {}
   void visit(ast::Struct &) override {}
   void visit(ast::Enum &e) override {}
-  /* LCOV_EXCL_END */
 
 private:
   SymbolMan man;

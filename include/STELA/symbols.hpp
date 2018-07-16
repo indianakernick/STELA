@@ -48,19 +48,30 @@ struct BuiltinType final : Symbol {
   } value;
 };
 
+struct Scope;
+
+struct StructType final : Symbol {
+  Scope *scope;
+};
+
+struct EnumType final : Symbol {
+  Scope *scope;
+};
+
 struct TypeAlias final : Symbol {
-  std::string type;
+  Symbol *type;
 };
 
 struct Object final : Symbol {
-  std::string type;
+  Symbol *type;
   bool mut;
 };
 
-using FuncParams = std::vector<std::string>;
+using FuncParams = std::vector<Symbol *>;
 struct Func final : Symbol {
-  std::string ret;
+  Symbol *ret;
   FuncParams params;
+  Scope *scope;
 };
 using FuncPtr = std::unique_ptr<Func>;
             

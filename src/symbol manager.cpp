@@ -12,7 +12,7 @@ using namespace stela;
 
 namespace {
 
-class TypeNameVisitor final : public ast::Visitor {
+/*class TypeNameVisitor final : public ast::Visitor {
 public:
   explicit TypeNameVisitor(SymbolMan &man)
     : man{man} {}
@@ -77,6 +77,44 @@ public:
 
 private:
   SymbolMan &man;
+};*/
+
+class TypeVisitor final : public ast::Visitor {
+public:
+  explicit TypeVisitor(SymbolMan &man)
+    : man{man} {}
+
+  void visit(ast::ArrayType &) override {
+    assert(false);
+  }
+  
+  void visit(ast::MapType &) override {
+    assert(false);
+  }
+  
+  void visit(ast::FuncType &) override {
+    assert(false);
+  }
+  
+  void visit(ast::NamedType &namedType) override {
+    sym::Symbol *symbol = man.lookup(namedType.name, namedType.loc);
+    if (auto *builtin = dynamic_cast<sym::BuiltinType *>(symbol)) {
+      type = symbol;
+    } else if (auto *strut = dynamic_cast<sym::StructType *>(symbol)) {
+      type = symbol;
+    } else if (auto *num = dynamic_cast<sym::EnumType *>(symbol)) {
+      type = symbol;
+    } else if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
+      type = alias->type;
+    } else {
+      assert(false);
+    }
+  }
+  
+  sym::Symbol *type;
+
+private:
+  SymbolMan &man;
 };
 
 }
@@ -88,16 +126,16 @@ Log &SymbolMan::logger() {
   return log;
 }
 
-std::string SymbolMan::typeName(const ast::TypePtr &type) {
-  TypeNameVisitor visitor{*this};
+sym::Symbol *SymbolMan::type(const ast::TypePtr &type) {
+  TypeVisitor visitor{*this};
   type->accept(visitor);
-  return visitor.name;
+  return visitor.type;
 }
 
 sym::FuncParams SymbolMan::funcParams(const ast::FuncParams &params) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {
-    symParams.push_back(typeName(param.type));
+    symParams.push_back(type(param.type));
   }
   return symParams;
 }
