@@ -14,12 +14,7 @@
 
 namespace stela {
 
-struct ExprType {
-  sym::Symbol *type = nullptr;
-  bool mut = false;
-};
-
-ExprType inferType(SymbolMan &, ast::Expression *);
+sym::ExprType inferType(SymbolMan &, ast::Expression *);
 
 }
 

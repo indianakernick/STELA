@@ -132,10 +132,22 @@ sym::Symbol *SymbolMan::type(const ast::TypePtr &type) {
   return visitor.type;
 }
 
+namespace {
+
+sym::ValueCat refToCat(const ast::ParamRef ref) {
+  if (ref == ast::ParamRef::inout) {
+    return sym::ValueCat::lvalue_var;
+  } else {
+    return sym::ValueCat::rvalue;
+  }
+}
+
+}
+
 sym::FuncParams SymbolMan::funcParams(const ast::FuncParams &params) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {
-    symParams.push_back(type(param.type));
+    symParams.push_back({type(param.type), refToCat(param.ref)});
   }
   return symParams;
 }
@@ -190,10 +202,9 @@ sym::Func *SymbolMan::lookup(
       log.ferror(loc) << "Calling \"" << name
         << "\" but it is not a function. " << begin->second->loc << endlog;
     } else {
-      if (func->params == params) {
+      if (convParams(func->params, params)) {
         return func;
       } else {
-        // @TODO lookup type conversions
         log.ferror(loc) << "No matching call to function \"" << name
           << "\" at " << func->loc << endlog;
       }
@@ -204,7 +215,7 @@ sym::Func *SymbolMan::lookup(
       // if there is more than one symbol with the same name then those symbols
       // must be functions
       assert(func);
-      if (func->params == params) {
+      if (compatParams(func->params, params)) {
         return func;
       }
     }
@@ -231,11 +242,77 @@ void SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
       log.ferror(func->loc) << "Redefinition of function \"" << name
         << "\" as a different kind of symbol. " << i->second->loc << endlog;
     } else {
-      if (otherFunc->params == func->params) {
+      if (sameParams(otherFunc->params, func->params)) {
         log.ferror(func->loc) << "Redefinition of function \"" << name << "\". "
           << i->second->loc << endlog;
       }
     }
   }
   scope->table.insert({name, std::move(func)});
+}
+
+namespace {
+
+bool compat(const sym::ValueCat param, const sym::ValueCat arg) {
+  return static_cast<int>(param) <= static_cast<int>(arg);
+}
+
+}
+
+/// Argument types are convertible to parameter types
+bool SymbolMan::convParams(
+  const sym::FuncParams &params,
+  const sym::FuncParams &args
+) {
+  if (params.size() != args.size()) {
+    return false;
+  }
+  for (size_t i = 0; i != params.size(); ++i) {
+    if (compat(params[i].cat, args[i].cat)) {
+      if (params[i].cat == sym::ValueCat::rvalue) {
+        // @TODO lookup type conversions
+     // if (args[i].type is not convertible to params[i].type) {
+        if (params[i].type != args[i].type) {
+          return false;
+        }
+      } else if (params[i].type != args[i].type) {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Argument types are compatible with parameter types. (Checks ValueCat)
+bool SymbolMan::compatParams(
+  const sym::FuncParams &params,
+  const sym::FuncParams &args
+) {
+  if (params.size() != args.size()) {
+    return false;
+  }
+  for (size_t i = 0; i != params.size(); ++i) {
+    if (!compat(params[i].cat, args[i].cat) || params[i].type != args[i].type) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/// Argument types are the same as parameter types. ValueCat may be different
+bool SymbolMan::sameParams(
+  const sym::FuncParams &params,
+  const sym::FuncParams &args
+) {
+  if (params.size() != args.size()) {
+    return false;
+  }
+  for (size_t i = 0; i != params.size(); ++i) {
+    if (params[i].type != args[i].type) {
+      return false;
+    }
+  }
+  return true;
 }

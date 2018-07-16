@@ -23,33 +23,31 @@ public:
     auto funcSym = std::make_unique<sym::Func>();
     funcSym->loc = func.loc;
     if (func.ret) {
-      funcSym->ret = man.type(func.ret);
+      funcSym->ret = {man.type(func.ret), sym::ValueCat::rvalue};
     } else {
       // @TODO infer return type
       log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
     }
     funcSym->params = man.funcParams(func.params);
-    man.insert(func.name, std::move(funcSym));
-    
     man.enterScope();
-    for (const ast::FuncParam &param : func.params) {
+    for (size_t p = 0; p != func.params.size(); ++p) {
       auto paramSym = std::make_unique<sym::Object>();
-      paramSym->loc = param.loc;
-      paramSym->type = man.type(param.type);
-      paramSym->mut = (param.ref == ast::ParamRef::inout);
-      man.insert(param.name, std::move(paramSym));
+      paramSym->loc = func.params[p].loc;
+      paramSym->etype = funcSym->params[p];
+      man.insert(func.params[p].name, std::move(paramSym));
     }
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);
     }
     man.leaveScope();
+    man.insert(func.name, std::move(funcSym));
   }
   void visit(ast::Var &var) override {
     auto varSym = std::make_unique<sym::Object>();
     varSym->loc = var.loc;
-    varSym->mut = true;
+    varSym->etype.cat = sym::ValueCat::lvalue_var;
     if (var.type) {
-      varSym->type = man.type(var.type);
+      varSym->etype.type = man.type(var.type);
     } else {
       // @TODO infer variable type
       log.ferror(var.loc) << "Type inference has not been implemented" << endlog;
@@ -59,11 +57,11 @@ public:
   void visit(ast::Let &let) override {
     auto letSym = std::make_unique<sym::Object>();
     letSym->loc = let.loc;
-    letSym->mut = false;
+    letSym->etype.cat = sym::ValueCat::lvalue_let;
     if (let.type) {
-      letSym->type = man.type(let.type);
+      letSym->etype.type = man.type(let.type);
     } else {
-      // @TODO infer variable type
+      // @TODO infer constant type
       log.ferror(let.loc) << "Type inference has not been implemented" << endlog;
     }
     man.insert(let.name, std::move(letSym));
@@ -94,8 +92,8 @@ public:
     for (const ast::EnumCase &cs : num.cases) {
       auto caseSym = std::make_unique<sym::Object>();
       caseSym->loc = cs.loc;
-      caseSym->mut = false;
-      caseSym->type = enumSym.get();
+      caseSym->etype.type = enumSym.get();
+      caseSym->etype.cat = sym::ValueCat::lvalue_let;
       man.insert(cs.name, std::move(caseSym));
     }
     man.leaveScope();

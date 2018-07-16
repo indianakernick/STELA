@@ -71,14 +71,27 @@ struct TypeAlias final : Symbol {
   Symbol *type;
 };
 
-struct Object final : Symbol {
-  Symbol *type;
-  bool mut;
+enum class ValueCat {
+  // order from most restrictive to least restrictive
+  // less restrictive values can be converted to more restrictive values
+  // e.g. lvalue_var is convertible to lvalue_let but not the other way around
+  rvalue,
+  lvalue_let,
+  lvalue_var
 };
 
-using FuncParams = std::vector<Symbol *>;
+struct ExprType {
+  Symbol *type;
+  ValueCat cat;
+};
+
+struct Object final : Symbol {
+  ExprType etype;
+};
+
+using FuncParams = std::vector<ExprType>;
 struct Func final : Symbol {
-  Symbol *ret;
+  ExprType ret;
   FuncParams params;
   Scope *scope;
 };

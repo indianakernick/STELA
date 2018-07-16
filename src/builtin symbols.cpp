@@ -16,14 +16,29 @@ namespace {
 
 sym::SymbolPtr makeBuiltinType(const sym::BuiltinType::Enum e) {
   auto type = std::make_unique<sym::BuiltinType>();
-  type->loc = {};
   type->value = e;
   return type;
 }
 
+sym::Symbol *Void = nullptr;
+sym::Symbol *Int = nullptr;
+sym::Symbol *Char = nullptr;
+sym::Symbol *Bool = nullptr;
+sym::Symbol *Float = nullptr;
+sym::Symbol *Double = nullptr;
+sym::Symbol *String = nullptr;
+sym::Symbol *Int8 = nullptr;
+sym::Symbol *Int16 = nullptr;
+sym::Symbol *Int32 = nullptr;
+sym::Symbol *Int64 = nullptr;
+sym::Symbol *UInt8 = nullptr;
+sym::Symbol *UInt16 = nullptr;
+sym::Symbol *UInt32 = nullptr;
+sym::Symbol *UInt64 = nullptr;
+
 void insertTypes(sym::Table &table) {
   #define INSERT(TYPE)                                                          \
-    table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})
+    TYPE = table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})->second.get()
   
   INSERT(Void);
   INSERT(Int);
@@ -31,7 +46,7 @@ void insertTypes(sym::Table &table) {
   INSERT(Bool);
   INSERT(Float);
   INSERT(Double);
-  INSERT(String);
+  INSERT(String); // @NOTE standard library?
   INSERT(Int8);
   INSERT(Int16);
   INSERT(Int32);
@@ -66,29 +81,25 @@ void insertTypes(sym::Table &table) {
   INSERT(OP, Bool); \
   INSERT(OP, String);
 
-sym::Symbol *lookupType(sym::Table &table, const std::string_view type) {
-  const auto [begin, end] = table.equal_range(type);
-  assert(std::next(begin) == end);
-  assert(dynamic_cast<sym::BuiltinType *>(begin->second.get()));
-  return begin->second.get();
-}
-
 sym::SymbolPtr makeBinOp(sym::Symbol *type, sym::Symbol *ret) {
   auto func = std::make_unique<sym::Func>();
-  func->loc = {};
-  func->ret = ret;
-  func->params.push_back(type);
-  func->params.push_back(type);
+  func->ret = {ret, sym::ValueCat::rvalue};
+  func->params.push_back({type, sym::ValueCat::rvalue});
+  func->params.push_back({type, sym::ValueCat::rvalue});
   return func;
 }
 
 sym::SymbolPtr makeAssignOp(sym::Symbol *type) {
-  return makeBinOp(type, type);
+  auto func = std::make_unique<sym::Func>();
+  func->ret = {type, sym::ValueCat::lvalue_var};
+  func->params.push_back({type, sym::ValueCat::lvalue_var});
+  func->params.push_back({type, sym::ValueCat::rvalue});
+  return func;
 }
 
 void insertAssign(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::AssignOp::OP), makeAssignOp(lookupType(table, #TYPE))})
+    table.insert({opName(ast::AssignOp::OP), makeAssignOp(TYPE)})
   
   INSERT_ALL(assign);
   INSERT_NUM(add);
@@ -108,7 +119,7 @@ void insertAssign(sym::Table &table) {
 
 void insertBin(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::BinOp::OP), makeAssignOp(lookupType(table, #TYPE))})
+    table.insert({opName(ast::BinOp::OP), makeAssignOp(TYPE)})
   
   INSERT(bool_or, Bool);
   INSERT(bool_and, Bool);
@@ -124,11 +135,9 @@ void insertBin(sym::Table &table) {
   INSERT_NUM(mod);
   INSERT_NUM(pow);
   
-  sym::Symbol *const boolType = lookupType(table, "Bool");
-  
   #undef INSERT
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::BinOp::OP), makeBinOp(lookupType(table, #TYPE), boolType)})
+    table.insert({opName(ast::BinOp::OP), makeBinOp(TYPE, Bool)})
   
   INSERT_ALL(eq);
   INSERT_ALL(ne);
@@ -142,24 +151,47 @@ void insertBin(sym::Table &table) {
 
 sym::SymbolPtr makeUnOp(sym::Symbol *type) {
   auto func = std::make_unique<sym::Func>();
-  func->loc = {};
-  func->ret = type;
-  func->params.push_back(type);
+  func->ret = {type, sym::ValueCat::rvalue};
+  func->params.push_back({type, sym::ValueCat::rvalue});
+  return func;
+}
+
+sym::SymbolPtr makePreOp(sym::Symbol *type) {
+  auto func = std::make_unique<sym::Func>();
+  func->ret = {type, sym::ValueCat::lvalue_var};
+  func->params.push_back({type, sym::ValueCat::lvalue_var});
+  return func;
+}
+
+sym::SymbolPtr makePostOp(sym::Symbol *type) {
+  auto func = std::make_unique<sym::Func>();
+  func->ret = {type, sym::ValueCat::rvalue};
+  func->params.push_back({type, sym::ValueCat::lvalue_var});
   return func;
 }
 
 void insertUn(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::UnOp::OP), makeUnOp(lookupType(table, #TYPE))})
+    table.insert({opName(ast::UnOp::OP), MAKE(TYPE)})
+  #define MAKE makeUnOp
   
   INSERT_NUM(neg);
   INSERT(bool_not, Bool);
   INSERT_INT(bit_not);
+  
+  #undef MAKE
+  #define MAKE makePreOp
+  
   INSERT_NUM(pre_incr);
   INSERT_NUM(pre_decr);
+  
+  #undef MAKE
+  #define MAKE makePostOp
+  
   INSERT_NUM(post_incr);
   INSERT_NUM(post_decr);
   
+  #undef MAKE
   #undef INSERT
 }
 

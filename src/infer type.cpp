@@ -8,7 +8,7 @@
 
 #include "infer type.hpp"
 
-#include "clone type.hpp"
+#include "operator name.hpp"
 
 using namespace stela;
 using namespace stela::ast;
@@ -22,36 +22,34 @@ public:
 
   void visit(Assignment &as) override {
     as.left->accept(*this);
-    if (!type.mut) {
-      log.ferror(as.loc) << "Left side of assignment must be mutable" << endlog;
-    }
-    sym::Symbol *left = type.type;
+    const sym::ExprType left = etype;
     as.right->accept(*this);
-    if (left != type.type) {
-      log.ferror(as.loc) << "Both operands of assignment must have the same type" << endlog;
-    }
-    type.type = left;
-    type.mut = true;
+    const sym::ExprType right = etype;
+    sym::Func *func = man.lookup(opName(as.oper), {left, right}, as.loc);
+    etype = func->ret;
   }
   void visit(BinaryExpr &bin) override {
     bin.left->accept(*this);
-    sym::Symbol *left = type.type;
+    const sym::ExprType left = etype;
     bin.right->accept(*this);
-    if (left != type.type) {
-      log.ferror(bin.loc) << "Both operands of binary operator must have the same type" << endlog;
-    }
+    const sym::ExprType right = etype;
+    sym::Func *func = man.lookup(opName(bin.oper), {left, right}, bin.loc);
+    etype = func->ret;
   }
-  void visit(UnaryExpr &) override {}
+  void visit(UnaryExpr &un) override {
+    un.expr->accept(*this);
+    sym::Func *func = man.lookup(opName(un.oper), {etype}, un.loc);
+    etype = func->ret;
+  }
   void visit(FuncCall &call) override {
     if (auto *id = dynamic_cast<ast::Identifier *>(call.func.get())) {
       sym::FuncParams params;
       for (const ast::ExprPtr &expr : call.args) {
         expr->accept(*this);
-        params.push_back(type.type);
+        params.push_back(etype);
       }
       sym::Func *func = man.lookup(id->name, params, call.loc);
-      type.type = func->ret;
-      type.mut = false;
+      etype = func->ret;
     } else {
       assert(false);
     }
@@ -61,14 +59,14 @@ public:
     // lookup members
   }
   void visit(InitCall &init) override {
-    type.type = man.type(init.type);
-    type.mut = false;
+    etype.type = man.type(init.type);
+    etype.cat = sym::ValueCat::rvalue;
   }
   void visit(Identifier &) override {
     assert(false);
   }
   
-  ExprType type;
+  sym::ExprType etype;
 
 private:
   SymbolMan &man;
@@ -77,8 +75,8 @@ private:
 
 }
 
-stela::ExprType stela::inferType(SymbolMan &man, ast::Expression *expr) {
+sym::ExprType stela::inferType(SymbolMan &man, ast::Expression *expr) {
   InferVisitor visitor{man};
   expr->accept(visitor);
-  return std::move(visitor.type);
+  return std::move(visitor.etype);
 }

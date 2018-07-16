@@ -18,8 +18,8 @@ using Col = uint32_t;
 
 /// A location in the source
 struct Loc {
-  Line l;
-  Col c;
+  Line l = 0;
+  Col c = 0;
 };
 
 }

@@ -38,6 +38,10 @@ private:
   sym::Scopes &scopes;
   sym::Scope *scope;
   Log &log;
+  
+  bool convParams(const sym::FuncParams &, const sym::FuncParams &);
+  bool compatParams(const sym::FuncParams &, const sym::FuncParams &);
+  bool sameParams(const sym::FuncParams &, const sym::FuncParams &);
 };
 
 }
