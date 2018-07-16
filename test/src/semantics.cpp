@@ -25,21 +25,21 @@ TEST_GROUP(Semantics, {
     ASSERT_TRUE(ast.global.empty());
   });
   
-  TEST(Return type inference, {
+  /*TEST(Return type inference, {
     const char *source = R"(
       func returnInt() {
         return 5;
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
-  });
+  });*/
   
   TEST(Redef func, {
     const char *source = R"(
-      func myFunction() -> Void {
+      func myFunction() {
         
       }
-      func myFunction() -> Void {
+      func myFunction() {
         
       }
     )";

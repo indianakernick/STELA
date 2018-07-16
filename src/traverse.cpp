@@ -27,7 +27,9 @@ public:
       funcSym->ret = {man.type(func.ret), sym::ValueCat::rvalue};
     } else {
       // @TODO infer return type
-      log.ferror(func.loc) << "Return type inference has not been implemented" << endlog;
+      log.warn(func.loc) << "Return type inference has not been implemented. "
+        << "Return type is Void by default" << endlog;
+      funcSym->ret = {man.lookup("Void", func.loc), sym::ValueCat::rvalue};
     }
     funcSym->params = man.funcParams(func.params);
     man.enterScope();
