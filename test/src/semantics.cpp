@@ -115,14 +115,48 @@ TEST_GROUP(Semantics, {
     const char *source = R"(
       var num = 5;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    const auto [symbols, ast] = createSym(source, log);
+    ASSERT_EQ(symbols.scopes.size(), 2);
+    const sym::Table &global = symbols.scopes[1]->table;
+    ASSERT_EQ(global.size(), 1);
+    const auto iter = global.find("num");
+    ASSERT_NE(iter, global.end());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_var);
+    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
+    ASSERT_EQ(builtin->value, sym::BuiltinType::Int64);
   });
   
   TEST(Let type inference, {
     const char *source = R"(
-      let num = 5;
+      let pi = 3.14;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    const auto [symbols, ast] = createSym(source, log);
+    ASSERT_EQ(symbols.scopes.size(), 2);
+    const sym::Table &global = symbols.scopes[1]->table;
+    ASSERT_EQ(global.size(), 1);
+    const auto iter = global.find("pi");
+    ASSERT_NE(iter, global.end());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
+    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
+    ASSERT_EQ(builtin->value, sym::BuiltinType::Double);
+  });
+  
+  TEST(Big num type inference, {
+    const char *source = R"(
+      let big = 18446744073709551615;
+    )";
+    const auto [symbols, ast] = createSym(source, log);
+    ASSERT_EQ(symbols.scopes.size(), 2);
+    const sym::Table &global = symbols.scopes[1]->table;
+    ASSERT_EQ(global.size(), 1);
+    const auto iter = global.find("big");
+    ASSERT_NE(iter, global.end());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
+    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
+    ASSERT_EQ(builtin->value, sym::BuiltinType::UInt64);
   });
   
   TEST(Variables, {

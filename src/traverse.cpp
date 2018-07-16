@@ -8,6 +8,7 @@
 
 #include "traverse.hpp"
 
+#include "infer type.hpp"
 #include "symbol manager.hpp"
 
 using namespace stela;
@@ -49,8 +50,7 @@ public:
     if (var.type) {
       varSym->etype.type = man.type(var.type);
     } else {
-      // @TODO infer variable type
-      log.ferror(var.loc) << "Type inference has not been implemented" << endlog;
+      varSym->etype.type = inferType(man, var.expr.get()).type;
     }
     man.insert(var.name, std::move(varSym));
   }
@@ -61,8 +61,7 @@ public:
     if (let.type) {
       letSym->etype.type = man.type(let.type);
     } else {
-      // @TODO infer constant type
-      log.ferror(let.loc) << "Type inference has not been implemented" << endlog;
+      letSym->etype.type = inferType(man, let.expr.get()).type;
     }
     man.insert(let.name, std::move(letSym));
   }

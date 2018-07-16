@@ -44,7 +44,7 @@ void insertTypes(sym::Table &table) {
   INSERT(Bool);
   INSERT(Float);
   INSERT(Double);
-  INSERT(String); // @NOTE standard library?
+  INSERT(String);
   INSERT(Int8);
   INSERT(Int16);
   INSERT(Int32);
