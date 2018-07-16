@@ -20,7 +20,7 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
     case LogCat::lexical:
       return stream << "Lexical";
     case LogCat::syntax:
-      return stream << "Syntax";
+      return stream << "Syntactic";
     case LogCat::semantic:
       return stream << "Semantic";
   }

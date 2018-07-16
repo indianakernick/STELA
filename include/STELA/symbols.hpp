@@ -26,7 +26,18 @@ struct Symbol {
   // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
 };
+
 using SymbolPtr = std::unique_ptr<Symbol>;
+using Name = std::string_view;
+using Table = std::unordered_multimap<Name, SymbolPtr>;
+
+struct Scope {
+  Table table;
+  Scope *parent = nullptr;
+};
+
+using ScopePtr = std::unique_ptr<Scope>;
+using Scopes = std::vector<ScopePtr>;
 
 struct BuiltinType final : Symbol {
   enum Enum {
@@ -47,8 +58,6 @@ struct BuiltinType final : Symbol {
     UInt64
   } value;
 };
-
-struct Scope;
 
 struct StructType final : Symbol {
   Scope *scope;
@@ -74,16 +83,6 @@ struct Func final : Symbol {
   Scope *scope;
 };
 using FuncPtr = std::unique_ptr<Func>;
-            
-using Name = std::string_view;
-using Table = std::unordered_multimap<Name, SymbolPtr>;
-
-struct Scope {
-  Table table;
-  Scope *parent = nullptr;
-};
-using ScopePtr = std::unique_ptr<Scope>;
-using Scopes = std::vector<ScopePtr>;
 
 }
 

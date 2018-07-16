@@ -16,10 +16,12 @@ using namespace stela::ast;
 
 TEST_GROUP(Semantics, {
   StreamLog log;
+  log.pri(LogPri::verbose);
   
   TEST(Empty source, {
     const auto [symbols, ast] = createSym("", log);
-    ASSERT_EQ(symbols.scopes.size(), 1);
+    ASSERT_EQ(symbols.scopes.size(), 2);
+    ASSERT_TRUE(symbols.scopes[1]->table.empty());
     ASSERT_TRUE(ast.global.empty());
   });
   

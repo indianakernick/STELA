@@ -120,7 +120,7 @@ private:
 }
 
 SymbolMan::SymbolMan(sym::Scopes &scopes, Log &log)
-  : scopes{scopes}, scope{scopes.front().get()}, log{log} {}
+  : scopes{scopes}, scope{scopes.back().get()}, log{log} {}
 
 Log &SymbolMan::logger() {
   return log;
