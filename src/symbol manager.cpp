@@ -194,34 +194,49 @@ sym::Func *SymbolMan::lookup(
       return func;
     } else {
       log.ferror(loc) << "Use of undefined symbol \"" << name << '"' << endlog;
+      assert(false);
+      return nullptr;
     }
   } else if (std::next(begin) == end) {
-    sym::Func *func = dynamic_cast<sym::Func *>(begin->second.get());
-    if (func == nullptr) {
-      // @TODO check if this is a function object
-      log.ferror(loc) << "Calling \"" << name
-        << "\" but it is not a function. " << begin->second->loc << endlog;
-    } else {
-      if (convParams(func->params, params)) {
-        return func;
-      } else {
-        log.ferror(loc) << "No matching call to function \"" << name
-          << "\" at " << func->loc << endlog;
-      }
-    }
+    return callFunc(begin->second.get(), name, params, loc);
   } else {
-    for (auto i = begin; i != end; ++i) {
-      sym::Func *func = dynamic_cast<sym::Func *>(i->second.get());
-      // if there is more than one symbol with the same name then those symbols
-      // must be functions
-      assert(func);
-      if (compatParams(func->params, params)) {
-        return func;
-      }
-    }
-    log.ferror(loc) << "Ambiguous call to function \"" << name << '"' << endlog;
+    return findFunc({begin, end}, name, params, loc);
   }
-  return nullptr;
+}
+
+sym::Symbol *SymbolMan::memberLookup(
+  sym::StructType *strut,
+  const sym::Name name,
+  const Loc loc
+) {
+  strut->referenced = true;
+  const sym::Table &table = strut->scope->table;
+  const auto iter = table.find(name);
+  if (iter == table.end()) {
+    log.ferror(loc) << "Member \"" << name << "\" not found in struct" << endlog;
+  }
+  iter->second->referenced = true;
+  return iter->second.get();
+}
+
+sym::Func *SymbolMan::memberLookup(
+  sym::StructType *strut,
+  const sym::Name name,
+  const sym::FuncParams &params,
+  const Loc loc
+) {
+  strut->referenced = true;
+  const sym::Table &table = strut->scope->table;
+  const auto [begin, end] = table.equal_range(name);
+  if (begin == end) {
+    log.ferror(loc) << "Member function \"" << name << "\" not found in struct" << endlog;
+    assert(false);
+    return nullptr;
+  } else if (std::next(begin) == end) {
+    return callFunc(begin->second.get(), name, params, loc);
+  } else {
+    return findFunc({begin, end}, name, params, loc);
+  }
 }
 
 void SymbolMan::insert(const sym::Name name, sym::SymbolPtr symbol) {
@@ -307,4 +322,49 @@ bool SymbolMan::sameParams(
     }
   }
   return true;
+}
+
+sym::Func *SymbolMan::callFunc(
+  sym::Symbol *const symbol,
+  const sym::Name name,
+  const sym::FuncParams &params,
+  const Loc loc
+) {
+  sym::Func *func = dynamic_cast<sym::Func *>(symbol);
+  if (func == nullptr) {
+    // @TODO check if this is a function object
+    log.ferror(loc) << "Calling \"" << name
+      << "\" but it is not a function. " << symbol->loc << endlog;
+  } else {
+    if (convParams(func->params, params)) {
+      func->referenced = true;
+      return func;
+    } else {
+      log.ferror(loc) << "No matching call to function \"" << name
+        << "\" at " << func->loc << endlog;
+    }
+  }
+  assert(false);
+  return nullptr;
+}
+
+sym::Func *SymbolMan::findFunc(
+  const IterPair pair,
+  const sym::Name name,
+  const sym::FuncParams &params,
+  const Loc loc
+) {
+  for (auto i = pair.first; i != pair.second; ++i) {
+    sym::Func *func = dynamic_cast<sym::Func *>(i->second.get());
+    // if there is more than one symbol with the same name then those symbols
+    // must be functions
+    assert(func);
+    if (compatParams(func->params, params)) {
+      func->referenced = true;
+      return func;
+    }
+  }
+  log.ferror(loc) << "Ambiguous call to function \"" << name << '"' << endlog;
+  assert(false);
+  return nullptr;
 }

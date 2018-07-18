@@ -14,7 +14,9 @@
 
 namespace stela {
 
-sym::ExprType inferType(SymbolMan &, ast::Expression *);
+sym::ExprType inferTypeFunc(SymbolMan &, ast::Expression *);
+sym::ExprType inferTypeMemFunc(SymbolMan &, ast::Expression *, sym::StructType *);
+sym::ExprType inferTypeStatFunc(SymbolMan &, ast::Expression *, sym::StructType *);
 
 }
 

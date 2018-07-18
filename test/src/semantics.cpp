@@ -184,4 +184,27 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Bad variable decl, {
+    const char *source = R"(
+      let x: Int = 2.5;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct members, {
+    const char *source = R"(
+      struct Vec {
+        var x: Double;
+        var y: Double;
+      };
+    
+      func mid(a: Vec, b: Vec) -> Vec {
+        let x         = (a.x + b.x) / 2.0;
+        let y: Double = (a.y + b.y) / 2.0;
+        return make Vec(x, y);
+      }
+    )";
+    createSym(source, log);
+  });
 });

@@ -31,6 +31,9 @@ public:
   sym::Symbol *lookup(sym::Name, Loc);
   sym::Func *lookup(sym::Name, const sym::FuncParams &, Loc);
   
+  sym::Symbol *memberLookup(sym::StructType *, sym::Name, Loc);
+  sym::Func *memberLookup(sym::StructType *, sym::Name, const sym::FuncParams &, Loc);
+  
   void insert(sym::Name, sym::SymbolPtr);
   void insert(sym::Name, sym::FuncPtr);
 
@@ -42,6 +45,11 @@ private:
   bool convParams(const sym::FuncParams &, const sym::FuncParams &);
   bool compatParams(const sym::FuncParams &, const sym::FuncParams &);
   bool sameParams(const sym::FuncParams &, const sym::FuncParams &);
+  
+  sym::Func *callFunc(sym::Symbol *, sym::Name, const sym::FuncParams &, Loc);
+  using Iter = sym::Table::const_iterator;
+  using IterPair = std::pair<Iter, Iter>;
+  sym::Func *findFunc(IterPair, sym::Name, const sym::FuncParams &, Loc);
 };
 
 }

@@ -96,6 +96,16 @@ struct Object final : Symbol {
   ExprType etype;
 };
 
+enum class MemAccess {
+  public_,
+  private_
+};
+
+enum class MemScope {
+  member,
+  static_
+};
+
 using FuncParams = std::vector<ExprType>;
 struct Func final : Symbol {
   ExprType ret;

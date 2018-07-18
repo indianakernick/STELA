@@ -9,7 +9,7 @@ __If a compilers expert is reading this, I would love some advice!__
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * Writing the semantic analyser is way harder than I thought it would be! I think I'm going to implement a small subset of the language first. By "small subset", I mean functions, variables and expressions. I'll generate LLVM code for it and try it out. Once I have the tiny subset running, I'll add more features.
+ * Writing the semantic analyser is way harder than I thought it would be! I think I have bitten off more than I can chew. Testing the semantic analyser is difficult because it's so context sensitive. Perhaps I should consider making a simpler language. C with sugar perhaps?
 
 ## About
 
