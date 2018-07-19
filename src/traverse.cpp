@@ -89,11 +89,11 @@ public:
     if (expr == nullptr) {
       exprType = nullptr;
     } else if (st.current() == ScopeType::func && st.parent() == ScopeType::struct_member) {
-      exprType = inferTypeMemFunc(man, expr.get(), parentStruct).type;
+      exprType = exprMemFunc(man, expr.get(), parentStruct).type;
     } else if (st.current() == ScopeType::func && st.parent() == ScopeType::struct_static) {
       exprType = inferTypeStatFunc(man, expr.get(), parentStruct).type;
     } else {
-      exprType = inferTypeFunc(man, expr.get()).type;
+      exprType = exprFunc(man, expr.get()).type;
     }
     sym::Symbol *symType = type ? man.type(type) : exprType;
     if (exprType != nullptr && exprType != symType) {

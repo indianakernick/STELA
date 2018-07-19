@@ -188,13 +188,13 @@ private:
 
 }
 
-sym::ExprType stela::inferTypeFunc(SymbolMan &man, ast::Expression *expr) {
+sym::ExprType stela::exprFunc(SymbolMan &man, ast::Expression *expr) {
   Visitor visitor{man, Visitor::Func::free};
   expr->accept(visitor);
   return visitor.etype;
 }
 
-sym::ExprType stela::inferTypeMemFunc(
+sym::ExprType stela::exprMemFunc(
   SymbolMan &man,
   ast::Expression *expr,
   sym::StructType *strut
