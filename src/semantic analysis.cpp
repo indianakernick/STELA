@@ -19,6 +19,7 @@ stela::Symbols stela::createSym(const AST &ast, LogBuf &buf) {
   syms.scopes.push_back(createBuiltinScope());
   log.verbose() << "Initialized " << syms.scopes[0]->table.size() << " builtins" << endlog;
   auto global = std::make_unique<sym::Scope>();
+  global->type = sym::ScopeType::name_space;
   global->parent = syms.scopes.back().get();
   syms.scopes.push_back(std::move(global));
   traverse(syms.scopes, ast, log);

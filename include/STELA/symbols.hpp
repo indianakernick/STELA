@@ -17,8 +17,6 @@
 
 namespace stela::sym {
 
-class Visitor;
-
 struct Symbol {
   virtual ~Symbol() = default;
 
@@ -28,12 +26,19 @@ struct Symbol {
 };
 
 using SymbolPtr = std::unique_ptr<Symbol>;
-using Name = std::string_view;
+using Name = std::string;
 using Table = std::unordered_multimap<Name, SymbolPtr>;
+
+enum class ScopeType {
+  name_space,
+  function,
+  structure
+};
 
 struct Scope {
   Table table;
   Scope *parent = nullptr;
+  ScopeType type;
 };
 
 using ScopePtr = std::unique_ptr<Scope>;
@@ -63,9 +68,7 @@ struct StructType final : Symbol {
   Scope *scope;
 };
 
-struct EnumType final : Symbol {
-  Scope *scope;
-};
+struct EnumType final : Symbol {};
 
 struct TypeAlias final : Symbol {
   Symbol *type;
@@ -94,16 +97,6 @@ struct ExprType {
 
 struct Object final : Symbol {
   ExprType etype;
-};
-
-enum class MemAccess {
-  public_,
-  private_
-};
-
-enum class MemScope {
-  member,
-  static_
 };
 
 using FuncParams = std::vector<ExprType>;

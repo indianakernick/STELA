@@ -41,7 +41,7 @@ public:
     const sym::ExprType left = etype;
     as.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = man.lookup(opName(as.oper), {left, right}, as.loc);
+    sym::Func *func = man.lookup(sym::Name(opName(as.oper)), {left, right}, as.loc);
     etype = func->ret;
   }
   void visit(ast::BinaryExpr &bin) override {
@@ -49,12 +49,12 @@ public:
     const sym::ExprType left = etype;
     bin.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = man.lookup(opName(bin.oper), {left, right}, bin.loc);
+    sym::Func *func = man.lookup(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
     etype = func->ret;
   }
   void visit(ast::UnaryExpr &un) override {
     un.expr->accept(*this);
-    sym::Func *func = man.lookup(opName(un.oper), {etype}, un.loc);
+    sym::Func *func = man.lookup(sym::Name(opName(un.oper)), {etype}, un.loc);
     etype = func->ret;
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
@@ -75,11 +75,11 @@ public:
     const sym::ExprType funcType = etype;
     const sym::FuncParams params = argTypes(call.args);
     if (funcType.type == nullptr) {
-      sym::Func *func = man.lookup(funcName, params, call.loc);
+      sym::Func *func = man.lookup(sym::Name(funcName), params, call.loc);
       etype = func->ret;
     } else {
       if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
-        sym::Func *func = man.memberLookup(strut, funcName, params, call.loc);
+        sym::Func *func = man.memberLookup(strut, sym::Name(funcName), params, call.loc);
         etype = func->ret;
       } else {
         assert(false);
@@ -94,7 +94,7 @@ public:
       name = mem.member;
     } else {
       if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
-        sym::Symbol *symbol = man.memberLookup(strut, mem.member, mem.loc);
+        sym::Symbol *symbol = man.memberLookup(strut, sym::Name(mem.member), mem.loc);
         if (auto *obj = dynamic_cast<sym::Object *>(symbol)) {
           etype = obj->etype;
         } else {
@@ -115,7 +115,7 @@ public:
       // null type indicates that `name` is the name of a free function
       etype.type = nullptr;
     } else {
-      sym::Symbol *symbol = man.lookup(id.name, id.loc);
+      sym::Symbol *symbol = man.lookup(sym::Name(id.name), id.loc);
       if (auto *obj = dynamic_cast<sym::Object *>(symbol)) {
         etype = obj->etype;
       } else {
@@ -204,7 +204,7 @@ sym::ExprType stela::exprMemFunc(
   return visitor.etype;
 }
 
-sym::ExprType stela::inferTypeStatFunc(
+sym::ExprType stela::exprStatFunc(
   SymbolMan &man,
   ast::Expression *expr,
   sym::StructType *strut

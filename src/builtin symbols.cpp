@@ -100,7 +100,7 @@ sym::SymbolPtr makeAssignOp(sym::Symbol *type) {
 
 void insertAssign(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::AssignOp::OP), makeAssignOp(TYPE)})
+    table.insert({sym::Name(opName(ast::AssignOp::OP)), makeAssignOp(TYPE)})
   
   INSERT_ALL(assign);
   INSERT_NUM(add);
@@ -120,7 +120,7 @@ void insertAssign(sym::Table &table) {
 
 void insertBin(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::BinOp::OP), makeAssignOp(TYPE)})
+    table.insert({sym::Name(opName(ast::BinOp::OP)), makeAssignOp(TYPE)})
   
   INSERT(bool_or, Bool);
   INSERT(bool_and, Bool);
@@ -138,7 +138,7 @@ void insertBin(sym::Table &table) {
   
   #undef INSERT
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::BinOp::OP), makeBinOp(TYPE, Bool)})
+    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(TYPE, Bool)})
   
   INSERT_ALL(eq);
   INSERT_ALL(ne);
@@ -173,7 +173,7 @@ sym::SymbolPtr makePostOp(sym::Symbol *type) {
 
 void insertUn(sym::Table &table) {
   #define INSERT(OP, TYPE) \
-    table.insert({opName(ast::UnOp::OP), MAKE(TYPE)})
+    table.insert({sym::Name(opName(ast::UnOp::OP)), MAKE(TYPE)})
   #define MAKE makeUnOp
   
   INSERT_NUM(neg);
@@ -200,6 +200,7 @@ void insertUn(sym::Table &table) {
 
 stela::sym::ScopePtr stela::createBuiltinScope() {
   sym::ScopePtr scope = std::make_unique<sym::Scope>();
+  scope->type = sym::ScopeType::name_space;
   scope->parent = nullptr;
   insertTypes(scope->table);
   insertAssign(scope->table);

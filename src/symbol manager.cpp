@@ -12,73 +12,6 @@ using namespace stela;
 
 namespace {
 
-/*class TypeNameVisitor final : public ast::Visitor {
-public:
-  explicit TypeNameVisitor(SymbolMan &man)
-    : man{man} {}
-
-  void visit(ast::ArrayType &array) override {
-    std::string newName;
-    newName += '[';
-    assert(array.elem);
-    array.elem->accept(*this);
-    newName += std::move(name);
-    newName += ']';
-    name = std::move(newName);
-  }
-  
-  void visit(ast::MapType &map) override {
-    std::string newName;
-    newName += "[{";
-    assert(map.key);
-    map.key->accept(*this);
-    newName += std::move(name);
-    newName += ':';
-    assert(map.val);
-    map.val->accept(*this);
-    newName += std::move(name);
-    newName += "}]";
-    name = std::move(newName);
-  }
-  
-  void visit(ast::FuncType &func) override {
-    std::string newName;
-    newName += '(';
-    if (!func.params.empty()) {
-      for (auto p = func.params.begin(); p != func.params.end(); ++p) {
-        if (p->ref == ast::ParamRef::inout) {
-          newName += "inout ";
-        }
-        assert(p->type);
-        p->type->accept(*this);
-        newName += std::move(name);
-        if (p != func.params.end() - 1) {
-          newName += ',';
-        }
-      }
-    }
-    newName += "->";
-    assert(func.ret);
-    func.ret->accept(*this);
-    newName += std::move(name);
-    name = std::move(newName);
-  }
-  
-  void visit(ast::NamedType &namedType) override {
-    sym::Symbol *const sym = man.lookup(namedType.name, namedType.loc);
-    if (auto *alias = dynamic_cast<sym::TypeAlias *>(sym); alias) {
-      name = alias->type;
-    } else {
-      name = std::string(namedType.name);
-    }
-  }
-  
-  std::string name;
-
-private:
-  SymbolMan &man;
-};*/
-
 class TypeVisitor final : public ast::Visitor {
 public:
   explicit TypeVisitor(SymbolMan &man)
@@ -97,7 +30,7 @@ public:
   }
   
   void visit(ast::NamedType &namedType) override {
-    sym::Symbol *symbol = man.lookup(namedType.name, namedType.loc);
+    sym::Symbol *symbol = man.lookup(sym::Name(namedType.name), namedType.loc);
     if (auto *builtin = dynamic_cast<sym::BuiltinType *>(symbol)) {
       type = symbol;
     } else if (auto *strut = dynamic_cast<sym::StructType *>(symbol)) {
@@ -152,8 +85,17 @@ sym::FuncParams SymbolMan::funcParams(const ast::FuncParams &params) {
   return symParams;
 }
 
-sym::Scope *SymbolMan::enterScope() {
+sym::Scope *SymbolMan::current() const {
+  return scope;
+}
+
+sym::Scope *SymbolMan::current(sym::Scope *const curr) {
+  return std::exchange(scope, curr);
+}
+
+sym::Scope *SymbolMan::enterScope(const sym::ScopeType type) {
   sym::ScopePtr newScope = std::make_unique<sym::Scope>();
+  newScope->type = type;
   newScope->parent = scope;
   scope = newScope.get();
   scopes.push_back(std::move(newScope));

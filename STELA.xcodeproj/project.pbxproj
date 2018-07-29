@@ -27,10 +27,10 @@
 		4572CA9220FB4F9A00EA1A56 /* clone type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9020FB4F9A00EA1A56 /* clone type.cpp */; };
 		4572CA9520FC445200EA1A56 /* builtin symbols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9320FC445200EA1A56 /* builtin symbols.cpp */; };
 		4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9620FC462800EA1A56 /* operator name.cpp */; };
+		4572CAA2210716A800EA1A56 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1B20DE72D400CC3289 /* log output.cpp */; };
@@ -44,14 +44,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		45BBA40020D640F0006108C1 /* PBXContainerItemProxy */ = {
+		4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
 			remoteInfo = STELA;
 		};
-		45BBA43D20D7B557006108C1 /* PBXContainerItemProxy */ = {
+		45BBA40020D640F0006108C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
 			proxyType = 1;
@@ -181,7 +181,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				45BBA43B20D7AFCD006108C1 /* libSTELA.a in Frameworks */,
+				4572CAA2210716A800EA1A56 /* libSTELA.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,7 +441,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				45BBA43E20D7B557006108C1 /* PBXTargetDependency */,
+				4572CAA1210716A300EA1A56 /* PBXTargetDependency */,
 			);
 			name = CLI;
 			productName = CLI;
@@ -575,15 +575,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4572CAA1210716A300EA1A56 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */;
+		};
 		45BBA40120D640F0006108C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
 			targetProxy = 45BBA40020D640F0006108C1 /* PBXContainerItemProxy */;
-		};
-		45BBA43E20D7B557006108C1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
-			targetProxy = 45BBA43D20D7B557006108C1 /* PBXContainerItemProxy */;
 		};
 		45BBA44020D7B57E006108C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

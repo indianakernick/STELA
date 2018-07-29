@@ -206,7 +206,7 @@ func anotherDummy(dir: Dir) {
 
   stela::StreamLog log;
   stela::fmt::Tokens tokens = stela::format(source, log);
-  stela::conFormat(tokens);
+  //stela::conFormat(tokens);
   
   stela::HTMLstyles styles;
   styles.doc = true;
