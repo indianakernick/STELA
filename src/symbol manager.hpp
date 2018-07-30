@@ -37,7 +37,21 @@ public:
   sym::Func *memberLookup(sym::StructType *, sym::Name, const sym::FuncParams &, Loc);
   
   void insert(sym::Name, sym::SymbolPtr);
-  void insert(sym::Name, sym::FuncPtr);
+  sym::Func *insert(sym::Name, sym::FuncPtr);
+  
+  template <typename Symbol>
+  Symbol *insert(const sym::Name name) {
+    auto symbol = std::make_unique<Symbol>();
+    Symbol *const ret = symbol.get();
+    insert(name, std::move(symbol));
+    return ret;
+  }
+  template <typename Symbol, typename AST_Node>
+  Symbol *insert(const AST_Node &node) {
+    Symbol *const symbol = insert<Symbol>(sym::Name(node.name));
+    symbol->loc = node.loc;
+    return symbol;
+  }
 
 private:
   sym::Scopes &scopes;

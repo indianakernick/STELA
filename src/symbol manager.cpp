@@ -191,7 +191,7 @@ void SymbolMan::insert(const sym::Name name, sym::SymbolPtr symbol) {
   }
 }
 
-void SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
+sym::Func *SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
   const auto [begin, end] = scope->table.equal_range(name);
   for (auto i = begin; i != end; ++i) {
     sym::Func *otherFunc = dynamic_cast<sym::Func *>(i->second.get());
@@ -205,7 +205,9 @@ void SymbolMan::insert(const sym::Name name, sym::FuncPtr func) {
       }
     }
   }
+  sym::Func *const ret = func.get();
   scope->table.insert({name, std::move(func)});
+  return ret;
 }
 
 /// Argument types are convertible to parameter types

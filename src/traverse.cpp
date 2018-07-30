@@ -15,68 +15,154 @@ using namespace stela;
 
 namespace {
 
-/// Visitor for ast::MemScope::member. Node is a declaration
-class StructMemberVisitor final : ast::Visitor {
+class FunctionInserter {
 public:
-  StructMemberVisitor();
+  FunctionInserter(SymbolMan &man, Log &log)
+    : man{man}, log{log} {}
 
-  void visit(ast::Func &) {}
-  void visit(ast::Var &) {}
-  void visit(ast::Let &) {}
-  // implicitly static
-  void visit(ast::TypeAlias &) {}
-  void visit(ast::Init &) {}
-  // implicitly static
-  void visit(ast::Struct &) {}
-  // implicitly static
-  void visit(ast::Enum &) {}
+  void enterFunc(const ast::Func &func) {
+    std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+    funcSym->params = man.funcParams(func.params);
+    inferRetType(*funcSym, func);
+    sym::Func *funcSymPtr = man.insert(sym::Name(func.name), std::move(funcSym));
+    man.enterScope(sym::ScopeType::function);
+    insertFuncParams(*funcSymPtr, func);
+  }
+  void enterMemFunc(const ast::Func &func, sym::StructType *structType) {
+    std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+    funcSym->params = man.funcParams(func.params);
+    funcSym->params.insert(funcSym->params.begin(), selfType(structType));
+    inferRetType(*funcSym, func);
+    sym::Func *funcSymPtr = man.insert(sym::Name(func.name), std::move(funcSym));
+    man.enterScope(sym::ScopeType::function);
+    insertSelfParam(*funcSymPtr, structType);
+    insertFuncParams(*funcSymPtr, func);
+  }
+  void leaveFunc() {
+    man.leaveScope();
+  }
 
 private:
+  SymbolMan &man;
+  Log &log;
+
+  std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
+    auto funcSym = std::make_unique<sym::Func>();
+    funcSym->loc = func.loc;
+    return funcSym;
+  }
+  void inferRetType(sym::Func &funcSym, const ast::Func &func) {
+    if (func.ret) {
+      funcSym.ret = {man.type(func.ret), sym::ValueCat::rvalue};
+    } else {
+      // @TODO infer return type
+      log.warn(func.loc) << "Return type is Void by default" << endlog;
+      funcSym.ret = {man.lookup("Void", func.loc), sym::ValueCat::rvalue};
+    }
+  }
   
+  sym::ExprType selfType(sym::StructType *const structType) {
+    return {structType, sym::ValueCat::lvalue_var};
+  }
+
+  void insertFuncParams(sym::Func &funcSym, const ast::Func &func) {
+    for (size_t p = 0; p != func.params.size(); ++p) {
+      auto *paramSym = man.insert<sym::Object>(func.params[p]);
+      paramSym->etype = funcSym.params[p];
+    }
+  }
+  void insertSelfParam(sym::Func &funcSym, sym::StructType *const structType) {
+    auto *selfSym = man.insert<sym::Object>(sym::Name("self"));
+    selfSym->loc = funcSym.loc;
+    selfSym->etype = selfType(structType);
+  }
 };
 
-enum class ScopeType {
-  static_mem,
-  inst_mem,
-  global
+class MemberScope final : public ast::Visitor {
+public:
+  MemberScope(Log &log, ast::MemScope astScope)
+    : log{log}, astScope{astScope} {}
+
+  void visit(ast::Func &) {
+    scope = convert(astScope);
+  }
+  void visit(ast::Var &) {
+    scope = convert(astScope);
+  }
+  void visit(ast::Let &) {
+    scope = convert(astScope);
+  }
+  void visit(ast::TypeAlias &alias) {
+    if (astScope == ast::MemScope::static_) {
+      log.warn(alias.loc) << "No need to mark typealias as static" << endlog;
+    }
+    scope = sym::MemScope::static_;
+  }
+  void visit(ast::Init &init) {
+    if (astScope == ast::MemScope::static_) {
+      log.ferror(init.loc) << "Cannot mark init as static" << endlog;
+    }
+    scope = sym::MemScope::instance;
+  }
+  void visit(ast::Struct &strt) {
+    if (astScope == ast::MemScope::static_) {
+      log.warn(strt.loc) << "No need to mark struct as static" << endlog;
+    }
+    scope = sym::MemScope::static_;
+  }
+  void visit(ast::Enum &enm) {
+    if (astScope == ast::MemScope::static_) {
+      log.warn(enm.loc) << "No need to mark enum as static" << endlog;
+    }
+    scope = sym::MemScope::static_;
+  }
+
+  sym::MemScope scope;
+
+private:
+  Log &log;
+  const ast::MemScope astScope;
+  
+  static sym::MemScope convert(const ast::MemScope scope) {
+    if (scope == ast::MemScope::member) {
+      return sym::MemScope::instance;
+    } else {
+      return sym::MemScope::static_;
+    }
+  }
 };
+
+sym::MemScope memScope(const ast::Member &mem, Log &log) {
+  MemberScope visitor{log, mem.scope};
+  mem.node->accept(visitor);
+  return visitor.scope;
+}
+
+sym::MemAccess memAccess(const ast::Member &mem, Log &) {
+  // @TODO maybe make vars private by default and functions public by default?
+  if (mem.access == ast::MemAccess::private_) {
+    return sym::MemAccess::private_;
+  } else {
+    return sym::MemAccess::public_;
+  }
+}
 
 class Visitor final : public ast::Visitor {
 public:
   Visitor(sym::Scopes &scopes, Log &log)
     : man{scopes, log}, log{log} {}
-
-  void visit(ast::Func &func) override {
-    auto funcSym = std::make_unique<sym::Func>();
-    funcSym->loc = func.loc;
-    if (func.ret) {
-      funcSym->ret = {man.type(func.ret), sym::ValueCat::rvalue};
-    } else {
-      // @TODO infer return type
-      log.warn(func.loc) << "Return type inference has not been implemented. "
-        << "Return type is Void by default" << endlog;
-      funcSym->ret = {man.lookup("Void", func.loc), sym::ValueCat::rvalue};
-    }
-    funcSym->params = man.funcParams(func.params);
-    man.enterScope(sym::ScopeType::function);
-    for (size_t p = 0; p != func.params.size(); ++p) {
-      auto paramSym = std::make_unique<sym::Object>();
-      paramSym->loc = func.params[p].loc;
-      paramSym->etype = funcSym->params[p];
-      man.insert(std::string(func.params[p].name), std::move(paramSym));
-    }
-    if (scopeType == ScopeType::inst_mem) {
-      auto selfSym = std::make_unique<sym::Object>();
-      selfSym->loc = funcSym->loc;
-      selfSym->etype = sym::ExprType{parentStruct, sym::ValueCat::lvalue_var};
-      funcSym->params.insert(funcSym->params.begin(), selfSym->etype);
-      man.insert(std::string("self"), std::move(selfSym));
-    }
-    for (const ast::StatPtr &stat : func.body.nodes) {
+  
+  void visit(ast::Block &block) override {
+    for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
-    man.leaveScope();
-    man.insert(parentScopeName + std::string(func.name), std::move(funcSym));
+  }
+
+  void visit(ast::Func &func) override {
+    FunctionInserter funInsert{man, log};
+    funInsert.enterFunc(func);
+    visit(func.body);
+    funInsert.leaveFunc();
   }
   sym::Symbol *objectType(
     const ast::TypePtr &type,
@@ -91,107 +177,49 @@ public:
     return symType;
   }
   void visit(ast::Var &var) override {
-    auto varSym = std::make_unique<sym::Object>();
-    varSym->loc = var.loc;
+    auto *varSym = man.insert<sym::Object>(var);
     varSym->etype.cat = sym::ValueCat::lvalue_var;
     varSym->etype.type = objectType(var.type, var.expr, var.loc);
-    if (scopeType == ScopeType::static_mem) {
-      man.insert(parentScopeName + std::string(var.name), std::move(varSym));
-    } else {
-      man.insert(std::string(var.name), std::move(varSym));
-    }
   }
   void visit(ast::Let &let) override {
-    auto letSym = std::make_unique<sym::Object>();
-    letSym->loc = let.loc;
+    auto *letSym = man.insert<sym::Object>(let);
     letSym->etype.cat = sym::ValueCat::lvalue_let;
     letSym->etype.type = objectType(let.type, let.expr, let.loc);
-    if (scopeType == ScopeType::static_mem) {
-      man.insert(parentScopeName + std::string(let.name), std::move(letSym));
-    } else {
-      man.insert(std::string(let.name), std::move(letSym));
-    }
   }
   void visit(ast::TypeAlias &alias) override {
-    auto aliasSym = std::make_unique<sym::TypeAlias>();
-    aliasSym->loc = alias.loc;
+    auto *aliasSym = man.insert<sym::TypeAlias>(alias);
     aliasSym->type = man.type(alias.type);
-    man.insert(parentScopeName + std::string(alias.name), std::move(aliasSym));
   }
   
   void visit(ast::Init &) override {}
   void visit(ast::Struct &strut) override {
-    auto structSym = std::make_unique<sym::StructType>();
-    structSym->loc = strut.loc;
+    auto *structSym = man.insert<sym::StructType>(strut);
     structSym->scope = man.enterScope(sym::ScopeType::structure);
-    std::vector<bool> instanceData(strut.body.size(), false);
-    const ScopeType oldScopeType = std::exchange(scopeType, ScopeType::inst_mem);
-    for (size_t m = 0; m != strut.body.size(); ++m) {
-      const ast::Member &mem = strut.body[m];
-      if (mem.scope == ast::MemScope::member) {
-        if (auto *var = dynamic_cast<ast::Var *>(mem.node.get())) {
-          instanceData[m] = true;
-          visit(*var);
-          continue;
-        } else if (auto *let = dynamic_cast<ast::Let *>(mem.node.get())) {
-          instanceData[m] = true;
-          visit(*let);
-          continue;
-        }
-      }
+    parentStruct = structSym;
+    for (const ast::Member &mem : strut.body) {
+      //memAccess(mem, log);
+      //memScope(mem, log);
     }
     man.leaveScope();
-    const size_t oldScope = pushScopeName(strut.name);
-    sym::StructType *const oldStruct = std::exchange(parentStruct, structSym.get());
-    for (size_t m = 0; m != strut.body.size(); ++m) {
-      const ast::Member &mem = strut.body[m];
-      if (!instanceData[m]) {
-        if (mem.scope == ast::MemScope::member) {
-          scopeType = ScopeType::inst_mem;
-        } else {
-          scopeType = ScopeType::static_mem;
-        }
-        mem.node->accept(*this);
-      }
-    }
-    parentStruct = oldStruct;
-    popScopeName(oldScope);
-    scopeType = oldScopeType;
-    man.insert(parentScopeName + std::string(strut.name), std::move(structSym));
   }
   void visit(ast::Enum &num) override {
-    auto enumSym = std::make_unique<sym::EnumType>();
+    auto *enumSym = man.insert<sym::EnumType>(num);
     enumSym->loc = num.loc;
-    man.insert(parentScopeName + std::string(num.name), std::move(enumSym));
-    const size_t oldScope = pushScopeName(num.name);
+    enumSym->scope = man.enterScope(sym::ScopeType::enumeration);
     for (const ast::EnumCase &cs : num.cases) {
       auto caseSym = std::make_unique<sym::Object>();
       caseSym->loc = cs.loc;
-      caseSym->etype.type = enumSym.get();
+      caseSym->etype.type = enumSym;
       caseSym->etype.cat = sym::ValueCat::lvalue_let;
-      man.insert(parentScopeName + std::string(cs.name), std::move(caseSym));
+      man.insert(sym::Name(cs.name), std::move(caseSym));
     }
-    popScopeName(oldScope);
+    man.leaveScope();
   }
 
 private:
   SymbolMan man;
   Log &log;
-  sym::Scope *parentScope = nullptr;
-  std::string parentScopeName = {};
-  ScopeType scopeType = ScopeType::global;
   sym::StructType *parentStruct = nullptr;
-  
-  size_t pushScopeName(const std::string_view name) {
-    const size_t oldScopeSize = parentScopeName.size();
-    parentScopeName += '_';
-    parentScopeName.append(name);
-    parentScopeName += '_';
-    return oldScopeSize;
-  }
-  void popScopeName(const size_t oldScopeSize) {
-    parentScopeName.erase(oldScopeSize);
-  }
 };
 
 }

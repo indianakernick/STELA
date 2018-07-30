@@ -28,15 +28,27 @@ struct Symbol {
 using SymbolPtr = std::unique_ptr<Symbol>;
 using Name = std::string;
 using Table = std::unordered_multimap<Name, SymbolPtr>;
+struct OrderedTableRow {
+  Name key;
+  SymbolPtr val;
+};
+using OrderedTable = std::vector<OrderedTableRow>;
 
 enum class ScopeType {
   name_space,
   function,
-  structure
+  structure,
+  enumeration
 };
 
 struct Scope {
   Table table;
+  Scope *parent = nullptr;
+  ScopeType type;
+};
+
+struct OrderedScope {
+  OrderedTable table;
   Scope *parent = nullptr;
   ScopeType type;
 };
@@ -68,7 +80,9 @@ struct StructType final : Symbol {
   Scope *scope;
 };
 
-struct EnumType final : Symbol {};
+struct EnumType final : Symbol {
+  Scope *scope;
+};
 
 struct TypeAlias final : Symbol {
   Symbol *type;
@@ -106,6 +120,22 @@ struct Func final : Symbol {
   Scope *scope;
 };
 using FuncPtr = std::unique_ptr<Func>;
+
+enum class MemAccess {
+  public_,
+  private_
+};
+
+enum class MemScope {
+  instance,
+  static_
+};
+
+struct Member {
+  SymbolPtr symbol;
+  MemAccess access;
+  MemScope scope;
+};
 
 }
 

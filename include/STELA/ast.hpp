@@ -14,6 +14,12 @@
 #include <string_view>
 #include "location.hpp"
 
+namespace stela::sym {
+
+struct Symbol;
+
+}
+
 namespace stela::ast {
 
 class Visitor;
@@ -80,6 +86,7 @@ struct FuncType final : Type {
 
 struct NamedType final : Type {
   Name name;
+  sym::Symbol *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -138,6 +145,7 @@ using FuncArgs = std::vector<ExprPtr>;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
+  sym::Symbol *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -145,6 +153,7 @@ struct FuncCall final : Expression {
 struct MemberIdent final : Expression {
   ExprPtr object;
   Name member;
+  sym::Symbol *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -152,6 +161,7 @@ struct MemberIdent final : Expression {
 struct InitCall final : Expression {
   TypePtr type;
   FuncArgs args;
+  sym::Symbol *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -165,6 +175,7 @@ struct Subscript final : Expression {
 
 struct Identifier final : Expression {
   Name name;
+  sym::Symbol *definition = nullptr;
   
   void accept(Visitor &) override;
 };

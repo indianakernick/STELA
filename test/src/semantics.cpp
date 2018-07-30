@@ -48,10 +48,10 @@ TEST_GROUP(Semantics, {
   
   TEST(Redef func with params, {
     const char *source = R"(
-      func myFunction(i: Int, f: Float) -> Void {
+      func myFunction(i: Int, f: Float) {
         
       }
-      func myFunction(i: Int, f: Float) -> Void {
+      func myFunction(i: Int, f: Float) {
         
       }
     )";
@@ -61,10 +61,10 @@ TEST_GROUP(Semantics, {
   TEST(Redef func alias, {
     const char *source = R"(
       typealias Number = Int;
-      func myFunction(i: Number) -> Void {
+      func myFunction(i: Number) {
         
       }
-      func myFunction(i: Int) -> Void {
+      func myFunction(i: Int) {
         
       }
     )";
@@ -77,10 +77,10 @@ TEST_GROUP(Semantics, {
       typealias Number = Integer;
       typealias SpecialNumber = Number;
       typealias TheNumber = SpecialNumber;
-      func myFunction(i: TheNumber) -> Void {
+      func myFunction(i: TheNumber) {
         
       }
-      func myFunction(i: Int) -> Void {
+      func myFunction(i: Int) {
         
       }
     )";
@@ -89,10 +89,10 @@ TEST_GROUP(Semantics, {
 
   TEST(Undefined symbol, {
     const char *source = R"(
-      func myFunction(i: Number) -> Void {
+      func myFunction(i: Number) {
         
       }
-      func myFunction(i: Int) -> Void {
+      func myFunction(i: Int) {
         
       }
     )";
@@ -101,10 +101,10 @@ TEST_GROUP(Semantics, {
 
   TEST(Function overloading, {
     const char *source = R"(
-      func myFunction(n: Float) -> Void {
+      func myFunction(n: Float) {
         
       }
-      func myFunction(n: Int) -> Void {
+      func myFunction(n: Int) {
         
       }
     )";
