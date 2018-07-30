@@ -23,11 +23,11 @@ void ScopeMan::leaveScope() {
   scope = scope->parent;
 }
 
-sym::Scope *ScopeMan::current() const {
+sym::Scope *ScopeMan::cur() const {
   return scope;
 }
 
-sym::Scope *ScopeMan::parent() const {
+sym::Scope *ScopeMan::par() const {
   assert(scope);
   return scope->parent;
 }

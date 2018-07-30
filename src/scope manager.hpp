@@ -26,8 +26,8 @@ public:
     return newScopePtr;
   }
   void leaveScope();
-  sym::Scope *current() const;
-  sym::Scope *parent() const;
+  sym::Scope *cur() const;
+  sym::Scope *par() const;
 
 private:
   sym::Scopes &scopes;

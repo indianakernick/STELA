@@ -43,7 +43,7 @@ public:
     const sym::ExprType left = etype;
     as.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = lookup(man.current(), log, sym::FunKey{sym::Name(opName(as.oper)), {left, right}}, as.loc);
+    sym::Func *func = lookup(man.cur(), log, sym::FunKey{sym::Name(opName(as.oper)), {left, right}}, as.loc);
     etype = func->ret;
   }
   void visit(ast::BinaryExpr &bin) override {
@@ -51,12 +51,12 @@ public:
     const sym::ExprType left = etype;
     bin.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = lookup(man.current(), log, sym::FunKey{sym::Name(opName(bin.oper)), {left, right}}, bin.loc);
+    sym::Func *func = lookup(man.cur(), log, sym::FunKey{sym::Name(opName(bin.oper)), {left, right}}, bin.loc);
     etype = func->ret;
   }
   void visit(ast::UnaryExpr &un) override {
     un.expr->accept(*this);
-    sym::Func *func = lookup(man.current(), log, {sym::Name(opName(un.oper)), {etype}}, un.loc);
+    sym::Func *func = lookup(man.cur(), log, {sym::Name(opName(un.oper)), {etype}}, un.loc);
     etype = func->ret;
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
@@ -77,7 +77,7 @@ public:
     const sym::ExprType funcType = etype;
     const sym::FuncParams params = argTypes(call.args);
     if (funcType.type == nullptr) {
-      sym::Func *func = lookup(man.current(), log, {sym::Name(funcName), params}, call.loc);
+      sym::Func *func = lookup(man.cur(), log, {sym::Name(funcName), params}, call.loc);
       etype = func->ret;
     } else {
       if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
@@ -108,7 +108,7 @@ public:
     }
   }
   void visit(ast::InitCall &init) override {
-    etype.type = type(man.current(), log, init.type);
+    etype.type = type(man.cur(), log, init.type);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::Identifier &id) override {
@@ -117,7 +117,7 @@ public:
       // null type indicates that `name` is the name of a free function
       etype.type = nullptr;
     } else {
-      sym::Symbol *symbol = lookup(man.current(), log, sym::Name(id.name), id.loc);
+      sym::Symbol *symbol = lookup(man.cur(), log, sym::Name(id.name), id.loc);
       if (auto *obj = dynamic_cast<sym::Object *>(symbol)) {
         etype = obj->etype;
       } else {
@@ -136,7 +136,7 @@ public:
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
     const sym::ExprType cond = etype;
-    if (cond.type != lookup(man.current(), log, "Bool", {})) {
+    if (cond.type != lookup(man.cur(), log, "Bool", {})) {
       log.ferror(tern.loc) << "Condition of ternary conditional must be a Bool" << endlog;
     }
     tern.tru->accept(*this);
@@ -151,26 +151,26 @@ public:
   }
   
   void visit(ast::StringLiteral &s) override {
-    etype.type = lookup(man.current(), log, "String", s.loc);
+    etype.type = lookup(man.cur(), log, "String", s.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::CharLiteral &c) override {
-    etype.type = lookup(man.current(), log, "Char", c.loc);
+    etype.type = lookup(man.cur(), log, "Char", c.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
     if (num.type == NumberVariant::Float) {
-      etype.type = lookup(man.current(), log, "Double", n.loc);
+      etype.type = lookup(man.cur(), log, "Double", n.loc);
     } else if (num.type == NumberVariant::Int) {
-      etype.type = lookup(man.current(), log, "Int64", n.loc);
+      etype.type = lookup(man.cur(), log, "Int64", n.loc);
     } else if (num.type == NumberVariant::UInt) {
-      etype.type = lookup(man.current(), log, "UInt64", n.loc);
+      etype.type = lookup(man.cur(), log, "UInt64", n.loc);
     }
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::BoolLiteral &b) override {
-    etype.type = lookup(man.current(), log, "Bool", b.loc);
+    etype.type = lookup(man.cur(), log, "Bool", b.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::ArrayLiteral &) override {}
