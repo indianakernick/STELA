@@ -48,8 +48,18 @@ add_library(STELA STATIC
         "src/format.cpp"
         "src/console format.cpp"
         "src/html format.cpp"
-        "src/symbol manager.cpp"
-        "src/symbol manager.hpp"
+        "src/scope manager.cpp"
+        "src/scope manager.hpp"
+        "src/member access scope.cpp"
+        "src/member access scope.hpp"
+        "src/compare params args.cpp"
+        "src/compare params args.hpp"
+        "src/scope insert.cpp"
+        "src/scope insert.hpp"
+        "src/scope lookup.cpp"
+        "src/scope lookup.hpp"
+        "src/scope find.cpp"
+        "src/scope find.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

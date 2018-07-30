@@ -8,6 +8,7 @@
 
 #include "infer type.hpp"
 
+#include "scope lookup.hpp"
 #include "operator name.hpp"
 #include "number literal.hpp"
 
@@ -31,17 +32,18 @@ public:
   };
 
   Visitor(
-    stela::SymbolMan &man,
+    ScopeMan &man,
+    Log &log,
     const Func func,
     sym::StructType *strut = nullptr
-  ) : man{man}, log{man.logger()}, strut{strut}, func{func} {}
+  ) : man{man}, log{log}, strut{strut}, func{func} {}
 
   void visit(ast::Assignment &as) override {
     as.left->accept(*this);
     const sym::ExprType left = etype;
     as.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = man.lookup(sym::Name(opName(as.oper)), {left, right}, as.loc);
+    sym::Func *func = lookup(man.current(), log, sym::FunKey{sym::Name(opName(as.oper)), {left, right}}, as.loc);
     etype = func->ret;
   }
   void visit(ast::BinaryExpr &bin) override {
@@ -49,12 +51,12 @@ public:
     const sym::ExprType left = etype;
     bin.right->accept(*this);
     const sym::ExprType right = etype;
-    sym::Func *func = man.lookup(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
+    sym::Func *func = lookup(man.current(), log, sym::FunKey{sym::Name(opName(bin.oper)), {left, right}}, bin.loc);
     etype = func->ret;
   }
   void visit(ast::UnaryExpr &un) override {
     un.expr->accept(*this);
-    sym::Func *func = man.lookup(sym::Name(opName(un.oper)), {etype}, un.loc);
+    sym::Func *func = lookup(man.current(), log, {sym::Name(opName(un.oper)), {etype}}, un.loc);
     etype = func->ret;
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
@@ -75,12 +77,12 @@ public:
     const sym::ExprType funcType = etype;
     const sym::FuncParams params = argTypes(call.args);
     if (funcType.type == nullptr) {
-      sym::Func *func = man.lookup(sym::Name(funcName), params, call.loc);
+      sym::Func *func = lookup(man.current(), log, {sym::Name(funcName), params}, call.loc);
       etype = func->ret;
     } else {
       if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
-        sym::Func *func = man.memberLookup(strut, sym::Name(funcName), params, call.loc);
-        etype = func->ret;
+        /*sym::Func *func = lookup(man.current(), log, strut, {sym::Name(funcName), params}, call.loc);
+        etype = func->ret;*/
       } else {
         assert(false);
       }
@@ -94,19 +96,19 @@ public:
       name = mem.member;
     } else {
       if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
-        sym::Symbol *symbol = man.memberLookup(strut, sym::Name(mem.member), mem.loc);
+        /*sym::Symbol *symbol = lookup(man.current(), log, strut, sym::Name(mem.member), mem.loc);
         if (auto *obj = dynamic_cast<sym::Object *>(symbol)) {
           etype = obj->etype;
         } else {
           assert(false);
-        }
+        }*/
       } else {
         assert(false);
       }
     }
   }
   void visit(ast::InitCall &init) override {
-    etype.type = man.type(init.type);
+    etype.type = type(man.current(), log, init.type);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::Identifier &id) override {
@@ -115,7 +117,7 @@ public:
       // null type indicates that `name` is the name of a free function
       etype.type = nullptr;
     } else {
-      sym::Symbol *symbol = man.lookup(sym::Name(id.name), id.loc);
+      sym::Symbol *symbol = lookup(man.current(), log, sym::Name(id.name), id.loc);
       if (auto *obj = dynamic_cast<sym::Object *>(symbol)) {
         etype = obj->etype;
       } else {
@@ -134,7 +136,7 @@ public:
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
     const sym::ExprType cond = etype;
-    if (cond.type != man.lookup("Bool", {})) {
+    if (cond.type != lookup(man.current(), log, "Bool", {})) {
       log.ferror(tern.loc) << "Condition of ternary conditional must be a Bool" << endlog;
     }
     tern.tru->accept(*this);
@@ -149,26 +151,26 @@ public:
   }
   
   void visit(ast::StringLiteral &s) override {
-    etype.type = man.lookup("String", s.loc);
+    etype.type = lookup(man.current(), log, "String", s.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::CharLiteral &c) override {
-    etype.type = man.lookup("Char", c.loc);
+    etype.type = lookup(man.current(), log, "Char", c.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
     if (num.type == NumberVariant::Float) {
-      etype.type = man.lookup("Double", n.loc);
+      etype.type = lookup(man.current(), log, "Double", n.loc);
     } else if (num.type == NumberVariant::Int) {
-      etype.type = man.lookup("Int64", n.loc);
+      etype.type = lookup(man.current(), log, "Int64", n.loc);
     } else if (num.type == NumberVariant::UInt) {
-      etype.type = man.lookup("UInt64", n.loc);
+      etype.type = lookup(man.current(), log, "UInt64", n.loc);
     }
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::BoolLiteral &b) override {
-    etype.type = man.lookup("Bool", b.loc);
+    etype.type = lookup(man.current(), log, "Bool", b.loc);
     etype.cat = sym::ValueCat::rvalue;
   }
   void visit(ast::ArrayLiteral &) override {}
@@ -178,7 +180,7 @@ public:
   sym::ExprType etype;
 
 private:
-  SymbolMan &man;
+  ScopeMan &man;
   Log &log;
   std::string_view name;
   sym::StructType *strut;
@@ -188,28 +190,30 @@ private:
 
 }
 
-sym::ExprType stela::exprFunc(SymbolMan &man, ast::Expression *expr) {
-  Visitor visitor{man, Visitor::Func::free};
+sym::ExprType stela::exprFunc(ScopeMan &man, Log &log, ast::Expression *expr) {
+  Visitor visitor{man, log, Visitor::Func::free};
   expr->accept(visitor);
   return visitor.etype;
 }
 
 sym::ExprType stela::exprMemFunc(
-  SymbolMan &man,
+  ScopeMan &man,
+  Log &log,
   ast::Expression *expr,
   sym::StructType *strut
 ) {
-  Visitor visitor{man, Visitor::Func::member, strut};
+  Visitor visitor{man, log, Visitor::Func::member, strut};
   expr->accept(visitor);
   return visitor.etype;
 }
 
 sym::ExprType stela::exprStatFunc(
-  SymbolMan &man,
+  ScopeMan &man,
+  Log &log,
   ast::Expression *expr,
   sym::StructType *strut
 ) {
-  Visitor visitor{man, Visitor::Func::static_, strut};
+  Visitor visitor{man, log, Visitor::Func::static_, strut};
   expr->accept(visitor);
   return visitor.etype;
 }

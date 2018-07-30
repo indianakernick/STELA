@@ -10,13 +10,14 @@
 #define stela_infer_type_hpp
 
 #include "ast.hpp"
-#include "symbol manager.hpp"
+#include "log output.hpp"
+#include "scope manager.hpp"
 
 namespace stela {
 
-sym::ExprType exprFunc(SymbolMan &, ast::Expression *);
-sym::ExprType exprMemFunc(SymbolMan &, ast::Expression *, sym::StructType *);
-sym::ExprType exprStatFunc(SymbolMan &, ast::Expression *, sym::StructType *);
+sym::ExprType exprFunc(ScopeMan &, Log &, ast::Expression *);
+sym::ExprType exprMemFunc(ScopeMan &, Log &, ast::Expression *, sym::StructType *);
+sym::ExprType exprStatFunc(ScopeMan &, Log &, ast::Expression *, sym::StructType *);
 
 }
 

@@ -35,7 +35,7 @@ sym::Symbol *UInt16 = nullptr;
 sym::Symbol *UInt32 = nullptr;
 sym::Symbol *UInt64 = nullptr;
 
-void insertTypes(sym::Table &table) {
+void insertTypes(sym::UnorderedTable &table) {
   #define INSERT(TYPE)                                                          \
     TYPE = table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})->second.get()
   
@@ -61,25 +61,25 @@ void insertTypes(sym::Table &table) {
   #undef INSERT
 }
 
-#define INSERT_INT(OP) \
-  INSERT(OP, Char); \
-  INSERT(OP, Int8); \
-  INSERT(OP, Int16); \
-  INSERT(OP, Int32); \
-  INSERT(OP, Int64); \
-  INSERT(OP, UInt8); \
-  INSERT(OP, UInt16); \
-  INSERT(OP, UInt32); \
+#define INSERT_INT(OP)                                                          \
+  INSERT(OP, Char);                                                             \
+  INSERT(OP, Int8);                                                             \
+  INSERT(OP, Int16);                                                            \
+  INSERT(OP, Int32);                                                            \
+  INSERT(OP, Int64);                                                            \
+  INSERT(OP, UInt8);                                                            \
+  INSERT(OP, UInt16);                                                           \
+  INSERT(OP, UInt32);                                                           \
   INSERT(OP, UInt64)
 
-#define INSERT_NUM(OP) \
-  INSERT_INT(OP); \
-  INSERT(OP, Float); \
-  INSERT(OP, Double) \
+#define INSERT_NUM(OP)                                                          \
+  INSERT_INT(OP);                                                               \
+  INSERT(OP, Float);                                                            \
+  INSERT(OP, Double)
 
-#define INSERT_ALL(OP) \
-  INSERT_NUM(OP); \
-  INSERT(OP, Bool); \
+#define INSERT_ALL(OP)                                                          \
+  INSERT_NUM(OP);                                                               \
+  INSERT(OP, Bool);                                                             \
   INSERT(OP, String);
 
 sym::SymbolPtr makeBinOp(sym::Symbol *type, sym::Symbol *ret) {
@@ -98,8 +98,8 @@ sym::SymbolPtr makeAssignOp(sym::Symbol *type) {
   return func;
 }
 
-void insertAssign(sym::Table &table) {
-  #define INSERT(OP, TYPE) \
+void insertAssign(sym::UnorderedTable &table) {
+  #define INSERT(OP, TYPE)                                                      \
     table.insert({sym::Name(opName(ast::AssignOp::OP)), makeAssignOp(TYPE)})
   
   INSERT_ALL(assign);
@@ -118,8 +118,8 @@ void insertAssign(sym::Table &table) {
   #undef INSERT
 }
 
-void insertBin(sym::Table &table) {
-  #define INSERT(OP, TYPE) \
+void insertBin(sym::UnorderedTable &table) {
+  #define INSERT(OP, TYPE)                                                      \
     table.insert({sym::Name(opName(ast::BinOp::OP)), makeAssignOp(TYPE)})
   
   INSERT(bool_or, Bool);
@@ -137,7 +137,7 @@ void insertBin(sym::Table &table) {
   INSERT_NUM(pow);
   
   #undef INSERT
-  #define INSERT(OP, TYPE) \
+  #define INSERT(OP, TYPE)                                                      \
     table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(TYPE, Bool)})
   
   INSERT_ALL(eq);
@@ -171,8 +171,8 @@ sym::SymbolPtr makePostOp(sym::Symbol *type) {
   return func;
 }
 
-void insertUn(sym::Table &table) {
-  #define INSERT(OP, TYPE) \
+void insertUn(sym::UnorderedTable &table) {
+  #define INSERT(OP, TYPE)                                                      \
     table.insert({sym::Name(opName(ast::UnOp::OP)), MAKE(TYPE)})
   #define MAKE makeUnOp
   
@@ -199,9 +199,7 @@ void insertUn(sym::Table &table) {
 }
 
 stela::sym::ScopePtr stela::createBuiltinScope() {
-  sym::ScopePtr scope = std::make_unique<sym::Scope>();
-  scope->type = sym::ScopeType::name_space;
-  scope->parent = nullptr;
+  auto scope = std::make_unique<sym::NSScope>(nullptr);
   insertTypes(scope->table);
   insertAssign(scope->table);
   insertBin(scope->table);

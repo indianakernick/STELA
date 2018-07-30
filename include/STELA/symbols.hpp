@@ -24,37 +24,94 @@ struct Symbol {
   // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
 };
-
 using SymbolPtr = std::unique_ptr<Symbol>;
+
+class ScopeVisitor;
+
+struct Scope {
+  explicit Scope(Scope *const parent)
+    : parent{parent} {}
+  virtual ~Scope() = default;
+
+  virtual void accept(ScopeVisitor &) = 0;
+
+  Scope *const parent;
+};
+using ScopePtr = std::unique_ptr<Scope>;
+using Scopes = std::vector<ScopePtr>;
+
 using Name = std::string;
-using Table = std::unordered_multimap<Name, SymbolPtr>;
-struct OrderedTableRow {
+using UnorderedTable = std::unordered_multimap<Name, SymbolPtr>;
+
+struct NSScope : Scope {
+  explicit NSScope(Scope *const parent)
+    : Scope{parent} {}
+
+  void accept(ScopeVisitor &) override;
+
+  UnorderedTable table;
+};
+
+struct FuncScope : Scope {
+  explicit FuncScope(Scope *const parent)
+    : Scope{parent} {}
+  
+  void accept(ScopeVisitor &) override;
+  
+  UnorderedTable table;
+};
+
+enum class MemAccess {
+  public_,
+  private_
+};
+
+enum class MemScope {
+  instance,
+  static_
+};
+
+struct StructTableRow {
+  Name name;
+  MemAccess access;
+  MemScope scope;
+  SymbolPtr val;
+};
+using StructTable = std::vector<StructTableRow>;
+
+struct StructScope : Scope {
+  explicit StructScope(Scope *const parent)
+    : Scope{parent} {}
+  
+  void accept(ScopeVisitor &) override;
+  
+  StructTable table;
+};
+
+struct EnumTableRow {
   Name key;
   SymbolPtr val;
 };
-using OrderedTable = std::vector<OrderedTableRow>;
+using EnumTable = std::vector<EnumTableRow>;
 
-enum class ScopeType {
-  name_space,
-  function,
-  structure,
-  enumeration
+struct EnumScope : Scope {
+  explicit EnumScope(Scope *const parent)
+    : Scope{parent} {}
+
+  void accept(ScopeVisitor &) override;
+
+  EnumTable table;
 };
 
-struct Scope {
-  Table table;
-  Scope *parent = nullptr;
-  ScopeType type;
+class ScopeVisitor {
+public:
+  virtual ~ScopeVisitor() = default;
+  
+  virtual void visit(NSScope &) = 0;
+  virtual void visit(FuncScope &) = 0;
+  virtual void visit(StructScope &) = 0;
+  virtual void visit(EnumScope &) = 0;
 };
-
-struct OrderedScope {
-  OrderedTable table;
-  Scope *parent = nullptr;
-  ScopeType type;
-};
-
-using ScopePtr = std::unique_ptr<Scope>;
-using Scopes = std::vector<ScopePtr>;
 
 struct BuiltinType final : Symbol {
   enum Enum {
@@ -77,11 +134,11 @@ struct BuiltinType final : Symbol {
 };
 
 struct StructType final : Symbol {
-  Scope *scope;
+  StructScope *scope;
 };
 
 struct EnumType final : Symbol {
-  Scope *scope;
+  EnumScope *scope;
 };
 
 struct TypeAlias final : Symbol {
@@ -117,22 +174,24 @@ using FuncParams = std::vector<ExprType>;
 struct Func final : Symbol {
   ExprType ret;
   FuncParams params;
-  Scope *scope;
+  FuncScope *scope;
 };
 using FuncPtr = std::unique_ptr<Func>;
 
-enum class MemAccess {
-  public_,
-  private_
+struct FunKey {
+  Name name;
+  FuncParams params;
 };
 
-enum class MemScope {
-  instance,
-  static_
+struct MemKey {
+  Name name;
+  MemAccess access;
+  MemScope scope;
 };
 
-struct Member {
-  SymbolPtr symbol;
+struct MemFunKey {
+  Name name;
+  FuncParams params;
   MemAccess access;
   MemScope scope;
 };
