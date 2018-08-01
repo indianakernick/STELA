@@ -8,6 +8,7 @@
 
 #include "scope manager.hpp"
 
+#include <cassert>
 #include "compare params args.hpp"
 
 using namespace stela;

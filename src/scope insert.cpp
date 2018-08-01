@@ -9,128 +9,211 @@
 #include "scope insert.hpp"
 
 #include "scope find.hpp"
+#include "scope lookup.hpp"
+#include "member access scope.hpp"
 #include "compare params args.hpp"
 
 using namespace stela;
 
 namespace {
 
-class InsertVisitor final : public sym::ScopeVisitor {
-public:
-  InsertVisitor(const sym::Name &name, sym::SymbolPtr symbol)
-    : name{name}, symbol{std::move(symbol)} {}
-
-  void visit(sym::NSScope &scope) {
-    insert(scope.table);
-  }
-  void visit(sym::FuncScope &scope) {
-    insert(scope.table);
-  }
-  void visit(sym::StructScope &) {
-    assert(false);
-  }
-  void visit(sym::EnumScope &scope) {
-    scope.table.push_back({name, std::move(symbol)});
-  }
-
-private:
-  const sym::Name &name;
-  sym::SymbolPtr symbol;
-  
-  void insert(sym::UnorderedTable &table) {
-    table.insert({name, std::move(symbol)});
-  }
-};
-
-void insertSymbol(sym::Scope *const scope, const sym::Name &name, sym::SymbolPtr symbol) {
-  InsertVisitor inserter{name, std::move(symbol)};
-  scope->accept(inserter);
+std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
+  auto funcSym = std::make_unique<sym::Func>();
+  funcSym->loc = func.loc;
+  return funcSym;
 }
 
-}
-
-void stela::insert(
-  sym::Scope *const scope,
-  Log &log,
-  const sym::Name name,
-  sym::SymbolPtr symbol
-) {
-  sym::Symbol *const dupSym = find(scope, name);
-  if (dupSym) {
-    log.ferror(symbol->loc) << "Redefinition of symbol \"" << name
-      << "\" previously declared at " << dupSym->loc << endlog;
+sym::ExprType inferRetType(sym::Scope *scope, Log &log, const ast::Func &func) {
+  if (func.ret) {
+    return {type(scope, log, func.ret), sym::ValueCat::rvalue};
   } else {
-    insertSymbol(scope, name, std::move(symbol));
+    // @TODO infer return type
+    log.warn(func.loc) << "Return type is Void by default" << endlog;
+    return {lookup(scope, log, "Void", func.loc), sym::ValueCat::rvalue};
   }
 }
 
-sym::Func *stela::insert(
-  sym::Scope *const scope,
-  Log &log,
-  const sym::Name name,
-  sym::FuncPtr func
-) {
-  const std::vector<sym::Symbol *> symbols = findMany(scope, name);
-  for (sym::Symbol *const symbol : symbols) {
+sym::ExprType selfType(sym::StructType *const structType) {
+  return {structType, sym::ValueCat::lvalue_var};
+}
+
+auto makeSelf(sym::Func &funcSym, sym::StructType *const structType) {
+  auto self = std::make_unique<sym::Object>();
+  self->loc = funcSym.loc;
+  self->etype = selfType(structType);
+  return self;
+}
+
+auto makeParam(const sym::ExprType &etype, const ast::FuncParam &param) {
+  auto paramSym = std::make_unique<sym::Object>();
+  paramSym->loc = param.loc;
+  paramSym->etype = etype;
+  return paramSym;
+}
+
+}
+
+UnorderedInserter::UnorderedInserter(sym::UnorderedScope *scope, Log &log)
+  : scope{scope}, log{log} {
+  assert(scope);
+}
+
+void UnorderedInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
+  const auto iter = scope->table.find(name);
+  if (iter != scope->table.end()) {
+    log.ferror(symbol->loc) << "Redefinition of symbol \"" << name
+      << "\" previously declared at " << iter->second->loc << endlog;
+  } else {
+    scope->table.insert({name, std::move(symbol)});
+  }
+}
+
+sym::Func *UnorderedInserter::insert(const ast::Func &func) {
+  std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+  funcSym->params = funcParams(scope, log, func.params);
+  funcSym->ret = inferRetType(scope, log, func);
+  const auto [beg, end] = scope->table.equal_range(sym::Name(func.name));
+  for (auto s = beg; s != end; ++s) {
+    sym::Symbol *const symbol = s->second.get();
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
     if (dupFunc) {
-      if (sameParams(dupFunc->params, func->params)) {
-        log.ferror(func->loc) << "Redefinition of function \"" << name
+      if (sameParams(dupFunc->params, funcSym->params)) {
+        log.ferror(funcSym->loc) << "Redefinition of function \"" << func.name
           << "\" previously declared at " << symbol->loc << endlog;
       }
     } else {
-      log.ferror(func->loc) << "Redefinition of function \"" << name
+      log.ferror(funcSym->loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
         << symbol->loc << endlog;
     }
   }
-  sym::Func *const ret = func.get();
-  insertSymbol(scope, name, std::move(func));
+  sym::Func *const ret = funcSym.get();
+  scope->table.insert({sym::Name(func.name), std::move(funcSym)});
   return ret;
 }
 
-void stela::insert(
-  sym::StructScope *const scope,
-  Log &log,
-  const sym::MemKey &key,
-  sym::SymbolPtr symbol
-) {
-  for (const sym::StructTableRow &row : scope->table) {
-    if (row.name == key.name) {
-      log.ferror(symbol->loc) << "Redefinition of member \"" << key.name
+void UnorderedInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
+  for (size_t i = 0; i != funcSym->params.size(); ++i) {
+    funcSym->scope->table.insert({
+      sym::Name(func.params[i].name),
+      makeParam(funcSym->params[i], func.params[i])
+    });
+  }
+}
+
+NSInserter::NSInserter(sym::NSScope *scope, Log &log)
+  : UnorderedInserter{scope, log} {}
+
+FuncInserter::FuncInserter(sym::FuncScope *scope, Log &log)
+  : UnorderedInserter{scope, log} {}
+
+BlockInserter::BlockInserter(sym::BlockScope *scope, Log &log)
+  : UnorderedInserter{scope, log} {}
+
+StructInserter::StructInserter(sym::StructType *strut, Log &log)
+  : strut{strut}, log{log}, access{}, scope{} {
+  assert(strut);
+}
+
+void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
+  for (const sym::StructTableRow &row : strut->scope->table) {
+    if (row.name == name) {
+      log.ferror(symbol->loc) << "Redefinition of member \"" << name
         << "\" previously declared at " << row.val->loc << endlog;
     }
   }
-  scope->table.push_back({key.name, key.access, key.scope, std::move(symbol)});
+  strut->scope->table.push_back({name, access, scope, std::move(symbol)});
 }
 
-sym::Func *stela::insert(
-  sym::StructScope *const scope,
-  Log &log,
-  const sym::MemKey &key,
-  sym::FuncPtr func
-) {
-  for (const sym::StructTableRow &row : scope->table) {
-    if (row.name != key.name) {
+sym::Func *StructInserter::insert(const ast::Func &func) {
+  std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+  funcSym->params = funcParams(strut->scope, log, func.params);
+  funcSym->params.insert(funcSym->params.begin(), selfType(strut));
+  funcSym->ret = inferRetType(strut->scope, log, func);
+  sym::StructTable &table = strut->scope->table;
+  for (const sym::StructTableRow &row : table) {
+    if (row.name != func.name) {
       continue;
     }
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(row.val.get());
     if (dupFunc) {
-      if (row.scope != key.scope) {
-        log.ferror(func->loc) << "Cannot overload static and non-static member functions \""
+      if (row.scope != scope) {
+        log.ferror(func.loc) << "Cannot overload static and non-static member functions \""
           << row.name << '"' << endlog;
       }
-      if (sameParams(dupFunc->params, func->params)) {
-        log.ferror(func->loc) << "Redefinition of function \"" << key.name
+      if (sameParams(dupFunc->params, funcSym->params)) {
+        log.ferror(func.loc) << "Redefinition of function \"" << func.name
           << "\" previously declared at " << row.val->loc << endlog;
       }
     } else {
-      log.ferror(func->loc) << "Redefinition of function \"" << key.name
+      log.ferror(func.loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
         << row.val->loc << endlog;
     }
   }
-  sym::Func *const ret = func.get();
-  scope->table.push_back({key.name, key.access, key.scope, std::move(func)});
+  sym::Func *const ret = funcSym.get();
+  table.push_back({sym::Name(func.name), access, scope, std::move(funcSym)});
   return ret;
+}
+
+void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
+  funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut)});
+  for (size_t i = 0; i != funcSym->params.size(); ++i) {
+    funcSym->scope->table.insert({
+      sym::Name(func.params[i].name),
+      makeParam(funcSym->params[i], func.params[i])
+    });
+  }
+}
+
+void StructInserter::accessScope(const ast::Member &member) {
+  access = memAccess(member, log);
+  scope = memScope(member, log);
+}
+
+EnumInserter::EnumInserter(sym::EnumType *enm, Log &log)
+  : enm{enm}, log{log} {
+  assert(enm);
+}
+
+void EnumInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
+  sym::EnumTable &table = enm->scope->table;
+  for (auto r = table.begin(); r != table.end(); ++r) {
+    if (r->key == name) {
+      log.ferror(symbol->loc) << "Redefinition of enum case \"" << name
+        << "\" previously declared at " << r->val->loc << endlog;
+    }
+  }
+  table.push_back({name, std::move(symbol)});
+}
+
+sym::Func *EnumInserter::insert(const ast::Func &) {
+  assert(false);
+}
+
+void EnumInserter::enterFuncScope(sym::Func *, const ast::Func &) {
+  assert(false);
+}
+
+void EnumInserter::insert(const ast::EnumCase &cs) {
+  auto caseSym = std::make_unique<sym::Object>();
+  caseSym->loc = cs.loc;
+  caseSym->etype.type = enm;
+  caseSym->etype.cat = sym::ValueCat::lvalue_let;
+  insert(sym::Name(cs.name), std::move(caseSym));
+}
+
+InserterManager::InserterManager(sym::NSScope *scope, Log &log)
+  : defIns{scope, log}, ins{&defIns} {}
+
+SymbolInserter *InserterManager::set(SymbolInserter *const newIns) {
+  assert(newIns);
+  return std::exchange(ins, newIns);
+}
+SymbolInserter *InserterManager::setDef() {
+  return set(&defIns);
+}
+void InserterManager::restore(SymbolInserter *const oldIns) {
+  assert(oldIns);
+  ins = oldIns;
 }

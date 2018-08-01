@@ -9,30 +9,123 @@
 #ifndef stela_scope_insert_hpp
 #define stela_scope_insert_hpp
 
+#include "ast.hpp"
 #include "symbols.hpp"
 #include "log output.hpp"
+#include "scope manager.hpp"
 
 namespace stela {
 
-void insert(sym::Scope *, Log &, sym::Name, sym::SymbolPtr);
-sym::Func *insert(sym::Scope *, Log &, sym::Name, sym::FuncPtr);
+class SymbolInserter {
+public:
+  virtual ~SymbolInserter() = default;
+  
+  virtual void insert(const sym::Name &, sym::SymbolPtr) = 0;
+  virtual sym::Func *insert(const ast::Func &) = 0;
+  // @TODO might be able to get symbol from AST node
+  virtual void enterFuncScope(sym::Func *, const ast::Func &) = 0;
+};
 
-template <typename Symbol>
-Symbol *insert(sym::Scope *scope, Log &log, const sym::Name name) {
-  auto symbol = std::make_unique<Symbol>();
-  Symbol *const ret = symbol.get();
-  insert(scope, log, name, std::move(symbol));
-  return ret;
-}
-template <typename Symbol, typename AST_Node>
-Symbol *insert(sym::Scope *scope, Log &log, const AST_Node &node) {
-  Symbol *const symbol = insert<Symbol>(scope, log, sym::Name(node.name));
-  symbol->loc = node.loc;
-  return symbol;
-}
+class UnorderedInserter : public SymbolInserter {
+public:
+  UnorderedInserter(sym::UnorderedScope *, Log &);
+  
+  void insert(const sym::Name &, sym::SymbolPtr) override;
+  sym::Func *insert(const ast::Func &) override;
+  void enterFuncScope(sym::Func *, const ast::Func &) override;
 
-void insert(sym::StructScope *, Log &, const sym::MemKey &, sym::SymbolPtr);
-sym::Func *insert(sym::StructScope *, Log &, const sym::MemKey &, sym::FuncPtr);
+private:
+  sym::UnorderedScope *scope;
+  Log &log;
+};
+
+class NSInserter final : public UnorderedInserter {
+public:
+  NSInserter(sym::NSScope *, Log &);
+};
+
+class FuncInserter final : public UnorderedInserter {
+public:
+  FuncInserter(sym::FuncScope *, Log &);
+};
+
+class BlockInserter final : public UnorderedInserter {
+public:
+  BlockInserter(sym::BlockScope *, Log &);
+};
+
+class StructInserter final : public SymbolInserter {
+public:
+  StructInserter(sym::StructType *, Log &);
+
+  void insert(const sym::Name &, sym::SymbolPtr) override;
+  sym::Func *insert(const ast::Func &) override;
+  void enterFuncScope(sym::Func *, const ast::Func &) override;
+
+  void accessScope(const ast::Member &);
+
+private:
+  sym::StructType *strut;
+  Log &log;
+  sym::MemAccess access;
+  sym::MemScope scope;
+};
+
+class EnumInserter final : public SymbolInserter {
+public:
+  EnumInserter(sym::EnumType *, Log &);
+  
+  void insert(const sym::Name &, sym::SymbolPtr) override;
+  sym::Func *insert(const ast::Func &) override;
+  void enterFuncScope(sym::Func *, const ast::Func &) override;
+  
+  void insert(const ast::EnumCase &);
+
+private:
+  sym::EnumType *enm;
+  Log &log;
+};
+
+class InserterManager {
+public:
+  InserterManager(sym::NSScope *, Log &);
+  
+  template <typename Symbol>
+  Symbol *insert(const sym::Name &name) {
+    static_assert(!std::is_same_v<Symbol, sym::Func>);
+    assert(ins);
+    auto symbol = std::make_unique<Symbol>();
+    Symbol *const ret = symbol.get();
+    ins->insert(name, std::move(symbol));
+    return ret;
+  }
+  template <typename Symbol, typename AST_Node>
+  Symbol *insert(const AST_Node &node) {
+    Symbol *const symbol = insert<Symbol>(sym::Name(node.name));
+    symbol->loc = node.loc;
+    return symbol;
+  }
+  void insert(const sym::Name &name, sym::SymbolPtr symbol) {
+    assert(ins);
+    ins->insert(name, std::move(symbol));
+  }
+  sym::Func *insert(const ast::Func &func) {
+    assert(ins);
+    return ins->insert(func);
+  }
+  void enterFuncScope(sym::Func *const funcSym, const ast::Func &func) {
+    assert(ins);
+    ins->enterFuncScope(funcSym, func);
+  }
+  
+  SymbolInserter *set(SymbolInserter *);
+  SymbolInserter *setDef();
+  void restore(SymbolInserter *);
+
+private:
+  NSInserter defIns;
+  SymbolInserter *ins;
+};
 
 }
 

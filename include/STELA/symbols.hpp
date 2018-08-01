@@ -43,22 +43,32 @@ using Scopes = std::vector<ScopePtr>;
 using Name = std::string;
 using UnorderedTable = std::unordered_multimap<Name, SymbolPtr>;
 
-struct NSScope : Scope {
-  explicit NSScope(Scope *const parent)
+struct UnorderedScope : Scope {
+  explicit UnorderedScope(Scope *const parent)
     : Scope{parent} {}
-
-  void accept(ScopeVisitor &) override;
 
   UnorderedTable table;
 };
 
-struct FuncScope : Scope {
+struct NSScope final : UnorderedScope {
+  explicit NSScope(Scope *const parent)
+    : UnorderedScope{parent} {}
+
+  void accept(ScopeVisitor &) override;
+};
+
+struct BlockScope final : UnorderedScope {
+  explicit BlockScope(Scope *const parent)
+    : UnorderedScope{parent} {}
+  
+  void accept(ScopeVisitor &) override {}
+};
+
+struct FuncScope final : UnorderedScope {
   explicit FuncScope(Scope *const parent)
-    : Scope{parent} {}
+    : UnorderedScope{parent} {}
   
   void accept(ScopeVisitor &) override;
-  
-  UnorderedTable table;
 };
 
 enum class MemAccess {
@@ -79,7 +89,7 @@ struct StructTableRow {
 };
 using StructTable = std::vector<StructTableRow>;
 
-struct StructScope : Scope {
+struct StructScope final : Scope {
   explicit StructScope(Scope *const parent)
     : Scope{parent} {}
   
@@ -94,7 +104,7 @@ struct EnumTableRow {
 };
 using EnumTable = std::vector<EnumTableRow>;
 
-struct EnumScope : Scope {
+struct EnumScope final : Scope {
   explicit EnumScope(Scope *const parent)
     : Scope{parent} {}
 
