@@ -107,7 +107,7 @@ void stela::insert(
 sym::Func *stela::insert(
   sym::StructScope *const scope,
   Log &log,
-  const sym::MemFunKey &key,
+  const sym::MemKey &key,
   sym::FuncPtr func
 ) {
   for (const sym::StructTableRow &row : scope->table) {

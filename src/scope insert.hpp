@@ -32,7 +32,7 @@ Symbol *insert(sym::Scope *scope, Log &log, const AST_Node &node) {
 }
 
 void insert(sym::StructScope *, Log &, const sym::MemKey &, sym::SymbolPtr);
-sym::Func *insert(sym::StructScope *, Log &, const sym::MemFunKey &, sym::FuncPtr);
+sym::Func *insert(sym::StructScope *, Log &, const sym::MemKey &, sym::FuncPtr);
 
 }
 
