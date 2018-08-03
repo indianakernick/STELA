@@ -15,7 +15,7 @@ using namespace stela;
 
 ScopeMan::ScopeMan(sym::Scopes &scopes)
   : scopes{scopes} {
-  assert(!scopes.empty());
+  assert(scopes.size() >= 2);
   scope = scopes.back().get();
 }
 
@@ -31,4 +31,12 @@ sym::Scope *ScopeMan::cur() const {
 sym::Scope *ScopeMan::par() const {
   assert(scope);
   return scope->parent;
+}
+
+sym::Scope *ScopeMan::builtin() const {
+  return scopes[0].get();
+}
+
+sym::Scope *ScopeMan::global() const {
+  return scopes[1].get();
 }
