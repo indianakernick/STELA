@@ -61,7 +61,7 @@ struct BlockScope final : UnorderedScope {
   explicit BlockScope(Scope *const parent)
     : UnorderedScope{parent} {}
   
-  void accept(ScopeVisitor &) override {}
+  void accept(ScopeVisitor &) override;
 };
 
 struct FuncScope final : UnorderedScope {
@@ -118,6 +118,7 @@ public:
   virtual ~ScopeVisitor() = default;
   
   virtual void visit(NSScope &) = 0;
+  virtual void visit(BlockScope &) = 0;
   virtual void visit(FuncScope &) = 0;
   virtual void visit(StructScope &) = 0;
   virtual void visit(EnumScope &) = 0;
@@ -172,9 +173,11 @@ constexpr bool convertibleTo(const ValueCat from, const ValueCat to) {
 }
 
 struct ExprType {
-  Symbol *type;
+  Symbol *type = nullptr;
   ValueCat cat;
 };
+
+constexpr ExprType null_type {};
 
 struct Object final : Symbol {
   ExprType etype;

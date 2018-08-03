@@ -20,6 +20,9 @@ public:
   void visit(sym::NSScope &scope) override {
     find(scope.table);
   }
+  void visit(sym::BlockScope &scope) override {
+    find(scope.table);
+  }
   void visit(sym::FuncScope &scope) override {
     find(scope.table);
   }
@@ -57,6 +60,9 @@ public:
     : name{name} {}
 
   void visit(sym::NSScope &scope) override {
+    find(scope.table);
+  }
+  void visit(sym::BlockScope &scope) override {
     find(scope.table);
   }
   void visit(sym::FuncScope &scope) override {

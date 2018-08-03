@@ -44,14 +44,14 @@ public:
   NSInserter(sym::NSScope *, Log &);
 };
 
-class FuncInserter final : public UnorderedInserter {
-public:
-  FuncInserter(sym::FuncScope *, Log &);
-};
-
 class BlockInserter final : public UnorderedInserter {
 public:
   BlockInserter(sym::BlockScope *, Log &);
+};
+
+class FuncInserter final : public UnorderedInserter {
+public:
+  FuncInserter(sym::FuncScope *, Log &);
 };
 
 class StructInserter final : public SymbolInserter {

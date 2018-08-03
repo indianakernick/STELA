@@ -104,10 +104,10 @@ void UnorderedInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func
 NSInserter::NSInserter(sym::NSScope *scope, Log &log)
   : UnorderedInserter{scope, log} {}
 
-FuncInserter::FuncInserter(sym::FuncScope *scope, Log &log)
+BlockInserter::BlockInserter(sym::BlockScope *scope, Log &log)
   : UnorderedInserter{scope, log} {}
 
-BlockInserter::BlockInserter(sym::BlockScope *scope, Log &log)
+FuncInserter::FuncInserter(sym::FuncScope *scope, Log &log)
   : UnorderedInserter{scope, log} {}
 
 StructInserter::StructInserter(sym::StructType *strut, Log &log)
