@@ -28,7 +28,6 @@ enum class LogPri : uint8_t {
   info,
   warning,
   error,
-  fatal_error,
   nothing
 };
 
@@ -54,7 +53,6 @@ public:
   
   void beginLog(LogCat, LogPri, Loc);
   void beginLog(LogCat, LogPri);
-  // if the priority passed to endLog is fatal_error then throw FatalError
   void endLog(LogCat, LogPri);
   std::streambuf *getStreambuf(LogCat, LogPri);
   

@@ -32,7 +32,7 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
     } else {
       const Token &token = tok.front();
       log.info(token.loc) << "Only declarations are allowed at global scope" << endlog;
-      log.ferror(token.loc) << "Unexpected " << token << " in global scope" << endlog;
+      log.error(token.loc) << "Unexpected " << token << " in global scope" << fatal;
     };
   }
   

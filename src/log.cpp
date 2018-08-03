@@ -36,7 +36,6 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
     case LogPri::warning:
       return stream << "warning";
     case LogPri::error:
-    case LogPri::fatal_error:
       return stream << "error";
     /* LCOV_EXCL_START */
     case LogPri::nothing:
@@ -150,7 +149,7 @@ void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
     std::cerr << con::text_blue;
   } else if (pri == LogPri::warning) {
     std::cerr << con::text_yellow;
-  } else if (pri == LogPri::error || pri == LogPri::fatal_error) {
+  } else if (pri == LogPri::error) {
     std::cerr << con::text_red;
   }
   std::cerr << cat << ' ' << pri;

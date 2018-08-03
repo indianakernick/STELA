@@ -52,7 +52,7 @@ public:
     sym::Symbol *exprType = expr ? exprFunc(man, log, expr.get()).type : nullptr;
     sym::Symbol *symType = atype ? type(man.cur(), log, atype) : exprType;
     if (exprType != nullptr && exprType != symType) {
-      log.ferror(loc) << "Expression and declaration type do not match" << endlog;
+      log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
     return symType;
   }

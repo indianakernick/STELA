@@ -104,7 +104,7 @@ bool parseString(Token &token, Utils::ParseString &str, Log &log) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        log.ferror(+str.lineCol()) << "Unterminated string literal" << endlog;
+        log.error(+str.lineCol()) << "Unterminated string literal" << fatal;
       }
     }
   } else {
@@ -124,7 +124,7 @@ bool parseChar(Token &token, Utils::ParseString &str, Log &log) {
       } else if (str.check('\\')) {
         str.advance();
       } else {
-        log.ferror(+str.lineCol()) << "Unterminated character literal" << endlog;
+        log.error(+str.lineCol()) << "Unterminated character literal" << fatal;
       }
     }
   } else {
@@ -166,7 +166,7 @@ bool parseMultiComment(Utils::ParseString &str, Log &log) {
       } else if (str.check("/*")) {
         ++depth;
       } else if (str.empty()) {
-        log.ferror(loc) << "Unterminated multi-line comment" << endlog;
+        log.error(loc) << "Unterminated multi-line comment" << fatal;
       } else {
         // skipping the '*' or '/' char
         str.advance();
@@ -205,7 +205,7 @@ Tokens stela::lex(const std::string_view source, LogBuf &buf) {
     else if (parseIdent(token, str)) {}
     else if (parseString(token, str, log)) {}
     else if (parseChar(token, str, log)) {}
-    else log.ferror(+str.lineCol()) << "Invalid token" << endlog;
+    else log.error(+str.lineCol()) << "Invalid token" << fatal;
     
     end(token, str);
     tokens.push_back(token);

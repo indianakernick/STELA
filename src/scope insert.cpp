@@ -61,8 +61,8 @@ UnorderedInserter::UnorderedInserter(sym::UnorderedScope *scope, Log &log)
 void UnorderedInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   const auto iter = scope->table.find(name);
   if (iter != scope->table.end()) {
-    log.ferror(symbol->loc) << "Redefinition of symbol \"" << name
-      << "\" previously declared at " << iter->second->loc << endlog;
+    log.error(symbol->loc) << "Redefinition of symbol \"" << name
+      << "\" previously declared at " << iter->second->loc << fatal;
   } else {
     scope->table.insert({name, std::move(symbol)});
   }
@@ -78,13 +78,13 @@ sym::Func *UnorderedInserter::insert(const ast::Func &func) {
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
     if (dupFunc) {
       if (sameParams(dupFunc->params, funcSym->params)) {
-        log.ferror(funcSym->loc) << "Redefinition of function \"" << func.name
-          << "\" previously declared at " << symbol->loc << endlog;
+        log.error(funcSym->loc) << "Redefinition of function \"" << func.name
+          << "\" previously declared at " << symbol->loc << fatal;
       }
     } else {
-      log.ferror(funcSym->loc) << "Redefinition of function \"" << func.name
+      log.error(funcSym->loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
-        << symbol->loc << endlog;
+        << symbol->loc << fatal;
     }
   }
   sym::Func *const ret = funcSym.get();
@@ -118,8 +118,8 @@ StructInserter::StructInserter(sym::StructType *strut, Log &log)
 void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   for (const sym::StructTableRow &row : strut->scope->table) {
     if (row.name == name) {
-      log.ferror(symbol->loc) << "Redefinition of member \"" << name
-        << "\" previously declared at " << row.val->loc << endlog;
+      log.error(symbol->loc) << "Redefinition of member \"" << name
+        << "\" previously declared at " << row.val->loc << fatal;
     }
   }
   strut->scope->table.push_back({name, access, scope, std::move(symbol)});
@@ -138,17 +138,17 @@ sym::Func *StructInserter::insert(const ast::Func &func) {
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(row.val.get());
     if (dupFunc) {
       if (row.scope != scope) {
-        log.ferror(func.loc) << "Cannot overload static and non-static member functions \""
-          << row.name << '"' << endlog;
+        log.error(func.loc) << "Cannot overload static and non-static member functions \""
+          << row.name << '"' << fatal;
       }
       if (sameParams(dupFunc->params, funcSym->params)) {
-        log.ferror(func.loc) << "Redefinition of function \"" << func.name
-          << "\" previously declared at " << row.val->loc << endlog;
+        log.error(func.loc) << "Redefinition of function \"" << func.name
+          << "\" previously declared at " << row.val->loc << fatal;
       }
     } else {
-      log.ferror(func.loc) << "Redefinition of function \"" << func.name
+      log.error(func.loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
-        << row.val->loc << endlog;
+        << row.val->loc << fatal;
     }
   }
   sym::Func *const ret = funcSym.get();
@@ -180,8 +180,8 @@ void EnumInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   sym::EnumTable &table = enm->scope->table;
   for (auto r = table.begin(); r != table.end(); ++r) {
     if (r->key == name) {
-      log.ferror(symbol->loc) << "Redefinition of enum case \"" << name
-        << "\" previously declared at " << r->val->loc << endlog;
+      log.error(symbol->loc) << "Redefinition of enum case \"" << name
+        << "\" previously declared at " << r->val->loc << fatal;
     }
   }
   table.push_back({name, std::move(symbol)});
@@ -210,9 +210,11 @@ SymbolInserter *InserterManager::set(SymbolInserter *const newIns) {
   assert(newIns);
   return std::exchange(ins, newIns);
 }
+
 SymbolInserter *InserterManager::setDef() {
   return set(&defIns);
 }
+
 void InserterManager::restore(SymbolInserter *const oldIns) {
   assert(oldIns);
   ins = oldIns;

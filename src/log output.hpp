@@ -18,21 +18,18 @@ namespace stela {
 struct endlog_t {};
 constexpr endlog_t endlog {};
 
+struct fatal_t {};
+constexpr fatal_t fatal {};
+
 class LogStream {
 public:
   LogStream(LogBuf &, LogCat, LogPri);
-  
-  #ifndef NDEBUG
-  ~LogStream() {
-    // must << endlog before stream is destroyed
-    assert(ended);
-  }
-  #endif
 
   void operator<<(endlog_t);
+  [[noreturn]] void operator<<(fatal_t);
   
   template <typename T>
-  LogStream &operator<<(const T &value) {
+  [[nodiscard]] LogStream &operator<<(const T &value) {
     stream << value;
     return *this;
   }
@@ -42,10 +39,6 @@ private:
   LogBuf &buf;
   LogCat category;
   LogPri priority;
-  
-  #ifndef NDEBUG
-  bool ended = false;
-  #endif
 };
 
 class Log {
@@ -56,14 +49,12 @@ public:
   LogStream info(Loc);
   LogStream warn(Loc);
   LogStream error(Loc);
-  LogStream ferror(Loc);
   LogStream log(LogPri, Loc);
   
   LogStream verbose();
   LogStream info();
   LogStream warn();
   LogStream error();
-  LogStream ferror();
   LogStream log(LogPri);
   
 private:

@@ -35,7 +35,7 @@ public:
   auto expectNode(ParseFunc &&parse, const std::string_view msg) {
     auto node = parse(*this);
     if (node == nullptr) {
-      logger.ferror(beg->loc) << "Expected " << msg << ctxStack << endlog;
+      logger.error(beg->loc) << "Expected " << msg << ctxStack << fatal;
     }
     return node;
   }

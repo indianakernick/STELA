@@ -70,8 +70,8 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
       tok.expectOp(":");
       switchNode->body.nodes.emplace_back(std::move(def));
     } else {
-      tok.log().ferror(tok.loc()) << "Expected case label or statement but found "
-        << tok.front() << tok.contextStack() << endlog;
+      tok.log().error(tok.loc()) << "Expected case label or statement but found "
+        << tok.front() << tok.contextStack() << fatal;
     }
   }
   

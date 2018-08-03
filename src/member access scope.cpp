@@ -34,7 +34,7 @@ public:
   }
   void visit(ast::Init &init) {
     if (astScope == ast::MemScope::static_) {
-      log.ferror(init.loc) << "Cannot mark init as static" << endlog;
+      log.error(init.loc) << "Cannot mark init as static" << fatal;
     }
     scope = sym::MemScope::instance;
   }
