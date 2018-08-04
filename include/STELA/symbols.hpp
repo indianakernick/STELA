@@ -156,26 +156,41 @@ struct TypeAlias final : Symbol {
   Symbol *type;
 };
 
-enum class ValueCat {
-  // order from most restrictive to least restrictive
-  lvalue_let,
-  rvalue,
-  lvalue_var
+enum class ValueMut {
+  let,
+  var
 };
 
-constexpr ValueCat mostRestrictive(const ValueCat a, const ValueCat b) {
-  const int min = std::min(static_cast<int>(a), static_cast<int>(b));
-  return static_cast<ValueCat>(min);
-}
-
-constexpr bool convertibleTo(const ValueCat from, const ValueCat to) {
-  return static_cast<int>(from) >= static_cast<int>(to);
-}
+enum class ValueRef {
+  val,
+  ref
+};
 
 struct ExprType {
   Symbol *type = nullptr;
-  ValueCat cat;
+  ValueMut mut;
+  ValueRef ref;
 };
+
+constexpr ValueMut common(const ValueMut a, const ValueMut b) {
+  return a == ValueMut::let ? a : b;
+}
+
+constexpr ValueRef common(const ValueRef a, const ValueRef b) {
+  return a == ValueRef::val ? a : b;
+}
+
+constexpr ExprType memberType(const ExprType obj, const ExprType mem) {
+  return {mem.type, common(obj.mut, mem.mut), obj.ref};
+}
+
+constexpr bool callMut(const ValueMut param, const ValueMut arg) {
+  return static_cast<int>(param) >= static_cast<int>(arg);
+}
+
+constexpr bool callMutRef(const ExprType param, const ExprType arg) {
+  return param.ref == sym::ValueRef::val || callMut(param.mut, arg.mut);
+}
 
 constexpr ExprType null_type {};
 

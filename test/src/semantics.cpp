@@ -230,4 +230,19 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Enums, {
+    const char *source = R"(
+      enum Dir {
+        up,
+        right,
+        down,
+        left
+      };
+    
+      let south = Dir.down;
+      let east: Dir = Dir.right;
+    )";
+    createSym(source, log);
+  });
 });

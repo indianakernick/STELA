@@ -25,16 +25,16 @@ std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
 
 sym::ExprType inferRetType(sym::Scope *scope, Log &log, const ast::Func &func) {
   if (func.ret) {
-    return {lookupType(scope, log, func.ret), sym::ValueCat::rvalue};
+    return {lookupType(scope, log, func.ret), sym::ValueMut::let, sym::ValueRef::val};
   } else {
     // @TODO infer return type
     log.warn(func.loc) << "Return type is Void by default" << endlog;
-    return {lookupAny(scope, log, "Void", func.loc), sym::ValueCat::rvalue};
+    return {lookupAny(scope, log, "Void", func.loc), sym::ValueMut::let, sym::ValueRef::val};
   }
 }
 
 sym::ExprType selfType(sym::StructType *const structType) {
-  return {structType, sym::ValueCat::lvalue_var};
+  return {structType, sym::ValueMut::var, sym::ValueRef::ref};
 }
 
 auto makeSelf(sym::Func &funcSym, sym::StructType *const structType) {
@@ -199,7 +199,8 @@ void EnumInserter::insert(const ast::EnumCase &cs) {
   auto caseSym = std::make_unique<sym::Object>();
   caseSym->loc = cs.loc;
   caseSym->etype.type = enm;
-  caseSym->etype.cat = sym::ValueCat::lvalue_let;
+  caseSym->etype.mut = sym::ValueMut::let;
+  caseSym->etype.ref = sym::ValueRef::val;
   insert(sym::Name(cs.name), std::move(caseSym));
 }
 

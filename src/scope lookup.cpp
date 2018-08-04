@@ -99,14 +99,6 @@ private:
   Log &log;
 };
 
-sym::ValueCat refToCat(const ast::ParamRef ref) {
-  if (ref == ast::ParamRef::inout) {
-    return sym::ValueCat::lvalue_var;
-  } else {
-    return sym::ValueCat::lvalue_let;
-  }
-}
-
 template <typename ScopeType>
 ScopeType *findNearest(sym::Scope *const scope) {
   if (scope == nullptr) {
@@ -308,10 +300,30 @@ sym::Symbol *stela::lookupType(sym::Scope *scope, Log &log, const ast::TypePtr &
   return visitor.type;
 }
 
+sym::ValueMut refToMut(const ast::ParamRef ref) {
+  if (ref == ast::ParamRef::inout) {
+    return sym::ValueMut::var;
+  } else {
+    return sym::ValueMut::let;
+  }
+}
+
+sym::ValueRef refToRef(const ast::ParamRef ref) {
+  if (ref == ast::ParamRef::inout) {
+    return sym::ValueRef::ref;
+  } else {
+    return sym::ValueRef::val;
+  }
+}
+
 sym::FuncParams stela::lookupParams(sym::Scope *scope, Log &log, const ast::FuncParams &params) {
   sym::FuncParams symParams;
   for (const ast::FuncParam &param : params) {
-    symParams.push_back({lookupType(scope, log, param.type), refToCat(param.ref)});
+    symParams.push_back({
+      lookupType(scope, log, param.type),
+      refToMut(param.ref),
+      refToRef(param.ref)
+    });
   }
   return symParams;
 }
@@ -421,7 +433,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     if (object == nullptr) {
       log.error(loc) << "Member \"" << key.name << "\" is not a variable" << fatal;
     }
-    pushExpr(object->etype);
+    pushExpr(memberType(etype, object->etype));
     return object;
   }
   if (memVarExpr(Expr::Type::static_type)) {

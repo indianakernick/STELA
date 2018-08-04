@@ -84,17 +84,17 @@ void insertTypes(sym::UnorderedTable &table) {
 
 sym::SymbolPtr makeBinOp(sym::Symbol *type, sym::Symbol *ret) {
   auto func = std::make_unique<sym::Func>();
-  func->ret = {ret, sym::ValueCat::rvalue};
-  func->params.push_back({type, sym::ValueCat::rvalue});
-  func->params.push_back({type, sym::ValueCat::rvalue});
+  func->ret = {ret, sym::ValueMut::let, sym::ValueRef::val};
+  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
+  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
   return func;
 }
 
 sym::SymbolPtr makeAssignOp(sym::Symbol *type) {
   auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueCat::lvalue_var};
-  func->params.push_back({type, sym::ValueCat::lvalue_var});
-  func->params.push_back({type, sym::ValueCat::rvalue});
+  func->ret = {type, sym::ValueMut::var, sym::ValueRef::ref};
+  func->params.push_back({type, sym::ValueMut::var, sym::ValueRef::ref});
+  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
   return func;
 }
 
@@ -152,22 +152,22 @@ void insertBin(sym::UnorderedTable &table) {
 
 sym::SymbolPtr makeUnOp(sym::Symbol *type) {
   auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueCat::rvalue};
-  func->params.push_back({type, sym::ValueCat::rvalue});
+  func->ret = {type, sym::ValueMut::let, sym::ValueRef::val};
+  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
   return func;
 }
 
 sym::SymbolPtr makePreOp(sym::Symbol *type) {
   auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueCat::lvalue_var};
-  func->params.push_back({type, sym::ValueCat::lvalue_var});
+  func->ret = {type, sym::ValueMut::var, sym::ValueRef::ref};
+  func->params.push_back({type, sym::ValueMut::var, sym::ValueRef::ref});
   return func;
 }
 
 sym::SymbolPtr makePostOp(sym::Symbol *type) {
   auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueCat::rvalue};
-  func->params.push_back({type, sym::ValueCat::lvalue_var});
+  func->ret = {type, sym::ValueMut::let, sym::ValueRef::val};
+  func->params.push_back({type, sym::ValueMut::var, sym::ValueRef::ref});
   return func;
 }
 

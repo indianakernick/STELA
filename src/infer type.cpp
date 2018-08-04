@@ -74,7 +74,8 @@ public:
   }
   void visit(ast::InitCall &init) override {
     etype.type = tlk.lookupType(init.type);
-    etype.cat = sym::ValueCat::rvalue;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
     // @TODO lookup init function
     //init.definition = lkp.lookupFunc(argTypes(init.args), init.loc);
@@ -101,18 +102,21 @@ public:
       log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
     }
     etype.type = tru.type;
-    etype.cat = mostRestrictive(tru.cat, fals.cat);
+    etype.mut = sym::common(tru.mut, fals.mut);
+    etype.ref = sym::common(tru.ref, fals.ref);
     lkp.setExprType(etype);
   }
   
   void visit(ast::StringLiteral &s) override {
     etype.type = tlk.lookupBuiltinType("String", s.loc);
-    etype.cat = sym::ValueCat::rvalue;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
   void visit(ast::CharLiteral &c) override {
     etype.type = tlk.lookupBuiltinType("Char", c.loc);
-    etype.cat = sym::ValueCat::rvalue;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
   void visit(ast::NumberLiteral &n) override {
@@ -124,12 +128,14 @@ public:
     } else if (num.type == NumberVariant::UInt) {
       etype.type = tlk.lookupBuiltinType("UInt64", n.loc);
     }
-    etype.cat = sym::ValueCat::rvalue;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
   void visit(ast::BoolLiteral &b) override {
     etype.type = tlk.lookupBuiltinType("Bool", b.loc);
-    etype.cat = sym::ValueCat::rvalue;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
   void visit(ast::ArrayLiteral &) override {}

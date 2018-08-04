@@ -17,14 +17,16 @@ bool stela::convParams(
     return false;
   }
   for (size_t i = 0; i != params.size(); ++i) {
-    if (convertibleTo(args[i].cat, params[i].cat)) {
-      if (params[i].cat == sym::ValueCat::rvalue) {
+    const sym::ExprType param = params[i];
+    const sym::ExprType arg = args[i];
+    if (sym::callMutRef(param, arg)) {
+      if (param.ref == sym::ValueRef::val) {
         // @TODO lookup type conversions
-     // if (args[i].type is not convertible to params[i].type) {
-        if (params[i].type != args[i].type) {
+     // if (arg.type is not convertible to param.type) {
+        if (param.type != arg.type) {
           return false;
         }
-      } else if (params[i].type != args[i].type) {
+      } else if (param.type != arg.type) {
         return false;
       }
     } else {
@@ -43,7 +45,12 @@ bool stela::compatParams(
     return false;
   }
   for (size_t i = 0; i != params.size(); ++i) {
-    if (!convertibleTo(args[i].cat, params[i].cat) || params[i].type != args[i].type) {
+    const sym::ExprType param = params[i];
+    const sym::ExprType arg = args[i];
+    if (param.type != arg.type) {
+      return false;
+    }
+    if (!sym::callMutRef(param, arg)) {
       return false;
     }
   }

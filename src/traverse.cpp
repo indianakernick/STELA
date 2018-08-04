@@ -58,13 +58,15 @@ public:
   }
   void visit(ast::Var &var) override {
     auto *varSym = ins.insert<sym::Object>(var);
-    varSym->etype.cat = sym::ValueCat::lvalue_var;
     varSym->etype.type = objectType(var.type, var.expr, var.loc);
+    varSym->etype.mut = sym::ValueMut::var;
+    varSym->etype.ref = sym::ValueRef::val;
   }
   void visit(ast::Let &let) override {
     auto *letSym = ins.insert<sym::Object>(let);
-    letSym->etype.cat = sym::ValueCat::lvalue_let;
     letSym->etype.type = objectType(let.type, let.expr, let.loc);
+    letSym->etype.mut = sym::ValueMut::let;
+    letSym->etype.ref = sym::ValueRef::val;
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
