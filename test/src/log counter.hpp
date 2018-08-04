@@ -19,7 +19,6 @@ public:
   uint32_t info() const;
   uint32_t warn() const;
   uint32_t error() const;
-  uint32_t fatalError() const;
   void reset();
   
 private:
@@ -27,7 +26,6 @@ private:
   uint32_t infoCount = 0;
   uint32_t warnCount = 0;
   uint32_t errorCount = 0;
-  uint32_t fatalErrorCount = 0;
   
   std::streambuf *getBuf(stela::LogCat, stela::LogPri) override;
   void begin(stela::LogCat, stela::LogPri, stela::Loc) override;

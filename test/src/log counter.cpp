@@ -26,12 +26,8 @@ uint32_t CountLogs::error() const {
   return errorCount;
 }
 
-uint32_t CountLogs::fatalError() const {
-  return fatalErrorCount;
-}
-
 void CountLogs::reset() {
-  verboseCount = infoCount = warnCount = errorCount = fatalErrorCount = 0;
+  verboseCount = infoCount = warnCount = errorCount = 0;
 }
 
 std::streambuf *CountLogs::getBuf(stela::LogCat, stela::LogPri) {
@@ -55,9 +51,6 @@ void CountLogs::begin(stela::LogCat, const stela::LogPri pri) {
       break;
     case stela::LogPri::error:
       ++errorCount;
-      break;
-    case stela::LogPri::fatal_error:
-      ++fatalErrorCount;
       break;
     default:
       assert(false);
