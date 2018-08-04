@@ -245,4 +245,32 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Assign to enum, {
+    const char *source = R"(
+      enum Eeeeenum {
+        e
+      };
+    
+      func main() {
+        Eeeeenum.e = 4;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Swap literals, {
+    const char *source = R"(
+      func swap(a: inout Int, b: inout Int) {
+        let temp: Int = a;
+        a = b;
+        b = temp;
+      }
+    
+      func main() {
+        swap(4, 5);
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

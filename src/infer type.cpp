@@ -19,44 +19,29 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(ScopeMan &man, Log &log)
-    : lkp{man.cur(), log}, tlk{man, log}, log{log} {}
+    : lkp{man.cur(), log}, tlk{man, log}, man{man}, log{log} {}
 
   void visit(ast::Assignment &as) override {
-    lkp.enterSubExpr();
-    as.left->accept(*this);
-    lkp.leaveSubExpr();
-    const sym::ExprType left = etype;
-    lkp.enterSubExpr();
-    as.right->accept(*this);
-    lkp.leaveSubExpr();
-    const sym::ExprType right = etype;
+    const sym::ExprType left = getExprType(man, log, as.left.get());
+    const sym::ExprType right = getExprType(man, log, as.right.get());
     as.definition = lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::BinaryExpr &bin) override {
-    lkp.enterSubExpr();
-    bin.left->accept(*this);
-    lkp.leaveSubExpr();
-    const sym::ExprType left = etype;
-    lkp.enterSubExpr();
-    bin.right->accept(*this);
-    lkp.leaveSubExpr();
-    const sym::ExprType right = etype;
+    const sym::ExprType left = getExprType(man, log, bin.left.get());
+    const sym::ExprType right = getExprType(man, log, bin.right.get());
     bin.definition = lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::UnaryExpr &un) override {
-    un.expr->accept(*this);
-    un.definition = lkp.lookupFunc(sym::Name(opName(un.oper)), {etype}, un.loc);
+    const sym::ExprType type = getExprType(man, log, un.expr.get());
+    un.definition = lkp.lookupFunc(sym::Name(opName(un.oper)), {type}, un.loc);
     etype = lkp.getExprType();
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      lkp.enterSubExpr();
-      expr->accept(*this);
-      lkp.leaveSubExpr();
-      params.push_back(etype);
+      params.push_back(getExprType(man, log, expr.get()));
     }
     return params;
   }
@@ -147,6 +132,7 @@ public:
 private:
   ExprLookup lkp;
   TypeLookup tlk;
+  ScopeMan &man;
   Log &log;
 };
 

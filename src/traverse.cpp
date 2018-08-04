@@ -39,7 +39,11 @@ public:
     FuncInserter inserter{funcSym->scope, log};
     SymbolInserter *const old = ins.set(&inserter);
     for (const ast::StatPtr &stat : func.body.nodes) {
-      stat->accept(*this);
+      if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
+        getExprType(man, log, expr);
+      } else {
+        stat->accept(*this);
+      }
     }
     ins.restore(old);
     man.leaveScope();

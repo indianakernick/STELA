@@ -120,7 +120,7 @@ void insertAssign(sym::UnorderedTable &table) {
 
 void insertBin(sym::UnorderedTable &table) {
   #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::BinOp::OP)), makeAssignOp(TYPE)})
+    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(TYPE, TYPE)})
   
   INSERT(bool_or, Bool);
   INSERT(bool_and, Bool);

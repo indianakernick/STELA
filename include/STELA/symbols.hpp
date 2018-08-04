@@ -185,7 +185,7 @@ constexpr ExprType memberType(const ExprType obj, const ExprType mem) {
 }
 
 constexpr bool callMut(const ValueMut param, const ValueMut arg) {
-  return static_cast<int>(param) >= static_cast<int>(arg);
+  return static_cast<int>(param) <= static_cast<int>(arg);
 }
 
 constexpr bool callMutRef(const ExprType param, const ExprType arg) {

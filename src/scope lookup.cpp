@@ -21,7 +21,7 @@ sym::Func *callFunc(
   const sym::FunKey &key,
   const Loc loc
 ) {
-  sym::Func *func = dynamic_cast<sym::Func *>(symbol);
+  auto *func = dynamic_cast<sym::Func *>(symbol);
   if (func == nullptr) {
     // @TODO check if this is a function object
     log.error(loc) << "Calling \"" << key.name
@@ -44,7 +44,7 @@ sym::Func *findFunc(
   const Loc loc
 ) {
   for (sym::Symbol *symbol : symbols) {
-    sym::Func *func = dynamic_cast<sym::Func *>(symbol);
+    auto *func = dynamic_cast<sym::Func *>(symbol);
     // if there is more than one symbol with the same name then those symbols
     // must be functions
     assert(func);
@@ -103,7 +103,7 @@ template <typename ScopeType>
 ScopeType *findNearest(sym::Scope *const scope) {
   if (scope == nullptr) {
     return nullptr;
-  } else if (ScopeType *const dynamic = dynamic_cast<ScopeType *>(scope)) {
+  } else if (auto *dynamic = dynamic_cast<ScopeType *>(scope)) {
     return dynamic;
   } else {
     return findNearest<ScopeType>(scope->parent);
@@ -220,7 +220,7 @@ sym::Object *lookup(
   for (const sym::EnumTableRow &row : scope->table) {
     if (row.key == name) {
       row.val->referenced = true;
-      sym::Object *const object = dynamic_cast<sym::Object *>(row.val.get());
+      auto *object = dynamic_cast<sym::Object *>(row.val.get());
       // an enum is just a bunch of cases
       // a case is an object
       // an enum is just a bunch of objects
@@ -353,16 +353,17 @@ void ExprLookup::call() {
 sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
   if (memFunExpr(Expr::Type::expr)) {
     exprs.pop_back(); // pop expr
-    sym::StructType *const strut = dynamic_cast<sym::StructType *>(etype.type);
+    auto *strut = dynamic_cast<sym::StructType *>(etype.type);
     if (strut == nullptr) {
       log.error(loc) << "Can only call member functions on struct objects" << fatal;
     }
-    const sym::MemFunKey key = {
+    sym::MemFunKey key = {
       exprs.back().name,
       params,
       accessLevel(scope, strut),
       sym::MemScope::instance
     };
+    key.params.insert(key.params.begin(), etype);
     exprs.pop_back(); // pop member
     exprs.pop_back(); // pop call
     sym::Func *const func = lookup(strut->scope, log, key, loc);
@@ -370,8 +371,8 @@ sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     return func;
   }
   if (memFunExpr(Expr::Type::static_type)) {
-    exprs.pop_back(); // pop expr
-    sym::StructType *const strut = dynamic_cast<sym::StructType *>(etype.type);
+    exprs.pop_back(); // pop static_type
+    auto *strut = dynamic_cast<sym::StructType *>(etype.type);
     if (strut == nullptr) {
       log.error(loc) << "Can only call static member functions on struct types" << fatal;
     }
@@ -418,7 +419,7 @@ void ExprLookup::member(const sym::Name &name) {
 sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
     exprs.pop_back(); // pop expr
-    sym::StructType *const strut = dynamic_cast<sym::StructType *>(etype.type);
+    auto *strut = dynamic_cast<sym::StructType *>(etype.type);
     if (strut == nullptr) {
       log.error(loc) << "Can only use . operator on struct objects" << fatal;
     }
@@ -429,7 +430,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     };
     exprs.pop_back(); // pop member
     sym::Symbol *const member = lookup(strut->scope, log, key, loc);
-    sym::Object *const object = dynamic_cast<sym::Object *>(member);
+    auto *object = dynamic_cast<sym::Object *>(member);
     if (object == nullptr) {
       log.error(loc) << "Member \"" << key.name << "\" is not a variable" << fatal;
     }
@@ -438,7 +439,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
   }
   if (memVarExpr(Expr::Type::static_type)) {
     exprs.pop_back(); // pop static_type
-    if (sym::StructType *const strut = dynamic_cast<sym::StructType *>(etype.type)) {
+    if (auto *strut = dynamic_cast<sym::StructType *>(etype.type)) {
       const sym::MemKey key = {
         exprs.back().name,
         accessLevel(scope, strut),
@@ -446,14 +447,14 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
       };
       exprs.pop_back(); // pop member
       sym::Symbol *const member = lookup(strut->scope, log, key, loc);
-      sym::Object *const object = dynamic_cast<sym::Object *>(member);
+      auto *object = dynamic_cast<sym::Object *>(member);
       if (object == nullptr) {
         log.error(loc) << "Static member \"" << key.name << "\" is not a variable" << fatal;
       }
       pushExpr(object->etype);
       return object;
     }
-    if (sym::EnumType *const enm = dynamic_cast<sym::EnumType *>(etype.type)) {
+    if (auto *enm = dynamic_cast<sym::EnumType *>(etype.type)) {
       sym::Object *const cse = lookup(enm->scope, log, exprs.back().name, loc);
       exprs.pop_back(); // pop member
       pushExpr(cse->etype);
@@ -466,15 +467,15 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
 
 sym::Symbol *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
   sym::Symbol *symbol = lookup(scope, log, name, loc);
-  if (sym::Func *const func = dynamic_cast<sym::Func *>(symbol)) {
+  if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     exprs.push_back({Expr::Type::ident, name});
     return nullptr;
   }
-  if (sym::Object *const object = dynamic_cast<sym::Object *>(symbol)) {
+  if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
     pushExpr(object->etype);
     return object;
   }
-  if (sym::TypeAlias *const alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
+  if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
     symbol = alias->type;
   }
   // symbol must be a StructType or EnumType
@@ -504,29 +505,9 @@ sym::ExprType ExprLookup::getExprType() {
   }
 }
 
-void ExprLookup::enterSubExpr() {
-  exprs.push_back({Expr::Type::subexpr});
-}
-
-void ExprLookup::leaveSubExpr() {
-  assert(!exprs.empty());
-  while (exprs.back().type != Expr::Type::subexpr) {
-    exprs.pop_back();
-    assert(!exprs.empty());
-  }
-  exprs.pop_back();
-  etype = sym::null_type;
-  currentEtype = false;
-}
-
 ExprLookup::Expr::Expr(const Type type)
   : type{type}, name{} {
-  assert(
-    type == Type::call ||
-    type == Type::expr ||
-    type == Type::static_type ||
-    type == Type::subexpr
-  );
+  assert(type == Type::call || type == Type::expr || type == Type::static_type);
 }
 
 ExprLookup::Expr::Expr(const Type type, const sym::Name &name)
