@@ -141,6 +141,9 @@ public:
   void setExprType(sym::ExprType);
   sym::ExprType getExprType();
   
+  void enterSubExpr();
+  void leaveSubExpr();
+  
 private:
   struct Expr {
     enum class Type {
@@ -148,7 +151,8 @@ private:
       member,
       ident,
       expr,
-      static_type
+      static_type,
+      subexpr
     } type;
     sym::Name name;
     

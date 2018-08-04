@@ -22,17 +22,25 @@ public:
     : lkp{man.cur(), log}, tlk{man, log}, log{log} {}
 
   void visit(ast::Assignment &as) override {
+    lkp.enterSubExpr();
     as.left->accept(*this);
+    lkp.leaveSubExpr();
     const sym::ExprType left = etype;
+    lkp.enterSubExpr();
     as.right->accept(*this);
+    lkp.leaveSubExpr();
     const sym::ExprType right = etype;
     as.definition = lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::BinaryExpr &bin) override {
+    lkp.enterSubExpr();
     bin.left->accept(*this);
+    lkp.leaveSubExpr();
     const sym::ExprType left = etype;
+    lkp.enterSubExpr();
     bin.right->accept(*this);
+    lkp.leaveSubExpr();
     const sym::ExprType right = etype;
     bin.definition = lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
     etype = lkp.getExprType();
@@ -45,7 +53,9 @@ public:
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
+      lkp.enterSubExpr();
       expr->accept(*this);
+      lkp.leaveSubExpr();
       params.push_back(etype);
     }
     return params;
@@ -53,21 +63,21 @@ public:
   void visit(ast::FuncCall &call) override {
     lkp.call();
     call.func->accept(*this);
-    lkp.setExprType(etype);
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
     etype = call.definition->ret;
   }
   void visit(ast::MemberIdent &mem) override {
     lkp.member(sym::Name(mem.member));
     mem.object->accept(*this);
-    lkp.setExprType(etype);
     mem.definition = lkp.lookupMember(mem.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::InitCall &init) override {
     etype.type = tlk.lookupType(init.type);
     etype.cat = sym::ValueCat::rvalue;
-    init.definition = lkp.lookupFunc(argTypes(init.args), init.loc);
+    lkp.setExprType(etype);
+    // @TODO lookup init function
+    //init.definition = lkp.lookupFunc(argTypes(init.args), init.loc);
   }
   void visit(ast::Identifier &id) override {
     id.definition = lkp.lookupIdent(sym::Name(id.name), id.loc);
@@ -92,15 +102,18 @@ public:
     }
     etype.type = tru.type;
     etype.cat = mostRestrictive(tru.cat, fals.cat);
+    lkp.setExprType(etype);
   }
   
   void visit(ast::StringLiteral &s) override {
     etype.type = tlk.lookupBuiltinType("String", s.loc);
     etype.cat = sym::ValueCat::rvalue;
+    lkp.setExprType(etype);
   }
   void visit(ast::CharLiteral &c) override {
     etype.type = tlk.lookupBuiltinType("Char", c.loc);
     etype.cat = sym::ValueCat::rvalue;
+    lkp.setExprType(etype);
   }
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
@@ -112,10 +125,12 @@ public:
       etype.type = tlk.lookupBuiltinType("UInt64", n.loc);
     }
     etype.cat = sym::ValueCat::rvalue;
+    lkp.setExprType(etype);
   }
   void visit(ast::BoolLiteral &b) override {
     etype.type = tlk.lookupBuiltinType("Bool", b.loc);
     etype.cat = sym::ValueCat::rvalue;
+    lkp.setExprType(etype);
   }
   void visit(ast::ArrayLiteral &) override {}
   void visit(ast::MapLiteral &) override {}

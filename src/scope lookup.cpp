@@ -475,13 +475,13 @@ sym::Symbol *ExprLookup::lookupSelf(const Loc loc) {
 }
 
 void ExprLookup::setExprType(const sym::ExprType type) {
-  if (exprs.back().type != Expr::Type::expr) {
+  if (exprs.empty() || exprs.back().type != Expr::Type::expr) {
     pushExpr(type);
   }
 }
 
 sym::ExprType ExprLookup::getExprType() {
-  if (exprs.back().type == Expr::Type::expr && currentEtype) {
+  if (!exprs.empty() && exprs.back().type == Expr::Type::expr && currentEtype) {
     currentEtype = false;
     if (exprs.size() == 1) {
       exprs.clear();
@@ -492,9 +492,29 @@ sym::ExprType ExprLookup::getExprType() {
   }
 }
 
+void ExprLookup::enterSubExpr() {
+  exprs.push_back({Expr::Type::subexpr});
+}
+
+void ExprLookup::leaveSubExpr() {
+  assert(!exprs.empty());
+  while (exprs.back().type != Expr::Type::subexpr) {
+    exprs.pop_back();
+    assert(!exprs.empty());
+  }
+  exprs.pop_back();
+  etype = sym::null_type;
+  currentEtype = false;
+}
+
 ExprLookup::Expr::Expr(const Type type)
   : type{type}, name{} {
-  assert(type == Type::call || type == Type::expr || type == Type::static_type);
+  assert(
+    type == Type::call ||
+    type == Type::expr ||
+    type == Type::static_type ||
+    type == Type::subexpr
+  );
 }
 
 ExprLookup::Expr::Expr(const Type type, const sym::Name &name)

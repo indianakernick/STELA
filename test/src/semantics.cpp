@@ -197,12 +197,35 @@ TEST_GROUP(Semantics, {
       struct Vec {
         var x: Double;
         var y: Double;
+        
+        init(x: Double, y: Double) {
+          self.x = x;
+          self.y = y;
+        }
+        
+        static var origin = make Vec(0.0, 0.0);
+        
+        func add(other: Vec) {
+          self.x += other.x;
+          self.y += other.y;
+        }
+        func div(val: Double) {
+          self.x /= val;
+          self.y /= val;
+        }
       };
     
       func mid(a: Vec, b: Vec) -> Vec {
-        let x         = (a.x + b.x) / 2.0;
-        let y: Double = (a.y + b.y) / 2.0;
-        return make Vec(x, y);
+        var ret = a;
+        ret.add(b);
+        ret.div(2.0);
+        return ret;
+      }
+    
+      func main() {
+        let middle = mid(Vec.origin, make Vec(2.0, 3.0));
+        let two = (make Vec(2.0, 3.0)).x;
+        let three = two + 1.0;
       }
     )";
     createSym(source, log);

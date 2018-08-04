@@ -158,8 +158,8 @@ struct TypeAlias final : Symbol {
 
 enum class ValueCat {
   // order from most restrictive to least restrictive
-  rvalue,
   lvalue_let,
+  rvalue,
   lvalue_var
 };
 

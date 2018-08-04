@@ -158,10 +158,10 @@ sym::Func *StructInserter::insert(const ast::Func &func) {
 
 void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
   funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut)});
-  for (size_t i = 0; i != funcSym->params.size(); ++i) {
+  for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
       sym::Name(func.params[i].name),
-      makeParam(funcSym->params[i], func.params[i])
+      makeParam(funcSym->params[i + 1], func.params[i])
     });
   }
 }
