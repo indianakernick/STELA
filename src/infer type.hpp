@@ -15,9 +15,7 @@
 
 namespace stela {
 
-sym::ExprType exprFunc(ScopeMan &, Log &, ast::Expression *);
-sym::ExprType exprMemFunc(ScopeMan &, Log &, ast::Expression *, sym::StructType *);
-sym::ExprType exprStatFunc(ScopeMan &, Log &, ast::Expression *, sym::StructType *);
+sym::ExprType getExprType(ScopeMan &, Log &, ast::Expression *);
 
 }
 

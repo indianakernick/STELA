@@ -192,7 +192,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  /*TEST(Struct members, {
+  TEST(Struct members, {
     const char *source = R"(
       struct Vec {
         var x: Double;
@@ -206,5 +206,5 @@ TEST_GROUP(Semantics, {
       }
     )";
     createSym(source, log);
-  });*/
+  });
 });

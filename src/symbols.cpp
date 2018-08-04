@@ -16,6 +16,7 @@
 /* LCOV_EXCL_START */
 
 ACCEPT(NSScope)
+ACCEPT(BlockScope)
 ACCEPT(FuncScope)
 ACCEPT(StructScope)
 ACCEPT(EnumScope)

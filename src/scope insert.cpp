@@ -25,11 +25,11 @@ std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
 
 sym::ExprType inferRetType(sym::Scope *scope, Log &log, const ast::Func &func) {
   if (func.ret) {
-    return {type(scope, log, func.ret), sym::ValueCat::rvalue};
+    return {lookupType(scope, log, func.ret), sym::ValueCat::rvalue};
   } else {
     // @TODO infer return type
     log.warn(func.loc) << "Return type is Void by default" << endlog;
-    return {lookup(scope, log, "Void", func.loc), sym::ValueCat::rvalue};
+    return {lookupAny(scope, log, "Void", func.loc), sym::ValueCat::rvalue};
   }
 }
 
@@ -70,7 +70,7 @@ void UnorderedInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 
 sym::Func *UnorderedInserter::insert(const ast::Func &func) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
-  funcSym->params = funcParams(scope, log, func.params);
+  funcSym->params = lookupParams(scope, log, func.params);
   funcSym->ret = inferRetType(scope, log, func);
   const auto [beg, end] = scope->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
@@ -127,7 +127,7 @@ void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 
 sym::Func *StructInserter::insert(const ast::Func &func) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
-  funcSym->params = funcParams(strut->scope, log, func.params);
+  funcSym->params = lookupParams(strut->scope, log, func.params);
   funcSym->params.insert(funcSym->params.begin(), selfType(strut));
   funcSym->ret = inferRetType(strut->scope, log, func);
   sym::StructTable &table = strut->scope->table;

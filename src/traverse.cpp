@@ -20,7 +20,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(sym::Scopes &scopes, Log &log)
-    : man{scopes}, log{log}, ins{dynamic_cast<sym::NSScope *>(man.cur()), log} {}
+    : man{scopes}, log{log}, ins{man.global(), log}, tlk{man, log} {}
   
   void visit(ast::Block &block) override {
     BlockInserter inserter(man.enterScope<sym::BlockScope>(), log);
@@ -45,12 +45,12 @@ public:
     man.leaveScope();
   }
   sym::Symbol *objectType(
-    const ast::TypePtr &atype,
+    const ast::TypePtr &type,
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    sym::Symbol *exprType = expr ? exprFunc(man, log, expr.get()).type : nullptr;
-    sym::Symbol *symType = atype ? type(man.cur(), log, atype) : exprType;
+    sym::Symbol *exprType = expr ? getExprType(man, log, expr.get()).type : nullptr;
+    sym::Symbol *symType = type ? tlk.lookupType(type) : exprType;
     if (exprType != nullptr && exprType != symType) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
@@ -68,7 +68,7 @@ public:
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
-    aliasSym->type = type(man.cur(), log, alias.type);
+    aliasSym->type = tlk.lookupType(alias.type);
   }
   
   void visit(ast::Init &) override {}
@@ -98,6 +98,7 @@ private:
   ScopeMan man;
   Log &log;
   InserterManager ins;
+  TypeLookup tlk;
 };
 
 }

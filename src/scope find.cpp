@@ -26,8 +26,14 @@ public:
   void visit(sym::FuncScope &scope) override {
     find(scope.table);
   }
-  void visit(sym::StructScope &) override {
-    assert(false);
+  void visit(sym::StructScope &scope) override {
+    for (const sym::StructTableRow &row : scope.table) {
+      if (row.name == name && row.scope == sym::MemScope::static_) {
+        symbol = row.val.get();
+        return;
+      }
+    }
+    symbol = nullptr;
   }
   void visit(sym::EnumScope &scope) override {
     for (const sym::EnumTableRow &row : scope.table) {

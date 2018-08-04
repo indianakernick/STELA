@@ -19,15 +19,17 @@ public:
   
   template <typename Scope>
   Scope *enterScope() {
-    Scope *const newScope = scopes.emplace_back(std::make_unique<Scope>(scope));
-    scope = newScope;
-    return newScope;
+    auto newScope = std::make_unique<Scope>(scope);
+    Scope *const newScopePtr = newScope.get();
+    scope = newScopePtr;
+    scopes.push_back(std::move(newScope));
+    return newScopePtr;
   }
   void leaveScope();
   sym::Scope *cur() const;
   sym::Scope *par() const;
-  sym::Scope *builtin() const;
-  sym::Scope *global() const;
+  sym::NSScope *builtin() const;
+  sym::NSScope *global() const;
 
 private:
   sym::Scopes &scopes;

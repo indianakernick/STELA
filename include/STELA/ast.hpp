@@ -17,6 +17,7 @@
 namespace stela::sym {
 
 struct Symbol;
+struct Func;
 
 }
 
@@ -121,6 +122,7 @@ struct Assignment final : Expression {
   ExprPtr left;
   AssignOp oper;
   ExprPtr right;
+  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -129,6 +131,7 @@ struct BinaryExpr final : Expression {
   ExprPtr left;
   BinOp oper;
   ExprPtr right;
+  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -136,6 +139,7 @@ struct BinaryExpr final : Expression {
 struct UnaryExpr final : Expression {
   UnOp oper;
   ExprPtr expr;
+  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -145,7 +149,7 @@ using FuncArgs = std::vector<ExprPtr>;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
-  sym::Symbol *definition = nullptr;
+  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -161,7 +165,7 @@ struct MemberIdent final : Expression {
 struct InitCall final : Expression {
   TypePtr type;
   FuncArgs args;
-  sym::Symbol *definition = nullptr;
+  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -181,6 +185,8 @@ struct Identifier final : Expression {
 };
 
 struct Self final : Expression {
+  sym::Symbol *definition = nullptr;
+
   void accept(Visitor &) override;
 };
 

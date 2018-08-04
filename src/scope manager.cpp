@@ -33,10 +33,20 @@ sym::Scope *ScopeMan::par() const {
   return scope->parent;
 }
 
-sym::Scope *ScopeMan::builtin() const {
-  return scopes[0].get();
+namespace {
+
+sym::NSScope *assertNS(sym::Scope *const scope) {
+  sym::NSScope *const ns = dynamic_cast<sym::NSScope *>(scope);
+  assert(ns);
+  return ns;
 }
 
-sym::Scope *ScopeMan::global() const {
-  return scopes[1].get();
+}
+
+sym::NSScope *ScopeMan::builtin() const {
+  return assertNS(scopes[0].get());
+}
+
+sym::NSScope *ScopeMan::global() const {
+  return assertNS(scopes[1].get());
 }

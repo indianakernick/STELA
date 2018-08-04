@@ -31,8 +31,8 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
       ast.global.emplace_back(std::move(node));
     } else {
       const Token &token = tok.front();
-      log.info(token.loc) << "Only declarations are allowed at global scope" << endlog;
-      log.error(token.loc) << "Unexpected " << token << " in global scope" << fatal;
+      log.error(token.loc) << "Unexpected " << token << " in global scope" << endlog;
+      log.info(token.loc) << "Only declarations are allowed at global scope" << fatal;
     };
   }
   
