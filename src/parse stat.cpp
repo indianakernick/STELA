@@ -208,7 +208,11 @@ ast::StatPtr stela::parseStat(ParseTokens &tok) {
   if (ast::StatPtr node = parseBlock(tok)) return node;
   if (ast::StatPtr node = parseDecl(tok)) return node;
   if (ast::StatPtr node = parseExprStatement(tok)) return node;
-  if (tok.checkOp(";")) return std::make_unique<ast::EmptyStatement>();
+  if (tok.checkOp(";")) {
+    auto empty = std::make_unique<ast::EmptyStatement>();
+    empty->loc = tok.lastLoc();
+    return empty;
+  }
   return nullptr;
 }
 

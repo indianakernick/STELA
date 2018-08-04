@@ -48,7 +48,9 @@ ast::ExprPtr parseIdent(ParseTokens &tok) {
 
 ast::ExprPtr parseSelf(ParseTokens &tok) {
   if (tok.checkKeyword("self")) {
-    return std::make_unique<ast::Self>();
+    auto self = std::make_unique<ast::Self>();
+    self->loc = tok.lastLoc();
+    return self;
   } else {
     return nullptr;
   }
@@ -88,17 +90,20 @@ ast::ExprPtr parseMisc(ParseTokens &tok) {
       left = makeUnary(ast::UnOp::post_decr, std::move(left));
     } else if (tok.peekOp("(")) {
       auto call = std::make_unique<ast::FuncCall>();
+      call->loc = tok.loc();
       call->func = std::move(left);
       call->args = parseFuncArgs(tok);
       left = std::move(call);
     } else if (tok.checkOp("[")) {
       auto sub = std::make_unique<ast::Subscript>();
+      sub->loc = tok.lastLoc();
       sub->object = std::move(left);
       sub->index = expectExpr(tok, parseExpr);
       tok.expectOp("]");
       left = std::move(sub);
     } else if (tok.checkOp(".")) {
       auto mem = std::make_unique<ast::MemberIdent>();
+      mem->loc = tok.lastLoc();
       mem->object = std::move(left);
       mem->member = tok.expectID();
       left = std::move(mem);
@@ -130,6 +135,7 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
   } else if (tok.checkKeyword("make")) {
     Context ctx = tok.context("object initialization");
     auto init = std::make_unique<ast::InitCall>();
+    init->loc = tok.lastLoc();
     init->type = parseType(tok);
     init->args = parseFuncArgs(tok);
     return init;
