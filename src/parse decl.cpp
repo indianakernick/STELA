@@ -101,6 +101,7 @@ ast::Member parseStructMember(ParseTokens &tok) {
   member.access = parseMemAccess(tok);
   member.scope = parseMemScope(tok);
   member.node = parseDecl(tok);
+  tok.extraSemi();
   return member;
 }
 

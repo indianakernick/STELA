@@ -58,6 +58,8 @@ public:
   bool peekIdentType() const;
   
   bool peekOp(std::string_view) const;
+  
+  void extraSemi();
 
 private:
   const Token *beg;

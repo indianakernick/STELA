@@ -142,6 +142,12 @@ bool stela::ParseTokens::peekOp(const std::string_view view) const {
   return peekOpType() && front().view == view;
 }
 
+void stela::ParseTokens::extraSemi() {
+  while (checkOp(";")) {
+    logger.warn(lastLoc()) << "Extra ;" << endlog;
+  }
+}
+
 void stela::ParseTokens::expectToken() {
   if (empty()) {
     logger.error() << "Unexpected end of input" << ctxStack << fatal;

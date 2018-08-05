@@ -21,14 +21,12 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
   AST ast;
   ParseTokens tok(tokens, log);
   
-  while (!tok.empty()) {
-    if (tok.checkOp(";")) {
-      log.warn(tok.lastLoc()) << "Unnecessary ;" << endlog;
-      continue;
-    }
+  tok.extraSemi();
   
+  while (!tok.empty()) {
     if (ast::DeclPtr node = parseDecl(tok)) {
       ast.global.emplace_back(std::move(node));
+      tok.extraSemi();
     } else {
       const Token &token = tok.front();
       log.error(token.loc) << "Unexpected " << token << " in global scope" << endlog;
