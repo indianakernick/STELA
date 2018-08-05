@@ -245,10 +245,14 @@ TEST_GROUP(Semantics, {
     
       struct MyString {
         var s: String;
-      };
+      }
+    
+      func append(str: inout String) {
+        str += " is still a string";
+      }
     
       func append(str: inout MyString) {
-        str.s += " is still a string";
+        append(str.s);
       }
     
       func main() {
@@ -258,6 +262,17 @@ TEST_GROUP(Semantics, {
       }
     )";
     createSym(source, log);
+  });
+  
+  TEST(Static init, {
+    const char *source = R"(
+      struct MyStruct {
+        static init() {
+          // this is not allowed to be static
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Enums, {
