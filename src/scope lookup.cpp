@@ -43,15 +43,21 @@ sym::Func *findFunc(
   const sym::FunKey &key,
   const Loc loc
 ) {
+  std::vector<sym::Func *> candidates;
   for (sym::Symbol *symbol : symbols) {
     auto *func = dynamic_cast<sym::Func *>(symbol);
     // if there is more than one symbol with the same name then those symbols
     // must be functions
     assert(func);
     if (compatParams(func->params, key.params)) {
-      func->referenced = true;
-      return func;
+      candidates.push_back(func);
     }
+  }
+  if (candidates.size() == 1) {
+    return candidates[0];
+  }
+  if (candidates.size() == 0) {
+    log.error(loc) << "No matching call to overloaded function \"" << key.name << '"' << fatal;
   }
   log.error(loc) << "Ambiguous call to function \"" << key.name << '"' << fatal;
 }

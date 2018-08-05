@@ -104,6 +104,7 @@ void insertAssign(sym::UnorderedTable &table) {
   
   INSERT_ALL(assign);
   INSERT_NUM(add);
+  INSERT(add, String);
   INSERT_NUM(sub);
   INSERT_NUM(mul);
   INSERT_NUM(div);
@@ -130,6 +131,7 @@ void insertBin(sym::UnorderedTable &table) {
   INSERT_INT(bit_shl);
   INSERT_INT(bit_shr);
   INSERT_NUM(add);
+  INSERT(add, String);
   INSERT_NUM(sub);
   INSERT_NUM(mul);
   INSERT_NUM(div);

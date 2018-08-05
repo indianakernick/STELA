@@ -192,7 +192,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Struct members, {
+  TEST(Structs, {
     const char *source = R"(
       struct Vec {
         var x: Double;
@@ -226,6 +226,35 @@ TEST_GROUP(Semantics, {
         let middle = mid(Vec.origin, make Vec(2.0, 3.0));
         let two = (make Vec(2.0, 3.0)).x;
         let three = two + 1.0;
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(More Structs, {
+    const char *source = R"(
+      struct Vec {
+        static typealias StaticIsRedundant = Int;
+        static enum StaticIsRedundant1 {
+          a, b, c
+        }
+        static struct StaticIsRedundant2 {
+          var mem: String;
+        }
+      }
+    
+      struct MyString {
+        var s: String;
+      };
+    
+      func append(str: inout MyString) {
+        str.s += " is still a string";
+      }
+    
+      func main() {
+        var thing = make MyString();
+        thing.s = "A string";
+        append(thing);
       }
     )";
     createSym(source, log);
