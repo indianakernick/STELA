@@ -206,7 +206,9 @@ func anotherDummy(dir: Dir) {
 
   stela::StreamLog log;
   stela::fmt::Tokens tokens = stela::format(source, log);
-  //stela::conFormat(tokens);
+  #if IN_GCOV == 1
+  stela::conFormat(tokens);
+  #endif
   
   stela::HTMLstyles styles;
   styles.doc = true;

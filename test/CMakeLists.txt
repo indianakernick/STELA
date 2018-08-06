@@ -11,6 +11,8 @@ add_executable(Test
         "src/syntax.hpp"
         "src/semantics.cpp"
         "src/semantics.hpp"
+        "src/format.cpp"
+        "src/format.hpp"
 )
 
 set_target_properties(Test
