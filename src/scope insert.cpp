@@ -8,6 +8,7 @@
 
 #include "scope insert.hpp"
 
+#include <cassert>
 #include "scope find.hpp"
 #include "scope lookup.hpp"
 #include "member access scope.hpp"

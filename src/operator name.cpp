@@ -8,6 +8,8 @@
 
 #include "operator name.hpp"
 
+#include <cassert>
+
 std::string_view stela::opName(const ast::AssignOp op) {
   switch (op) {
     case ast::AssignOp::assign:

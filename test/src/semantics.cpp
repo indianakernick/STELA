@@ -317,4 +317,13 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Assign to literal, {
+    const char *source = R"(
+      func main() {
+        4 = 5;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

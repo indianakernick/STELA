@@ -8,6 +8,7 @@
 
 #include "scope lookup.hpp"
 
+#include <cassert>
 #include "scope find.hpp"
 #include "compare params args.hpp"
 

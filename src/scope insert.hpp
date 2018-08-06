@@ -10,6 +10,7 @@
 #define stela_scope_insert_hpp
 
 #include "ast.hpp"
+#include <cassert>
 #include "symbols.hpp"
 #include "log output.hpp"
 #include "scope manager.hpp"

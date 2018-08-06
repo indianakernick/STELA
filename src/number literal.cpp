@@ -8,6 +8,8 @@
 
 #include "number literal.hpp"
 
+#include <cassert>
+
 namespace {
 
 template <typename Number>

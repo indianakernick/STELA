@@ -8,6 +8,8 @@
 
 #include "scope find.hpp"
 
+#include <cassert>
+
 using namespace stela;
 
 namespace {
