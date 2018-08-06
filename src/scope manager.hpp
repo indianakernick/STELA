@@ -27,7 +27,6 @@ public:
   }
   void leaveScope();
   sym::Scope *cur() const;
-  sym::Scope *par() const;
   sym::NSScope *builtin() const;
   sym::NSScope *global() const;
 

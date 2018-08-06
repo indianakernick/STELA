@@ -87,7 +87,7 @@ struct IntStack {
   
   // member functions are implicitly public
   // you can mark them public if you want
-  func push(value: Int) {
+  public func push(value: Int) {
     data.push_back(value);
   }
   func pop() {
@@ -101,7 +101,20 @@ struct IntStack {
   func empty() {
     return data.empty();
   }
+  
+  static func justPop(stack: inout IntStack) {
+    while (!stack.empty()) {
+      stack.pop();
+      continue; // for no reason
+    }
+  }
 };
+
+enum ABC {
+  a = 65,
+  b = 66,
+  c = 67
+}
 
 let map: [{String: [Int]}] = [{
   "one_two_three": [1, 2, 3],
@@ -122,13 +135,22 @@ func isEqual(a: Int, b: Int) {
 
 let equal = isEqual;
 
-func sort(array: [Int], pred: (Int, Int) -> Bool) {
+func sort(array: [Int], pred: (Int, Int) -> Bool) -> Void {
   // sorting...
 }
 
+func customSwap(a: [Int], b: [Int], swap: (inout Int, inout Int) -> Void) {
+  // yeah...
+}
+
+struct EmptyStruct {}
+struct EmptyEnum {}
+
 func ifs() {
+  switch (1) {}
+
   if (expr) {
-    var dummy = 'e';
+    var dummy = (5 ? 'e' : 'f');
   }
 
   if (expr) {
@@ -147,7 +169,7 @@ func ifs() {
   
   {
     let blocks_are_statements = 5;
-    let just_like_C = "yeah";
+    let just_like_C = "yeah"[1];
   }
   
   if (true);
@@ -206,15 +228,19 @@ func anotherDummy(dir: Dir) {
 
   stela::StreamLog log;
   stela::fmt::Tokens tokens = stela::format(source, log);
-  #if IN_GCOV == 1
   stela::conFormat(tokens);
-  #endif
   
   stela::HTMLstyles styles;
   styles.doc = true;
   styles.def = true;
-  const std::string html = stela::htmlFormat(tokens, styles);
-  std::ofstream file("code.html", std::ios::ate);
+  std::string html = stela::htmlFormat(tokens, styles);
+  std::ofstream file("default.html", std::ios::ate);
+  if (file.is_open()) {
+    file << html;
+  }
+  styles.def = false;
+  html = stela::htmlFormat(tokens, styles);
+  file.open("not default.html", std::ios::ate);
   if (file.is_open()) {
     file << html;
   }

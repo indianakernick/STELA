@@ -8,8 +8,6 @@
 
 #include "operator name.hpp"
 
-#include <cassert>
-
 std::string_view stela::opName(const ast::AssignOp op) {
   switch (op) {
     case ast::AssignOp::assign:
@@ -36,9 +34,6 @@ std::string_view stela::opName(const ast::AssignOp op) {
       return "<<=";
     case ast::AssignOp::bit_shr:
       return ">>=";
-    default:
-      assert(false);
-      return "";
   }
 }
 
@@ -82,9 +77,6 @@ std::string_view stela::opName(const ast::BinOp op) {
       return "%";
     case ast::BinOp::pow:
       return "**";
-    default:
-      assert(false);
-      return "";
   }
 }
 
@@ -104,8 +96,5 @@ std::string_view stela::opName(const ast::UnOp op) {
       return "a++";
     case ast::UnOp::post_decr:
       return "a--";
-    default:
-      assert(false);
-      return "";
   }
 }

@@ -28,11 +28,6 @@ sym::Scope *ScopeMan::cur() const {
   return scope;
 }
 
-sym::Scope *ScopeMan::par() const {
-  assert(scope);
-  return scope->parent;
-}
-
 namespace {
 
 sym::NSScope *assertNS(sym::Scope *const scope) {

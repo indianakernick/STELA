@@ -297,7 +297,7 @@ TEST_GROUP(Semantics, {
       };
     
       func main() {
-        Eeeeenum.e = 4;
+        Eeeeenum.e = !true;
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -321,9 +321,24 @@ TEST_GROUP(Semantics, {
   TEST(Assign to literal, {
     const char *source = R"(
       func main() {
-        4 = 5;
+        '4' = '5';
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Assign to ternary, {
+    const char *source = R"(
+      func main() {
+        var a = 5;
+        {
+          var b = 7;
+          {
+            (a < b ? a : b) = (a > b ? a : b);
+          }
+        }
+      }
+    )";
+    createSym(source, log);
   });
 });
