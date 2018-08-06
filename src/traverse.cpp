@@ -58,6 +58,9 @@ public:
     const Loc loc
   ) {
     sym::Symbol *exprType = expr ? getExprType(man, log, expr.get()).type : nullptr;
+    if (expr && !exprType) {
+      log.error(loc) << "Cannot initialize variable with a type" << fatal;
+    }
     sym::Symbol *symType = type ? tlk.lookupType(type) : exprType;
     if (exprType != nullptr && exprType != symType) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;

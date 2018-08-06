@@ -341,4 +341,49 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Nested types, {
+    const char *source = R"(
+      struct Outer {
+        struct Inner {
+          static let five = 5;
+          
+          var num: Double;
+        }
+      }
+    
+      func main() {
+        let alsoFive = Outer.Inner.five;
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Assign nested type, {
+    const char *source = R"(
+      struct Outer {
+        struct Inner {
+          static let five = 5;
+          
+          var num: Double;
+        }
+      }
+    
+      func main() {
+        let inner = Outer.Inner;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Assign regular type, {
+    const char *source = R"(
+      struct Type {}
+    
+      func main() {
+        let type = Type;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

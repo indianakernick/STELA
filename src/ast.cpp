@@ -19,6 +19,7 @@ ACCEPT(ArrayType)
 ACCEPT(MapType)
 ACCEPT(FuncType)
 ACCEPT(NamedType)
+ACCEPT(NestedType)
 
 ACCEPT(Assignment)
 ACCEPT(BinaryExpr)

@@ -51,6 +51,11 @@ public:
   void visit(ast::NamedType &type) override {
     push(Tag::type_name, type.name);
   }
+  void visit(ast::NestedType &type) override {
+    type.parent->accept(*this);
+    pushOp(".");
+    push(Tag::type_name, type.name);
+  }
   
   void visit(ast::Assignment &as) override {
     as.left->accept(*this);

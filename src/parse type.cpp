@@ -68,6 +68,29 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
   return namedType;
 }
 
+ast::TypePtr parseBasicType(ParseTokens &tok) {
+  if (ast::TypePtr type = parseFuncType(tok)) return type;
+  if (ast::TypePtr type = parseArrayType(tok)) return type;
+  if (ast::TypePtr type = parseMapType(tok)) return type;
+  if (ast::TypePtr type = parseNamedType(tok)) return type;
+  return nullptr;
+}
+
+ast::TypePtr parseNestedType(ParseTokens &tok) {
+  ast::TypePtr left = parseBasicType(tok);
+  if (left == nullptr) {
+    return nullptr;
+  }
+  while (tok.checkOp(".")) {
+    auto nest = std::make_unique<ast::NestedType>();
+    nest->loc = tok.lastLoc();
+    nest->parent = std::move(left);
+    nest->name = tok.expectID();
+    left = std::move(nest);
+  }
+  return left;
+}
+
 }
 
 ast::ParamRef stela::parseRef(ParseTokens &tok) {
@@ -79,9 +102,5 @@ ast::ParamRef stela::parseRef(ParseTokens &tok) {
 }
 
 ast::TypePtr stela::parseType(ParseTokens &tok) {
-  if (ast::TypePtr type = parseFuncType(tok)) return type;
-  if (ast::TypePtr type = parseArrayType(tok)) return type;
-  if (ast::TypePtr type = parseMapType(tok)) return type;
-  if (ast::TypePtr type = parseNamedType(tok)) return type;
-  return nullptr;
+  return parseNestedType(tok);
 }

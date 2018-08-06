@@ -92,6 +92,14 @@ struct NamedType final : Type {
   void accept(Visitor &) override;
 };
 
+struct NestedType final : Type {
+  TypePtr parent;
+  Name name;
+  sym::Symbol *definition = nullptr;
+  
+  void accept(Visitor &) override;
+};
+
 //------------------------------ Expressions -----------------------------------
 
 /// Assignment operator
@@ -425,6 +433,7 @@ public:
   virtual void visit(MapType &) {}
   virtual void visit(FuncType &) {}
   virtual void visit(NamedType &) {}
+  virtual void visit(NestedType &) {}
   
   virtual void visit(Assignment &) {}
   virtual void visit(BinaryExpr &) {}

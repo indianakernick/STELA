@@ -156,12 +156,12 @@ struct TypeAlias final : Symbol {
   Symbol *type;
 };
 
-enum class ValueMut {
+enum class ValueMut : uint8_t {
   let,
   var
 };
 
-enum class ValueRef {
+enum class ValueRef : uint8_t  {
   val,
   ref
 };
@@ -170,6 +170,7 @@ struct ExprType {
   Symbol *type = nullptr;
   ValueMut mut;
   ValueRef ref;
+  // bool isType = false;
 };
 
 constexpr ValueMut common(const ValueMut a, const ValueMut b) {
@@ -185,7 +186,7 @@ constexpr ExprType memberType(const ExprType obj, const ExprType mem) {
 }
 
 constexpr bool callMut(const ValueMut param, const ValueMut arg) {
-  return static_cast<int>(param) <= static_cast<int>(arg);
+  return static_cast<uint8_t>(param) <= static_cast<uint8_t>(arg);
 }
 
 constexpr bool callMutRef(const ExprType param, const ExprType arg) {

@@ -99,6 +99,10 @@ public:
     }
   }
   
+  void visit(ast::NestedType &) override {
+    assert(false);
+  }
+  
   sym::Symbol *type;
 
 private:
@@ -454,12 +458,23 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
       };
       exprs.pop_back(); // pop member
       sym::Symbol *const member = lookup(strut->scope, log, key, loc);
-      auto *object = dynamic_cast<sym::Object *>(member);
-      if (object == nullptr) {
-        log.error(loc) << "Static member \"" << key.name << "\" is not a variable" << fatal;
+      if (exprs.empty()) {
+        auto *object = dynamic_cast<sym::Object *>(member);
+        if (object == nullptr) {
+          log.error(loc) << "Static member \"" << key.name << "\" is not a variable" << fatal;
+        }
+        pushExpr(object->etype);
+        return member;
       }
-      pushExpr(object->etype);
-      return object;
+      if (auto *object = dynamic_cast<sym::Object *>(member)) {
+        pushExpr(object->etype);
+        return member;
+      }
+      if (auto *func = dynamic_cast<sym::Func *>(member)) {
+        log.error(loc) << "Reference to function \"" << key.name << "\" must be called" << fatal;
+      }
+      pushStatic(member);
+      return member;
     }
     if (auto *enm = dynamic_cast<sym::EnumType *>(etype.type)) {
       sym::Object *const cse = lookup(enm->scope, log, exprs.back().name, loc);
