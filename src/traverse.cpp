@@ -22,11 +22,19 @@ public:
   Visitor(sym::Scopes &scopes, Log &log)
     : man{scopes}, log{log}, ins{man.global(), log}, tlk{man, log} {}
   
+  void visitStat(const ast::StatPtr &stat) {
+    if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
+      getExprType(man, log, expr);
+    } else {
+      stat->accept(*this);
+    }
+  }
+  
   void visit(ast::Block &block) override {
     BlockInserter inserter(man.enterScope<sym::BlockScope>(), log);
     SymbolInserter *const old = ins.set(&inserter);
     for (const ast::StatPtr &stat : block.nodes) {
-      stat->accept(*this);
+      visitStat(stat);
     }
     ins.restore(old);
     man.leaveScope();
@@ -39,11 +47,7 @@ public:
     FuncInserter inserter{funcSym->scope, log};
     SymbolInserter *const old = ins.set(&inserter);
     for (const ast::StatPtr &stat : func.body.nodes) {
-      if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
-        getExprType(man, log, expr);
-      } else {
-        stat->accept(*this);
-      }
+      visitStat(stat);
     }
     ins.restore(old);
     man.leaveScope();

@@ -43,6 +43,8 @@ void write(const stela::ConStyle &style, const std::string_view text) {
       std::cout << con::text_cyan; break;
     case Color::white:
       std::cout << con::text_white; break;
+    case Color::def:
+      std::cout << con::text_default; break;
   }
   switch (style.back) {
     case Color::black:
@@ -61,6 +63,8 @@ void write(const stela::ConStyle &style, const std::string_view text) {
       std::cout << con::back_cyan; break;
     case Color::white:
       std::cout << con::back_white; break;
+    case Color::def:
+      std::cout << con::back_default; break;
   }
   std::cout << text << con::reset;
 }

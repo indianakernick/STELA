@@ -26,10 +26,11 @@ struct ConStyle {
     blue,
     magenta,
     cyan,
-    white
+    white,
+    def
   };
-  Color text = Color::white;
-  Color back = Color::black;
+  Color text = Color::def;
+  Color back = Color::def;
 };
 using ConStyles = fmt::Styles<ConStyle>;
 
