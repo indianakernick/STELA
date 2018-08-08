@@ -386,4 +386,29 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Returning an object, {
+    const char *source = R"(
+      struct Outer {
+        struct Inner {
+          struct Deep {
+            var x: Int;
+          }
+          
+          var deep: Deep;
+        }
+        func getInner() -> Inner {
+          return make Inner();
+        }
+      }
+    
+      func main() {
+        var outer = make Outer();
+        let inner: Outer.Inner = outer.getInner();
+        let deep: Outer.Inner.Deep = outer.getInner().deep;
+        let x: Int = outer.getInner().deep.x;
+      }
+    )";
+    createSym(source, log);
+  });
 });

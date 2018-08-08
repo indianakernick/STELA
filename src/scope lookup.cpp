@@ -63,6 +63,9 @@ sym::Func *findFunc(
   log.error(loc) << "Ambiguous call to function \"" << key.name << '"' << fatal;
 }
 
+sym::Symbol *lookup(sym::StructScope *, Log &, const sym::MemKey &, Loc);
+sym::MemAccess accessLevel(sym::Scope *, sym::StructType *);
+
 class TypeVisitor final : public ast::Visitor {
 public:
   explicit TypeVisitor(sym::Scope *scope, Log &log)
@@ -80,27 +83,39 @@ public:
     assert(false);
   }
   
-  void visit(ast::NamedType &namedType) override {
-    sym::Symbol *symbol = lookupAny(scope, log, sym::Name(namedType.name), namedType.loc);
+  void visit(ast::NamedType &named) override {
+    sym::Symbol *symbol = lookupAny(scope, log, sym::Name(named.name), named.loc);
     if (auto *builtin = dynamic_cast<sym::BuiltinType *>(symbol)) {
       type = symbol;
-      namedType.definition = type;
+      named.definition = type;
     } else if (auto *strut = dynamic_cast<sym::StructType *>(symbol)) {
       type = symbol;
-      namedType.definition = type;
+      named.definition = type;
     } else if (auto *num = dynamic_cast<sym::EnumType *>(symbol)) {
       type = symbol;
-      namedType.definition = type;
+      named.definition = type;
     } else if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
       type = alias->type;
-      namedType.definition = type;
+      named.definition = type;
     } else {
       assert(false);
     }
   }
   
-  void visit(ast::NestedType &) override {
-    assert(false);
+  void visit(ast::NestedType &nested) override {
+    nested.parent->accept(*this);
+    sym::Symbol *const parent = type;
+    if (auto *strut = dynamic_cast<sym::StructType *>(parent)) {
+      type = lookup(
+        strut->scope,
+        log,
+        {sym::Name(nested.name), accessLevel(scope, strut), sym::MemScope::static_},
+        nested.loc
+      );
+      nested.definition = type;
+    } else {
+      log.error(nested.loc) << "Can only access nested types of structs" << fatal;
+    }
   }
   
   sym::Symbol *type;

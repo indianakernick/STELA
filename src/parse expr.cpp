@@ -59,7 +59,7 @@ ast::ExprPtr parseSelf(ParseTokens &tok) {
 ast::ExprPtr parseTerm(ParseTokens &tok) {
   // 1
   if (tok.checkOp("(")) {
-    ast::ExprPtr node = parseExpr(tok);
+    ast::ExprPtr node = tok.expectNode(parseExpr, "expression after (");
     tok.expectOp(")");
     return node;
   }
@@ -136,7 +136,7 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
     Context ctx = tok.context("object initialization");
     auto init = std::make_unique<ast::InitCall>();
     init->loc = tok.lastLoc();
-    init->type = parseType(tok);
+    init->type = tok.expectNode(parseType, "type");
     init->args = parseFuncArgs(tok);
     return init;
   } else {

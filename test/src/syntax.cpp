@@ -687,6 +687,15 @@ TEST_GROUP(Syntax, {
     }
   });
   
+  TEST(Struct - Bad member, {
+    const char *source = R"(
+      struct C {
+        int x;
+      };
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Expr - Simple literals, {
     const char *source = R"(
       func dummy() {

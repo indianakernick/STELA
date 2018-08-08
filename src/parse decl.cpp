@@ -37,7 +37,7 @@ ast::DeclPtr stela::parseLet(ParseTokens &tok) {
   if (!tok.checkKeyword("let")) {
     return nullptr;
   }
-  Context ctx = tok.context("in var declaration");
+  Context ctx = tok.context("in let declaration");
   auto let = std::make_unique<ast::Let>();
   let->loc = tok.lastLoc();
   let->name = tok.expectID();
@@ -100,7 +100,7 @@ ast::Member parseStructMember(ParseTokens &tok) {
   ast::Member member;
   member.access = parseMemAccess(tok);
   member.scope = parseMemScope(tok);
-  member.node = parseDecl(tok);
+  member.node = tok.expectNode(parseDecl, "member declaration");
   tok.extraSemi();
   return member;
 }
@@ -113,7 +113,7 @@ ast::DeclPtr parseStruct(ParseTokens &tok) {
   auto structNode = std::make_unique<ast::Struct>();
   structNode->loc = tok.lastLoc();
   structNode->name = tok.expectID();
-  ctx.desc(structNode->name);
+  ctx.ident(structNode->name);
   tok.expectOp("{");
   while(!tok.checkOp("}")) {
     structNode->body.push_back(parseStructMember(tok));

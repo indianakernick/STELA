@@ -11,9 +11,9 @@
 #include "parse type.hpp"
 #include "parse stat.hpp"
 
-namespace stela {
+using namespace stela;
 
-ast::FuncParams parseFuncParams(ParseTokens &tok) {
+ast::FuncParams stela::parseFuncParams(ParseTokens &tok) {
   Context ctx = tok.context("in parameter list");
   tok.expectOp("(");
   if (tok.checkOp(")")) {
@@ -31,16 +31,16 @@ ast::FuncParams parseFuncParams(ParseTokens &tok) {
   return params;
 }
 
-ast::TypePtr parseFuncRet(ParseTokens &tok) {
+ast::TypePtr stela::parseFuncRet(ParseTokens &tok) {
   if (tok.checkOp("->")) {
-    tok.context("after ->");
+    Context ctx = tok.context("after ->");
     return tok.expectNode(parseType, "type");
   } else {
     return nullptr;
   }
 }
 
-ast::Block parseFuncBody(ParseTokens &tok) {
+ast::Block stela::parseFuncBody(ParseTokens &tok) {
   ast::Block body;
   body.loc = tok.loc();
   Context ctx = tok.context("in body");
@@ -52,7 +52,7 @@ ast::Block parseFuncBody(ParseTokens &tok) {
   return body;
 }
 
-ast::DeclPtr parseFunc(ParseTokens &tok) {
+ast::DeclPtr stela::parseFunc(ParseTokens &tok) {
   if (!tok.checkKeyword("func")) {
     return nullptr;
   }
@@ -67,6 +67,4 @@ ast::DeclPtr parseFunc(ParseTokens &tok) {
   funcNode->body = parseFuncBody(tok);
   
   return funcNode;
-}
-
 }

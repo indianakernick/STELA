@@ -23,12 +23,12 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
     do {
       ast::ParamType &param = type->params.emplace_back();
       param.ref = parseRef(tok);
-      param.type = parseType(tok);
+      param.type = tok.expectNode(parseType, "type");
     } while (tok.expectEitherOp(")", ",") == ",");
   }
   ctx.desc("after function parameter types");
   tok.expectOp("->");
-  type->ret = parseType(tok);
+  type->ret = tok.expectNode(parseType, "type");
   return type;
 }
 

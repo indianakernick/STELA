@@ -28,7 +28,7 @@ public:
   Loc lastLoc() const;
   Loc loc() const;
   
-  Context context(std::string_view);
+  [[nodiscard]] Context context(std::string_view);
   const ContextStack &contextStack() const;
   
   template <typename ParseFunc>
