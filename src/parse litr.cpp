@@ -75,19 +75,19 @@ ast::LitrPtr parseArray(ParseTokens &tok) {
 }
 
 ast::LitrPtr parseMap(ParseTokens &tok) {
-  if (!tok.checkOp("[{")) {
+  if (!tok.checkOp("{")) {
     return nullptr;
   }
   Context ctx = tok.context("in map literal");
   auto map = std::make_unique<ast::MapLiteral>();
   map->loc = tok.lastLoc();
-  if (!tok.checkOp("}]")) {
+  if (!tok.checkOp("}")) {
     do {
       ast::MapPair &pair = map->pairs.emplace_back();
       pair.key = tok.expectNode(parseExpr, "key expression");
       tok.expectOp(":");
       pair.val = tok.expectNode(parseExpr, "value expression");
-    } while (tok.expectEitherOp(",", "}]") == ",");
+    } while (tok.expectEitherOp(",", "}") == ",");
   }
   return map;
 }

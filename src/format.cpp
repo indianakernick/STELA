@@ -23,12 +23,12 @@ public:
     pushOp("]");
   }
   void visit(ast::MapType &type) override {
-    pushOp("[{");
+    pushOp("{");
     type.key->accept(*this);
     pushOp(":");
     pushSpace();
     type.val->accept(*this);
-    pushOp("}]");
+    pushOp("}");
   }
   void visit(ast::FuncType &type) override {
     pushOp("(");
@@ -476,9 +476,9 @@ public:
     pushOp("]");
   }
   void visit(ast::MapLiteral &map) override {
-    pushOp("[{");
+    pushOp("{");
     if (map.pairs.empty()) {
-      pushOp("}]");
+      pushOp("}");
       return;
     }
     pushNewline();
@@ -497,7 +497,7 @@ public:
     }
     --indent;
     pushIndent();
-    pushOp("}]");
+    pushOp("}");
   }
   void visit(ast::Lambda &lam) override {
     pushOp("{");

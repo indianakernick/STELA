@@ -45,7 +45,7 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
 }
 
 ast::TypePtr parseMapType(ParseTokens &tok) {
-  if (!tok.checkOp("[{")) {
+  if (!tok.checkOp("{")) {
     return nullptr;
   }
   Context ctx = tok.context("in map type");
@@ -54,7 +54,7 @@ ast::TypePtr parseMapType(ParseTokens &tok) {
   mapType->key = tok.expectNode(parseType, "key type");
   tok.expectOp(":");
   mapType->val = tok.expectNode(parseType, "value type");
-  tok.expectOp("}]");
+  tok.expectOp("}");
   return mapType;
 }
 

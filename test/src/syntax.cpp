@@ -223,7 +223,7 @@ TEST_GROUP(Syntax, {
   
   TEST(Type - Map, {
     const char *source = R"(
-      typealias dummy = [{String: [Int]}];
+      typealias dummy = {String: [Int]};
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
@@ -773,23 +773,26 @@ TEST_GROUP(Syntax, {
   TEST(Expr - Map, {
     const char *source = R"(
       func dummy() {
-        [{}];
-        [{"seven": 7}];
-        [{"seven": 7, "eight": 8, "nine": 9}];
+        var map: Map;
+        map = {};
+        map = {"seven": 7};
+        map = {"seven": 7, "eight": 8, "nine": 9};
       }
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 3);
+    ASSERT_EQ(block.size(), 4);
     
     {
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[0].get());
+      const auto *assign = IS_AOP(block[1], assign);
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
       ASSERT_TRUE(lit->pairs.empty());
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[1].get());
+      const auto *assign = IS_AOP(block[2], assign);
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
       ASSERT_EQ(lit->pairs.size(), 1);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
@@ -798,7 +801,8 @@ TEST_GROUP(Syntax, {
       ASSERT_EQ(sevenVal->value, "7");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, block[2].get());
+      const auto *assign = IS_AOP(block[3], assign);
+      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
       ASSERT_EQ(lit->pairs.size(), 3);
       
       const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());

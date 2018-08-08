@@ -117,14 +117,14 @@ enum ABC {
   c = 67
 }
 
-let map: [{String: [Int]}] = [{
+let map: {String: [Int]} = {
   "one_two_three": [1, 2, 3],
   "four_five_six": [4, 5, 6],
   "seven": [7],
   "eight_nine": [8, 9]
-}];
+};
 
-let empty = [{}];
+let empty = {};
 
 let less = lambda (a: Int, b: Int) {
   return a < b;
@@ -175,7 +175,7 @@ func ifs() {
   
   if (true);
   
-  typealias StrInt = [{String:Int}];
+  typealias StrInt = {String:Int};
   
   while (expr) {
     ++thing;
