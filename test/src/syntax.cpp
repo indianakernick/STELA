@@ -820,8 +820,8 @@ TEST_GROUP(Syntax, {
   
   TEST(Expr - Lambda, {
     const char *source = R"(
-      let nothing = {() in };
-      let identity = {(n: Int) -> Int in
+      let nothing = lambda () {};
+      let identity = lambda (n: Int) -> Int {
         return expr;
       };
     )";

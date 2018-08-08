@@ -9,10 +9,11 @@
 #include "format.hpp"
 
 #include <fstream>
-#include "html format.hpp"
-#include "console format.hpp"
+#include "macros.hpp"
+#include <STELA/html format.hpp>
+#include <STELA/console format.hpp>
 
-bool testFormat() {
+TEST_GROUP(Format, {
   const char *source = R"(
 struct Rational {
   // all members of a struct are implicitly public
@@ -125,7 +126,7 @@ let map: [{String: [Int]}] = [{
 
 let empty = [{}];
 
-let less = {(a: Int, b: Int) in
+let less = lambda (a: Int, b: Int) {
   return a < b;
 };
 
@@ -227,23 +228,37 @@ func anotherDummy(dir: Dir) {
 )";
 
   stela::StreamLog log;
-  stela::fmt::Tokens tokens = stela::format(source, log);
-  stela::conFormat(tokens);
+  stela::fmt::Tokens tokens;
   
-  stela::HTMLstyles styles;
-  styles.doc = true;
-  styles.def = true;
-  std::string html = stela::htmlFormat(tokens, styles);
-  std::ofstream file("default.html", std::ios::ate);
-  if (file.is_open()) {
-    file << html;
-  }
-  styles.def = false;
-  html = stela::htmlFormat(tokens, styles);
-  file.open("not default.html", std::ios::ate);
-  if (file.is_open()) {
-    file << html;
-  }
+  TEST(Get tokens, {
+    tokens = stela::format(source, log);
+    ASSERT_FALSE(tokens.empty());
+  });
   
-  return true;
-}
+  TEST(Console, {
+    stela::conFormat(tokens);
+  });
+  
+  TEST(HTML default styles, {
+    stela::HTMLstyles styles;
+    styles.doc = true;
+    styles.def = true;
+    const std::string html = stela::htmlFormat(tokens, styles);
+    ASSERT_FALSE(html.empty());
+    std::ofstream file("default.html", std::ios::ate);
+    if (file.is_open()) {
+      file << html;
+    }
+  });
+  
+  TEST(HTML non-default styles, {
+    stela::HTMLstyles styles;
+    styles.doc = true;
+    styles.def = false;
+    const std::string html = stela::htmlFormat(tokens, styles);
+    ASSERT_FALSE(html.empty());
+    std::ofstream file("not default.html", std::ios::ate);
+    ASSERT_TRUE(file.is_open());
+    file << html;
+  });
+})

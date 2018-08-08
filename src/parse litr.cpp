@@ -92,20 +92,8 @@ ast::LitrPtr parseMap(ParseTokens &tok) {
   return map;
 }
 
-ast::Block parseLambdaBody(ParseTokens &tok) {
-  ast::Block body;
-  Context ctx = tok.context("in body");
-  tok.expectKeyword("in");
-  body.loc = tok.lastLoc();
-  while (ast::StatPtr node = parseStat(tok)) {
-    body.nodes.emplace_back(std::move(node));
-  }
-  tok.expectOp("}");
-  return body;
-}
-
 ast::LitrPtr parseLambda(ParseTokens &tok) {
-  if (!tok.checkOp("{")) {
+  if (!tok.checkKeyword("lambda")) {
     return nullptr;
   }
   Context ctx = tok.context("in lambda expression");
@@ -113,7 +101,7 @@ ast::LitrPtr parseLambda(ParseTokens &tok) {
   lambda->loc = tok.lastLoc();
   lambda->params = parseFuncParams(tok);
   lambda->ret = parseFuncRet(tok);
-  lambda->body = parseLambdaBody(tok);
+  lambda->body = parseFuncBody(tok);
   return lambda;
 }
 
