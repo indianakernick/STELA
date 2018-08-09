@@ -34,14 +34,29 @@ sym::ExprType inferRetType(sym::Scope *scope, Log &log, const ast::Func &func) {
   }
 }
 
-sym::ExprType selfType(sym::StructType *const structType) {
+sym::ExprType mutSelfType(sym::StructType *const structType) {
   return {structType, sym::ValueMut::var, sym::ValueRef::ref};
 }
 
-auto makeSelf(sym::Func &funcSym, sym::StructType *const structType) {
+sym::ExprType conSelfType(sym::StructType *const structType) {
+  return {structType, sym::ValueMut::let, sym::ValueRef::ref};
+}
+
+auto makeSelf(sym::Func &funcSym) {
   auto self = std::make_unique<sym::Object>();
   self->loc = funcSym.loc;
-  self->etype = selfType(structType);
+  return self;
+}
+
+auto makeMutSelf(sym::Func &funcSym, sym::StructType *const structType) {
+  auto self = makeSelf(funcSym);
+  self->etype = mutSelfType(structType);
+  return self;
+}
+
+auto makeConSelf(sym::Func &funcSym, sym::StructType *const structType) {
+  auto self = makeSelf(funcSym);
+  self->etype = conSelfType(structType);
   return self;
 }
 
@@ -129,7 +144,10 @@ void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 sym::Func *StructInserter::insert(const ast::Func &func) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
   funcSym->params = lookupParams(strut->scope, log, func.params);
-  funcSym->params.insert(funcSym->params.begin(), selfType(strut));
+  funcSym->params.insert(
+    funcSym->params.begin(),
+    (mut == ast::MemMut::mutating ? mutSelfType(strut) : conSelfType(strut))
+  );
   funcSym->ret = inferRetType(strut->scope, log, func);
   sym::StructTable &table = strut->scope->table;
   for (const sym::StructTableRow &row : table) {
@@ -158,7 +176,10 @@ sym::Func *StructInserter::insert(const ast::Func &func) {
 }
 
 void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
-  funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut)});
+  funcSym->scope->table.insert({
+    sym::Name("self"),
+    (mut == ast::MemMut::mutating ? makeMutSelf(*funcSym, strut) : makeConSelf(*funcSym, strut))
+  });
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
       sym::Name(func.params[i].name),
@@ -170,6 +191,7 @@ void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
 void StructInserter::accessScope(const ast::Member &member) {
   access = memAccess(member, log);
   scope = memScope(member, log);
+  mut = member.mut;
 }
 
 EnumInserter::EnumInserter(sym::EnumType *enm, Log &log)

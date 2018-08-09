@@ -96,11 +96,28 @@ ast::MemScope parseMemScope(ParseTokens &tok) {
   }
 }
 
+ast::MemMut parseMemMut(ParseTokens &tok) {
+  if (tok.checkKeyword("mutating")) {
+    return ast::MemMut::mutating;
+  } else {
+    return ast::MemMut::constant;
+  }
+}
+
 ast::Member parseStructMember(ParseTokens &tok) {
   ast::Member member;
   member.access = parseMemAccess(tok);
   member.scope = parseMemScope(tok);
-  member.node = tok.expectNode(parseDecl, "member declaration");
+  member.mut = parseMemMut(tok);
+  if (member.mut == ast::MemMut::mutating) {
+    if (member.scope == ast::MemScope::static_) {
+      tok.log().error(tok.lastLoc()) << "Cannot apply mutating keyword to "
+        "static functions" << fatal;
+    }
+    member.node = tok.expectNode(parseFunc, "function declaration (after mutating keyword)");
+  } else {
+    member.node = tok.expectNode(parseDecl, "member declaration");
+  }
   tok.extraSemi();
   return member;
 }

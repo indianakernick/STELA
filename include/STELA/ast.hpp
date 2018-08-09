@@ -344,9 +344,15 @@ enum class MemScope {
   static_
 };
 
+enum class MemMut {
+  constant,
+  mutating
+};
+
 struct Member {
   MemAccess access;
   MemScope scope;
+  MemMut mut;
   DeclPtr node;
 };
 

@@ -205,11 +205,11 @@ TEST_GROUP(Semantics, {
         
         static var origin = make Vec(0.0, 0.0);
         
-        func add(other: Vec) {
+        mutating func add(other: Vec) {
           self.x += other.x;
           self.y += other.y;
         }
-        func div(val: Double) {
+        mutating func div(val: Double) {
           self.x /= val;
           self.y /= val;
         }
@@ -403,7 +403,7 @@ TEST_GROUP(Semantics, {
       }
     
       func main() {
-        var outer = make Outer();
+        let outer = make Outer();
         let inner: Outer.Inner = outer.getInner();
         let deep: Outer.Inner.Deep = outer.getInner().deep;
         let x: Int = outer.getInner().deep.x;

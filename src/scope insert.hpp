@@ -70,6 +70,7 @@ private:
   Log &log;
   sym::MemAccess access;
   sym::MemScope scope;
+  ast::MemMut mut;
 };
 
 class EnumInserter final : public SymbolInserter {

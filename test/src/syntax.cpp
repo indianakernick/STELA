@@ -657,11 +657,16 @@ TEST_GROUP(Syntax, {
   TEST(Struct - Functions, {
     const char *source = R"(
       struct Vec2 {
-        func add(other: Vec2) {
-          expr;
-          expr;
+        func plus(other: Vec2) {
+          return make Vec2(
+            self.x + other.x,
+            self.y + other.y
+          );
         }
-        
+        mutating func add(other: Vec2) {
+          self.x += other.x;
+          self.y += other.y;
+        }
         static func add(a: Vec2, b: Vec2) {
           return expr;
         }
@@ -671,20 +676,47 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
     ASSERT_EQ(structNode->name, "Vec2");
-    ASSERT_EQ(structNode->body.size(), 2);
+    ASSERT_EQ(structNode->body.size(), 3);
     
     {
       const Member &mem = structNode->body[0];
       ASSERT_EQ(mem.access, MemAccess::default_);
       ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_EQ(mem.mut, MemMut::constant);
       ASSERT_DOWN_CAST(const Func, mem.node.get());
     }
     {
       const Member &mem = structNode->body[1];
       ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::static_);
+      ASSERT_EQ(mem.scope, MemScope::member);
+      ASSERT_EQ(mem.mut, MemMut::mutating);
       ASSERT_DOWN_CAST(const Func, mem.node.get());
     }
+    {
+      const Member &mem = structNode->body[2];
+      ASSERT_EQ(mem.access, MemAccess::default_);
+      ASSERT_EQ(mem.scope, MemScope::static_);
+      ASSERT_EQ(mem.mut, MemMut::constant);
+      ASSERT_DOWN_CAST(const Func, mem.node.get());
+    }
+  });
+  
+  TEST(Struct - static mutating, {
+    const char *source = R"(
+      struct Dummy {
+        static mutating doesnt_make_sense() {}
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
+  TEST(Struct - mutating var, {
+    const char *source = R"(
+      struct Dummy {
+        mutating var doesnt_make_sense: Int;
+      }
+    })";
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Struct - Bad member, {
