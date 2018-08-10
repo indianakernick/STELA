@@ -628,4 +628,39 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Nested function, {
+    const char *source = R"(
+      struct Struct {
+        static func fn() -> Struct {
+          func nested() -> Struct {
+            return make Struct();
+          }
+          return nested();
+        }
+      }
+    
+      func main() {
+        func nested() -> Struct {
+          return Struct.fn();
+        }
+        let s: Struct = nested();
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Nested function access, {
+    const char *source = R"(
+      func main() {
+        var nope = 5;
+        {
+          func nested() {
+            nope = 7;
+          }
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

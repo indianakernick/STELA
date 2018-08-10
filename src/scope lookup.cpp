@@ -38,7 +38,7 @@ sym::Func *callFunc(
   }
 }
 
-sym::Func *findFunc(
+sym::Func *selectOverload(
   Log &log,
   const std::vector<sym::Symbol *> &symbols,
   const sym::FunKey &key,
@@ -63,6 +63,7 @@ sym::Func *findFunc(
   log.error(loc) << "Ambiguous call to function \"" << key.name << '"' << fatal;
 }
 
+sym::Symbol *lookup(sym::Scope *, Log &, sym::Name, Loc);
 sym::Symbol *lookup(sym::StructScope *, Log &, const sym::MemKey &, Loc);
 sym::MemAccess accessLevel(sym::Scope *, sym::StructType *);
 
@@ -84,7 +85,7 @@ public:
   }
   
   void visit(ast::NamedType &named) override {
-    sym::Symbol *symbol = lookupAny(scope, log, sym::Name(named.name), named.loc);
+    sym::Symbol *symbol = lookup(scope, log, sym::Name(named.name), named.loc);
     if (auto *builtin = dynamic_cast<sym::BuiltinType *>(symbol)) {
       type = symbol;
       named.definition = type;
@@ -213,7 +214,7 @@ sym::Func *lookup(
   } else if (symbols.size() == 1) {
     return callFunc(log, symbols.front(), key, loc);
   } else {
-    return findFunc(log, symbols, key, loc);
+    return selectOverload(log, symbols, key, loc);
   }
 }
 
@@ -299,7 +300,7 @@ sym::Func *lookup(
     }
     return func;
   } else {
-    sym::Func *func = findFunc(log, symbols, {key.name, key.params}, loc);
+    sym::Func *func = selectOverload(log, symbols, {key.name, key.params}, loc);
     sym::Symbol *symbol = func;
     for (size_t i = 0; i != symbols.size(); ++i) {
       if (symbol == symbols[i]) {
@@ -313,10 +314,6 @@ sym::Func *lookup(
   }
 }
 
-}
-
-sym::Symbol *stela::lookupAny(sym::Scope *scope, Log &log, const sym::Name &name, const Loc loc) {
-  return lookup(scope, log, name, loc);
 }
 
 sym::Symbol *stela::lookupType(sym::Scope *scope, Log &log, const ast::TypePtr &type) {

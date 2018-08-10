@@ -16,7 +16,6 @@
 
 namespace stela {
 
-sym::Symbol *lookupAny(sym::Scope *, Log &, const sym::Name &, Loc);
 sym::Symbol *lookupType(sym::Scope *, Log &, const ast::TypePtr &);
 sym::FuncParams lookupParams(sym::Scope *, Log &, const ast::FuncParams &);
 
