@@ -9,7 +9,6 @@
 #include "scope insert.hpp"
 
 #include <cassert>
-#include "scope find.hpp"
 #include "scope lookup.hpp"
 #include "member access scope.hpp"
 #include "compare params args.hpp"
@@ -24,13 +23,18 @@ std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
   return funcSym;
 }
 
-sym::ExprType inferRetType(sym::Scope *scope, Log &log, const ast::Func &func) {
+sym::ExprType inferRetType(
+  sym::Scope *scope,
+  Log &log,
+  const ast::Func &func,
+  const BuiltinTypes &bnt
+) {
   if (func.ret) {
     return {lookupType(scope, log, func.ret), sym::ValueMut::let, sym::ValueRef::val};
   } else {
     // @TODO infer return type
     log.warn(func.loc) << "Return type is Void by default" << endlog;
-    return {lookupAny(scope, log, "Void", func.loc), sym::ValueMut::let, sym::ValueRef::val};
+    return {bnt.Void, sym::ValueMut::let, sym::ValueRef::val};
   }
 }
 
@@ -84,10 +88,10 @@ void UnorderedInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   }
 }
 
-sym::Func *UnorderedInserter::insert(const ast::Func &func) {
+sym::Func *UnorderedInserter::insert(const ast::Func &func, const BuiltinTypes &bnt) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
   funcSym->params = lookupParams(scope, log, func.params);
-  funcSym->ret = inferRetType(scope, log, func);
+  funcSym->ret = inferRetType(scope, log, func, bnt);
   const auto [beg, end] = scope->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
@@ -141,7 +145,7 @@ void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   strut->scope->table.push_back({name, access, scope, std::move(symbol)});
 }
 
-sym::Func *StructInserter::insert(const ast::Func &func) {
+sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
   funcSym->params = lookupParams(strut->scope, log, func.params);
   if (scope == sym::MemScope::instance) {
@@ -150,7 +154,7 @@ sym::Func *StructInserter::insert(const ast::Func &func) {
       (mut == ast::MemMut::mutating ? mutSelfType(strut) : conSelfType(strut))
     );
   }
-  funcSym->ret = inferRetType(strut->scope, log, func);
+  funcSym->ret = inferRetType(strut->scope, log, func, bnt);
   sym::StructTable &table = strut->scope->table;
   for (const sym::StructTableRow &row : table) {
     if (row.name != func.name) {
@@ -216,15 +220,12 @@ void EnumInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 }
 
 /* LCOV_EXCL_START */
-
-sym::Func *EnumInserter::insert(const ast::Func &) {
+sym::Func *EnumInserter::insert(const ast::Func &, const BuiltinTypes &) {
   assert(false);
 }
-
 void EnumInserter::enterFuncScope(sym::Func *, const ast::Func &) {
   assert(false);
 }
-
 /* LCOV_EXCL_END */
 
 void EnumInserter::insert(const ast::EnumCase &cs) {
@@ -236,16 +237,12 @@ void EnumInserter::insert(const ast::EnumCase &cs) {
   insert(sym::Name(cs.name), std::move(caseSym));
 }
 
-InserterManager::InserterManager(sym::NSScope *scope, Log &log)
-  : defIns{scope, log}, ins{&defIns} {}
+InserterManager::InserterManager(sym::NSScope *scope, Log &log, const BuiltinTypes &types)
+  : defIns{scope, log}, ins{&defIns}, bnt{types} {}
 
 SymbolInserter *InserterManager::set(SymbolInserter *const newIns) {
   assert(newIns);
   return std::exchange(ins, newIns);
-}
-
-SymbolInserter *InserterManager::setDef() {
-  return set(&defIns);
 }
 
 void InserterManager::restore(SymbolInserter *const oldIns) {

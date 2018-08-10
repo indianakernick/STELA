@@ -12,10 +12,11 @@
 #include "ast.hpp"
 #include "log output.hpp"
 #include "scope manager.hpp"
+#include "builtin symbols.hpp"
 
 namespace stela {
 
-sym::ExprType getExprType(ScopeMan &, Log &, ast::Expression *);
+sym::ExprType getExprType(ScopeMan &, Log &, ast::Expression *, const BuiltinTypes &);
 
 }
 

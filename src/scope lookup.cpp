@@ -358,10 +358,6 @@ sym::FuncParams stela::lookupParams(sym::Scope *scope, Log &log, const ast::Func
 TypeLookup::TypeLookup(ScopeMan &man, Log &log)
   : man{man}, log{log} {}
 
-sym::Symbol *TypeLookup::lookupBuiltinType(const sym::Name &name, const Loc loc) {
-  return lookup(man.builtin(), log, name, loc);
-}
-
 sym::Symbol *TypeLookup::lookupType(const ast::TypePtr &astType) {
   return stela::lookupType(man.cur(), log, astType);
 }

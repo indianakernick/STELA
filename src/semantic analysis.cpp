@@ -16,10 +16,11 @@
 stela::Symbols stela::createSym(const AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   Symbols syms;
-  syms.scopes.push_back(createBuiltinScope());
+  BuiltinTypes types;
+  syms.scopes.push_back(createBuiltinScope(types));
   auto global = std::make_unique<sym::NSScope>(syms.scopes.back().get());
   syms.scopes.push_back(std::move(global));
-  traverse(syms.scopes, ast, log);
+  traverse(syms.scopes, ast, log, types);
   return syms;
 }
 

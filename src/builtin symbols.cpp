@@ -20,24 +20,9 @@ sym::SymbolPtr makeBuiltinType(const sym::BuiltinType::Enum e) {
   return type;
 }
 
-sym::Symbol *Void = nullptr;
-sym::Symbol *Char = nullptr;
-sym::Symbol *Bool = nullptr;
-sym::Symbol *Float = nullptr;
-sym::Symbol *Double = nullptr;
-sym::Symbol *String = nullptr;
-sym::Symbol *Int8 = nullptr;
-sym::Symbol *Int16 = nullptr;
-sym::Symbol *Int32 = nullptr;
-sym::Symbol *Int64 = nullptr;
-sym::Symbol *UInt8 = nullptr;
-sym::Symbol *UInt16 = nullptr;
-sym::Symbol *UInt32 = nullptr;
-sym::Symbol *UInt64 = nullptr;
-
-void insertTypes(sym::UnorderedTable &table) {
+void insertTypes(sym::UnorderedTable &table, BuiltinTypes &t) {
   #define INSERT(TYPE)                                                          \
-    TYPE = table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})->second.get()
+    t.TYPE = table.insert({#TYPE, makeBuiltinType(sym::BuiltinType::TYPE)})->second.get()
   
   INSERT(Void);
   INSERT(Char);
@@ -55,7 +40,7 @@ void insertTypes(sym::UnorderedTable &table) {
   INSERT(UInt64);
   
   auto intType = std::make_unique<sym::TypeAlias>();
-  intType->type = Int64;
+  intType->type = t.Int64;
   table.insert({"Int", std::move(intType)});
   
   #undef INSERT
@@ -98,9 +83,9 @@ sym::SymbolPtr makeAssignOp(sym::Symbol *type) {
   return func;
 }
 
-void insertAssign(sym::UnorderedTable &table) {
+void insertAssign(sym::UnorderedTable &table, const BuiltinTypes &t) {
   #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::AssignOp::OP)), makeAssignOp(TYPE)})
+    table.insert({sym::Name(opName(ast::AssignOp::OP)), makeAssignOp(t.TYPE)})
   
   INSERT_ALL(assign);
   INSERT_NUM(add);
@@ -119,9 +104,9 @@ void insertAssign(sym::UnorderedTable &table) {
   #undef INSERT
 }
 
-void insertBin(sym::UnorderedTable &table) {
+void insertBin(sym::UnorderedTable &table, const BuiltinTypes &t) {
   #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(TYPE, TYPE)})
+    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(t.TYPE, t.TYPE)})
   
   INSERT(bool_or, Bool);
   INSERT(bool_and, Bool);
@@ -140,7 +125,7 @@ void insertBin(sym::UnorderedTable &table) {
   
   #undef INSERT
   #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(TYPE, Bool)})
+    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(t.TYPE, t.Bool)})
   
   INSERT_ALL(eq);
   INSERT_ALL(ne);
@@ -173,9 +158,9 @@ sym::SymbolPtr makePostOp(sym::Symbol *type) {
   return func;
 }
 
-void insertUn(sym::UnorderedTable &table) {
+void insertUn(sym::UnorderedTable &table, const BuiltinTypes &t) {
   #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::UnOp::OP)), MAKE(TYPE)})
+    table.insert({sym::Name(opName(ast::UnOp::OP)), MAKE(t.TYPE)})
   #define MAKE makeUnOp
   
   INSERT_NUM(neg);
@@ -200,11 +185,11 @@ void insertUn(sym::UnorderedTable &table) {
 
 }
 
-stela::sym::ScopePtr stela::createBuiltinScope() {
+stela::sym::ScopePtr stela::createBuiltinScope(BuiltinTypes &types) {
   auto scope = std::make_unique<sym::NSScope>(nullptr);
-  insertTypes(scope->table);
-  insertAssign(scope->table);
-  insertBin(scope->table);
-  insertUn(scope->table);
+  insertTypes(scope->table, types);
+  insertAssign(scope->table, types);
+  insertBin(scope->table, types);
+  insertUn(scope->table, types);
   return scope;
 }

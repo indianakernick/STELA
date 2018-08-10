@@ -24,7 +24,6 @@ class TypeLookup {
 public:
   TypeLookup(ScopeMan &, Log &);
 
-  sym::Symbol *lookupBuiltinType(const sym::Name &, Loc);
   sym::Symbol *lookupType(const ast::TypePtr &);
   sym::FuncParams lookupParams(const ast::FuncParams &);
 

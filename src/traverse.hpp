@@ -12,10 +12,11 @@
 #include "ast.hpp"
 #include "symbols.hpp"
 #include "log output.hpp"
+#include "builtin symbols.hpp"
 
 namespace stela {
 
-void traverse(sym::Scopes &, const AST &, Log &);
+void traverse(sym::Scopes &, const AST &, Log &, const BuiltinTypes &);
 
 }
 

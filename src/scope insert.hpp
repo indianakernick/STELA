@@ -14,6 +14,7 @@
 #include "symbols.hpp"
 #include "log output.hpp"
 #include "scope manager.hpp"
+#include "builtin symbols.hpp"
 
 namespace stela {
 
@@ -22,7 +23,7 @@ public:
   virtual ~SymbolInserter() = default;
   
   virtual void insert(const sym::Name &, sym::SymbolPtr) = 0;
-  virtual sym::Func *insert(const ast::Func &) = 0;
+  virtual sym::Func *insert(const ast::Func &, const BuiltinTypes &) = 0;
   // @TODO might be able to get symbol from AST node
   virtual void enterFuncScope(sym::Func *, const ast::Func &) = 0;
 };
@@ -32,7 +33,7 @@ public:
   UnorderedInserter(sym::UnorderedScope *, Log &);
   
   void insert(const sym::Name &, sym::SymbolPtr) override;
-  sym::Func *insert(const ast::Func &) override;
+  sym::Func *insert(const ast::Func &, const BuiltinTypes &) override;
   void enterFuncScope(sym::Func *, const ast::Func &) override;
 
 private:
@@ -60,7 +61,7 @@ public:
   StructInserter(sym::StructType *, Log &);
 
   void insert(const sym::Name &, sym::SymbolPtr) override;
-  sym::Func *insert(const ast::Func &) override;
+  sym::Func *insert(const ast::Func &, const BuiltinTypes &) override;
   void enterFuncScope(sym::Func *, const ast::Func &) override;
 
   void accessScope(const ast::Member &);
@@ -78,7 +79,7 @@ public:
   EnumInserter(sym::EnumType *, Log &);
   
   void insert(const sym::Name &, sym::SymbolPtr) override;
-  sym::Func *insert(const ast::Func &) override;
+  sym::Func *insert(const ast::Func &, const BuiltinTypes &) override;
   void enterFuncScope(sym::Func *, const ast::Func &) override;
   
   void insert(const ast::EnumCase &);
@@ -90,7 +91,7 @@ private:
 
 class InserterManager {
 public:
-  InserterManager(sym::NSScope *, Log &);
+  InserterManager(sym::NSScope *, Log &, const BuiltinTypes &);
   
   template <typename Symbol>
   Symbol *insert(const sym::Name &name) {
@@ -113,7 +114,7 @@ public:
   }
   sym::Func *insert(const ast::Func &func) {
     assert(ins);
-    return ins->insert(func);
+    return ins->insert(func, bnt);
   }
   void enterFuncScope(sym::Func *const funcSym, const ast::Func &func) {
     assert(ins);
@@ -121,12 +122,12 @@ public:
   }
   
   SymbolInserter *set(SymbolInserter *);
-  SymbolInserter *setDef();
   void restore(SymbolInserter *);
 
 private:
   NSInserter defIns;
   SymbolInserter *ins;
+  const BuiltinTypes &bnt;
 };
 
 }

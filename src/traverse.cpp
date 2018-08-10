@@ -19,12 +19,12 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(sym::Scopes &scopes, Log &log)
-    : man{scopes}, log{log}, ins{man.global(), log}, tlk{man, log} {}
+  Visitor(sym::Scopes &scopes, Log &log, const BuiltinTypes &types)
+    : man{scopes}, log{log}, ins{man.global(), log, types}, tlk{man, log}, bnt{types} {}
   
   void visitStat(const ast::StatPtr &stat) {
     if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
-      getExprType(man, log, expr);
+      getExprType(man, log, expr, bnt);
     } else {
       stat->accept(*this);
     }
@@ -42,7 +42,7 @@ public:
 
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      getExprType(man, log, ret.expr.get());
+      getExprType(man, log, ret.expr.get(), bnt);
     }
   }
 
@@ -63,7 +63,7 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    sym::Symbol *exprType = expr ? getExprType(man, log, expr.get()).type : nullptr;
+    sym::Symbol *exprType = expr ? getExprType(man, log, expr.get(), bnt).type : nullptr;
     if (expr && !exprType) {
       log.error(loc) << "Cannot initialize variable with a type" << fatal;
     }
@@ -118,12 +118,13 @@ private:
   Log &log;
   InserterManager ins;
   TypeLookup tlk;
+  const BuiltinTypes &bnt;
 };
 
 }
 
-void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log) {
-  Visitor visitor{scopes, log};
+void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log, const BuiltinTypes &types) {
+  Visitor visitor{scopes, log, types};
   for (const ast::DeclPtr &decl : ast.global) {
     decl->accept(visitor);
   }

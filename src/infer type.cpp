@@ -18,30 +18,30 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan &man, Log &log)
-    : lkp{man.cur(), log}, tlk{man, log}, man{man}, log{log} {}
+  Visitor(ScopeMan &man, Log &log, const BuiltinTypes &types)
+    : lkp{man.cur(), log}, tlk{man, log}, man{man}, log{log}, bnt{types} {}
 
   void visit(ast::Assignment &as) override {
-    const sym::ExprType left = getExprType(man, log, as.left.get());
-    const sym::ExprType right = getExprType(man, log, as.right.get());
+    const sym::ExprType left = getExprType(man, log, as.left.get(), bnt);
+    const sym::ExprType right = getExprType(man, log, as.right.get(), bnt);
     as.definition = lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::BinaryExpr &bin) override {
-    const sym::ExprType left = getExprType(man, log, bin.left.get());
-    const sym::ExprType right = getExprType(man, log, bin.right.get());
+    const sym::ExprType left = getExprType(man, log, bin.left.get(), bnt);
+    const sym::ExprType right = getExprType(man, log, bin.right.get(), bnt);
     bin.definition = lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
     etype = lkp.getExprType();
   }
   void visit(ast::UnaryExpr &un) override {
-    const sym::ExprType type = getExprType(man, log, un.expr.get());
+    const sym::ExprType type = getExprType(man, log, un.expr.get(), bnt);
     un.definition = lkp.lookupFunc(sym::Name(opName(un.oper)), {type}, un.loc);
     etype = lkp.getExprType();
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      params.push_back(getExprType(man, log, expr.get()));
+      params.push_back(getExprType(man, log, expr.get(), bnt));
     }
     return params;
   }
@@ -76,7 +76,7 @@ public:
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
     const sym::ExprType cond = etype;
-    if (cond.type != tlk.lookupBuiltinType("Bool", tern.cond->loc)) {
+    if (cond.type != bnt.Bool) {
       log.error(tern.loc) << "Condition of ternary conditional must be a Bool" << fatal;
     }
     tern.tru->accept(*this);
@@ -92,14 +92,14 @@ public:
     lkp.setExprType(etype);
   }
   
-  void visit(ast::StringLiteral &s) override {
-    etype.type = tlk.lookupBuiltinType("String", s.loc);
+  void visit(ast::StringLiteral &) override {
+    etype.type = bnt.String;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
-  void visit(ast::CharLiteral &c) override {
-    etype.type = tlk.lookupBuiltinType("Char", c.loc);
+  void visit(ast::CharLiteral &) override {
+    etype.type = bnt.Char;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
@@ -107,18 +107,18 @@ public:
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
     if (num.type == NumberVariant::Float) {
-      etype.type = tlk.lookupBuiltinType("Double", n.loc);
+      etype.type = bnt.Double;
     } else if (num.type == NumberVariant::Int) {
-      etype.type = tlk.lookupBuiltinType("Int64", n.loc);
+      etype.type = bnt.Int64;
     } else if (num.type == NumberVariant::UInt) {
-      etype.type = tlk.lookupBuiltinType("UInt64", n.loc);
+      etype.type = bnt.UInt64;
     }
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
   }
-  void visit(ast::BoolLiteral &b) override {
-    etype.type = tlk.lookupBuiltinType("Bool", b.loc);
+  void visit(ast::BoolLiteral &) override {
+    etype.type = bnt.Bool;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExprType(etype);
@@ -134,12 +134,18 @@ private:
   TypeLookup tlk;
   ScopeMan &man;
   Log &log;
+  const BuiltinTypes &bnt;
 };
 
 }
 
-sym::ExprType stela::getExprType(ScopeMan &man, Log &log, ast::Expression *expr) {
-  Visitor visitor{man, log};
+sym::ExprType stela::getExprType(
+  ScopeMan &man,
+  Log &log,
+  ast::Expression *expr,
+  const BuiltinTypes &types
+) {
+  Visitor visitor{man, log, types};
   expr->accept(visitor);
   return visitor.etype;
 }
