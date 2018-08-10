@@ -40,6 +40,12 @@ public:
     man.leaveScope();
   }
 
+  void visit(ast::Return &ret) override {
+    if (ret.expr) {
+      getExprType(man, log, ret.expr.get());
+    }
+  }
+
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = ins.insert(func);
     funcSym->scope = man.enterScope<sym::FuncScope>();

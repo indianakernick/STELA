@@ -191,6 +191,13 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
+  TEST(Type - keyword, {
+    const char *source = R"(
+      typealias Dummy = lambda;
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Type - Array of functions, {
     const char *source = R"(
       typealias dummy = [(inout Int, inout Double) -> Void];

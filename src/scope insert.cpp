@@ -144,10 +144,12 @@ void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 sym::Func *StructInserter::insert(const ast::Func &func) {
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
   funcSym->params = lookupParams(strut->scope, log, func.params);
-  funcSym->params.insert(
-    funcSym->params.begin(),
-    (mut == ast::MemMut::mutating ? mutSelfType(strut) : conSelfType(strut))
-  );
+  if (scope == sym::MemScope::instance) {
+    funcSym->params.insert(
+      funcSym->params.begin(),
+      (mut == ast::MemMut::mutating ? mutSelfType(strut) : conSelfType(strut))
+    );
+  }
   funcSym->ret = inferRetType(strut->scope, log, func);
   sym::StructTable &table = strut->scope->table;
   for (const sym::StructTableRow &row : table) {
@@ -176,14 +178,17 @@ sym::Func *StructInserter::insert(const ast::Func &func) {
 }
 
 void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
-  funcSym->scope->table.insert({
-    sym::Name("self"),
-    (mut == ast::MemMut::mutating ? makeMutSelf(*funcSym, strut) : makeConSelf(*funcSym, strut))
-  });
+  const bool hasSelf = (scope == sym::MemScope::instance);
+  if (hasSelf) {
+    funcSym->scope->table.insert({
+      sym::Name("self"),
+      (mut == ast::MemMut::mutating ? makeMutSelf(*funcSym, strut) : makeConSelf(*funcSym, strut))
+    });
+  }
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
       sym::Name(func.params[i].name),
-      makeParam(funcSym->params[i + 1], func.params[i])
+      makeParam(funcSym->params[i + hasSelf], func.params[i])
     });
   }
 }
@@ -210,6 +215,8 @@ void EnumInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   table.push_back({name, std::move(symbol)});
 }
 
+/* LCOV_EXCL_START */
+
 sym::Func *EnumInserter::insert(const ast::Func &) {
   assert(false);
 }
@@ -217,6 +224,8 @@ sym::Func *EnumInserter::insert(const ast::Func &) {
 void EnumInserter::enterFuncScope(sym::Func *, const ast::Func &) {
   assert(false);
 }
+
+/* LCOV_EXCL_END */
 
 void EnumInserter::insert(const ast::EnumCase &cs) {
   auto caseSym = std::make_unique<sym::Object>();

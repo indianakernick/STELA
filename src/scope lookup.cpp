@@ -320,6 +320,7 @@ sym::Symbol *stela::lookupAny(sym::Scope *scope, Log &log, const sym::Name &name
 }
 
 sym::Symbol *stela::lookupType(sym::Scope *scope, Log &log, const ast::TypePtr &type) {
+  scope = findNearest<sym::NSScope>(scope);
   TypeVisitor visitor{scope, log};
   type->accept(visitor);
   visitor.type->referenced = true;

@@ -111,6 +111,14 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
+  TEST(Colliding type and function, {
+    const char *source = R"(
+      struct fn {}
+      func fn() {}
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
   TEST(Var type inference, {
     const char *source = R"(
       var num = 5;
@@ -192,7 +200,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Structs, {
+  TEST(Struct - Main, {
     const char *source = R"(
       struct Vec {
         var x: Double;
@@ -231,7 +239,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(More Structs, {
+  TEST(Struct - More, {
     const char *source = R"(
       struct Vec {
         static typealias StaticIsRedundant = Int;
@@ -264,7 +272,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Static init, {
+  TEST(Struct - Static init, {
     const char *source = R"(
       struct MyStruct {
         static init() {
@@ -275,7 +283,134 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Enums, {
+  TEST(Struct - Overload static and non-static, {
+    const char *source = R"(
+      struct MyStruct {
+        func fn() {}
+        static func fn() {}
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Dup member function, {
+    const char *source = R"(
+      struct MyStruct {
+        func fn() {}
+        func fn() {}
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Colliding function and variable, {
+    const char *source = R"(
+      struct MyStruct {
+        var fn: Int;
+        func fn() {}
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Dup member, {
+    const char *source = R"(
+      struct MyStruct {
+        var m: Int;
+        var m: Float;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Access control, {
+    const char *source = R"(
+      struct MyStruct {
+        private var priv: Int;
+        
+        mutating func increase(amount: Int) {
+          self.priv += amount;
+        }
+        private func get() -> Int {
+          return self.priv;
+        }
+        func getDouble() -> Int {
+          return self.get() * 2;
+        }
+        
+        struct Half {}
+        struct Third {}
+        
+        private func getFrac(h: MyStruct.Half) -> Int {
+          return self.priv / 2;
+        }
+        func getFrac(t: MyStruct.Third) -> Int {
+          return self.priv / 3;
+        }
+        
+        static func getFive() -> MyStruct {
+          var s = make MyStruct();
+          s.priv = 5;
+          return s;
+        }
+      }
+    
+      func main() {
+        var five = MyStruct.getFive();
+        let third: Int = five.getFrac(make MyStruct.Third());
+        five.increase(2);
+        let dub: Int = five.getDouble();
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Struct - Access private from outside, {
+    const char *source = R"(
+      struct MyStruct {
+        private var priv: Int;
+      }
+    
+      func oh_no() {
+        var s = make MyStruct();
+        s.priv = 4;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Access private from nested, {
+    const char *source = R"(
+      struct MyStruct {
+        private func priv() -> Int {
+          return 7;
+        }
+        
+        struct Nested {
+          static func getPriv(s: MyStruct) -> Int {
+            return s.priv();
+          }
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Access undefined member var, {
+    const char *source = R"(
+      struct MyStruct {
+        var ajax: Int;
+      }
+    
+      func oh_no() {
+        var s = make MyStruct();
+        s.francis = 4;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Enum - Basic, {
     const char *source = R"(
       enum Dir {
         up,
@@ -288,6 +423,31 @@ TEST_GROUP(Semantics, {
       let east: Dir = Dir.right;
     )";
     createSym(source, log);
+  });
+  
+  TEST(Enum - Access undefined case, {
+    const char *source = R"(
+      enum Enum {
+        ay
+      }
+    
+      func oh_no() {
+        let bee = Enum.bee;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Enum - Duplicate case, {
+    const char *source = R"(
+      enum Dups {
+        ay,
+        bee,
+        see,
+        bee
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Assign to enum, {
@@ -340,6 +500,24 @@ TEST_GROUP(Semantics, {
       }
     )";
     createSym(source, log);
+  });
+  
+  TEST(Non-bool ternary condition, {
+    const char *source = R"(
+      func main() {
+        ("nope" ? 4 : 6);
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Ternary condition type mismatch, {
+    const char *source = R"(
+      func main() {
+        (true ? 4 : "nope");
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Nested types, {
@@ -395,10 +573,10 @@ TEST_GROUP(Semantics, {
             var x: Int;
           }
           
-          var deep: Deep;
+          var deep: Outer.Inner.Deep;
         }
-        func getInner() -> Inner {
-          return make Inner();
+        func getInner() -> Outer.Inner {
+          return make Outer.Inner();
         }
       }
     
