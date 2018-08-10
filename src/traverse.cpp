@@ -63,12 +63,12 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    sym::Symbol *exprType = expr ? getExprType(man, log, expr.get(), bnt).type : nullptr;
-    if (expr && !exprType) {
+    sym::ExprType exprType = expr ? getExprType(man, log, expr.get(), bnt) : sym::ExprType{};
+    if (expr && exprType.typeExpr) {
       log.error(loc) << "Cannot initialize variable with a type" << fatal;
     }
-    sym::Symbol *symType = type ? tlk.lookupType(type) : exprType;
-    if (exprType != nullptr && exprType != symType) {
+    sym::Symbol *symType = type ? tlk.lookupType(type) : exprType.type;
+    if (exprType.type != nullptr && exprType.type != symType) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
     return symType;

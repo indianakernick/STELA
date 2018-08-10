@@ -170,7 +170,7 @@ struct ExprType {
   Symbol *type = nullptr;
   ValueMut mut;
   ValueRef ref;
-  // bool isType = false;
+  bool typeExpr = false;
 };
 
 constexpr ValueMut common(const ValueMut a, const ValueMut b) {

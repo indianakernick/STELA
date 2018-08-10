@@ -137,8 +137,9 @@ public:
     //   currentEtype = false;
   sym::Symbol *lookupSelf(Loc);
   
-  void setExprType(sym::ExprType);
-  sym::ExprType getExprType();
+  void setExpr(sym::ExprType);
+  void enterSubExpr();
+  sym::ExprType leaveSubExpr();
   
 private:
   struct Expr {
@@ -147,7 +148,8 @@ private:
       member,
       ident,
       expr,
-      static_type
+      static_type,
+      subexpr
     } type;
     sym::Name name;
     
@@ -158,7 +160,6 @@ private:
   Log &log;
   std::vector<Expr> exprs;
   sym::ExprType etype;
-  bool currentEtype = false;
   
   void pushExpr(sym::ExprType);
   void pushStatic(sym::Symbol *);

@@ -22,21 +22,28 @@ public:
     : lkp{man.cur(), log}, tlk{man, log}, man{man}, log{log}, bnt{types} {}
 
   void visit(ast::Assignment &as) override {
-    const sym::ExprType left = getExprType(man, log, as.left.get(), bnt);
-    const sym::ExprType right = getExprType(man, log, as.right.get(), bnt);
+    lkp.enterSubExpr();
+    as.left->accept(*this);
+    const sym::ExprType left = lkp.leaveSubExpr();
+    lkp.enterSubExpr();
+    as.right->accept(*this);
+    const sym::ExprType right = lkp.leaveSubExpr();
     as.definition = lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
-    etype = lkp.getExprType();
   }
   void visit(ast::BinaryExpr &bin) override {
-    const sym::ExprType left = getExprType(man, log, bin.left.get(), bnt);
-    const sym::ExprType right = getExprType(man, log, bin.right.get(), bnt);
+    lkp.enterSubExpr();
+    bin.left->accept(*this);
+    const sym::ExprType left = lkp.leaveSubExpr();
+    lkp.enterSubExpr();
+    bin.right->accept(*this);
+    const sym::ExprType right = lkp.leaveSubExpr();
     bin.definition = lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
-    etype = lkp.getExprType();
   }
   void visit(ast::UnaryExpr &un) override {
-    const sym::ExprType type = getExprType(man, log, un.expr.get(), bnt);
+    lkp.enterSubExpr();
+    un.expr->accept(*this);
+    const sym::ExprType type = lkp.leaveSubExpr();
     un.definition = lkp.lookupFunc(sym::Name(opName(un.oper)), {type}, un.loc);
-    etype = lkp.getExprType();
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
@@ -49,63 +56,67 @@ public:
     lkp.call();
     call.func->accept(*this);
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
-    etype = call.definition->ret;
   }
   void visit(ast::MemberIdent &mem) override {
     lkp.member(sym::Name(mem.member));
     mem.object->accept(*this);
     mem.definition = lkp.lookupMember(mem.loc);
-    etype = lkp.getExprType();
   }
   void visit(ast::InitCall &init) override {
+    sym::ExprType etype;
     etype.type = tlk.lookupType(init.type);
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
     // @TODO lookup init function
     //init.definition = lkp.lookupFunc(argTypes(init.args), init.loc);
   }
   void visit(ast::Identifier &id) override {
     id.definition = lkp.lookupIdent(sym::Name(id.name), id.loc);
-    etype = lkp.getExprType();
   }
   void visit(ast::Self &self) override {
     self.definition = lkp.lookupSelf(self.loc);
-    etype = lkp.getExprType();
   }
   void visit(ast::Ternary &tern) override {
+    lkp.enterSubExpr();
     tern.cond->accept(*this);
-    const sym::ExprType cond = etype;
+    const sym::ExprType cond = lkp.leaveSubExpr();
     if (cond.type != bnt.Bool) {
       log.error(tern.loc) << "Condition of ternary conditional must be a Bool" << fatal;
     }
+    lkp.enterSubExpr();
     tern.tru->accept(*this);
-    const sym::ExprType tru = etype;
+    const sym::ExprType tru = lkp.leaveSubExpr();
+    lkp.enterSubExpr();
     tern.fals->accept(*this);
-    const sym::ExprType fals = etype;
+    const sym::ExprType fals = lkp.leaveSubExpr();
     if (tru.type != fals.type) {
       log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
     }
+    sym::ExprType etype;
     etype.type = tru.type;
     etype.mut = sym::common(tru.mut, fals.mut);
     etype.ref = sym::common(tru.ref, fals.ref);
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
   }
   
   void visit(ast::StringLiteral &) override {
+    sym::ExprType etype;
     etype.type = bnt.String;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
   }
   void visit(ast::CharLiteral &) override {
+    sym::ExprType etype;
     etype.type = bnt.Char;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
   }
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
+    sym::ExprType etype;
     if (num.type == NumberVariant::Float) {
       etype.type = bnt.Double;
     } else if (num.type == NumberVariant::Int) {
@@ -115,19 +126,25 @@ public:
     }
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
   }
   void visit(ast::BoolLiteral &) override {
+    sym::ExprType etype;
     etype.type = bnt.Bool;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
-    lkp.setExprType(etype);
+    lkp.setExpr(etype);
   }
   void visit(ast::ArrayLiteral &) override {}
   void visit(ast::MapLiteral &) override {}
   void visit(ast::Lambda &) override {}
-  
-  sym::ExprType etype = sym::null_type;
+
+  void enter() {
+    lkp.enterSubExpr();
+  }
+  sym::ExprType leave() {
+    return lkp.leaveSubExpr();
+  }
 
 private:
   ExprLookup lkp;
@@ -146,6 +163,7 @@ sym::ExprType stela::getExprType(
   const BuiltinTypes &types
 ) {
   Visitor visitor{man, log, types};
+  visitor.enter();
   expr->accept(visitor);
-  return visitor.etype;
+  return visitor.leave();
 }
