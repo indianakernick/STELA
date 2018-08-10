@@ -410,6 +410,45 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Struct - Implicit self, {
+    const char *source = R"(
+      struct MyStruct {
+        var mem: Int;
+        
+        func incr() {
+          ++mem;
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Implicit self type in func, {
+    const char *source = R"(
+      struct MyStruct {
+        struct Inner {}
+        
+        func yeah() {
+          let nope = make Inner();
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Struct - Implicit self type parameters, {
+    const char *source = R"(
+      struct MyStruct {
+        struct Inner {}
+        
+        func yeah(i: Inner) -> Inner {
+          return i;
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
   TEST(Enum - Basic, {
     const char *source = R"(
       enum Dir {
