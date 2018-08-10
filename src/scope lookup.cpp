@@ -63,14 +63,12 @@ sym::Func *selectOverload(
   log.error(loc) << "Ambiguous call to function \"" << key.name << '"' << fatal;
 }
 
-sym::Symbol *lookup(sym::Scope *, Log &, sym::Name, Loc);
-sym::Symbol *lookup(sym::StructScope *, Log &, const sym::MemKey &, Loc);
-sym::MemAccess accessLevel(sym::Scope *, sym::StructType *);
+
 
 class TypeVisitor final : public ast::Visitor {
 public:
-  explicit TypeVisitor(sym::Scope *scope, Log &log)
-    : scope{scope}, log{log} {}
+  explicit TypeVisitor(sym::Scope *const scope, Log &log)
+    : lkp{scope, log}, log{log} {}
 
   void visit(ast::ArrayType &) override {
     assert(false);
@@ -85,44 +83,31 @@ public:
   }
   
   void visit(ast::NamedType &named) override {
-    sym::Symbol *symbol = lookup(scope, log, sym::Name(named.name), named.loc);
-    if (auto *builtin = dynamic_cast<sym::BuiltinType *>(symbol)) {
-      type = symbol;
-      named.definition = type;
-    } else if (auto *strut = dynamic_cast<sym::StructType *>(symbol)) {
-      type = symbol;
-      named.definition = type;
-    } else if (auto *num = dynamic_cast<sym::EnumType *>(symbol)) {
-      type = symbol;
-      named.definition = type;
-    } else if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
-      type = alias->type;
-      named.definition = type;
-    } else {
-      assert(false);
-    }
+    named.definition = lkp.lookupIdent(sym::Name(named.name), named.loc);
+    type = named.definition;
   }
   
   void visit(ast::NestedType &nested) override {
+    lkp.member(sym::Name(nested.name));
     nested.parent->accept(*this);
-    sym::Symbol *const parent = type;
-    if (auto *strut = dynamic_cast<sym::StructType *>(parent)) {
-      type = lookup(
-        strut->scope,
-        log,
-        {sym::Name(nested.name), accessLevel(scope, strut), sym::MemScope::static_},
-        nested.loc
-      );
-      nested.definition = type;
-    } else {
-      log.error(nested.loc) << "Can only access nested types of structs" << fatal;
-    }
+    nested.definition = lkp.lookupMember(nested.loc);
+    type = nested.definition;
   }
   
   sym::Symbol *type;
+  
+  void enter() {
+    lkp.enterSubExpr();
+  }
+  void leave(const Loc loc) {
+    const sym::ExprType etype = lkp.leaveSubExpr();
+    if (!etype.typeExpr) {
+      log.error(loc) << "Expected type" << fatal;
+    }
+  }
 
 private:
-  sym::Scope *scope;
+  ExprLookup lkp;
   Log &log;
 };
 
@@ -319,7 +304,9 @@ sym::Func *lookup(
 sym::Symbol *stela::lookupType(sym::Scope *scope, Log &log, const ast::TypePtr &type) {
   scope = findNearest<sym::NSScope>(scope);
   TypeVisitor visitor{scope, log};
+  visitor.enter();
   type->accept(visitor);
+  visitor.leave(type->loc);
   visitor.type->referenced = true;
   return visitor.type;
 }
