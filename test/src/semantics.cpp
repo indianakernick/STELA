@@ -702,4 +702,54 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  // not sure if this should be allowed or not
+  TEST(Access static var in instance, {
+    const char *source = R"(
+      struct Struct {
+        static var stat = 4;
+      }
+    
+      let instance = make Struct();
+      let test = instance.stat;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  // definitely not allowed
+  TEST(Access instance var in struct, {
+    const char *source = R"(
+      struct Struct {
+        var inst = 4;
+      }
+    
+      let test = Struct.inst;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  // not sure if this should be allowed or not
+  TEST(Access static func in instance, {
+    const char *source = R"(
+      struct Struct {
+        static func stat() {}
+      }
+    
+      let instance = make Struct();
+      let test = instance.stat();
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  // definitely not allowed
+  TEST(Access instance func in struct, {
+    const char *source = R"(
+      struct Struct {
+        func inst() {}
+      }
+    
+      let test = Struct.inst();
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

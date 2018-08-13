@@ -149,7 +149,7 @@ sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(row.val.get());
     if (dupFunc) {
       if (row.scope != scope) {
-        log.error(func.loc) << "Cannot overload static and non-static member functions \""
+        log.error(func.loc) << "Cannot overload static and instance member functions \""
           << row.name << '"' << fatal;
       }
       if (sameParams(dupFunc->params, funcSym->params)) {
