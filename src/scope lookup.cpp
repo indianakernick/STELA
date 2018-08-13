@@ -304,14 +304,14 @@ sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     if (strut == nullptr) {
       log.error(loc) << "Can only call member functions on struct objects" << fatal;
     }
-    return popCallPushRet(lookupFun(strut->scope, memFunKey(strut, params, etype), loc));
+    return popCallPushRet(lookupFun(strut->scope, iMemFunKey(strut, params), loc));
   }
   if (memFunExpr(Expr::Type::static_type)) {
     auto *const strut = dynamic_cast<sym::StructType *>(popType());
     if (strut == nullptr) {
       log.error(loc) << "Can only call static member functions on struct types" << fatal;
     }
-    return popCallPushRet(lookupFun(strut->scope, memFunKey(strut, params), loc));
+    return popCallPushRet(lookupFun(strut->scope, sMemFunKey(strut, params), loc));
   }
   if (freeFun()) {
     return popCallPushRet(lookupFun(scope, {popName(), params}, loc));
@@ -383,7 +383,8 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     sym::Symbol *const member = lookupMem(strut->scope, key, loc);
     auto *object = dynamic_cast<sym::Object *>(member);
     if (object == nullptr) {
-      log.error(loc) << "Member \"" << key.name << "\" is not a variable" << fatal;
+      log.error(loc) << "Reference to instance member function \""
+        << key.name << "\" must be called" << fatal;
     }
     pushExpr(memberType(etype, object->etype));
     return object;
@@ -398,7 +399,8 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
       };
       sym::Symbol *const member = lookupMem(strut->scope, key, loc);
       if (auto *func = dynamic_cast<sym::Func *>(member)) {
-        log.error(loc) << "Reference to function \"" << key.name << "\" must be called" << fatal;
+        log.error(loc) << "Reference to static member function \""
+          << key.name << "\" must be called" << fatal;
       }
       if (auto *object = dynamic_cast<sym::Object *>(member)) {
         return pushObj(object);
@@ -433,6 +435,9 @@ sym::Symbol *ExprLookup::lookupIdent(
 sym::Symbol *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
   sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
+    if (exprs.back().type != Expr::Type::call) {
+      log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
+    }
     exprs.push_back({Expr::Type::ident, name});
     return nullptr;
   }
@@ -556,7 +561,7 @@ sym::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   return func;
 }
 
-sym::MemFunKey ExprLookup::memFunKey(sym::StructType *strut, const sym::FuncParams &params) {
+sym::MemFunKey ExprLookup::sMemFunKey(sym::StructType *strut, const sym::FuncParams &params) {
   return {
     popName(),
     params,
@@ -565,12 +570,8 @@ sym::MemFunKey ExprLookup::memFunKey(sym::StructType *strut, const sym::FuncPara
   };
 }
 
-sym::MemFunKey ExprLookup::memFunKey(
-  sym::StructType *strut,
-  const sym::FuncParams &params,
-  const sym::ExprType etype
-) {
-  sym::MemFunKey key = memFunKey(strut, params);
+sym::MemFunKey ExprLookup::iMemFunKey(sym::StructType *strut, const sym::FuncParams &params) {
+  sym::MemFunKey key = sMemFunKey(strut, params);
   key.scope = sym::MemScope::instance;
   key.params.insert(key.params.begin(), etype);
   return key;

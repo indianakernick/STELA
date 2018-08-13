@@ -175,8 +175,8 @@ private:
   sym::Name popName();
   sym::Symbol *popType();
   sym::Func *popCallPushRet(sym::Func *);
-  sym::MemFunKey memFunKey(sym::StructType *, const sym::FuncParams &);
-  sym::MemFunKey memFunKey(sym::StructType *, const sym::FuncParams &, sym::ExprType);
+  sym::MemFunKey sMemFunKey(sym::StructType *, const sym::FuncParams &);
+  sym::MemFunKey iMemFunKey(sym::StructType *, const sym::FuncParams &);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
   sym::Symbol *lookupMem(sym::StructScope *, const sym::MemKey &, Loc);

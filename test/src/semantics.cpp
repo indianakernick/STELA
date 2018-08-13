@@ -671,4 +671,35 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Must call free func, {
+    const char *source = R"(
+      func fn() {}
+      let test = fn;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Must call inst mem func, {
+    const char *source = R"(
+      struct Struct {
+        func fn() {}
+      }
+    
+      let s = make Struct();
+      let test = s.fn;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Must call inst mem func, {
+    const char *source = R"(
+      struct Struct {
+        static func fn() {}
+      }
+    
+      let test = Struct.fn;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });
