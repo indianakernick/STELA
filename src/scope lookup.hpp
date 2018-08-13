@@ -161,13 +161,28 @@ private:
   sym::ExprType etype;
   
   void pushExpr(sym::ExprType);
-  void pushStatic(sym::Symbol *);
+  sym::Object *pushObj(sym::Object *);
+  sym::Symbol *pushStatic(sym::Symbol *);
   bool memVarExpr(Expr::Type) const;
     // return top == type && below top == member && below below top != call
   bool memFunExpr(Expr::Type) const;
     // return top == type && below top == member && below below top == call
+  bool call(Expr::Type) const;
+    // return top == type && below top == call
   bool freeFun() const;
     // return top == ident && below top == call
+  
+  sym::Name popName();
+  sym::Symbol *popType();
+  sym::Func *popCallPushRet(sym::Func *);
+  sym::MemFunKey memFunKey(sym::StructType *, const sym::FuncParams &);
+  sym::MemFunKey memFunKey(sym::StructType *, const sym::FuncParams &, sym::ExprType);
+  
+  sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
+  sym::Symbol *lookupMem(sym::StructScope *, const sym::MemKey &, Loc);
+  sym::Object *lookupMem(sym::EnumScope *, const sym::Name &, Loc);
+  sym::Func *lookupFun(sym::Scope *, const sym::FunKey &, Loc);
+  sym::Func *lookupFun(sym::StructScope *, const sym::MemFunKey &, Loc);
 };
 
 }

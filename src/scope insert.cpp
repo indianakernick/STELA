@@ -38,29 +38,18 @@ sym::ExprType inferRetType(
   }
 }
 
-sym::ExprType mutSelfType(sym::StructType *const structType) {
-  return {structType, sym::ValueMut::var, sym::ValueRef::ref};
+sym::ExprType selfType(sym::StructType *const structType, const ast::MemMut mut) {
+  return {
+    structType,
+    mut == ast::MemMut::mutating ? sym::ValueMut::var : sym::ValueMut::let,
+    sym::ValueRef::ref
+  };
 }
 
-sym::ExprType conSelfType(sym::StructType *const structType) {
-  return {structType, sym::ValueMut::let, sym::ValueRef::ref};
-}
-
-auto makeSelf(sym::Func &funcSym) {
+auto makeSelf(sym::Func &funcSym, sym::StructType *const structType, const ast::MemMut mut) {
   auto self = std::make_unique<sym::Object>();
   self->loc = funcSym.loc;
-  return self;
-}
-
-auto makeMutSelf(sym::Func &funcSym, sym::StructType *const structType) {
-  auto self = makeSelf(funcSym);
-  self->etype = mutSelfType(structType);
-  return self;
-}
-
-auto makeConSelf(sym::Func &funcSym, sym::StructType *const structType) {
-  auto self = makeSelf(funcSym);
-  self->etype = conSelfType(structType);
+  self->etype = selfType(structType, mut);
   return self;
 }
 
@@ -149,10 +138,7 @@ sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt
   std::unique_ptr<sym::Func> funcSym = makeFunc(func);
   funcSym->params = lookupParams(strut->scope, log, func.params);
   if (scope == sym::MemScope::instance) {
-    funcSym->params.insert(
-      funcSym->params.begin(),
-      (mut == ast::MemMut::mutating ? mutSelfType(strut) : conSelfType(strut))
-    );
+    funcSym->params.insert(funcSym->params.begin(), selfType(strut, mut));
   }
   funcSym->ret = inferRetType(strut->scope, log, func, bnt);
   sym::StructTable &table = strut->scope->table;
@@ -184,10 +170,7 @@ sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt
 void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
   const bool hasSelf = (scope == sym::MemScope::instance);
   if (hasSelf) {
-    funcSym->scope->table.insert({
-      sym::Name("self"),
-      (mut == ast::MemMut::mutating ? makeMutSelf(*funcSym, strut) : makeConSelf(*funcSym, strut))
-    });
+    funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut, mut)});
   }
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({

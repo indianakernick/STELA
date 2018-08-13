@@ -663,4 +663,12 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Expected type, {
+    const char *source = R"(
+      let not_a_type = 4;
+      var oops: not_a_type;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });
