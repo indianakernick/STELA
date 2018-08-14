@@ -153,11 +153,11 @@ sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt
           << row.name << '"' << fatal;
       }
       if (sameParams(dupFunc->params, funcSym->params)) {
-        log.error(func.loc) << "Redefinition of function \"" << func.name
+        log.error(func.loc) << "Redefinition of member function \"" << func.name
           << "\" previously declared at " << row.val->loc << fatal;
       }
     } else {
-      log.error(func.loc) << "Redefinition of function \"" << func.name
+      log.error(func.loc) << "Redefinition of member function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
         << row.val->loc << fatal;
     }
@@ -171,6 +171,9 @@ void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
   const bool hasSelf = (scope == sym::MemScope::instance);
   if (hasSelf) {
     funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut, mut)});
+    funcSym->scope->ctx = sym::FuncScope::Ctx::inst_mem;
+  } else {
+    funcSym->scope->ctx = sym::FuncScope::Ctx::stat_mem;
   }
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({

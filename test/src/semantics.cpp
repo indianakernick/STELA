@@ -415,12 +415,21 @@ TEST_GROUP(Semantics, {
       struct MyStruct {
         var mem: Int;
         
-        func incr() {
-          ++mem;
+        static func incr(number: inout Int) {
+          ++number;
+        }
+        
+        func yeah() {
+          mem = (mem - 5) ** 2;
+        }
+        
+        func doStuff() {
+          incr(mem);
+          yeah();
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    createSym(source, log);
   });
   
   TEST(Struct - Implicit self type in func, {
@@ -433,7 +442,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    createSym(source, log);
   });
   
   TEST(Struct - Implicit self type parameters, {
@@ -446,7 +455,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    createSym(source, log);
   });
   
   TEST(Enum - Basic, {
@@ -703,7 +712,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  // not sure if this should be allowed or not
   TEST(Access static var in instance, {
     const char *source = R"(
       struct Struct {
@@ -716,7 +724,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  // definitely not allowed
   TEST(Access instance var in struct, {
     const char *source = R"(
       struct Struct {
@@ -728,7 +735,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  // not sure if this should be allowed or not
   TEST(Access static func in instance, {
     const char *source = R"(
       struct Struct {
@@ -741,7 +747,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  // definitely not allowed
   TEST(Access instance func in struct, {
     const char *source = R"(
       struct Struct {

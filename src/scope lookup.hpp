@@ -181,10 +181,10 @@ private:
   sym::MemKey iMemKey(sym::StructType *);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
-  sym::Symbol *lookupMem(sym::StructScope *, const sym::MemKey &, Loc);
+  sym::Symbol *lookupMem(sym::StructScope *, const sym::MemKey &, Loc, bool);
   sym::Object *lookupMem(sym::EnumScope *, const sym::Name &, Loc);
   sym::Func *lookupFun(sym::Scope *, const sym::FunKey &, Loc);
-  sym::Func *lookupFun(sym::StructScope *, const sym::MemFunKey &, Loc);
+  sym::Func *lookupFun(sym::StructScope *, const sym::MemFunKey &, Loc, bool);
 };
 
 }
