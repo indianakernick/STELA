@@ -69,12 +69,6 @@ struct FuncScope final : UnorderedScope {
     : UnorderedScope{parent} {}
   
   void accept(ScopeVisitor &) override;
-  
-  enum class Ctx {
-    free,
-    inst_mem,
-    stat_mem
-  } ctx = Ctx::free;
 };
 
 enum class MemAccess {

@@ -171,9 +171,6 @@ void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
   const bool hasSelf = (scope == sym::MemScope::instance);
   if (hasSelf) {
     funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut, mut)});
-    funcSym->scope->ctx = sym::FuncScope::Ctx::inst_mem;
-  } else {
-    funcSym->scope->ctx = sym::FuncScope::Ctx::stat_mem;
   }
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({

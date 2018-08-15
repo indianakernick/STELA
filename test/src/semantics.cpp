@@ -410,54 +410,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Struct - Implicit self, {
-    const char *source = R"(
-      struct MyStruct {
-        var mem: Int;
-        
-        static func incr(number: inout Int) {
-          ++number;
-        }
-        
-        func yeah() {
-          mem = (mem - 5) ** 2;
-        }
-        
-        func doStuff() {
-          incr(mem);
-          yeah();
-        }
-      }
-    )";
-    createSym(source, log);
-  });
-  
-  TEST(Struct - Implicit self type in func, {
-    const char *source = R"(
-      struct MyStruct {
-        struct Inner {}
-        
-        func yeah() {
-          let nope = make Inner();
-        }
-      }
-    )";
-    createSym(source, log);
-  });
-  
-  TEST(Struct - Implicit self type parameters, {
-    const char *source = R"(
-      struct MyStruct {
-        struct Inner {}
-        
-        func yeah(i: Inner) -> Inner {
-          return i;
-        }
-      }
-    )";
-    createSym(source, log);
-  });
-  
   TEST(Enum - Basic, {
     const char *source = R"(
       enum Dir {
@@ -476,7 +428,8 @@ TEST_GROUP(Semantics, {
   TEST(Enum - Access undefined case, {
     const char *source = R"(
       enum Enum {
-        ay
+        ay,
+        nay = ay
       }
     
       func oh_no() {
@@ -574,7 +527,7 @@ TEST_GROUP(Semantics, {
         struct Inner {
           static let five = 5;
           
-          var num: Double;
+          var num: Int = five;
         }
       }
     
@@ -621,10 +574,10 @@ TEST_GROUP(Semantics, {
             var x: Int;
           }
           
-          var deep: Outer.Inner.Deep;
+          var deep: Deep;
         }
-        func getInner() -> Outer.Inner {
-          return make Outer.Inner();
+        func getInner() -> Inner {
+          return make Inner();
         }
       }
     

@@ -109,35 +109,23 @@ ScopeType *findNearest(sym::Scope *const scope) {
   }
 }
 
-struct ParentScope {
-  sym::Scope *parent;
-  sym::MemScope memScope = {};
-  bool member = false;
-};
-
-sym::MemScope convertScope(const sym::FuncScope::Ctx ctx) {
-  assert(ctx != sym::FuncScope::Ctx::free);
-  if (ctx == sym::FuncScope::Ctx::stat_mem) {
-    return sym::MemScope::static_;
+template <typename... ScopeType>
+sym::Scope *findNearestNot(sym::Scope *const scope) {
+  if (scope == nullptr) {
+    return nullptr;
+  } else if ((dynamic_cast<ScopeType *>(scope) || ...)) {
+    return findNearestNot<ScopeType...>(scope->parent);
   } else {
-    return sym::MemScope::instance;
+    return scope;
   }
 }
 
-sym::StructScope *memFunParent(sym::Scope *const parent) {
-  return assertDownCast<sym::StructScope>(parent);
-}
-
-ParentScope parentScope(sym::Scope *const scope) {
+sym::Scope *parentScope(sym::Scope *const scope) {
   sym::FuncScope *func = dynamic_cast<sym::FuncScope *>(scope);
   if (func) {
-    if (func->ctx == sym::FuncScope::Ctx::free) {
-      return {findNearest<sym::NSScope>(func->parent)};
-    } else {
-      return {func->parent, convertScope(func->ctx), true};
-    }
+    return findNearestNot<sym::FuncScope, sym::BlockScope>(func->parent);
   } else {
-    return {scope->parent};
+    return scope->parent;
   }
 }
 
@@ -216,28 +204,8 @@ sym::Func *ExprLookup::lookupFun(
 ) {
   const std::vector<sym::Symbol *> symbols = findMany(scope, key.name);
   if (symbols.empty()) {
-    ParentScope ps = parentScope(scope);
-    if (ps.member) {
-      sym::Func *func = lookupFun(memFunParent(ps.parent), {
-        key.name, key.params, sym::MemAccess::private_, ps.memScope,
-      }, loc, true);
-      if (func) {
-        return func;
-      }
-      if (ps.memScope == sym::MemScope::instance) {
-        func = lookupFun(memFunParent(ps.parent), {
-          key.name, key.params, sym::MemAccess::private_, sym::MemScope::static_,
-        }, loc, true);
-        if (func) {
-          return func;
-        }
-      }
-      if (!ps.parent->parent) {
-        log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
-      }
-      return lookupFun(ps.parent->parent, key, loc);
-    } else if (ps.parent) {
-      return lookupFun(ps.parent, key, loc);
+    if (sym::Scope *parent = parentScope(scope)) {
+      return lookupFun(parent, key, loc);
     } else {
       log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
     }
@@ -249,11 +217,10 @@ sym::Func *ExprLookup::lookupFun(
 sym::Func *ExprLookup::lookupFun(
   sym::StructScope *scope,
   const sym::MemFunKey &key,
-  const Loc loc,
-  const bool retNull = false
+  const Loc loc
 ) {
   for (const sym::StructTableRow &row : scope->table) {
-    if (key.name != row.name || key.scope != row.scope) {
+    if (row.name != key.name || row.scope != key.scope) {
       continue;
     }
     auto *func = dynamic_cast<sym::Func *>(row.val.get());
@@ -270,12 +237,8 @@ sym::Func *ExprLookup::lookupFun(
     }
     return referTo(func);
   }
-  if (retNull) {
-    return nullptr;
-  } else {
-    log.error(loc) << "No " << scopeName(key.scope) << " member function \""
-      << key.name << "\" found in struct" << fatal;
-  }
+  log.error(loc) << "No " << scopeName(key.scope) << " member function \""
+    << key.name << "\" found in struct" << fatal;
 }
 
 sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
@@ -319,24 +282,23 @@ void ExprLookup::member(const sym::Name &name) {
 sym::Symbol *ExprLookup::lookupMem(
   sym::StructScope *scope,
   const sym::MemKey &key,
-  const Loc loc,
-  const bool retNull = false
+  const Loc loc
 ) {
   for (const sym::StructTableRow &row : scope->table) {
-    if (key.name != row.name || key.scope != row.scope) {
+    if (row.name != key.name || row.scope != key.scope) {
       continue;
     }
     if (key.access == sym::MemAccess::public_ && row.access == sym::MemAccess::private_) {
       log.error(loc) << "Cannot access private member \"" << key.name << "\" of struct" << fatal;
     }
+    if (sym::Func *func = dynamic_cast<sym::Func *>(row.val.get())) {
+      log.error(loc) << "Reference to " << scopeName(key.scope) << " member function \""
+        << key.name << "\" must be called" << fatal;
+    }
     return referTo(row.val.get());
   }
-  if (retNull) {
-    return nullptr;
-  } else {
-    log.error(loc) << "No " << scopeName(key.scope) << " member \""
-      << key.name << "\" found in struct" << fatal;
-  }
+  log.error(loc) << "No " << scopeName(key.scope) << " member \""
+    << key.name << "\" found in struct" << fatal;
 }
 
 sym::Object *ExprLookup::lookupMem(
@@ -358,12 +320,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     if (strut == nullptr) {
       log.error(loc) << "Can only use . operator on struct objects" << fatal;
     }
-    const sym::MemKey key = iMemKey(strut);
-    sym::Symbol *const member = lookupMem(strut->scope, key, loc);
-    if (auto *func = dynamic_cast<sym::Func *>(member)) {
-      log.error(loc) << "Reference to instance member function \""
-        << key.name << "\" must be called" << fatal;
-    }
+    sym::Symbol *const member = lookupMem(strut->scope, iMemKey(strut), loc);
     sym::Object *const object = assertDownCast<sym::Object>(member);
     pushExpr(memberType(etype, object->etype));
     return object;
@@ -371,12 +328,8 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::static_type)) {
     sym::Symbol *const type = popType();
     if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
-      const sym::MemKey key = sMemKey(strut);
-      sym::Symbol *const member = lookupMem(strut->scope, key, loc);
-      if (auto *func = dynamic_cast<sym::Func *>(member)) {
-        log.error(loc) << "Reference to static member function \""
-          << key.name << "\" must be called" << fatal;
-      } else if (auto *object = dynamic_cast<sym::Object *>(member)) {
+      sym::Symbol *const member = lookupMem(strut->scope, sMemKey(strut), loc);
+      if (auto *object = dynamic_cast<sym::Object *>(member)) {
         return pushObj(object);
       } else {
         return pushStatic(member);
@@ -399,28 +352,8 @@ sym::Symbol *ExprLookup::lookupIdent(
   if (symbol) {
     return referTo(symbol);
   }
-  ParentScope ps = parentScope(scope);
-  if (ps.member) {
-    sym::Symbol *symbol = lookupMem(memFunParent(ps.parent), {
-      name, sym::MemAccess::private_, ps.memScope,
-    }, loc, true);
-    if (symbol) {
-      return symbol;
-    }
-    if (ps.memScope == sym::MemScope::instance) {
-      symbol = lookupMem(memFunParent(ps.parent), {
-        name, sym::MemAccess::private_, sym::MemScope::static_,
-      }, loc, true);
-      if (symbol) {
-        return symbol;
-      }
-    }
-    if (!ps.parent->parent) {
-      log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
-    }
-    return lookupIdent(ps.parent->parent, name, loc);
-  } else if (ps.parent) {
-    return lookupIdent(ps.parent, name, loc);
+  if (sym::Scope *parent = parentScope(scope)) {
+    return lookupIdent(parent, name, loc);
   } else {
     log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
