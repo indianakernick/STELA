@@ -329,10 +329,6 @@ sym::Symbol *ExprLookup::lookupMem(
     if (key.access == sym::MemAccess::public_ && row.access == sym::MemAccess::private_) {
       log.error(loc) << "Cannot access private member \"" << key.name << "\" of struct" << fatal;
     }
-    if (sym::Func *func = dynamic_cast<sym::Func *>(row.val.get())) {
-      log.error(loc) << "Reference to " << scopeName(key.scope) << " member function \""
-        << key.name << "\" must be called" << fatal;
-    }
     return referTo(row.val.get());
   }
   if (retNull) {
@@ -362,7 +358,12 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     if (strut == nullptr) {
       log.error(loc) << "Can only use . operator on struct objects" << fatal;
     }
-    sym::Symbol *const member = lookupMem(strut->scope, iMemKey(strut), loc);
+    const sym::MemKey key = iMemKey(strut);
+    sym::Symbol *const member = lookupMem(strut->scope, key, loc);
+    if (auto *func = dynamic_cast<sym::Func *>(member)) {
+      log.error(loc) << "Reference to instance member function \""
+        << key.name << "\" must be called" << fatal;
+    }
     sym::Object *const object = assertDownCast<sym::Object>(member);
     pushExpr(memberType(etype, object->etype));
     return object;
@@ -370,8 +371,12 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::static_type)) {
     sym::Symbol *const type = popType();
     if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
-      sym::Symbol *const member = lookupMem(strut->scope, sMemKey(strut), loc);
-      if (auto *object = dynamic_cast<sym::Object *>(member)) {
+      const sym::MemKey key = sMemKey(strut);
+      sym::Symbol *const member = lookupMem(strut->scope, key, loc);
+      if (auto *func = dynamic_cast<sym::Func *>(member)) {
+        log.error(loc) << "Reference to static member function \""
+          << key.name << "\" must be called" << fatal;
+      } else if (auto *object = dynamic_cast<sym::Object *>(member)) {
         return pushObj(object);
       } else {
         return pushStatic(member);
