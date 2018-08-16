@@ -9,7 +9,18 @@ __If a compilers expert is reading this, I would love some advice!__
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * Writing the semantic analyser is way harder than I thought it would be! I think I have bitten off more than I can chew. Testing the semantic analyser is difficult because it's so context sensitive. Perhaps I should consider making a simpler language. C with sugar perhaps?
+ * The semantic analyser  can:
+   * check the type of variables
+   * check types of assignments and expressions
+   * lookup overloaded functions
+   * lookup constructors
+   * lookup struct members and functions
+   * lookup nested types
+   There's still a lot more to do:
+   * Generics (required to implement arrays, maps and lambdas)
+   * Arrays, maps, lambdas (their value expressions and type expressions)
+   * Deal with statements (if, while, for, ...)
+   * Probably a lot of stuff that I can't think of right now!
 
 ## About
 
