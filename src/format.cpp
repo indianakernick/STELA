@@ -165,11 +165,6 @@ public:
     pushOp(".");
     push(Tag::member, mem.member);
   }
-  void visit(ast::InitCall &init) override {
-    pushKey("make");
-    init.type->accept(*this);
-    pushArgs(init.args);
-  }
   void visit(ast::Subscript &sub) override {
     sub.object->accept(*this);
     pushOp("[");

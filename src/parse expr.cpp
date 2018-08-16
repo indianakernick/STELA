@@ -132,13 +132,6 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
     return makeUnary(ast::UnOp::bool_not, tok);
   } else if (tok.checkOp("~")) {
     return makeUnary(ast::UnOp::bit_not, tok);
-  } else if (tok.checkKeyword("make")) {
-    Context ctx = tok.context("object initialization");
-    auto init = std::make_unique<ast::InitCall>();
-    init->loc = tok.lastLoc();
-    init->type = tok.expectNode(parseType, "type");
-    init->args = parseFuncArgs(tok);
-    return init;
   } else {
     return parseMisc(tok);
   }

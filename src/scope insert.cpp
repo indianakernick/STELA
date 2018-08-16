@@ -17,9 +17,9 @@ using namespace stela;
 
 namespace {
 
-std::unique_ptr<sym::Func> makeFunc(const ast::Func &func) {
+sym::FuncPtr makeFunc(const Loc loc) {
   auto funcSym = std::make_unique<sym::Func>();
-  funcSym->loc = func.loc;
+  funcSym->loc = loc;
   return funcSym;
 }
 
@@ -78,7 +78,7 @@ void UnorderedInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 }
 
 sym::Func *UnorderedInserter::insert(const ast::Func &func, const BuiltinTypes &bnt) {
-  std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+  sym::FuncPtr funcSym = makeFunc(func.loc);
   funcSym->params = lookupParams(scope, log, func.params);
   funcSym->ret = inferRetType(scope, log, func, bnt);
   const auto [beg, end] = scope->table.equal_range(sym::Name(func.name));
@@ -135,36 +135,21 @@ void StructInserter::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 }
 
 sym::Func *StructInserter::insert(const ast::Func &func, const BuiltinTypes &bnt) {
-  std::unique_ptr<sym::Func> funcSym = makeFunc(func);
+  sym::FuncPtr funcSym = makeFunc(func.loc);
   funcSym->params = lookupParams(strut->scope, log, func.params);
   if (scope == sym::MemScope::instance) {
     funcSym->params.insert(funcSym->params.begin(), selfType(strut, mut));
   }
   funcSym->ret = inferRetType(strut->scope, log, func, bnt);
-  sym::StructTable &table = strut->scope->table;
-  for (const sym::StructTableRow &row : table) {
-    if (row.name != func.name) {
-      continue;
-    }
-    sym::Func *const dupFunc = dynamic_cast<sym::Func *>(row.val.get());
-    if (dupFunc) {
-      if (row.scope != scope) {
-        log.error(func.loc) << "Cannot overload static and instance member functions \""
-          << row.name << '"' << fatal;
-      }
-      if (sameParams(dupFunc->params, funcSym->params)) {
-        log.error(func.loc) << "Redefinition of member function \"" << func.name
-          << "\" previously declared at " << row.val->loc << fatal;
-      }
-    } else {
-      log.error(func.loc) << "Redefinition of member function \"" << func.name
-        << "\" previously declared (as a different kind of symbol) at "
-        << row.val->loc << fatal;
-    }
-  }
-  sym::Func *const ret = funcSym.get();
-  table.push_back({sym::Name(func.name), access, scope, std::move(funcSym)});
-  return ret;
+  return insertFunc(funcSym, sym::Name(func.name));
+}
+
+sym::Func *StructInserter::insert(const ast::Init &init) {
+  sym::FuncPtr funcSym = makeFunc(init.loc);
+  funcSym->params = lookupParams(strut->scope, log, init.params);
+  funcSym->params.insert(funcSym->params.begin(), selfType(strut, ast::MemMut::mutating));
+  funcSym->ret = {strut, sym::ValueMut::let, sym::ValueRef::val};
+  return insertFunc(funcSym, "init");
 }
 
 void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
@@ -180,10 +165,50 @@ void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
   }
 }
 
+void StructInserter::enterFuncScope(sym::Func *funcSym, const ast::Init &init) {
+  funcSym->scope->table.insert({sym::Name("self"), makeSelf(*funcSym, strut, ast::MemMut::mutating)});
+  for (size_t i = 0; i != init.params.size(); ++i) {
+    funcSym->scope->table.insert({
+      sym::Name(init.params[i].name),
+      makeParam(funcSym->params[i + 1], init.params[i])
+    });
+  }
+}
+
 void StructInserter::accessScope(const ast::Member &member) {
   access = memAccess(member, log);
   scope = memScope(member, log);
   mut = member.mut;
+}
+
+sym::Func *StructInserter::insertFunc(
+  sym::FuncPtr &funcSym,
+  const sym::Name &name
+) {
+  sym::StructTable &table = strut->scope->table;
+  for (const sym::StructTableRow &row : table) {
+    if (row.name != name) {
+      continue;
+    }
+    sym::Func *const dupFunc = dynamic_cast<sym::Func *>(row.val.get());
+    if (dupFunc) {
+      if (row.scope != scope) {
+        log.error(funcSym->loc) << "Cannot overload static and instance member functions \""
+          << row.name << '"' << fatal;
+      }
+      if (sameParams(dupFunc->params, funcSym->params)) {
+        log.error(funcSym->loc) << "Redefinition of member function \"" << name
+          << "\" previously declared at " << row.val->loc << fatal;
+      }
+    } else {
+      log.error(funcSym->loc) << "Redefinition of member function \"" << name
+        << "\" previously declared (as a different kind of symbol) at "
+        << row.val->loc << fatal;
+    }
+  }
+  sym::Func *const ret = funcSym.get();
+  table.push_back({name, access, scope, std::move(funcSym)});
+  return ret;
 }
 
 EnumInserter::EnumInserter(sym::EnumType *enm, Log &log)
@@ -231,4 +256,8 @@ SymbolInserter *InserterManager::set(SymbolInserter *const newIns) {
 void InserterManager::restore(SymbolInserter *const oldIns) {
   assert(oldIns);
   ins = oldIns;
+}
+
+SymbolInserter *InserterManager::get() const {
+  return ins;
 }

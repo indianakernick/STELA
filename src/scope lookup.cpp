@@ -226,7 +226,7 @@ sym::Func *ExprLookup::lookupFun(
     auto *func = dynamic_cast<sym::Func *>(row.val.get());
     if (func == nullptr) {
       log.error(loc) << "Calling \"" << key.name
-        << "\" but it is not a function. " << func->loc << fatal;
+        << "\" but it is not a function. " << row.val->loc << fatal;
     }
     if (!compatParams(func->params, key.params)) {
       continue;
@@ -237,7 +237,7 @@ sym::Func *ExprLookup::lookupFun(
     }
     return referTo(func);
   }
-  log.error(loc) << "No " << scopeName(key.scope) << " member function \""
+  log.error(loc) << "No matching " << scopeName(key.scope) << " member function \""
     << key.name << "\" found in struct" << fatal;
 }
 
@@ -256,8 +256,19 @@ sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     }
     return popCallPushRet(lookupFun(strut->scope, sMemFunKey(strut, params), loc));
   }
-  if (freeFun()) {
+  if (call(Expr::Type::ident)) {
     return popCallPushRet(lookupFun(scope, {popName(), params}, loc));
+  }
+  if (call(Expr::Type::static_type)) {
+    auto *const strut = dynamic_cast<sym::StructType *>(popType());
+    if (strut == nullptr) {
+      log.error(loc) << "Can only call constructor of struct" << fatal;
+    }
+    sym::MemFunKey key = {
+      "init", params, accessLevel(scope, strut), sym::MemScope::instance
+    };
+    key.params.insert(key.params.begin(), {strut, sym::ValueMut::var, sym::ValueRef::ref});
+    return popCallPushRet(lookupFun(strut->scope, key, loc));
   }
   if (call(Expr::Type::expr)) {
     log.error(loc) << "Overloaded function call operator has not been implemented" << fatal;
@@ -291,10 +302,6 @@ sym::Symbol *ExprLookup::lookupMem(
     if (key.access == sym::MemAccess::public_ && row.access == sym::MemAccess::private_) {
       log.error(loc) << "Cannot access private member \"" << key.name << "\" of struct" << fatal;
     }
-    if (sym::Func *func = dynamic_cast<sym::Func *>(row.val.get())) {
-      log.error(loc) << "Reference to " << scopeName(key.scope) << " member function \""
-        << key.name << "\" must be called" << fatal;
-    }
     return referTo(row.val.get());
   }
   log.error(loc) << "No " << scopeName(key.scope) << " member \""
@@ -320,7 +327,12 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     if (strut == nullptr) {
       log.error(loc) << "Can only use . operator on struct objects" << fatal;
     }
-    sym::Symbol *const member = lookupMem(strut->scope, iMemKey(strut), loc);
+    const sym::MemKey key = iMemKey(strut);
+    sym::Symbol *const member = lookupMem(strut->scope, key, loc);
+    if (auto *func = dynamic_cast<sym::Func *>(member)) {
+      log.error(loc) << "Reference to " << scopeName(key.scope) << " member function \""
+        << key.name << "\" must be called" << fatal;
+    }
     sym::Object *const object = assertDownCast<sym::Object>(member);
     pushExpr(memberType(etype, object->etype));
     return object;
@@ -328,8 +340,12 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::static_type)) {
     sym::Symbol *const type = popType();
     if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
-      sym::Symbol *const member = lookupMem(strut->scope, sMemKey(strut), loc);
-      if (auto *object = dynamic_cast<sym::Object *>(member)) {
+      const sym::MemKey key = sMemKey(strut);
+      sym::Symbol *const member = lookupMem(strut->scope, key, loc);
+      if (auto *func = dynamic_cast<sym::Func *>(member)) {
+        log.error(loc) << "Reference to " << scopeName(key.scope) << " member function \""
+          << key.name << "\" must be called" << fatal;
+      } else if (auto *object = dynamic_cast<sym::Object *>(member)) {
         return pushObj(object);
       } else {
         return pushStatic(member);
@@ -339,6 +355,18 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
       return pushObj(lookupMem(enm->scope, popName(), loc));
     }
     log.error(loc) << "Can only access static members of struct and enum types" << fatal;
+  }
+  if (memFunExpr(Expr::Type::static_type)) {
+    sym::Symbol *const type = popType();
+    if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
+      const sym::MemKey key = sMemKey(strut);
+      sym::Symbol *const member = lookupMem(strut->scope, key, loc);
+      if (auto *innerStrut = dynamic_cast<sym::StructType *>(member)) {
+        return pushStatic(innerStrut);
+      }
+      this->member(key.name);
+    }
+    pushStatic(type);
   }
   return nullptr;
 }
@@ -458,10 +486,6 @@ bool ExprLookup::call(const Expr::Type type) const {
     && top[0].type == type
     && top[1].type == Expr::Type::call
   ;
-}
-
-bool ExprLookup::freeFun() const {
-  return call(Expr::Type::ident);
 }
 
 sym::Name ExprLookup::popName() {

@@ -170,14 +170,6 @@ struct MemberIdent final : Expression {
   void accept(Visitor &) override;
 };
 
-struct InitCall final : Expression {
-  TypePtr type;
-  FuncArgs args;
-  sym::Func *definition = nullptr;
-  
-  void accept(Visitor &) override;
-};
-
 struct Subscript final : Expression {
   ExprPtr object;
   ExprPtr index;
@@ -446,7 +438,6 @@ public:
   virtual void visit(UnaryExpr &) {}
   virtual void visit(FuncCall &) {}
   virtual void visit(MemberIdent &) {}
-  virtual void visit(InitCall &) {}
   virtual void visit(Subscript &) {}
   virtual void visit(Identifier &) {}
   virtual void visit(Self &) {}

@@ -211,7 +211,7 @@ TEST_GROUP(Semantics, {
           self.y = y;
         }
         
-        static var origin = make Vec(0.0, 0.0);
+        static var origin = Vec(0.0, 0.0);
         
         mutating func add(other: Vec) {
           self.x += other.x;
@@ -231,8 +231,8 @@ TEST_GROUP(Semantics, {
       }
     
       func main() {
-        let middle = mid(Vec.origin, make Vec(2.0, 3.0));
-        let two = (make Vec(2.0, 3.0)).x;
+        let middle = mid(Vec.origin, Vec(2.0, 3.0));
+        let two = (Vec(2.0, 3.0)).x;
         let three = two + 1.0;
       }
     )";
@@ -252,6 +252,7 @@ TEST_GROUP(Semantics, {
       }
     
       struct MyString {
+        init() {}
         var s: String;
       }
     
@@ -264,7 +265,7 @@ TEST_GROUP(Semantics, {
       }
     
       func main() {
-        var thing = make MyString();
+        var thing = MyString();
         thing.s = "A string";
         append(thing);
       }
@@ -323,9 +324,23 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Struct - Construct nested, {
+    const char *source = R"(
+      struct Outer {
+        struct Inner {
+          init() {}
+        }
+      }
+      let inner: Outer.Inner = Outer.Inner();
+    )";
+    createSym(source, log);
+  });
+  
   TEST(Struct - Access control, {
     const char *source = R"(
       struct MyStruct {
+        init() {}
+      
         private var priv: Int;
         
         mutating func increase(amount: Int) {
@@ -338,8 +353,12 @@ TEST_GROUP(Semantics, {
           return self.get() * 2;
         }
         
-        struct Half {}
-        struct Third {}
+        struct Half {
+          init() {}
+        }
+        struct Third {
+          init() {}
+        }
         
         private func getFrac(h: MyStruct.Half) -> Int {
           return self.priv / 2;
@@ -349,7 +368,7 @@ TEST_GROUP(Semantics, {
         }
         
         static func getFive() -> MyStruct {
-          var s = make MyStruct();
+          var s = MyStruct();
           s.priv = 5;
           return s;
         }
@@ -357,7 +376,7 @@ TEST_GROUP(Semantics, {
     
       func main() {
         var five = MyStruct.getFive();
-        let third: Int = five.getFrac(make MyStruct.Third());
+        let third: Int = five.getFrac(MyStruct.Third());
         five.increase(2);
         let dub: Int = five.getDouble();
       }
@@ -372,7 +391,7 @@ TEST_GROUP(Semantics, {
       }
     
       func oh_no() {
-        var s = make MyStruct();
+        var s = MyStruct();
         s.priv = 4;
       }
     )";
@@ -399,11 +418,12 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Access undefined member var, {
     const char *source = R"(
       struct MyStruct {
+        init() {}
         var ajax: Int;
       }
     
       func oh_no() {
-        var s = make MyStruct();
+        var s = MyStruct();
         s.francis = 4;
       }
     )";
@@ -569,7 +589,9 @@ TEST_GROUP(Semantics, {
   TEST(Returning an object, {
     const char *source = R"(
       struct Outer {
+        init() {}
         struct Inner {
+          init() {}
           struct Deep {
             var x: Int;
           }
@@ -577,12 +599,12 @@ TEST_GROUP(Semantics, {
           var deep: Deep;
         }
         func getInner() -> Inner {
-          return make Inner();
+          return Inner();
         }
       }
     
       func main() {
-        let outer = make Outer();
+        let outer = Outer();
         let inner: Outer.Inner = outer.getInner();
         let deep: Outer.Inner.Deep = outer.getInner().deep;
         let x: Int = outer.getInner().deep.x;
@@ -594,9 +616,10 @@ TEST_GROUP(Semantics, {
   TEST(Nested function, {
     const char *source = R"(
       struct Struct {
+        init() {}
         static func fn() -> Struct {
           func nested() -> Struct {
-            return make Struct();
+            return Struct();
           }
           return nested();
         }
@@ -645,10 +668,11 @@ TEST_GROUP(Semantics, {
   TEST(Must call inst mem func, {
     const char *source = R"(
       struct Struct {
+        init() {}
         func fn() {}
       }
     
-      let s = make Struct();
+      let s = Struct();
       let test = s.fn;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -668,10 +692,11 @@ TEST_GROUP(Semantics, {
   TEST(Access static var in instance, {
     const char *source = R"(
       struct Struct {
+        init() {}
         static var stat = 4;
       }
     
-      let instance = make Struct();
+      let instance = Struct();
       let test = instance.stat;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -691,10 +716,11 @@ TEST_GROUP(Semantics, {
   TEST(Access static func in instance, {
     const char *source = R"(
       struct Struct {
+        init() {}
         static func stat() {}
       }
     
-      let instance = make Struct();
+      let instance = Struct();
       let test = instance.stat();
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);

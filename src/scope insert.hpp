@@ -63,6 +63,9 @@ public:
   void insert(const sym::Name &, sym::SymbolPtr) override;
   sym::Func *insert(const ast::Func &, const BuiltinTypes &) override;
   void enterFuncScope(sym::Func *, const ast::Func &) override;
+  
+  sym::Func *insert(const ast::Init &);
+  void enterFuncScope(sym::Func *, const ast::Init &);
 
   void accessScope(const ast::Member &);
 
@@ -72,6 +75,11 @@ private:
   sym::MemAccess access;
   sym::MemScope scope;
   ast::MemMut mut;
+  
+  sym::Func *insertFunc(
+    sym::FuncPtr &,
+    const sym::Name &
+  );
 };
 
 class EnumInserter final : public SymbolInserter {
@@ -93,20 +101,13 @@ class InserterManager {
 public:
   InserterManager(sym::NSScope *, Log &, const BuiltinTypes &);
   
-  template <typename Symbol>
-  Symbol *insert(const sym::Name &name) {
-    static_assert(!std::is_same_v<Symbol, sym::Func>);
-    assert(ins);
-    auto symbol = std::make_unique<Symbol>();
-    Symbol *const ret = symbol.get();
-    ins->insert(name, std::move(symbol));
-    return ret;
-  }
   template <typename Symbol, typename AST_Node>
   Symbol *insert(const AST_Node &node) {
-    Symbol *const symbol = insert<Symbol>(sym::Name(node.name));
+    auto symbol = std::make_unique<Symbol>();
+    Symbol *const ret = symbol.get();
     symbol->loc = node.loc;
-    return symbol;
+    ins->insert(sym::Name(node.name), std::move(symbol));
+    return ret;
   }
   void insert(const sym::Name &name, sym::SymbolPtr symbol) {
     assert(ins);
@@ -123,6 +124,7 @@ public:
   
   SymbolInserter *set(SymbolInserter *);
   void restore(SymbolInserter *);
+  SymbolInserter *get() const;
 
 private:
   NSInserter defIns;

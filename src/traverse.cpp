@@ -90,7 +90,22 @@ public:
     aliasSym->type = tlk.lookupType(alias.type);
   }
   
-  void visit(ast::Init &) override {}
+  void visit(ast::Init &init) override {
+    auto *strutIns = dynamic_cast<StructInserter *>(ins.get());
+    if (strutIns == nullptr) {
+      log.error(init.loc) << "Init function must be member of a struct" << endlog;
+    }
+    sym::Func *const funcSym = strutIns->insert(init);
+    funcSym->scope = man.enterScope<sym::FuncScope>();
+    strutIns->enterFuncScope(funcSym, init);
+    FuncInserter inserter{funcSym->scope, log};
+    SymbolInserter *const old = ins.set(&inserter);
+    for (const ast::StatPtr &stat : init.body.nodes) {
+      visitStat(stat);
+    }
+    ins.restore(old);
+    man.leaveScope();
+  }
   void visit(ast::Struct &strut) override {
     auto *structSym = ins.insert<sym::StructType>(strut);
     structSym->scope = man.enterScope<sym::StructScope>();

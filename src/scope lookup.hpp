@@ -169,8 +169,6 @@ private:
     // return top == type && below top == member && below below top == call
   bool call(Expr::Type) const;
     // return top == type && below top == call
-  bool freeFun() const;
-    // return top == ident && below top == call
   
   sym::Name popName();
   sym::Symbol *popType();

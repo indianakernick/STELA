@@ -41,7 +41,7 @@ struct Rational {
 // global variables are not allowed
 // var half = Rational(1, 2);
 // global constants are allowed though
-let half = make Rational(1, 2);
+let half = Rational(1, 2);
 // speaking of global, like C++ but unlike Swift,
 // constants, type declartions and functions are allowed at global scope
 // but nothing else
@@ -72,7 +72,7 @@ struct Vec3 {
 }
 
 // calling implicitly generated constructor
-let origin = make Vec3(0, 0, 0);
+let origin = Vec3(0, 0, 0);
 
 struct IntStack {
   // member variables are implicitly private

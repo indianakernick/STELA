@@ -62,15 +62,6 @@ public:
     mem.object->accept(*this);
     mem.definition = lkp.lookupMember(mem.loc);
   }
-  void visit(ast::InitCall &init) override {
-    sym::ExprType etype;
-    etype.type = tlk.lookupType(init.type);
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
-    // @TODO lookup init function
-    //init.definition = lkp.lookupFunc(argTypes(init.args), init.loc);
-  }
   void visit(ast::Identifier &id) override {
     id.definition = lkp.lookupIdent(sym::Name(id.name), id.loc);
   }
