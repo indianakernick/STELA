@@ -126,9 +126,6 @@ public:
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
-  void visit(ast::ArrayLiteral &) override {}
-  void visit(ast::MapLiteral &) override {}
-  void visit(ast::Lambda &) override {}
 
   void enter() {
     lkp.enterSubExpr();

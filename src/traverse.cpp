@@ -74,16 +74,20 @@ public:
     return symType;
   }
   void visit(ast::Var &var) override {
+    sym::ExprType etype;
+    etype.type = objectType(var.type, var.expr, var.loc);
+    etype.mut = sym::ValueMut::var;
+    etype.ref = sym::ValueRef::val;
     auto *varSym = ins.insert<sym::Object>(var);
-    varSym->etype.type = objectType(var.type, var.expr, var.loc);
-    varSym->etype.mut = sym::ValueMut::var;
-    varSym->etype.ref = sym::ValueRef::val;
+    varSym->etype = etype;
   }
   void visit(ast::Let &let) override {
+    sym::ExprType etype;
+    etype.type = objectType(let.type, let.expr, let.loc);
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
     auto *letSym = ins.insert<sym::Object>(let);
-    letSym->etype.type = objectType(let.type, let.expr, let.loc);
-    letSym->etype.mut = sym::ValueMut::let;
-    letSym->etype.ref = sym::ValueRef::val;
+    letSym->etype = etype;
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
@@ -93,7 +97,7 @@ public:
   void visit(ast::Init &init) override {
     auto *strutIns = dynamic_cast<StructInserter *>(ins.get());
     if (strutIns == nullptr) {
-      log.error(init.loc) << "Init function must be member of a struct" << endlog;
+      log.error(init.loc) << "Init function must be member of a struct" << fatal;
     }
     sym::Func *const funcSym = strutIns->insert(init);
     funcSym->scope = man.enterScope<sym::FuncScope>();
@@ -123,6 +127,17 @@ public:
     enumSym->scope = man.enterScope<sym::EnumScope>();
     EnumInserter inserter{enumSym, log};
     for (const ast::EnumCase &cs : num.cases) {
+      if (cs.value) {
+        const sym::ExprType type = getExprType(man, log, cs.value.get(), bnt);
+        if (type.typeExpr) {
+          log.error(cs.loc) << "Enum case \"" << cs.name
+            << "\" cannot be a type" << fatal;
+        }
+        if (type.type != bnt.Int64 && type.type != enumSym) {
+          log.error(cs.loc) << "Enum case \"" << cs.name
+            << "\" must have value of Int or another case" << fatal;
+        }
+      }
       inserter.insert(cs);
     }
     man.leaveScope();

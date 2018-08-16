@@ -34,7 +34,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });*/
   
-  TEST(Redef func, {
+  TEST(Func - Redef, {
     const char *source = R"(
       func myFunction() {
         
@@ -46,7 +46,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Redef func with params, {
+  TEST(Func - Redef with params, {
     const char *source = R"(
       func myFunction(i: Int, f: Float) {
         
@@ -58,7 +58,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Redef func alias, {
+  TEST(Func - Redef alias, {
     const char *source = R"(
       typealias Number = Int;
       func myFunction(i: Number) {
@@ -71,7 +71,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Redef func multi alias, {
+  TEST(Func - Redef multi alias, {
     const char *source = R"(
       typealias Integer = Int;
       typealias Number = Integer;
@@ -87,7 +87,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
 
-  TEST(Undefined symbol, {
+  TEST(Sym - Undefined, {
     const char *source = R"(
       func myFunction(i: Number) {
         
@@ -99,7 +99,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
 
-  TEST(Function overloading, {
+  TEST(Func - Overloading, {
     const char *source = R"(
       func myFunction(n: Float) {
         
@@ -111,7 +111,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Colliding type and function, {
+  TEST(Sym - Colliding type and function, {
     const char *source = R"(
       struct fn {}
       func fn() {}
@@ -119,7 +119,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Var type inference, {
+  TEST(Var - Var type inference, {
     const char *source = R"(
       var num = 5;
     )";
@@ -135,7 +135,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(builtin->value, sym::BuiltinType::Int64);*/
   });
   
-  TEST(Let type inference, {
+  TEST(Var - Let type inference, {
     const char *source = R"(
       let pi = 3.14;
     )";
@@ -151,9 +151,10 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(builtin->value, sym::BuiltinType::Double);*/
   });
   
-  TEST(Big num type inference, {
+  TEST(Var - Big num type inference, {
     const char *source = R"(
       let big = 18446744073709551615;
+      let neg = -9223372036854775807;
     )";
     const auto [symbols, ast] = createSym(source, log);
     /*ASSERT_EQ(symbols.scopes.size(), 2);
@@ -167,7 +168,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(builtin->value, sym::BuiltinType::UInt64);*/
   });
   
-  TEST(Variables, {
+  TEST(Var - exprs, {
     const char *source = R"(
       let num: Int = 0;
       //var f: (Float, inout String) -> [Double];
@@ -177,7 +178,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Redefine var, {
+  TEST(Var - Redefine var, {
     const char *source = R"(
       var x: Int;
       var x: Float;
@@ -185,7 +186,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Redefine let, {
+  TEST(Var - Redefine let, {
     const char *source = R"(
       let x: Int = 0;
       let x: Float = 0.0;
@@ -193,9 +194,16 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Bad variable decl, {
+  TEST(Var - Type mismatch, {
     const char *source = R"(
       let x: Int = 2.5;
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Var - Var equals itself, {
+    const char *source = R"(
+      let x = x;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
@@ -430,6 +438,21 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Struct - Implicitly access static, {
+    const char *source = R"(
+      struct Struct {
+        static func statFun() {}
+        static var statVar: Int;
+        
+        func test() {
+          statFun();
+          statVar = 4;
+        }
+      }
+    )";
+    createSym(source, log);
+  });
+  
   TEST(Enum - Basic, {
     const char *source = R"(
       enum Dir {
@@ -448,8 +471,7 @@ TEST_GROUP(Semantics, {
   TEST(Enum - Access undefined case, {
     const char *source = R"(
       enum Enum {
-        ay,
-        nay = ay
+        ay
       }
     
       func oh_no() {
@@ -471,7 +493,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Assign to enum, {
+  TEST(Enum - Assign to case, {
     const char *source = R"(
       enum Eeeeenum {
         e
@@ -480,6 +502,53 @@ TEST_GROUP(Semantics, {
       func main() {
         Eeeeenum.e = !true;
       }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Enum - Case value, {
+    const char *source = R"(
+      enum Enum {
+        one = 1,
+        also_one = one,
+        two,
+        four = 4,
+        five
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Enum - Case equals itself, {
+    const char *source = R"(
+      enum Enum {
+        me = me
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Enum - Case equals string, {
+    const char *source = R"(
+      enum Enum {
+        str = "str"
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Enum - Case equals type, {
+    const char *source = R"(
+      enum Enum {
+        type = Int
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Free init, {
+    const char *source = R"(
+      init() {}
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
