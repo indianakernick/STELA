@@ -17,7 +17,7 @@ __If a compilers expert is reading this, I would love some advice!__
    * lookup struct members and functions
    * lookup nested types
     
-   There's still a lot more to do:
+   Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * Generics (required to implement arrays, maps and lambdas)
    * Arrays, maps, lambdas (their value expressions and type expressions)
