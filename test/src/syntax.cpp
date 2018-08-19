@@ -76,14 +76,7 @@ TEST_GROUP(Syntax, {
   });
   
   TEST(Enum - empty, {
-    const char *source = R"(
-      enum NoCases {}
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.global[0].get());
-    ASSERT_EQ(enumNode->name, "NoCases");
-    ASSERT_TRUE(enumNode->cases.empty());
+    ASSERT_THROWS(createAST("enum NoCases {}", log), FatalError);
   });
   
   TEST(Enum - standard, {

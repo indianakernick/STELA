@@ -158,13 +158,12 @@ ast::DeclPtr parseEnum(ParseTokens &tok) {
   enumNode->name = tok.expectID();
   ctx.ident(enumNode->name);
   tok.expectOp("{");
-  
-  if (!tok.checkOp("}")) {
-    do {
-      enumNode->cases.push_back(parseEnumCase(tok));
-    } while (tok.expectEitherOp("}", ",") == ",");
+  if (tok.checkOp("}")) {
+    tok.log().error(tok.lastLoc()) << "enum must have at least one case" << fatal;
   }
-  
+  do {
+    enumNode->cases.push_back(parseEnumCase(tok));
+  } while (tok.expectEitherOp("}", ",") == ",");
   return enumNode;
 }
 

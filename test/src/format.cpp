@@ -145,7 +145,6 @@ func customSwap(a: [Int], b: [Int], swap: (inout Int, inout Int) -> Void) {
 }
 
 struct EmptyStruct {}
-enum EmptyEnum {}
 
 func ifs() {
   switch (1) {}
