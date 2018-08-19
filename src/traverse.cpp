@@ -56,16 +56,30 @@ public:
     visitStat(fi.body);
     visitStat(fi.elseBody);
   }
-  /*void visit(ast::SwitchCase &cas) override {
-    
-  }
-  void visit(ast::SwitchDefault &defalt) override {
-    
-  }
+  
   void visit(ast::Switch &swich) override {
-    
+    const sym::ExprType etype = getExprType(man, log, swich.expr.get(), bnt);
+    bool foundDef = false;
+    for (const ast::SwitchCase &cs : swich.cases) {
+      if (cs.expr) {
+        const sym::ExprType caseType = getExprType(man, log, cs.expr.get(), bnt);
+        if (caseType.type != etype.type) {
+          log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
+        }
+      } else {
+        if (foundDef) {
+          log.error(cs.loc) << "Multiple default cases found in switch" << fatal;
+        }
+        foundDef = true;
+      }
+      BlockInserter inserter{man.enterScope<sym::BlockScope>(), log};
+      SymbolInserter *const old = ins.set(&inserter);
+      visitStat(cs.body);
+      ins.restore(old);
+      man.leaveScope();
+    }
   }
-  void visit(ast::Break &brake) override {
+  /*void visit(ast::Break &brake) override {
     
   }
   void visit(ast::Continue &continu) override {
@@ -86,6 +100,7 @@ public:
     visitCond(repWhile.cond);
   }
   void visit(ast::For &four) override {
+    
     visitStat(four.init);
     visitCond(four.cond);
     visitExpr(four.incr);

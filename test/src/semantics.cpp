@@ -866,4 +866,50 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Switch - Standard, {
+    const char *source = R"(
+      func main() {
+        let num = 3;
+        switch (num) {}
+        switch (num) {
+          case (3) {}
+          case (4) {}
+          case (5) {}
+        }
+        switch (num) {
+          case (3) {}
+          default {}
+        }
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Switch - Multiple default, {
+    const char *source = R"(
+      func main() {
+        let num = 3;
+        switch (num) {
+          default {}
+          case (3) {}
+          default {}
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Switch - Type mismatch, {
+    const char *source = R"(
+      func main() {
+        let num = 3;
+        switch (num) {
+          default {}
+          case ("oops") {}
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });
