@@ -9,20 +9,24 @@ __If a compilers expert is reading this, I would love some advice!__
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * The semantic analyser  can:
+ * The semantic analyser can:
    * check the type of variables
    * check types of assignments and expressions
    * lookup overloaded functions
    * lookup constructors
    * lookup struct members and functions
    * lookup nested types
+   * deal with statements (if, while, for, ...)
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
-   * Generics (required to implement arrays, maps and lambdas)
-   * Arrays, maps, lambdas (their value expressions and type expressions)
-   * Deal with statements (if, while, for, ...)
-   * Probably a lot of stuff that I can't think of right now!
+   * generics (required to implement arrays, maps and lambdas)
+   * arrays, maps, lambdas (their value expressions and type expressions)
+   * static properties on builtin types (`Int.max`, `Double.nan`, `Float.epsilon`)
+   * syntax for overloaded operators (`func +(a: Vec, b: Vec) -> Vec`). Semantic analyser already supports it
+   * standard math functions (`sin`, `cosh`, `sqrt`)
+   * warnings about unused symbols (`unused variable "myVar"`)
+   * probably a lot of stuff that I can't think of right now!
 
 ## About
 
@@ -34,9 +38,9 @@ __If a compilers expert is reading this, I would love some advice!__
    * More errors can be caught at compile time, like `"a string" + 5`.
    * Function overloading, real classes that aren't just maps, type safety, awesome stuff!
  * __Embeddable__
-   * A C++ API is exposed for embedding the language into a C++ application. I think that there is something wrong with exposing a C interface and then having write a C++ wrapper. Sol2 for Lua, Pybind for Python, etc.
+   * A C++ API is exposed for embedding the language into a C++ application. I think that there is something wrong with exposing a C interface and then having to write a C++ wrapper. Sol2 for Lua, Pybind for Python, etc.
    * A C API that wraps the C++ API is also exposed so you get the best of both words!
-   * All steps of the compilation are exposed (lexer tokens, AST, bytecode) but if you just want to `compile(source)` and `run(bytecode)` then that's all you have to do.
+   * All steps of the compilation are exposed (lexer tokens, AST, symbol table, bytecode) but if you just want to `compile(source)` and `run(bytecode)` then that's all you have to do.
    * Reflection facilities are built-in so binding your C++ classes to STELA couldn't be easier.
  * __Minimal__
    * I see something quite wrong with the standard library being part of the language. The standard library should be implemented in the language itself with a few compiler hooks where necessary. For example, `std::initilizer_list` can't quite be implemented in pure C++. It needs a little help from the compiler.
