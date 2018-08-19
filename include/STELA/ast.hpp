@@ -234,10 +234,8 @@ struct Switch final : Statement {
 struct Break final : Statement {
   void accept(Visitor &) override;
 };
+
 struct Continue final : Statement {
-  void accept(Visitor &) override;
-};
-struct Fallthrough final : Statement {
   void accept(Visitor &) override;
 };
 
@@ -445,7 +443,6 @@ public:
   virtual void visit(Switch &) {}
   virtual void visit(Break &) {}
   virtual void visit(Continue &) {}
-  virtual void visit(Fallthrough &) {}
   virtual void visit(Return &) {}
   virtual void visit(While &) {}
   virtual void visit(RepeatWhile &) {}

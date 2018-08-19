@@ -366,7 +366,6 @@ TEST_GROUP(Syntax, {
       func dummy() {
         break;
         continue;
-        fallthrough;
         return;
         return expr;
       }
@@ -376,19 +375,18 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 5);
+    ASSERT_EQ(block.size(), 4);
     
     ASSERT_DOWN_CAST(const Break, block[0].get());
     ASSERT_DOWN_CAST(const Continue, block[1].get());
-    ASSERT_DOWN_CAST(const Fallthrough, block[2].get());
     
     {
-      auto *retVoid = ASSERT_DOWN_CAST(const Return, block[3].get());
+      auto *retVoid = ASSERT_DOWN_CAST(const Return, block[2].get());
       ASSERT_FALSE(retVoid->expr);
     }
     
     {
-      auto *retExpr = ASSERT_DOWN_CAST(const Return, block[4].get());
+      auto *retExpr = ASSERT_DOWN_CAST(const Return, block[3].get());
       ASSERT_TRUE(retExpr->expr);
     }
   });
@@ -453,7 +451,7 @@ TEST_GROUP(Syntax, {
         switch (expr) {
           case (expr) {
             expr;
-            fallthrough;
+            continue;
           }
           case (expr) {
             expr;
@@ -491,7 +489,7 @@ TEST_GROUP(Syntax, {
         ASSERT_TRUE(cases[0].expr);
         auto *block = ASSERT_DOWN_CAST(const Block, cases[0].body.get());
         ASSERT_TRUE(block->nodes[0]);
-        ASSERT_DOWN_CAST(const Fallthrough, block->nodes[1].get());
+        ASSERT_DOWN_CAST(const Continue, block->nodes[1].get());
       }
       {
         ASSERT_TRUE(cases[1].expr);

@@ -101,10 +101,6 @@ ast::StatPtr parseContinue(ParseTokens &tok) {
   return parseKeywordStatement<ast::Continue>(tok, "continue");
 }
 
-ast::StatPtr parseFallthrough(ParseTokens &tok) {
-  return parseKeywordStatement<ast::Fallthrough>(tok, "fallthrough");
-}
-
 ast::StatPtr parseReturn(ParseTokens &tok) {
   if (tok.checkKeyword("return")) {
     Context ctx = tok.context("in return statement");
@@ -201,7 +197,6 @@ ast::StatPtr stela::parseStat(ParseTokens &tok) {
   if (ast::StatPtr node = parseSwitch(tok)) return node;
   if (ast::StatPtr node = parseBreak(tok)) return node;
   if (ast::StatPtr node = parseContinue(tok)) return node;
-  if (ast::StatPtr node = parseFallthrough(tok)) return node;
   if (ast::StatPtr node = parseReturn(tok)) return node;
   if (ast::StatPtr node = parseWhile(tok)) return node;
   if (ast::StatPtr node = parseRepeatWhile(tok)) return node;

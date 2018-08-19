@@ -86,9 +86,7 @@ public:
   void visit(ast::Continue &continu) override {
     
   }
-  void visit(ast::Fallthrough &fallthrough) override {
-    
-  }*/
+  */
   void visit(ast::Return &ret) override {
     visitExpr(ret.expr);
   }

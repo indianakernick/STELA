@@ -260,10 +260,6 @@ public:
     push(Tag::keyword, "continue");
     pushOp(";");
   }
-  void visit(ast::Fallthrough &) override {
-    push(Tag::keyword, "fallthrough");
-    pushOp(";");
-  }
   void visit(ast::Return &ret) override {
     push(Tag::keyword, "return");
     if (ret.expr) {
