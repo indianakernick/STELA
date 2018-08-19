@@ -210,7 +210,7 @@ func anotherDummy(dir: Dir) {
   switch (dir) {
     case (Dir.up) {
       value += 2;
-      fallthrough;
+      continue;
     }
     case (Dir.right) {
       value <<= 2;

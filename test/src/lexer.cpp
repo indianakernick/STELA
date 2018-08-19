@@ -196,7 +196,7 @@ TEST_GROUP(Lexer, {
   
   TEST(Keywords in identifiers, {
     const Tokens tokens = lex(
-      "staticIdent iforeturn in_that_case continue_to_fallthrough let15 vars",
+      "staticIdent iforeturn in_that_case continue_to_break let15 vars",
       log
     );
     ASSERT_EQ(tokens.size(), 6);
