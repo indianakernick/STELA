@@ -38,7 +38,7 @@ public:
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      params.push_back(getExprType(man, log, expr.get(), bnt));
+      params.push_back(getExprType(man, log, bnt, expr.get()));
     }
     return params;
   }
@@ -134,9 +134,8 @@ private:
 sym::ExprType stela::getExprType(
   ScopeMan &man,
   Log &log,
-  ast::Expression *expr,
-  const BuiltinTypes &types
+  const BuiltinTypes &bnt,
+  ast::Expression *expr
 ) {
-  Visitor visitor{man, log, types};
-  return visitor.visitValueExpr(expr);
+  return Visitor{man, log, bnt}.visitValueExpr(expr);
 }

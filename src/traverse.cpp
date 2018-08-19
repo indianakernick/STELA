@@ -19,24 +19,24 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(sym::Scopes &scopes, Log &log, const BuiltinTypes &types)
-    : man{scopes}, log{log}, ins{man.global(), log, types}, tlk{man, log}, bnt{types} {}
+  Visitor(sym::Scopes &scopes, Log &log, const BuiltinTypes &bnt)
+    : man{scopes}, log{log}, ins{man.global(), log, bnt}, tlk{man, log}, bnt{bnt} {}
   
   void visitStat(const ast::StatPtr &stat) {
     if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
-      getExprType(man, log, expr, bnt);
+      getExprType(man, log, bnt, expr);
     } else if (stat) {
       stat->accept(*this);
     }
   }
   void visitExpr(const ast::ExprPtr &expr) {
     if (expr) {
-      getExprType(man, log, expr.get(), bnt);
+      getExprType(man, log, bnt, expr.get());
     }
   }
   void visitCond(const ast::ExprPtr &expr) {
     assert(expr);
-    const sym::ExprType etype = getExprType(man, log, expr.get(), bnt);
+    const sym::ExprType etype = getExprType(man, log, bnt, expr.get());
     if (etype.type != bnt.Bool) {
       log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
     }
@@ -58,13 +58,12 @@ public:
     ins.pop();
     man.leaveScope();
   }
-  
   void visit(ast::Switch &swich) override {
-    const sym::ExprType etype = getExprType(man, log, swich.expr.get(), bnt);
+    const sym::ExprType etype = getExprType(man, log, bnt, swich.expr.get());
     bool foundDef = false;
     for (const ast::SwitchCase &cs : swich.cases) {
       if (cs.expr) {
-        const sym::ExprType caseType = getExprType(man, log, cs.expr.get(), bnt);
+        const sym::ExprType caseType = getExprType(man, log, bnt, cs.expr.get());
         if (caseType.type != etype.type) {
           log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
         }
@@ -130,7 +129,7 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    const sym::ExprType exprType = expr ? getExprType(man, log, expr.get(), bnt) : sym::ExprType{};
+    const sym::ExprType exprType = expr ? getExprType(man, log, bnt, expr.get()) : sym::ExprType{};
     sym::Symbol *const symType = type ? tlk.lookupType(type) : exprType.type;
     if (exprType.type != nullptr && exprType.type != symType) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
@@ -190,7 +189,7 @@ public:
     EnumInserter inserter{enumSym, log};
     for (const ast::EnumCase &cs : num.cases) {
       if (cs.value) {
-        const sym::ExprType type = getExprType(man, log, cs.value.get(), bnt);
+        const sym::ExprType type = getExprType(man, log, bnt, cs.value.get());
         if (type.type != bnt.Int64 && type.type != enumSym) {
           log.error(cs.loc) << "Enum case \"" << cs.name
             << "\" must have value of Int or another case" << fatal;
