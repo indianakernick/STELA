@@ -451,18 +451,22 @@ TEST_GROUP(Syntax, {
         switch (expr) {}
         
         switch (expr) {
-          case expr:
+          case (expr) {
             expr;
             fallthrough;
-          case expr:
+          }
+          case (expr) {
             expr;
             break;
-          case expr:
+          }
+          case (expr) {
             expr;
             return expr;
-          default:
+          }
+          default {
             expr;
             return;
+          }
         }
       }
     )";
@@ -476,25 +480,39 @@ TEST_GROUP(Syntax, {
     {
       auto *switchNode = ASSERT_DOWN_CAST(const Switch, block[0].get());
       ASSERT_TRUE(switchNode->expr);
-      ASSERT_TRUE(switchNode->body.nodes.empty());
+      ASSERT_TRUE(switchNode->cases.empty());
     }
     {
       auto *switchNode = ASSERT_DOWN_CAST(const Switch, block[1].get());
       ASSERT_TRUE(switchNode->expr);
-      const auto &body = switchNode->body.nodes;
-      ASSERT_EQ(body.size(), 12);
-      ASSERT_DOWN_CAST(const SwitchCase, body[0].get());
-      ASSERT_TRUE(body[1].get());
-      ASSERT_DOWN_CAST(const Fallthrough, body[2].get());
-      ASSERT_DOWN_CAST(const SwitchCase, body[3].get());
-      ASSERT_TRUE(body[4].get());
-      ASSERT_DOWN_CAST(const Break, body[5].get());
-      ASSERT_DOWN_CAST(const SwitchCase, body[6].get());
-      ASSERT_TRUE(body[7].get());
-      ASSERT_DOWN_CAST(const Return, body[8].get());
-      ASSERT_DOWN_CAST(const SwitchDefault, body[9].get());
-      ASSERT_TRUE(body[10].get());
-      ASSERT_DOWN_CAST(const Return, body[11].get());
+      const auto &cases = switchNode->cases;
+      ASSERT_EQ(cases.size(), 4);
+      {
+        ASSERT_TRUE(cases[0].expr);
+        auto *block = ASSERT_DOWN_CAST(const Block, cases[0].body.get());
+        ASSERT_TRUE(block->nodes[0]);
+        ASSERT_DOWN_CAST(const Fallthrough, block->nodes[1].get());
+      }
+      {
+        ASSERT_TRUE(cases[1].expr);
+        auto *block = ASSERT_DOWN_CAST(const Block, cases[1].body.get());
+        ASSERT_TRUE(block->nodes[0]);
+        ASSERT_DOWN_CAST(const Break, block->nodes[1].get());
+      }
+      {
+        ASSERT_TRUE(cases[2].expr);
+        auto *block = ASSERT_DOWN_CAST(const Block, cases[2].body.get());
+        ASSERT_TRUE(block->nodes[0]);
+        auto *ret = ASSERT_DOWN_CAST(const Return, block->nodes[1].get());
+        ASSERT_TRUE(ret->expr);
+      }
+      {
+        ASSERT_FALSE(cases[3].expr);
+        const Block *block = ASSERT_DOWN_CAST(const Block, cases[3].body.get());
+        ASSERT_TRUE(block->nodes[0]);
+        auto *ret = ASSERT_DOWN_CAST(const Return, block->nodes[1].get());
+        ASSERT_FALSE(ret->expr);
+      }
     }
   });
   
@@ -502,7 +520,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         switch (expr) {
-          case expr:
+          case (expr)
             |; // wait, that's not a statement
         }
       }

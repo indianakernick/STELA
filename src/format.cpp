@@ -214,21 +214,12 @@ public:
     fi.cond->accept(*this);
     pushOp(")");
     pushSpace();
-    fi.body->accept(*this);
+    pushStat(fi.body);
     if (fi.elseBody) {
       pushSpace();
       pushKey("else");
-      fi.elseBody->accept(*this);
+      pushStat(fi.elseBody);
     }
-  }
-  void visit(ast::SwitchCase &cs) override {
-    pushKey("case");
-    cs.expr->accept(*this);
-    pushOp(":");
-  }
-  void visit(ast::SwitchDefault &) override {
-    push(Tag::keyword, "default");
-    pushOp(":");
   }
   void visit(ast::Switch &swtch) override {
     pushKey("switch");
@@ -237,34 +228,27 @@ public:
     pushOp(")");
     pushSpace();
     pushOp("{");
-    if (swtch.body.nodes.empty()) {
+    if (swtch.cases.empty()) {
       pushOp("}");
       return;
     }
     pushNewline();
-    indent += 2;
-    for (const ast::StatPtr &stat : swtch.body.nodes) {
-      if (auto *cs = dynamic_cast<ast::SwitchCase *>(stat.get())) {
-        --indent;
-        pushIndent();
-        visit(*cs);
-        ++indent;
-      } else if (auto *df = dynamic_cast<ast::SwitchDefault *>(stat.get())) {
-        --indent;
-        pushIndent();
-        visit(*df);
-        ++indent;
-      } else if (auto *ex = dynamic_cast<ast::Expression *>(stat.get())) {
-        pushIndent();
-        ex->accept(*this);
-        pushOp(";");
+    ++indent;
+    for (ast::SwitchCase &cs : swtch.cases) {
+      pushIndent();
+      if (cs.expr) {
+        pushKey("case");
+        pushOp("(");
+        cs.expr->accept(*this);
+        pushOp(")");
+        pushSpace();
       } else {
-        pushIndent();
-        stat->accept(*this);
+        pushKey("default");
       }
+      pushStat(cs.body);
       pushNewline();
     }
-    indent -= 2;
+    --indent;
     pushIndent();
     pushOp("}");
   }
@@ -294,11 +278,11 @@ public:
     whl.cond->accept(*this);
     pushOp(")");
     pushSpace();
-    whl.body->accept(*this);
+    pushStat(whl.body);
   }
   void visit(ast::RepeatWhile &rep) override {
     pushKey("repeat");
-    rep.body->accept(*this);
+    pushStat(rep.body);
     pushSpace();
     pushKey("while");
     pushOp("(");
@@ -310,10 +294,7 @@ public:
     pushKey("for");
     pushOp("(");
     if (fr.init) {
-      fr.init->accept(*this);
-      if (dynamic_cast<ast::Expression *>(fr.init.get())) {
-        pushOp(";");
-      }
+      pushStat(fr.init);
     } else {
       pushOp(";");
     }
@@ -582,16 +563,16 @@ private:
     }
     pushOp(")");
   }
+  void pushStat(ast::StatPtr &stat) {
+    stat->accept(*this);
+    if (auto *const expr = dynamic_cast<ast::Expression *>(stat.get())) {
+      pushOp(";");
+    }
+  }
   void pushBlockBody(ast::Block &block) {
     for (ast::StatPtr &stat : block.nodes) {
       pushIndent();
-      auto *const expr = dynamic_cast<ast::Expression *>(stat.get());
-      if (expr) {
-        expr->accept(*this);
-        pushOp(";");
-      } else {
-        stat->accept(*this);
-      }
+      pushStat(stat);
       pushNewline();
     }
   }

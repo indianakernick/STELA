@@ -56,21 +56,22 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
   tok.expectOp("{");
   
   while (!tok.checkOp("}")) {
-    if (ast::StatPtr stat = parseStat(tok)) {
-      switchNode->body.nodes.emplace_back(std::move(stat));
-    } else if (tok.checkKeyword("case")) {
-      auto scase = std::make_unique<ast::SwitchCase>();
-      scase->loc = tok.lastLoc();
-      scase->expr = tok.expectNode(parseExpr, "expression");
-      tok.expectOp(":");
-      switchNode->body.nodes.emplace_back(std::move(scase));
+    if (tok.checkKeyword("case")) {
+      ast::SwitchCase scase;
+      scase.loc = tok.lastLoc();
+      tok.expectOp("(");
+      scase.expr = tok.expectNode(parseExpr, "expression");
+      tok.expectOp(")");
+      scase.body = tok.expectNode(parseStat, "statement or block");
+      switchNode->cases.push_back(std::move(scase));
     } else if (tok.checkKeyword("default")) {
-      auto def = std::make_unique<ast::SwitchDefault>();
-      def->loc = tok.lastLoc();
-      tok.expectOp(":");
-      switchNode->body.nodes.emplace_back(std::move(def));
+      ast::SwitchCase def;
+      def.loc = tok.lastLoc();
+      def.body = tok.expectNode(parseStat, "statement or block");
+      def.expr = nullptr;
+      switchNode->cases.push_back(std::move(def));
     } else {
-      tok.log().error(tok.loc()) << "Expected case label or statement but found "
+      tok.log().error(tok.loc()) << "Expected case or default but found "
         << tok.front() << tok.contextStack() << fatal;
     }
   }

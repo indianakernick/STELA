@@ -145,7 +145,7 @@ func customSwap(a: [Int], b: [Int], swap: (inout Int, inout Int) -> Void) {
 }
 
 struct EmptyStruct {}
-struct EmptyEnum {}
+enum EmptyEnum {}
 
 func ifs() {
   switch (1) {}
@@ -208,19 +208,20 @@ enum Dir {
 func anotherDummy(dir: Dir) {
   var value = 5;
   switch (dir) {
-    case Dir.up:
+    case (Dir.up) {
       value += 2;
       fallthrough;
-    case Dir.right:
+    }
+    case (Dir.right) {
       value <<= 2;
       break;
-    case Dir.down:
+    }
+    case (Dir.down) {
       ++value;
       return value & 3;
-    case Dir.left:
-      return 5;
-    default:
-      value--;
+    }
+    case (Dir.left) return 5;
+    default value--;
   }
   return value;
 }

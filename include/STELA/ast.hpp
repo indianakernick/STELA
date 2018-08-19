@@ -218,19 +218,15 @@ struct If final : Statement {
   void accept(Visitor &) override;
 };
 
-struct SwitchCase final : Statement {
+struct SwitchCase {
   ExprPtr expr;
-  
-  void accept(Visitor &) override;
-};
-
-struct SwitchDefault final : Statement {
-  void accept(Visitor &) override;
+  StatPtr body;
+  Loc loc;
 };
 
 struct Switch final : Statement {
   ExprPtr expr;
-  Block body;
+  std::vector<SwitchCase> cases;
   
   void accept(Visitor &) override;
 };
@@ -446,8 +442,6 @@ public:
   virtual void visit(Block &) {}
   virtual void visit(EmptyStatement &) {}
   virtual void visit(If &) {}
-  virtual void visit(SwitchCase &) {}
-  virtual void visit(SwitchDefault &) {}
   virtual void visit(Switch &) {}
   virtual void visit(Break &) {}
   virtual void visit(Continue &) {}

@@ -845,4 +845,25 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Loops - All, {
+    const char *source = R"(
+      func main() {
+        while (true) {}
+        repeat {} while (true);
+        for (var i = 0; i != 10; ++i) {}
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Loops - For var scope, {
+    const char *source = R"(
+      func main() {
+        {for (var i = 0; i != 10; ++i) {}}
+        i = 3;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });
