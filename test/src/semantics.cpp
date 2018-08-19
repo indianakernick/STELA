@@ -860,7 +860,7 @@ TEST_GROUP(Semantics, {
   TEST(Loops - For var scope, {
     const char *source = R"(
       func main() {
-        {for (var i = 0; i != 10; ++i) {}}
+        for (var i = 0; i != 10; ++i) {}
         i = 3;
       }
     )";

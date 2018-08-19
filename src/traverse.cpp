@@ -43,12 +43,11 @@ public:
   }
   
   void visit(ast::Block &block) override {
-    BlockInserter inserter{man.enterScope<sym::BlockScope>(), log};
-    SymbolInserter *const old = ins.set(&inserter);
+    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
     for (const ast::StatPtr &stat : block.nodes) {
       visitStat(stat);
     }
-    ins.restore(old);
+    ins.pop();
     man.leaveScope();
   }
   void visit(ast::If &fi) override {
@@ -72,10 +71,9 @@ public:
         }
         foundDef = true;
       }
-      BlockInserter inserter{man.enterScope<sym::BlockScope>(), log};
-      SymbolInserter *const old = ins.set(&inserter);
+      ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
       visitStat(cs.body);
-      ins.restore(old);
+      ins.pop();
       man.leaveScope();
     }
   }
@@ -100,23 +98,24 @@ public:
     visitCond(repWhile.cond);
   }
   void visit(ast::For &four) override {
-    
+    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
     visitStat(four.init);
     visitCond(four.cond);
     visitExpr(four.incr);
     visitStat(four.body);
+    ins.pop();
+    man.leaveScope();
   }
 
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = ins.insert(func);
     funcSym->scope = man.enterScope<sym::FuncScope>();
     ins.enterFuncScope(funcSym, func);
-    FuncInserter inserter{funcSym->scope, log};
-    SymbolInserter *const old = ins.set(&inserter);
+    ins.push<FuncInserter>(funcSym->scope, log);
     for (const ast::StatPtr &stat : func.body.nodes) {
       visitStat(stat);
     }
-    ins.restore(old);
+    ins.pop();
     man.leaveScope();
   }
   sym::Symbol *objectType(
@@ -160,24 +159,22 @@ public:
     sym::Func *const funcSym = strutIns->insert(init);
     funcSym->scope = man.enterScope<sym::FuncScope>();
     strutIns->enterFuncScope(funcSym, init);
-    FuncInserter inserter{funcSym->scope, log};
-    SymbolInserter *const old = ins.set(&inserter);
+    ins.push<FuncInserter>(funcSym->scope, log);
     for (const ast::StatPtr &stat : init.body.nodes) {
       visitStat(stat);
     }
-    ins.restore(old);
+    ins.pop();
     man.leaveScope();
   }
   void visit(ast::Struct &strut) override {
     auto *structSym = ins.insert<sym::StructType>(strut);
     structSym->scope = man.enterScope<sym::StructScope>();
-    StructInserter inserter{structSym, log};
-    SymbolInserter *const old = ins.set(&inserter);
+    StructInserter *inserter = ins.push<StructInserter>(structSym, log);
     for (const ast::Member &mem : strut.body) {
-      inserter.accessScope(mem);
+      inserter->accessScope(mem);
       mem.node->accept(*this);
     }
-    ins.restore(old);
+    ins.pop();
     man.leaveScope();
   }
   void visit(ast::Enum &num) override {

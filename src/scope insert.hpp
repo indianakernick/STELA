@@ -24,7 +24,6 @@ public:
   
   virtual void insert(const sym::Name &, sym::SymbolPtr) = 0;
   virtual sym::Func *insert(const ast::Func &, const BuiltinTypes &) = 0;
-  // @TODO might be able to get symbol from AST node
   virtual void enterFuncScope(sym::Func *, const ast::Func &) = 0;
 };
 
@@ -106,29 +105,31 @@ public:
     auto symbol = std::make_unique<Symbol>();
     Symbol *const ret = symbol.get();
     symbol->loc = node.loc;
-    ins->insert(sym::Name(node.name), std::move(symbol));
+    get()->insert(sym::Name(node.name), std::move(symbol));
     return ret;
   }
   void insert(const sym::Name &name, sym::SymbolPtr symbol) {
-    assert(ins);
-    ins->insert(name, std::move(symbol));
+    get()->insert(name, std::move(symbol));
   }
   sym::Func *insert(const ast::Func &func) {
-    assert(ins);
-    return ins->insert(func, bnt);
+    return get()->insert(func, bnt);
   }
   void enterFuncScope(sym::Func *const funcSym, const ast::Func &func) {
-    assert(ins);
-    ins->enterFuncScope(funcSym, func);
+    get()->enterFuncScope(funcSym, func);
   }
   
-  SymbolInserter *set(SymbolInserter *);
-  void restore(SymbolInserter *);
+  template <typename Inserter, typename... Args>
+  Inserter *push(Args &&... args) {
+    auto ins = std::make_unique<Inserter>(std::forward<Args>(args)...);
+    Inserter *ret = ins.get();
+    stack.push_back(std::move(ins));
+    return ret;
+  }
+  void pop();
   SymbolInserter *get() const;
 
 private:
-  NSInserter defIns;
-  SymbolInserter *ins;
+  std::vector<std::unique_ptr<SymbolInserter>> stack;
   const BuiltinTypes &bnt;
 };
 

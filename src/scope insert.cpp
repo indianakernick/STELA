@@ -246,18 +246,16 @@ void EnumInserter::insert(const ast::EnumCase &cs) {
 }
 
 InserterManager::InserterManager(sym::NSScope *scope, Log &log, const BuiltinTypes &types)
-  : defIns{scope, log}, ins{&defIns}, bnt{types} {}
-
-SymbolInserter *InserterManager::set(SymbolInserter *const newIns) {
-  assert(newIns);
-  return std::exchange(ins, newIns);
+  : bnt{types} {
+  push<NSInserter>(scope, log);
 }
 
-void InserterManager::restore(SymbolInserter *const oldIns) {
-  assert(oldIns);
-  ins = oldIns;
+void InserterManager::pop() {
+  assert(!stack.empty());
+  stack.pop_back();
 }
 
 SymbolInserter *InserterManager::get() const {
-  return ins;
+  assert(!stack.empty());
+  return stack.back().get();
 }
