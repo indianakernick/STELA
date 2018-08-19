@@ -27,7 +27,7 @@ public:
   virtual void enterFuncScope(sym::Func *, const ast::Func &) = 0;
 };
 
-class UnorderedInserter : public SymbolInserter {
+class UnorderedInserter final : public SymbolInserter {
 public:
   UnorderedInserter(sym::UnorderedScope *, Log &);
   
@@ -38,21 +38,6 @@ public:
 private:
   sym::UnorderedScope *scope;
   Log &log;
-};
-
-class NSInserter final : public UnorderedInserter {
-public:
-  NSInserter(sym::NSScope *, Log &);
-};
-
-class BlockInserter final : public UnorderedInserter {
-public:
-  BlockInserter(sym::BlockScope *, Log &);
-};
-
-class FuncInserter final : public UnorderedInserter {
-public:
-  FuncInserter(sym::FuncScope *, Log &);
 };
 
 class StructInserter final : public SymbolInserter {

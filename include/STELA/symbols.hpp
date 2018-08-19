@@ -71,6 +71,14 @@ struct FuncScope final : UnorderedScope {
   void accept(ScopeVisitor &) override;
 };
 
+// break and continue are valid within flow scopes (while, for, repeat-while, switch)
+struct FlowScope final : UnorderedScope {
+  explicit FlowScope(Scope *const parent)
+    : UnorderedScope{parent} {}
+  
+  void accept(ScopeVisitor &) override;
+};
+
 enum class MemAccess {
   public_,
   private_
@@ -120,6 +128,7 @@ public:
   virtual void visit(NSScope &) = 0;
   virtual void visit(BlockScope &) = 0;
   virtual void visit(FuncScope &) = 0;
+  virtual void visit(FlowScope &) = 0;
   virtual void visit(StructScope &) = 0;
   virtual void visit(EnumScope &) = 0;
 };

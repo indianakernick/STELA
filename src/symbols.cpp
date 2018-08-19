@@ -18,6 +18,7 @@
 ACCEPT(NSScope)
 ACCEPT(BlockScope)
 ACCEPT(FuncScope)
+ACCEPT(FlowScope)
 ACCEPT(StructScope)
 ACCEPT(EnumScope)
 

@@ -28,6 +28,9 @@ public:
   void visit(sym::FuncScope &scope) override {
     find(scope.table);
   }
+  void visit(sym::FlowScope &scope) override {
+    find(scope.table);
+  }
   void visit(sym::StructScope &scope) override {
     for (const sym::StructTableRow &row : scope.table) {
       if (row.name == name && row.scope == sym::MemScope::static_) {
@@ -74,6 +77,9 @@ public:
     find(scope.table);
   }
   void visit(sym::FuncScope &scope) override {
+    find(scope.table);
+  }
+  void visit(sym::FlowScope &scope) override {
     find(scope.table);
   }
   void visit(sym::StructScope &scope) override {

@@ -110,15 +110,6 @@ void UnorderedInserter::enterFuncScope(sym::Func *funcSym, const ast::Func &func
   }
 }
 
-NSInserter::NSInserter(sym::NSScope *scope, Log &log)
-  : UnorderedInserter{scope, log} {}
-
-BlockInserter::BlockInserter(sym::BlockScope *scope, Log &log)
-  : UnorderedInserter{scope, log} {}
-
-FuncInserter::FuncInserter(sym::FuncScope *scope, Log &log)
-  : UnorderedInserter{scope, log} {}
-
 StructInserter::StructInserter(sym::StructType *strut, Log &log)
   : strut{strut}, log{log}, access{}, scope{} {
   assert(strut);
@@ -247,7 +238,7 @@ void EnumInserter::insert(const ast::EnumCase &cs) {
 
 InserterManager::InserterManager(sym::NSScope *scope, Log &log, const BuiltinTypes &types)
   : bnt{types} {
-  push<NSInserter>(scope, log);
+  push<UnorderedInserter>(scope, log);
 }
 
 void InserterManager::pop() {

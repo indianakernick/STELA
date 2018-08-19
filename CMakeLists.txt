@@ -67,6 +67,7 @@ add_library(STELA STATIC
         "src/scope lookup.hpp"
         "src/scope find.cpp"
         "src/scope find.hpp"
+        "src/scope traverse.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

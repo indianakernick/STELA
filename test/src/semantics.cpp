@@ -859,7 +859,13 @@ TEST_GROUP(Semantics, {
   TEST(Loops - All, {
     const char *source = R"(
       func main() {
-        while (true) {}
+        while (true) {
+          if (false) {
+            continue;
+          } else {
+            break;
+          }
+        }
         repeat {} while (true);
         for (var i = 0; i != 10; ++i) {}
       }
@@ -877,14 +883,27 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Loops - Break outside loop, {
+    const char *source = R"(
+      func main() {
+        break;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
   TEST(Switch - Standard, {
     const char *source = R"(
       func main() {
         let num = 3;
         switch (num) {}
         switch (num) {
-          case (3) {}
-          case (4) {}
+          case (3) {
+            continue;
+          }
+          case (4) {
+            break;
+          }
           case (5) {}
         }
         switch (num) {

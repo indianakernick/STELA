@@ -12,6 +12,7 @@
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
 #include "scope manager.hpp"
+#include "scope traverse.hpp"
 
 using namespace stela;
 
@@ -43,7 +44,7 @@ public:
   }
   
   void visit(ast::Block &block) override {
-    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push<UnorderedInserter>(man.enterScope<sym::BlockScope>(), log);
     for (const ast::StatPtr &stat : block.nodes) {
       visitStat(stat);
     }
@@ -51,7 +52,7 @@ public:
     man.leaveScope();
   }
   void visit(ast::If &fi) override {
-    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push<UnorderedInserter>(man.enterScope<sym::BlockScope>(), log);
     visitCond(fi.cond);
     visitStat(fi.body);
     visitStat(fi.elseBody);
@@ -73,38 +74,44 @@ public:
         }
         foundDef = true;
       }
-      ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+      ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
       visitStat(cs.body);
       ins.pop();
       man.leaveScope();
     }
   }
-  /*void visit(ast::Break &brake) override {
-    
+  void checkFlowKeyword(const std::string_view keyword, const Loc loc) {
+    sym::Scope *const flow = findNearestNot<sym::BlockScope>(man.cur());
+    if (dynamic_cast<sym::FlowScope *>(flow) == nullptr) {
+      log.error(loc) << "Invalid usage of keyword \"" << keyword
+        << "\" outside of loop or switch" << fatal;
+    }
+  }
+  void visit(ast::Break &brake) override {
+    checkFlowKeyword("break", brake.loc);
   }
   void visit(ast::Continue &continu) override {
-    
+    checkFlowKeyword("continue", continu.loc);
   }
-  */
   void visit(ast::Return &ret) override {
     visitExpr(ret.expr);
   }
   void visit(ast::While &wile) override {
-    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
     visitCond(wile.cond);
     visitStat(wile.body);
     ins.pop();
     man.leaveScope();
   }
   void visit(ast::RepeatWhile &repWhile) override {
-    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
     visitStat(repWhile.body);
     visitCond(repWhile.cond);
     ins.pop();
     man.leaveScope();
   }
   void visit(ast::For &four) override {
-    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
     visitStat(four.init);
     visitCond(four.cond);
     visitExpr(four.incr);
@@ -117,7 +124,7 @@ public:
     sym::Func *const funcSym = ins.insert(func);
     funcSym->scope = man.enterScope<sym::FuncScope>();
     ins.enterFuncScope(funcSym, func);
-    ins.push<FuncInserter>(funcSym->scope, log);
+    ins.push<UnorderedInserter>(funcSym->scope, log);
     for (const ast::StatPtr &stat : func.body.nodes) {
       visitStat(stat);
     }
@@ -165,7 +172,7 @@ public:
     sym::Func *const funcSym = strutIns->insert(init);
     funcSym->scope = man.enterScope<sym::FuncScope>();
     strutIns->enterFuncScope(funcSym, init);
-    ins.push<FuncInserter>(funcSym->scope, log);
+    ins.push<UnorderedInserter>(funcSym->scope, log);
     for (const ast::StatPtr &stat : init.body.nodes) {
       visitStat(stat);
     }

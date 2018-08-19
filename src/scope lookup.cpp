@@ -10,6 +10,7 @@
 
 #include <cassert>
 #include "scope find.hpp"
+#include "scope traverse.hpp"
 #include "compare params args.hpp"
 
 using namespace stela;
@@ -97,28 +98,6 @@ private:
   ExprLookup lkp;
   Log &log;
 };
-
-template <typename ScopeType>
-ScopeType *findNearest(sym::Scope *const scope) {
-  if (scope == nullptr) {
-    return nullptr;
-  } else if (auto *dynamic = dynamic_cast<ScopeType *>(scope)) {
-    return dynamic;
-  } else {
-    return findNearest<ScopeType>(scope->parent);
-  }
-}
-
-template <typename... ScopeType>
-sym::Scope *findNearestNot(sym::Scope *const scope) {
-  if (scope == nullptr) {
-    return nullptr;
-  } else if ((dynamic_cast<ScopeType *>(scope) || ...)) {
-    return findNearestNot<ScopeType...>(scope->parent);
-  } else {
-    return scope;
-  }
-}
 
 sym::Scope *parentScope(sym::Scope *const scope) {
   sym::FuncScope *func = dynamic_cast<sym::FuncScope *>(scope);

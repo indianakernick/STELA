@@ -140,6 +140,7 @@
 		4572CAAF210EFDFE00EA1A56 /* symbols.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = symbols.cpp; sourceTree = "<group>"; };
 		4572CAB1210F123B00EA1A56 /* scope find.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scope find.cpp"; sourceTree = "<group>"; };
 		4572CAB2210F123B00EA1A56 /* scope find.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope find.hpp"; sourceTree = "<group>"; };
+		45A723372129525700BFE7FB /* scope traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope traverse.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -233,6 +234,7 @@
 				4572CAAD210EF61100EA1A56 /* scope lookup.hpp */,
 				4572CAB1210F123B00EA1A56 /* scope find.cpp */,
 				4572CAB2210F123B00EA1A56 /* scope find.hpp */,
+				45A723372129525700BFE7FB /* scope traverse.hpp */,
 			);
 			name = "Semantic Analysis";
 			sourceTree = "<group>";
