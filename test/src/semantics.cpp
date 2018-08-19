@@ -846,6 +846,16 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(If - Scope, {
+    const char *source = R"(
+      func main() {
+        if (true) var i = 3;
+        i = 2;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
   TEST(Loops - All, {
     const char *source = R"(
       func main() {

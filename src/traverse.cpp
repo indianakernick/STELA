@@ -51,9 +51,12 @@ public:
     man.leaveScope();
   }
   void visit(ast::If &fi) override {
+    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
     visitCond(fi.cond);
     visitStat(fi.body);
     visitStat(fi.elseBody);
+    ins.pop();
+    man.leaveScope();
   }
   
   void visit(ast::Switch &swich) override {
@@ -90,12 +93,18 @@ public:
     visitExpr(ret.expr);
   }
   void visit(ast::While &wile) override {
+    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
     visitCond(wile.cond);
     visitStat(wile.body);
+    ins.pop();
+    man.leaveScope();
   }
   void visit(ast::RepeatWhile &repWhile) override {
+    ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
     visitStat(repWhile.body);
     visitCond(repWhile.cond);
+    ins.pop();
+    man.leaveScope();
   }
   void visit(ast::For &four) override {
     ins.push<BlockInserter>(man.enterScope<sym::BlockScope>(), log);
