@@ -166,11 +166,16 @@ enum class ValueRef : uint8_t  {
   ref
 };
 
+enum class ExprCat : uint8_t {
+  expr,
+  type
+};
+
 struct ExprType {
   Symbol *type = nullptr;
   ValueMut mut;
   ValueRef ref;
-  bool typeExpr = false;
+  ExprCat cat {ExprCat::expr};
 };
 
 constexpr ValueMut common(const ValueMut a, const ValueMut b) {

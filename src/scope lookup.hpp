@@ -89,7 +89,7 @@ public:
     //   pop call
     //   member function lookup
     //   push expr
-    // memFunExpr(static_type)
+    // memFunExpr(type)
     //   pop stuff
     //   static member function lookup
     //   push expr
@@ -112,8 +112,8 @@ public:
     //   member variable lookup
     //   push expr
     //   return object
-    // memVarExpr(static_type)
-    //   pop static_type
+    // memVarExpr(type)
+    //   pop type
     //   pop member
     //   static member variable lookup
     //   push expr
@@ -124,14 +124,14 @@ public:
   sym::Symbol *lookupIdent(const sym::Name &, Loc);
     // standard lookup
     // if name is function
-    //   exprs.push_back({Expr::Type::ident, name});
+    //   exprs.push_back({Expr::Type::free_fun, name});
     //   return null
     // if name is object
     //   exprs.push_back({Expr::Type::expr});
     //   set etype
     //   return object
     // if name is struct or enum
-    //   exprs.push_back({Expr::Type::static_type});
+    //   exprs.push_back({Expr::Type::type});
     //   set etype to struct or enum
     //   currentEtype = false;
   sym::Symbol *lookupSelf(Loc);
@@ -145,9 +145,9 @@ private:
     enum class Type {
       call,
       member,
-      ident,
+      free_fun,
       expr,
-      static_type,
+      type,
       subexpr
     } type;
     sym::Name name;

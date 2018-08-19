@@ -88,7 +88,7 @@ public:
   }
   void leave(const Loc loc) {
     const sym::ExprType etype = lkp.leaveSubExpr();
-    if (!etype.typeExpr) {
+    if (etype.cat != sym::ExprCat::type) {
       log.error(loc) << "Expected type" << fatal;
     }
   }
@@ -249,17 +249,17 @@ sym::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     }
     return popCallPushRet(lookupFun(strut->scope, iMemFunKey(strut, params), loc));
   }
-  if (memFunExpr(Expr::Type::static_type)) {
+  if (memFunExpr(Expr::Type::type)) {
     auto *const strut = dynamic_cast<sym::StructType *>(popType());
     if (strut == nullptr) {
       log.error(loc) << "Can only call static member functions on struct types" << fatal;
     }
     return popCallPushRet(lookupFun(strut->scope, sMemFunKey(strut, params), loc));
   }
-  if (call(Expr::Type::ident)) {
+  if (call(Expr::Type::free_fun)) {
     return popCallPushRet(lookupFun(scope, {popName(), params}, loc));
   }
-  if (call(Expr::Type::static_type)) {
+  if (call(Expr::Type::type)) {
     auto *const strut = dynamic_cast<sym::StructType *>(popType());
     if (strut == nullptr) {
       log.error(loc) << "Can only call constructor of struct" << fatal;
@@ -337,7 +337,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     pushExpr(memberType(etype, object->etype));
     return object;
   }
-  if (memVarExpr(Expr::Type::static_type)) {
+  if (memVarExpr(Expr::Type::type)) {
     sym::Symbol *const type = popType();
     if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
       const sym::MemKey key = sMemKey(strut);
@@ -356,7 +356,7 @@ sym::Symbol *ExprLookup::lookupMember(const Loc loc) {
     }
     log.error(loc) << "Can only access static members of struct and enum types" << fatal;
   }
-  if (memFunExpr(Expr::Type::static_type)) {
+  if (memFunExpr(Expr::Type::type)) {
     sym::Symbol *const type = popType();
     if (auto *strut = dynamic_cast<sym::StructType *>(type)) {
       const sym::MemKey key = sMemKey(strut);
@@ -378,7 +378,7 @@ sym::Symbol *ExprLookup::lookupIdent(
 ) {
   sym::Symbol *const symbol = find(scope, name);
   if (symbol) {
-    return referTo(symbol);
+    return symbol;
   }
   if (sym::Scope *parent = parentScope(scope)) {
     return lookupIdent(parent, name, loc);
@@ -393,17 +393,17 @@ sym::Symbol *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
     if (exprs.back().type != Expr::Type::call) {
       log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
     }
-    exprs.push_back({Expr::Type::ident, name});
+    exprs.push_back({Expr::Type::free_fun, name});
     return nullptr;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
-    return pushObj(object);
+    return pushObj(referTo(object));
   }
   if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
-    symbol = alias->type;
+    symbol = referTo(alias)->type;
   }
   // symbol must be a StructType or EnumType
-  pushStatic(symbol);
+  pushStatic(referTo(symbol));
   return symbol;
 }
 
@@ -423,7 +423,7 @@ void ExprLookup::enterSubExpr() {
 sym::ExprType ExprLookup::leaveSubExpr() {
   assert(exprs.size() >= 2);
   const auto top = exprs.rbegin();
-  assert(top[0].type == Expr::Type::expr || top[0].type == Expr::Type::static_type);
+  assert(top[0].type == Expr::Type::expr || top[0].type == Expr::Type::type);
   assert(top[1].type == Expr::Type::subexpr);
   exprs.pop_back();
   exprs.pop_back();
@@ -435,14 +435,14 @@ ExprLookup::Expr::Expr(const Type type)
   assert(
     type == Type::call ||
     type == Type::expr ||
-    type == Type::static_type ||
+    type == Type::type ||
     type == Type::subexpr
   );
 }
 
 ExprLookup::Expr::Expr(const Type type, const sym::Name &name)
   : type{type}, name{name} {
-  assert(type == Type::member || type == Type::ident);
+  assert(type == Type::member || type == Type::free_fun);
 }
 
 void ExprLookup::pushExpr(const sym::ExprType type) {
@@ -456,9 +456,9 @@ sym::Object *ExprLookup::pushObj(sym::Object *const obj) {
 }
 
 sym::Symbol *ExprLookup::pushStatic(sym::Symbol *const type) {
-  exprs.push_back({Expr::Type::static_type});
+  exprs.push_back({Expr::Type::type});
   etype.type = type;
-  etype.typeExpr = true;
+  etype.cat = sym::ExprCat::type;
   return type;
 }
 
@@ -490,7 +490,7 @@ bool ExprLookup::call(const Expr::Type type) const {
 
 sym::Name ExprLookup::popName() {
   const Expr &expr = exprs.back();
-  assert(expr.type == Expr::Type::member || expr.type == Expr::Type::ident);
+  assert(expr.type == Expr::Type::member || expr.type == Expr::Type::free_fun);
   sym::Name name = std::move(expr.name);
   exprs.pop_back();
   return name;
@@ -499,7 +499,7 @@ sym::Name ExprLookup::popName() {
 sym::Symbol *ExprLookup::popType() {
   assert(!exprs.empty());
   const Expr::Type type = exprs.back().type;
-  assert(type == Expr::Type::expr || type == Expr::Type::static_type);
+  assert(type == Expr::Type::expr || type == Expr::Type::type);
   exprs.pop_back();
   return etype.type;
 }

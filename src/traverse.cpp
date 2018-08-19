@@ -64,7 +64,7 @@ public:
     const Loc loc
   ) {
     sym::ExprType exprType = expr ? getExprType(man, log, expr.get(), bnt) : sym::ExprType{};
-    if (expr && exprType.typeExpr) {
+    if (expr && exprType.cat != sym::ExprCat::expr) {
       log.error(loc) << "Cannot initialize variable with a type" << fatal;
     }
     sym::Symbol *symType = type ? tlk.lookupType(type) : exprType.type;
@@ -129,7 +129,7 @@ public:
     for (const ast::EnumCase &cs : num.cases) {
       if (cs.value) {
         const sym::ExprType type = getExprType(man, log, cs.value.get(), bnt);
-        if (type.typeExpr) {
+        if (type.cat != sym::ExprCat::expr) {
           log.error(cs.loc) << "Enum case \"" << cs.name
             << "\" cannot be a type" << fatal;
         }
