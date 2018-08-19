@@ -805,4 +805,44 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(If - Standard, {
+    const char *source = R"(
+      func main() {
+        var a = 4;
+        var b = 4;
+        if (a == b) {
+          a += b;
+        }
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(If - Else, {
+    const char *source = R"(
+      func main() {
+        var a = 4;
+        var b = 4;
+        if (a == b) {
+          a += b;
+        } else if (a < b) {
+          b -= a;
+        }
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(If - Non-bool, {
+    const char *source = R"(
+      func main() {
+        var a = 4;
+        if (a) {
+          a = 0;
+        }
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

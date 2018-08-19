@@ -22,27 +22,17 @@ public:
     : lkp{man.cur(), log}, tlk{man, log}, man{man}, log{log}, bnt{types} {}
 
   void visit(ast::Assignment &as) override {
-    lkp.enterSubExpr();
-    as.left->accept(*this);
-    const sym::ExprType left = lkp.leaveSubExpr();
-    lkp.enterSubExpr();
-    as.right->accept(*this);
-    const sym::ExprType right = lkp.leaveSubExpr();
+    const sym::ExprType left = visitValueExpr(as.left.get());
+    const sym::ExprType right = visitValueExpr(as.right.get());
     as.definition = lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
   }
   void visit(ast::BinaryExpr &bin) override {
-    lkp.enterSubExpr();
-    bin.left->accept(*this);
-    const sym::ExprType left = lkp.leaveSubExpr();
-    lkp.enterSubExpr();
-    bin.right->accept(*this);
-    const sym::ExprType right = lkp.leaveSubExpr();
+    const sym::ExprType left = visitValueExpr(bin.left.get());
+    const sym::ExprType right = visitValueExpr(bin.right.get());
     bin.definition = lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
   }
   void visit(ast::UnaryExpr &un) override {
-    lkp.enterSubExpr();
-    un.expr->accept(*this);
-    const sym::ExprType type = lkp.leaveSubExpr();
+    const sym::ExprType type = visitValueExpr(un.expr.get());
     un.definition = lkp.lookupFunc(sym::Name(opName(un.oper)), {type}, un.loc);
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
@@ -69,18 +59,12 @@ public:
     self.definition = lkp.lookupSelf(self.loc);
   }
   void visit(ast::Ternary &tern) override {
-    lkp.enterSubExpr();
-    tern.cond->accept(*this);
-    const sym::ExprType cond = lkp.leaveSubExpr();
+    const sym::ExprType cond = visitValueExpr(tern.cond.get());
     if (cond.type != bnt.Bool) {
-      log.error(tern.loc) << "Condition of ternary conditional must be a Bool" << fatal;
+      log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
     }
-    lkp.enterSubExpr();
-    tern.tru->accept(*this);
-    const sym::ExprType tru = lkp.leaveSubExpr();
-    lkp.enterSubExpr();
-    tern.fals->accept(*this);
-    const sym::ExprType fals = lkp.leaveSubExpr();
+    const sym::ExprType tru = visitValueExpr(tern.tru.get());
+    const sym::ExprType fals = visitValueExpr(tern.fals.get());
     if (tru.type != fals.type) {
       log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
     }
@@ -127,11 +111,14 @@ public:
     lkp.setExpr(etype);
   }
 
-  void enter() {
+  sym::ExprType visitValueExpr(ast::Node *const node) {
     lkp.enterSubExpr();
-  }
-  sym::ExprType leave() {
-    return lkp.leaveSubExpr();
+    node->accept(*this);
+    const sym::ExprType etype = lkp.leaveSubExpr();
+    if (etype.cat != sym::ExprCat::value) {
+      log.error(node->loc) << "Expected value but found type" << fatal;
+    }
+    return etype;
   }
 
 private:
@@ -151,7 +138,5 @@ sym::ExprType stela::getExprType(
   const BuiltinTypes &types
 ) {
   Visitor visitor{man, log, types};
-  visitor.enter();
-  expr->accept(visitor);
-  return visitor.leave();
+  return visitor.visitValueExpr(expr);
 }

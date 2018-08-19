@@ -25,13 +25,25 @@ public:
   void visitStat(const ast::StatPtr &stat) {
     if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
       getExprType(man, log, expr, bnt);
-    } else {
+    } else if (stat) {
       stat->accept(*this);
+    }
+  }
+  void visitExpr(const ast::ExprPtr &expr) {
+    if (expr) {
+      getExprType(man, log, expr.get(), bnt);
+    }
+  }
+  void visitCond(const ast::ExprPtr &expr) {
+    assert(expr);
+    const sym::ExprType etype = getExprType(man, log, expr.get(), bnt);
+    if (etype.type != bnt.Bool) {
+      log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
     }
   }
   
   void visit(ast::Block &block) override {
-    BlockInserter inserter(man.enterScope<sym::BlockScope>(), log);
+    BlockInserter inserter{man.enterScope<sym::BlockScope>(), log};
     SymbolInserter *const old = ins.set(&inserter);
     for (const ast::StatPtr &stat : block.nodes) {
       visitStat(stat);
@@ -39,11 +51,45 @@ public:
     ins.restore(old);
     man.leaveScope();
   }
-
+  void visit(ast::If &fi) override {
+    visitCond(fi.cond);
+    visitStat(fi.body);
+    visitStat(fi.elseBody);
+  }
+  /*void visit(ast::SwitchCase &cas) override {
+    
+  }
+  void visit(ast::SwitchDefault &defalt) override {
+    
+  }
+  void visit(ast::Switch &swich) override {
+    
+  }
+  void visit(ast::Break &brake) override {
+    
+  }
+  void visit(ast::Continue &continu) override {
+    
+  }
+  void visit(ast::Fallthrough &fallthrough) override {
+    
+  }*/
   void visit(ast::Return &ret) override {
-    if (ret.expr) {
-      getExprType(man, log, ret.expr.get(), bnt);
-    }
+    visitExpr(ret.expr);
+  }
+  void visit(ast::While &wile) override {
+    visitCond(wile.cond);
+    visitStat(wile.body);
+  }
+  void visit(ast::RepeatWhile &repWhile) override {
+    visitStat(repWhile.body);
+    visitCond(repWhile.cond);
+  }
+  void visit(ast::For &four) override {
+    visitStat(four.init);
+    visitCond(four.cond);
+    visitExpr(four.incr);
+    visitStat(four.body);
   }
 
   void visit(ast::Func &func) override {
@@ -63,11 +109,8 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    sym::ExprType exprType = expr ? getExprType(man, log, expr.get(), bnt) : sym::ExprType{};
-    if (expr && exprType.cat != sym::ExprCat::expr) {
-      log.error(loc) << "Cannot initialize variable with a type" << fatal;
-    }
-    sym::Symbol *symType = type ? tlk.lookupType(type) : exprType.type;
+    const sym::ExprType exprType = expr ? getExprType(man, log, expr.get(), bnt) : sym::ExprType{};
+    sym::Symbol *const symType = type ? tlk.lookupType(type) : exprType.type;
     if (exprType.type != nullptr && exprType.type != symType) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
@@ -129,10 +172,6 @@ public:
     for (const ast::EnumCase &cs : num.cases) {
       if (cs.value) {
         const sym::ExprType type = getExprType(man, log, cs.value.get(), bnt);
-        if (type.cat != sym::ExprCat::expr) {
-          log.error(cs.loc) << "Enum case \"" << cs.name
-            << "\" cannot be a type" << fatal;
-        }
         if (type.type != bnt.Int64 && type.type != enumSym) {
           log.error(cs.loc) << "Enum case \"" << cs.name
             << "\" must have value of Int or another case" << fatal;

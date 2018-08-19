@@ -167,7 +167,7 @@ enum class ValueRef : uint8_t  {
 };
 
 enum class ExprCat : uint8_t {
-  expr,
+  value,
   type
 };
 
@@ -175,7 +175,7 @@ struct ExprType {
   Symbol *type = nullptr;
   ValueMut mut;
   ValueRef ref;
-  ExprCat cat {ExprCat::expr};
+  ExprCat cat {ExprCat::value};
 };
 
 constexpr ValueMut common(const ValueMut a, const ValueMut b) {
@@ -187,7 +187,7 @@ constexpr ValueRef common(const ValueRef a, const ValueRef b) {
 }
 
 constexpr ExprType memberType(const ExprType obj, const ExprType mem) {
-  return {mem.type, common(obj.mut, mem.mut), obj.ref};
+  return {mem.type, common(obj.mut, mem.mut), obj.ref, mem.cat};
 }
 
 constexpr bool callMut(const ValueMut param, const ValueMut arg) {

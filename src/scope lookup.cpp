@@ -89,7 +89,7 @@ public:
   void leave(const Loc loc) {
     const sym::ExprType etype = lkp.leaveSubExpr();
     if (etype.cat != sym::ExprCat::type) {
-      log.error(loc) << "Expected type" << fatal;
+      log.error(loc) << "Expected type but found value" << fatal;
     }
   }
 
