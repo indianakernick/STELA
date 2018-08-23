@@ -66,6 +66,7 @@ R"(pre {
 constexpr const char default_doc_styles[] =
 R"(body {
   margin: 0;
+  background-color: #000;
 }
 )";
 
