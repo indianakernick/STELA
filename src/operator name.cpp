@@ -10,8 +10,6 @@
 
 std::string_view stela::opName(const ast::AssignOp op) {
   switch (op) {
-    case ast::AssignOp::assign:
-      return "=";
     case ast::AssignOp::add:
       return "+=";
     case ast::AssignOp::sub:
@@ -88,13 +86,5 @@ std::string_view stela::opName(const ast::UnOp op) {
       return "!a";
     case ast::UnOp::bit_not:
       return "~a";
-    case ast::UnOp::pre_incr:
-      return "++a";
-    case ast::UnOp::pre_decr:
-      return "--a";
-    case ast::UnOp::post_incr:
-      return "a++";
-    case ast::UnOp::post_decr:
-      return "a--";
   }
 }

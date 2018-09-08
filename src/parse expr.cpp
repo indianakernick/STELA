@@ -46,16 +46,6 @@ ast::ExprPtr parseIdent(ParseTokens &tok) {
   }
 }
 
-ast::ExprPtr parseSelf(ParseTokens &tok) {
-  if (tok.checkKeyword("self")) {
-    auto self = std::make_unique<ast::Self>();
-    self->loc = tok.lastLoc();
-    return self;
-  } else {
-    return nullptr;
-  }
-}
-
 ast::ExprPtr parseTerm(ParseTokens &tok) {
   // 1
   if (tok.checkOp("(")) {
@@ -64,31 +54,20 @@ ast::ExprPtr parseTerm(ParseTokens &tok) {
     return node;
   }
   if (ast::ExprPtr node = parseIdent(tok)) return node;
-  if (ast::ExprPtr node = parseSelf(tok)) return node;
   if (ast::ExprPtr node = parseLitr(tok)) return node;
   return nullptr;
 }
 
-ast::ExprPtr makeUnary(const ast::UnOp oper, ast::ExprPtr expr) {
-  auto unary = std::make_unique<ast::UnaryExpr>();
-  unary->loc = expr->loc;
-  unary->oper = oper;
-  unary->expr = std::move(expr);
-  return unary;
 }
 
-ast::ExprPtr parseMisc(ParseTokens &tok) {
+ast::ExprPtr stela::parseNested(ParseTokens &tok) {
   // 2
-  ast::ExprPtr left;
-  if (!(left = parseTerm(tok))) {
+  ast::ExprPtr left = parseTerm(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
-    if (tok.checkOp("++")) {
-      left = makeUnary(ast::UnOp::post_incr, std::move(left));
-    } else if (tok.checkOp("--")) {
-      left = makeUnary(ast::UnOp::post_decr, std::move(left));
-    } else if (tok.peekOp("(")) {
+    if (tok.peekOp("(")) {
       auto call = std::make_unique<ast::FuncCall>();
       call->loc = tok.loc();
       call->func = std::move(left);
@@ -114,6 +93,16 @@ ast::ExprPtr parseMisc(ParseTokens &tok) {
   return left;
 }
 
+namespace {
+
+ast::ExprPtr makeUnary(const ast::UnOp oper, ast::ExprPtr expr) {
+  auto unary = std::make_unique<ast::UnaryExpr>();
+  unary->loc = expr->loc;
+  unary->oper = oper;
+  unary->expr = std::move(expr);
+  return unary;
+}
+
 ast::ExprPtr parseUnary(ParseTokens &);
 
 ast::ExprPtr makeUnary(const ast::UnOp oper, ParseTokens &tok) {
@@ -122,18 +111,14 @@ ast::ExprPtr makeUnary(const ast::UnOp oper, ParseTokens &tok) {
 
 ast::ExprPtr parseUnary(ParseTokens &tok) {
   // 3
-  if (tok.checkOp("++")) {
-    return makeUnary(ast::UnOp::pre_incr, tok);
-  } else if (tok.checkOp("--")) {
-    return makeUnary(ast::UnOp::pre_decr, tok);
-  } else if (tok.checkOp("-")) {
+  if (tok.checkOp("-")) {
     return makeUnary(ast::UnOp::neg, tok);
   } else if (tok.checkOp("!")) {
     return makeUnary(ast::UnOp::bool_not, tok);
   } else if (tok.checkOp("~")) {
     return makeUnary(ast::UnOp::bit_not, tok);
   } else {
-    return parseMisc(tok);
+    return parseNested(tok);
   }
 }
 
@@ -148,8 +133,8 @@ ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr left, ast::ExprPtr r
 
 ast::ExprPtr parsePow(ParseTokens &tok) {
   // 4
-  ast::ExprPtr left;
-  if (!(left = parseUnary(tok))) {
+  ast::ExprPtr left = parseUnary(tok);
+  if (!left) {
     return nullptr;
   }
   if (!tok.checkOp("**")) {
@@ -162,8 +147,8 @@ ast::ExprPtr parsePow(ParseTokens &tok) {
 
 ast::ExprPtr parseMul(ParseTokens &tok) {
   // 5
-  ast::ExprPtr left;
-  if (!(left = parsePow(tok))) {
+  ast::ExprPtr left = parsePow(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
@@ -184,8 +169,8 @@ ast::ExprPtr parseMul(ParseTokens &tok) {
 
 ast::ExprPtr parseAdd(ParseTokens &tok) {
   // 6
-  ast::ExprPtr left;
-  if (!(left = parseMul(tok))) {
+  ast::ExprPtr left = parseMul(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
@@ -204,8 +189,8 @@ ast::ExprPtr parseAdd(ParseTokens &tok) {
 
 ast::ExprPtr parseShift(ParseTokens &tok) {
   // 7
-  ast::ExprPtr left;
-  if (!(left = parseAdd(tok))) {
+  ast::ExprPtr left = parseAdd(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
@@ -224,8 +209,8 @@ ast::ExprPtr parseShift(ParseTokens &tok) {
 
 ast::ExprPtr parseRel(ParseTokens &tok) {
   // 9
-  ast::ExprPtr left;
-  if (!(left = parseShift(tok))) {
+  ast::ExprPtr left = parseShift(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
@@ -248,8 +233,8 @@ ast::ExprPtr parseRel(ParseTokens &tok) {
 
 ast::ExprPtr parseEq(ParseTokens &tok) {
   // 10
-  ast::ExprPtr left;
-  if (!(left = parseRel(tok))) {
+  ast::ExprPtr left = parseRel(tok);
+  if (!left) {
     return nullptr;
   }
   while (true) {
@@ -273,8 +258,8 @@ ast::ExprPtr parseBin(
   const std::string_view token,
   ast::ExprPtr (*parseLower)(ParseTokens &)
 ) {
-  ast::ExprPtr left;
-  if (!(left = parseLower(tok))) {
+  ast::ExprPtr left = parseLower(tok);
+  if (!left) {
     return nullptr;
   }
   while (tok.checkOp(token)) {
@@ -308,63 +293,26 @@ ast::ExprPtr parseBoolOr(ParseTokens &tok) {
   return parseBin(tok, ast::BinOp::bool_or, "||", parseBoolAnd);
 }
 
-ast::ExprPtr makeAssign(const ast::AssignOp op, ast::ExprPtr left, ast::ExprPtr right) {
-  auto assign = std::make_unique<ast::Assignment>();
-  assign->loc = left->loc;
-  assign->left = std::move(left);
-  assign->oper = op;
-  assign->right = std::move(right);
-  return assign;
-}
-
-ast::ExprPtr parseAssign(ParseTokens &);
-
-ast::ExprPtr makeAssign(const ast::AssignOp op, ast::ExprPtr left, ParseTokens &tok) {
-  return makeAssign(op, std::move(left), expectExpr(tok, parseAssign));
-}
-
-ast::ExprPtr parseAssign(ParseTokens &tok) {
+ast::ExprPtr parseTern(ParseTokens &tok) {
   // 16
-  ast::ExprPtr left;
-  if (!(left = parseBoolOr(tok))) {
+  ast::ExprPtr left = parseBoolOr(tok);
+  if (!left) {
     return nullptr;
   }
   if (tok.checkOp("?")) {
     auto tern = std::make_unique<ast::Ternary>();
     tern->loc = left->loc;
     tern->cond = std::move(left);
-    tern->tru = expectExpr(tok, parseAssign);
+    tern->tru = expectExpr(tok, parseTern);
     tok.expectOp(":");
-    tern->fals = expectExpr(tok, parseAssign);
+    tern->fals = expectExpr(tok, parseTern);
     return tern;
   }
-  
-  #define CHECK(TOKEN, ENUM)                                                    \
-    if (tok.checkOp(#TOKEN)) {                                                  \
-      return makeAssign(ast::AssignOp::ENUM, std::move(left), tok);             \
-    }
-  
-  CHECK(=, assign)
-  CHECK(+=, add)
-  CHECK(-=, sub)
-  CHECK(*=, mul)
-  CHECK(/=, div)
-  CHECK(%=, mod)
-  CHECK(**=, pow)
-  CHECK(<<=, bit_shl)
-  CHECK(>>=, bit_shr)
-  CHECK(&=, bit_and)
-  CHECK(^=, bit_xor)
-  CHECK(|=, bit_or)
-  
-  #undef CHECK
-  
   return left;
 }
 
 }
 
 ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
-  return parseAssign(tok);
+  return parseTern(tok);
 }
-

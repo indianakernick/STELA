@@ -23,7 +23,7 @@ using namespace stela::ast;
 
 #define IS_AOP(EXP, OPERATOR)                                                   \
   [&] {                                                                         \
-    auto *op = ASSERT_DOWN_CAST(const Assignment, EXP.get());                   \
+    auto *op = ASSERT_DOWN_CAST(const CompAssign, EXP.get());                   \
     ASSERT_EQ(op->oper, AssignOp::OPERATOR);                                    \
     return op;                                                                  \
   }()
@@ -55,8 +55,13 @@ TEST_GROUP(Syntax, {
     ASSERT_TRUE(ast.global.empty());
   });
   
+  TEST(Empty source, {
+    const AST ast = createAST("", log);
+    ASSERT_TRUE(ast.global.empty());
+  });
+  
   TEST(EOF, {
-    ASSERT_THROWS(createAST("typealias", log), FatalError);
+    ASSERT_THROWS(createAST("type", log), FatalError);
   });
   
   TEST(Silent Logger, {
@@ -73,61 +78,6 @@ TEST_GROUP(Syntax, {
     } catch (FatalError &e) {
       std::cout << "Should have got nothing but this " << e.what() << " exception\n";
     }
-  });
-  
-  TEST(Enum - empty, {
-    ASSERT_THROWS(createAST("enum NoCases {}", log), FatalError);
-  });
-  
-  TEST(Enum - standard, {
-    const char *source = R"(
-      enum Dir {
-        up,
-        right,
-        down,
-        left
-      }
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *enumNode = ASSERT_DOWN_CAST(const Enum, ast.global[0].get());
-    ASSERT_EQ(enumNode->name, "Dir");
-    ASSERT_EQ(enumNode->cases.size(), 4);
-    
-    ASSERT_EQ(enumNode->cases[0].name, "up");
-    ASSERT_EQ(enumNode->cases[1].name, "right");
-    ASSERT_EQ(enumNode->cases[2].name, "down");
-    ASSERT_EQ(enumNode->cases[3].name, "left");
-  });
-  
-  TEST(Enum - extra comma, {
-    const char *source = R"(
-      enum ExtraComma {
-        first,
-        second,
-      }
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
-  });
-  
-  TEST(Enum - missing comma, {
-    const char *source = R"(
-      enum ExtraComma {
-        first
-        oh_no
-      }
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
-  });
-  
-  TEST(Enum - bad value, {
-    const char *source = R"(
-      enum BadValue {
-        five = 5,
-        oh_no '='
-      }
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Func - empty, {
@@ -186,14 +136,14 @@ TEST_GROUP(Syntax, {
   
   TEST(Type - keyword, {
     const char *source = R"(
-      typealias Dummy = lambda;
+      type Dummy = func;
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Type - Array of functions, {
     const char *source = R"(
-      typealias dummy = [(inout Int, inout Double) -> Void];
+      type dummy = [func(inout Int, inout Double) -> Char];
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
@@ -211,54 +161,29 @@ TEST_GROUP(Syntax, {
     auto *second = ASSERT_DOWN_CAST(const NamedType, func->params[1].type.get());
     ASSERT_EQ(second->name, "Double");
     auto *ret = ASSERT_DOWN_CAST(const NamedType, func->ret.get());
-    ASSERT_EQ(ret->name, "Void");
+    ASSERT_EQ(ret->name, "Char");
   });
   
   TEST(Type - Function no ret type, {
     const char *source = R"(
-      typealias dummy = (Int, Char) 5
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
-  });
-  
-  TEST(Type - Map, {
-    const char *source = R"(
-      typealias dummy = {String: [Int]};
+      type dummy = func(Int, Char);
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
     ASSERT_EQ(alias->name, "dummy");
+    ASSERT_FALSE(alias->strong);
     
-    auto *map = ASSERT_DOWN_CAST(const MapType, alias->type.get());
-    auto *key = ASSERT_DOWN_CAST(const NamedType, map->key.get());
-    ASSERT_EQ(key->name, "String");
-    auto *val = ASSERT_DOWN_CAST(const ArrayType, map->val.get());
-    auto *valElem = ASSERT_DOWN_CAST(const NamedType, val->elem.get());
-    ASSERT_EQ(valElem->name, "Int");
+    auto *func = ASSERT_DOWN_CAST(const FuncType, alias->type.get());
+    ASSERT_EQ(func->params.size(), 2);
+    ASSERT_FALSE(func->ret);
   });
   
   TEST(Type - Invalid, {
     const char *source = R"(
-      typealias dummy = {Int};
+      type dummy = {Int};
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
-  });
-  
-  TEST(Stat - Empty, {
-    const char *source = R"(
-      func dummy() {
-        if (true);
-      }
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 1);
-    
-    auto *ifStat = ASSERT_DOWN_CAST(const If, block[0].get());
-    ASSERT_DOWN_CAST(const EmptyStatement, ifStat->body.get());
   });
   
   TEST(Stat - Block, {
@@ -388,11 +313,8 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         while (expr) {}
-        
-        repeat {} while (expr);
-        
-        for (let initial = expr; expr; expr) {}
-        for (; expr; expr) {}
+        for (i := expr; expr; i++) {}
+        for (; expr; i++) {}
         for (; expr; ) {}
       }
     )";
@@ -401,7 +323,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 5);
+    ASSERT_EQ(block.size(), 4);
     
     {
       auto *whileNode = ASSERT_DOWN_CAST(const While, block[0].get());
@@ -409,26 +331,21 @@ TEST_GROUP(Syntax, {
       ASSERT_DOWN_CAST(const Block, whileNode->body.get());
     }
     {
-      auto *repeatWhile = ASSERT_DOWN_CAST(const RepeatWhile, block[1].get());
-      ASSERT_DOWN_CAST(const Block, repeatWhile->body.get());
-      ASSERT_TRUE(repeatWhile->cond);
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[1].get());
+      ASSERT_DOWN_CAST(const DeclAssign, forNode->init.get());
+      ASSERT_TRUE(forNode->cond);
+      ASSERT_DOWN_CAST(const IncrDecr, forNode->incr.get());
+      ASSERT_DOWN_CAST(const Block, forNode->body.get());
     }
     {
       auto *forNode = ASSERT_DOWN_CAST(const For, block[2].get());
-      ASSERT_DOWN_CAST(const Let, forNode->init.get());
+      ASSERT_FALSE(forNode->init);
       ASSERT_TRUE(forNode->cond);
-      ASSERT_TRUE(forNode->incr);
+      ASSERT_DOWN_CAST(const IncrDecr, forNode->incr.get());
       ASSERT_DOWN_CAST(const Block, forNode->body.get());
     }
     {
       auto *forNode = ASSERT_DOWN_CAST(const For, block[3].get());
-      ASSERT_FALSE(forNode->init);
-      ASSERT_TRUE(forNode->cond);
-      ASSERT_TRUE(forNode->incr);
-      ASSERT_DOWN_CAST(const Block, forNode->body.get());
-    }
-    {
-      auto *forNode = ASSERT_DOWN_CAST(const For, block[4].get());
       ASSERT_FALSE(forNode->init);
       ASSERT_TRUE(forNode->cond);
       ASSERT_FALSE(forNode->incr);
@@ -443,19 +360,19 @@ TEST_GROUP(Syntax, {
         
         switch (expr) {
           case (expr) {
-            expr;
+            expr++;
             continue;
           }
           case (expr) {
-            expr;
+            expr++;
             break;
           }
           case (expr) {
-            expr;
+            expr++;
             return expr;
           }
           default {
-            expr;
+            expr++;
             return;
           }
         }
@@ -590,149 +507,74 @@ TEST_GROUP(Syntax, {
   
   TEST(Struct - empty, {
     const char *source = R"(
-      struct NoMembers {}
+      type NoMembers struct {};
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
-    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
-    ASSERT_EQ(structNode->name, "NoMembers");
-    ASSERT_TRUE(structNode->body.empty());
-  });
-  
-  TEST(Struct - Init, {
-    const char *source = R"(
-      struct Number {
-        init(n: Int) {
-          self;
-        }
-      }
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
-    ASSERT_EQ(structNode->name, "Number");
-    ASSERT_EQ(structNode->body.size(), 1);
-    const Member &mem = structNode->body[0];
-    ASSERT_EQ(mem.access, MemAccess::default_);
-    ASSERT_EQ(mem.scope, MemScope::member);
-    auto *init = ASSERT_DOWN_CAST(const Init, mem.node.get());
-    ASSERT_EQ(init->body.nodes.size(), 1);
-    ASSERT_DOWN_CAST(const Self, init->body.nodes[0].get());
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "NoMembers");
+    ASSERT_TRUE(alias->strong);
+    auto *strut = ASSERT_DOWN_CAST(const StructType, alias->type.get());
+    ASSERT_TRUE(strut->fields.empty());
   });
 
   TEST(Struct - Vars, {
     const char *source = R"(
-      struct Vec2 {
-        private var x: Float;
-        private var y: Float;
-        
-        static let zero = expr;
-        public static let zilch = expr;
-        
-        let mem = expr;
-      }
+      type Vec2 struct {
+        x: Float;
+        y: Float;
+      };
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
-    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
-    ASSERT_EQ(structNode->name, "Vec2");
-    ASSERT_EQ(structNode->body.size(), 5);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "Vec2");
+    auto *strut = ASSERT_DOWN_CAST(const StructType, alias->type.get());
+    ASSERT_EQ(strut->fields.size(), 2);
     
     {
-      const Member &mem = structNode->body[0];
-      ASSERT_EQ(mem.access, MemAccess::private_);
-      ASSERT_EQ(mem.scope, MemScope::member);
-      ASSERT_DOWN_CAST(const Var, mem.node.get());
+      const Field &field = strut->fields[0];
+      ASSERT_EQ(field.name, "x");
     }
     {
-      const Member &mem = structNode->body[1];
-      ASSERT_EQ(mem.access, MemAccess::private_);
-      ASSERT_EQ(mem.scope, MemScope::member);
-      ASSERT_DOWN_CAST(const Var, mem.node.get());
-    }
-    {
-      const Member &mem = structNode->body[2];
-      ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::static_);
-      ASSERT_DOWN_CAST(const Let, mem.node.get());
-    }
-    {
-      const Member &mem = structNode->body[3];
-      ASSERT_EQ(mem.access, MemAccess::public_);
-      ASSERT_EQ(mem.scope, MemScope::static_);
-      ASSERT_DOWN_CAST(const Let, mem.node.get());
-    }
-    {
-      const Member &mem = structNode->body[4];
-      ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::member);
-      ASSERT_DOWN_CAST(const Let, mem.node.get());
+      const Field &field = strut->fields[1];
+      ASSERT_EQ(field.name, "y");
     }
   });
   
   TEST(Struct - Functions, {
     const char *source = R"(
-      struct Vec2 {
-        func plus(other: Vec2) {
-          return Vec2(
-            self.x + other.x,
-            self.y + other.y
-          );
-        }
-        mutating func add(other: Vec2) {
-          self.x += other.x;
-          self.y += other.y;
-        }
-        static func add(a: Vec2, b: Vec2) {
-          return expr;
-        }
+      type Vec2 struct {
+        x: Float;
+        y: Float;
+      };
+    
+      func (self: inout Vec2) add(other: Vec2) {
+        self.x += other.x;
+        self.y += other.y;
       }
     )";
     const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *structNode = ASSERT_DOWN_CAST(const Struct, ast.global[0].get());
-    ASSERT_EQ(structNode->name, "Vec2");
-    ASSERT_EQ(structNode->body.size(), 3);
+    ASSERT_EQ(ast.global.size(), 2);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "Vec2");
+    auto *strut = ASSERT_DOWN_CAST(const StructType, alias->type.get());
+    ASSERT_EQ(strut->fields.size(), 2);
     
     {
-      const Member &mem = structNode->body[0];
-      ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::member);
-      ASSERT_EQ(mem.mut, MemMut::constant);
-      ASSERT_DOWN_CAST(const Func, mem.node.get());
+      const Field &field = strut->fields[0];
+      ASSERT_EQ(field.name, "x");
     }
     {
-      const Member &mem = structNode->body[1];
-      ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::member);
-      ASSERT_EQ(mem.mut, MemMut::mutating);
-      ASSERT_DOWN_CAST(const Func, mem.node.get());
+      const Field &field = strut->fields[1];
+      ASSERT_EQ(field.name, "y");
     }
-    {
-      const Member &mem = structNode->body[2];
-      ASSERT_EQ(mem.access, MemAccess::default_);
-      ASSERT_EQ(mem.scope, MemScope::static_);
-      ASSERT_EQ(mem.mut, MemMut::constant);
-      ASSERT_DOWN_CAST(const Func, mem.node.get());
-    }
-  });
-  
-  TEST(Struct - static mutating, {
-    const char *source = R"(
-      struct Dummy {
-        static mutating doesnt_make_sense() {}
-      }
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
-  });
-  
-  TEST(Struct - mutating var, {
-    const char *source = R"(
-      struct Dummy {
-        mutating var doesnt_make_sense: Int;
-      }
-    })";
-    ASSERT_THROWS(createAST(source, log), FatalError);
+    
+    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[1].get());
+    ASSERT_EQ(func->name, "add");
+    ASSERT_TRUE(func->receiver);
+    ASSERT_EQ(func->params.size(), 1);
+    ASSERT_FALSE(func->ret);
   });
   
   TEST(Struct - Bad member, {
@@ -747,11 +589,11 @@ TEST_GROUP(Syntax, {
   TEST(Expr - Simple literals, {
     const char *source = R"(
       func dummy() {
-        "This is a string";
-        'c';
-        73;
-        true;
-        false;
+        var a = "This is a string";
+        var a = 'c';
+        var a = 73;
+        var a = true;
+        var a = false;
       }
     )";
     const AST ast = createAST(source, log);
@@ -761,23 +603,28 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(block.size(), 5);
     
     {
-      const auto *lit = ASSERT_DOWN_CAST(const StringLiteral, block[0].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[0].get());
+      auto *lit = ASSERT_DOWN_CAST(const StringLiteral, var->expr.get());
       ASSERT_EQ(lit->value, "This is a string");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const CharLiteral, block[1].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[1].get());
+      auto *lit = ASSERT_DOWN_CAST(const CharLiteral, var->expr.get());
       ASSERT_EQ(lit->value, "c");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const NumberLiteral, block[2].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[2].get());
+      auto *lit = ASSERT_DOWN_CAST(const NumberLiteral, var->expr.get());
       ASSERT_EQ(lit->value, "73");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, block[3].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[3].get());
+      auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, var->expr.get());
       ASSERT_EQ(lit->value, true);
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, block[4].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[4].get());
+      auto *lit = ASSERT_DOWN_CAST(const BoolLiteral, var->expr.get());
       ASSERT_EQ(lit->value, false);
     }
   });
@@ -785,9 +632,9 @@ TEST_GROUP(Syntax, {
   TEST(Expr - Array, {
     const char *source = R"(
       func dummy() {
-        [];
-        [7];
-        [7, 8, 9];
+        var empty = [];
+        var seven = [7];
+        var seven_ate_nine = [7, 8, 9];
       }
     )";
     const AST ast = createAST(source, log);
@@ -797,83 +644,34 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(block.size(), 3);
     
     {
-      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[0].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[0].get());
+      auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, var->expr.get());
       ASSERT_TRUE(lit->exprs.empty());
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[1].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[1].get());
+      auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, var->expr.get());
       ASSERT_EQ(lit->exprs.size(), 1);
-      const auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
+      auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
       ASSERT_EQ(seven->value, "7");
     }
     {
-      const auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, block[2].get());
+      auto *var = ASSERT_DOWN_CAST(const Var, block[2].get());
+      auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, var->expr.get());
       ASSERT_EQ(lit->exprs.size(), 3);
-      const auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
+      auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0].get());
       ASSERT_EQ(seven->value, "7");
-      const auto *eight = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[1].get());
+      auto *eight = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[1].get());
       ASSERT_EQ(eight->value, "8");
-      const auto *nine = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[2].get());
+      auto *nine = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[2].get());
       ASSERT_EQ(nine->value, "9");
-    }
-  });
-  
-  TEST(Expr - Map, {
-    const char *source = R"(
-      func dummy() {
-        var map: Map;
-        map = {};
-        map = {"seven": 7};
-        map = {"seven": 7, "eight": 8, "nine": 9};
-      }
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
-    const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 4);
-    
-    {
-      const auto *assign = IS_AOP(block[1], assign);
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
-      ASSERT_TRUE(lit->pairs.empty());
-    }
-    {
-      const auto *assign = IS_AOP(block[2], assign);
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
-      ASSERT_EQ(lit->pairs.size(), 1);
-      
-      const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
-      ASSERT_EQ(sevenKey->value, "seven");
-      const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
-      ASSERT_EQ(sevenVal->value, "7");
-    }
-    {
-      const auto *assign = IS_AOP(block[3], assign);
-      const auto *lit = ASSERT_DOWN_CAST(const MapLiteral, assign->right.get());
-      ASSERT_EQ(lit->pairs.size(), 3);
-      
-      const auto *sevenKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[0].key.get());
-      ASSERT_EQ(sevenKey->value, "seven");
-      const auto *sevenVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[0].val.get());
-      ASSERT_EQ(sevenVal->value, "7");
-      
-      const auto *eightKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[1].key.get());
-      ASSERT_EQ(eightKey->value, "eight");
-      const auto *eightVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[1].val.get());
-      ASSERT_EQ(eightVal->value, "8");
-      
-      const auto *nineKey = ASSERT_DOWN_CAST(const StringLiteral, lit->pairs[2].key.get());
-      ASSERT_EQ(nineKey->value, "nine");
-      const auto *nineVal = ASSERT_DOWN_CAST(const NumberLiteral, lit->pairs[2].val.get());
-      ASSERT_EQ(nineVal->value, "9");
     }
   });
   
   TEST(Expr - Lambda, {
     const char *source = R"(
-      let nothing = lambda () {};
-      let identity = lambda (n: Int) -> Int {
+      let nothing = func() {};
+      let identity = func(n: Int) -> Int {
         return expr;
       };
     )";
@@ -966,19 +764,17 @@ TEST_GROUP(Syntax, {
     
       assign_add
      /          \
-  yeah        assign
-             /      \
-          val        bool_and
-                    /        \
-                  eq          lt
-                 /  \        /  \
-                1    two  four   5
+  yeah        bool_and
+             /        \
+           eq          lt
+          /  \        /  \
+         1    two  four   5
     
     */
     
     const char *source = R"(
       func dummy() {
-        yeah += val = 1 == two && four < 5;
+        yeah += 1 == two && four < 5;
       }
     )";
     const AST ast = createAST(source, log);
@@ -989,15 +785,13 @@ TEST_GROUP(Syntax, {
     
     auto *assign_add = IS_AOP(block[0], add);
       IS_ID(assign_add->left, "yeah");
-      auto *assign = IS_AOP(assign_add->right, assign);
-        IS_ID(assign->left, "val");
-        auto *bool_and = IS_BOP(assign->right, bool_and);
-          auto *eq = IS_BOP(bool_and->left, eq);
-            IS_NUM(eq->left, "1");
-            IS_ID(eq->right, "two");
-          auto *lt = IS_BOP(bool_and->right, lt);
-            IS_ID(lt->left, "four");
-            IS_NUM(lt->right, "5");
+      auto *bool_and = IS_BOP(assign_add->right, bool_and);
+        auto *eq = IS_BOP(bool_and->left, eq);
+          IS_NUM(eq->left, "1");
+          IS_ID(eq->right, "two");
+        auto *lt = IS_BOP(bool_and->right, lt);
+          IS_ID(lt->left, "four");
+          IS_NUM(lt->right, "5");
   });
   
   TEST(Expr - unary, {
@@ -1019,8 +813,6 @@ TEST_GROUP(Syntax, {
   
     const char *source = R"(
       func dummy() {
-        ++n;
-        --n;
         n++;
         n--;
         n -= -n - -(~5 + !0);
@@ -1030,13 +822,13 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 5);
+    ASSERT_EQ(block.size(), 3);
     
-    IS_UOP(block[0], pre_incr);
-    IS_UOP(block[1], pre_decr);
-    IS_UOP(block[2], post_incr);
-    IS_UOP(block[3], post_decr);
-    auto *assign = IS_AOP(block[4], sub);
+    auto *incr = ASSERT_DOWN_CAST(const IncrDecr, block[0].get());
+    ASSERT_TRUE(incr->incr);
+    auto *decr = ASSERT_DOWN_CAST(const IncrDecr, block[1].get());
+    ASSERT_FALSE(decr->incr);
+    auto *assign = IS_AOP(block[2], sub);
       IS_ID(assign->left, "n");
       auto *sub = IS_BOP(assign->right, sub);
         auto *lneg = IS_UOP(sub->left, neg);
@@ -1056,17 +848,15 @@ TEST_GROUP(Syntax, {
     /          \
    e         ternary
             /   |   \
-          le  po_inc assign_div
-         /  \   |   /          \
-        a    d  a  a          pr_dec
-                                |
-                                d
-    
+          le    a    div
+         /  \       /   \
+        a    d     a     d
+     
     */
   
     const char *source = R"(
       func dummy() {
-        e *= a <= d ? a++ : a /= --d;
+        e *= a <= d ? a : a / d;
       }
     )";
     const AST ast = createAST(source, log);
@@ -1081,12 +871,10 @@ TEST_GROUP(Syntax, {
         auto *le = IS_BOP(tern->cond, le);
           IS_ID(le->left, "a");
           IS_ID(le->right, "d");
-        auto *poInc = IS_UOP(tern->tru, post_incr);
-          IS_ID(poInc->expr, "a");
-        auto *assignDiv = IS_AOP(tern->fals, div);
-          IS_ID(assignDiv->left, "a");
-          auto *prDec = IS_UOP(assignDiv->right, pre_decr);
-            IS_ID(prDec->expr, "d");
+        IS_ID(tern->tru, "a");
+        auto *div = IS_BOP(tern->fals, div);
+          IS_ID(div->left, "a");
+          IS_ID(div->right, "d");
   });
   
   TEST(Expr - member and subscript, {
@@ -1105,7 +893,7 @@ TEST_GROUP(Syntax, {
     
     const char *source = R"(
       func dummy() {
-        a.b.c[e.f[g]][h];
+        let test = a.b.c[e.f[g]][h];
       }
     )";
     const AST ast = createAST(source, log);
@@ -1114,7 +902,8 @@ TEST_GROUP(Syntax, {
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);
     
-    auto *sub1 = ASSERT_DOWN_CAST(const Subscript, block[0].get());
+    auto *let = ASSERT_DOWN_CAST(const Let, block[0].get());
+    auto *sub1 = ASSERT_DOWN_CAST(const Subscript, let->expr.get());
       auto *sub2 = ASSERT_DOWN_CAST(const Subscript, sub1->object.get());
         auto *mem1 = ASSERT_DOWN_CAST(const MemberIdent, sub2->object.get());
           auto *mem2 = ASSERT_DOWN_CAST(const MemberIdent, mem1->object.get());
@@ -1147,7 +936,7 @@ TEST_GROUP(Syntax, {
   
     const char *source = R"(
       func dummy() {
-        ~a != b << 2 >> 3 || c & d | e ^ f;
+        let test = ~a != b << 2 >> 3 || c & d | e ^ f;
       }
     )";
     const AST ast = createAST(source, log);
@@ -1155,8 +944,9 @@ TEST_GROUP(Syntax, {
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);
+    auto *let = ASSERT_DOWN_CAST(const Let, block[0].get());
     
-    auto *boolOr = IS_BOP(block[0], bool_or);
+    auto *boolOr = IS_BOP(let->expr, bool_or);
       auto *ne = IS_BOP(boolOr->left, ne);
         auto *bnot = IS_UOP(ne->left, bit_not);
           IS_ID(bnot->expr, "a");
@@ -1205,7 +995,8 @@ TEST_GROUP(Syntax, {
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);
     
-    auto *call1 = ASSERT_DOWN_CAST(const FuncCall, block[0].get());
+    auto *assign = ASSERT_DOWN_CAST(const CallAssign, block[0].get());
+    auto *call1 = &assign->call;
       auto *mem1 = ASSERT_DOWN_CAST(const MemberIdent, call1->func.get());
         auto *sub = ASSERT_DOWN_CAST(const Subscript, mem1->object.get());
           IS_ID(sub->object, "a");
@@ -1226,57 +1017,57 @@ TEST_GROUP(Syntax, {
   TEST(Expr - assign, {
     /*
     
-      mod
-     /   \
-    a     pow
-         /   \
-        b     shl
-             /   \
-            c     shr
-                 /   \
-                d     and
-                     /   \
-                    e     xor
-                         /   \
-                        f     or
-                             /  \
-                            g    ge
-                                /  \
-                              gt    j
-                             /  \
-                            h    i
+        or
+       /  \
+      a    ge
+          /  \
+        gt    d
+       /  \
+      b    c
     
     */
     const char *source = R"(
       func dummy() {
-        a %= b **= c <<= d >>= e &= f ^= g |= h > i >= j;
+        a %= b;
+        a **= b;
+        a <<= b;
+        a >>= b;
+        a &= b;
+        a ^= b;
+        a |= b > c >= d;
       }
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0].get());
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 1);
+    ASSERT_EQ(block.size(), 7);
     
     auto *mod = IS_AOP(block[0], mod);
       IS_ID(mod->left, "a");
-      auto *pow = IS_AOP(mod->right, pow);
-        IS_ID(pow->left, "b");
-        auto *shl = IS_AOP(pow->right, bit_shl);
-          IS_ID(shl->left, "c");
-          auto *shr = IS_AOP(shl->right, bit_shr);
-            IS_ID(shr->left, "d");
-            auto *band = IS_AOP(shr->right, bit_and);
-              IS_ID(band->left, "e");
-              auto *bxor = IS_AOP(band->right, bit_xor);
-                IS_ID(bxor->left, "f");
-                auto *bor = IS_AOP(bxor->right, bit_or);
-                  IS_ID(bor->left, "g");
-                  auto *ge = IS_BOP(bor->right, ge);
-                    auto *gt = IS_BOP(ge->left, gt);
-                      IS_ID(gt->left, "h");
-                      IS_ID(gt->right, "i");
-                    IS_ID(ge->right, "j");
+      IS_ID(mod->right, "b");
+    auto *pow = IS_AOP(block[1], pow);
+      IS_ID(pow->left, "a");
+      IS_ID(pow->right, "b");
+    auto *shl = IS_AOP(block[2], bit_shl);
+      IS_ID(shl->left, "a");
+      IS_ID(shl->right, "b");
+    auto *shr = IS_AOP(block[3], bit_shr);
+      IS_ID(shr->left, "a");
+      IS_ID(shr->right, "b");
+    auto *band = IS_AOP(block[4], bit_and);
+      IS_ID(band->left, "a");
+      IS_ID(band->right, "b");
+    auto *bxor = IS_AOP(block[5], bit_xor);
+      IS_ID(bxor->left, "a");
+      IS_ID(bxor->right, "b");
+    auto *bor = IS_AOP(block[6], bit_or);
+      IS_ID(bor->left, "a");
+      auto *ge = IS_BOP(bor->right, ge);
+        auto *gt = IS_BOP(ge->left, gt);
+          IS_ID(gt->left, "b");
+          IS_ID(gt->right, "c");
+        IS_ID(ge->right, "d");
   });
   
   TEST(Factorial, {

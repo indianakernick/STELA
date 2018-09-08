@@ -15,7 +15,7 @@
 
 namespace stela {
 
-Symbols createSym(const AST &, LogBuf &);
+Symbols createSym(AST &, LogBuf &);
 
 struct SymbolsAST {
   Symbols sym;

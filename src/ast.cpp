@@ -15,47 +15,46 @@
 
 /* LCOV_EXCL_START */
 
+ACCEPT(BuiltinType)
 ACCEPT(ArrayType)
-ACCEPT(MapType)
 ACCEPT(FuncType)
 ACCEPT(NamedType)
-ACCEPT(NestedType)
+ACCEPT(NamespacedType)
+ACCEPT(StructType)
 
-ACCEPT(Assignment)
 ACCEPT(BinaryExpr)
 ACCEPT(UnaryExpr)
 ACCEPT(FuncCall)
 ACCEPT(MemberIdent)
 ACCEPT(Subscript)
 ACCEPT(Identifier)
-ACCEPT(Self)
 ACCEPT(Ternary)
 
 ACCEPT(Block)
-ACCEPT(EmptyStatement)
 ACCEPT(If)
 ACCEPT(Switch)
 ACCEPT(Break)
 ACCEPT(Continue)
 ACCEPT(Return)
 ACCEPT(While)
-ACCEPT(RepeatWhile)
 ACCEPT(For)
 
 ACCEPT(Func)
 ACCEPT(Var)
 ACCEPT(Let)
 ACCEPT(TypeAlias)
-ACCEPT(Init)
-ACCEPT(Struct)
-ACCEPT(Enum)
+
+ACCEPT(CompAssign)
+ACCEPT(IncrDecr)
+ACCEPT(Assign)
+ACCEPT(DeclAssign)
+ACCEPT(CallAssign)
 
 ACCEPT(StringLiteral)
 ACCEPT(CharLiteral)
 ACCEPT(NumberLiteral)
 ACCEPT(BoolLiteral)
 ACCEPT(ArrayLiteral)
-ACCEPT(MapLiteral)
 ACCEPT(Lambda)
 
 /* LCOV_EXCL_END */

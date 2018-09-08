@@ -15,6 +15,15 @@
 #include "location.hpp"
 #include <unordered_map>
 
+namespace stela::ast {
+
+struct Type;
+struct TypeAlias;
+struct Statement;
+struct Func;
+
+}
+
 namespace stela::sym {
 
 struct Symbol {
@@ -26,143 +35,31 @@ struct Symbol {
 };
 using SymbolPtr = std::unique_ptr<Symbol>;
 
-class ScopeVisitor;
+using Name = std::string;
+using Table = std::unordered_map<Name, SymbolPtr>;
 
 struct Scope {
-  explicit Scope(Scope *const parent)
-    : parent{parent} {}
-  virtual ~Scope() = default;
+  enum class Type {
+    // global namespace scope
+    ns,
+    block,
+    func,
+    // break and continue are valid within flow scopes (while, for, switch)
+    flow
+  };
 
-  virtual void accept(ScopeVisitor &) = 0;
+  Scope(Scope *const parent, const Type type)
+    : parent{parent}, type{type} {}
 
   Scope *const parent;
+  const Type type;
+  Table table;
 };
 using ScopePtr = std::unique_ptr<Scope>;
 using Scopes = std::vector<ScopePtr>;
 
-using Name = std::string;
-using UnorderedTable = std::unordered_multimap<Name, SymbolPtr>;
-
-struct UnorderedScope : Scope {
-  explicit UnorderedScope(Scope *const parent)
-    : Scope{parent} {}
-
-  UnorderedTable table;
-};
-
-struct NSScope final : UnorderedScope {
-  explicit NSScope(Scope *const parent)
-    : UnorderedScope{parent} {}
-
-  void accept(ScopeVisitor &) override;
-};
-
-struct BlockScope final : UnorderedScope {
-  explicit BlockScope(Scope *const parent)
-    : UnorderedScope{parent} {}
-  
-  void accept(ScopeVisitor &) override;
-};
-
-struct FuncScope final : UnorderedScope {
-  explicit FuncScope(Scope *const parent)
-    : UnorderedScope{parent} {}
-  
-  void accept(ScopeVisitor &) override;
-};
-
-// break and continue are valid within flow scopes (while, for, repeat-while, switch)
-struct FlowScope final : UnorderedScope {
-  explicit FlowScope(Scope *const parent)
-    : UnorderedScope{parent} {}
-  
-  void accept(ScopeVisitor &) override;
-};
-
-enum class MemAccess {
-  public_,
-  private_
-};
-
-enum class MemScope {
-  instance,
-  static_
-};
-
-struct StructTableRow {
-  Name name;
-  MemAccess access;
-  MemScope scope;
-  SymbolPtr val;
-};
-using StructTable = std::vector<StructTableRow>;
-
-struct StructScope final : Scope {
-  explicit StructScope(Scope *const parent)
-    : Scope{parent} {}
-  
-  void accept(ScopeVisitor &) override;
-  
-  StructTable table;
-};
-
-struct EnumTableRow {
-  Name key;
-  SymbolPtr val;
-};
-using EnumTable = std::vector<EnumTableRow>;
-
-struct EnumScope final : Scope {
-  explicit EnumScope(Scope *const parent)
-    : Scope{parent} {}
-
-  void accept(ScopeVisitor &) override;
-
-  EnumTable table;
-};
-
-class ScopeVisitor {
-public:
-  virtual ~ScopeVisitor() = default;
-  
-  virtual void visit(NSScope &) = 0;
-  virtual void visit(BlockScope &) = 0;
-  virtual void visit(FuncScope &) = 0;
-  virtual void visit(FlowScope &) = 0;
-  virtual void visit(StructScope &) = 0;
-  virtual void visit(EnumScope &) = 0;
-};
-
-struct BuiltinType final : Symbol {
-  enum Enum {
-    Void,
-    Int,
-    Char,
-    Bool,
-    Float,
-    Double,
-    String,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64
-  } value;
-};
-
-struct StructType final : Symbol {
-  StructScope *scope;
-};
-
-struct EnumType final : Symbol {
-  EnumScope *scope;
-};
-
 struct TypeAlias final : Symbol {
-  Symbol *type;
+  ast::TypeAlias *node;
 };
 
 enum class ValueMut : uint8_t {
@@ -175,16 +72,10 @@ enum class ValueRef : uint8_t  {
   ref
 };
 
-enum class ExprCat : uint8_t {
-  value,
-  type
-};
-
 struct ExprType {
-  Symbol *type = nullptr;
+  ast::Type *type = nullptr;
   ValueMut mut;
   ValueRef ref;
-  ExprCat cat {ExprCat::value};
 };
 
 constexpr ValueMut common(const ValueMut a, const ValueMut b) {
@@ -195,8 +86,8 @@ constexpr ValueRef common(const ValueRef a, const ValueRef b) {
   return a == ValueRef::val ? a : b;
 }
 
-constexpr ExprType memberType(const ExprType obj, const ExprType mem) {
-  return {mem.type, common(obj.mut, mem.mut), obj.ref, mem.cat};
+constexpr ExprType memberType(const ExprType obj, ast::Type *mem) {
+  return {mem, obj.mut, obj.ref};
 }
 
 constexpr bool callMut(const ValueMut param, const ValueMut arg) {
@@ -211,32 +102,23 @@ constexpr ExprType null_type {};
 
 struct Object final : Symbol {
   ExprType etype;
+  ast::Statement *node;
 };
 
+// the first parameter is the receiver
+// if params.front().type == nullptr then there is no receiver
 using FuncParams = std::vector<ExprType>;
 struct Func final : Symbol {
   ExprType ret;
   FuncParams params;
-  FuncScope *scope;
+  Scope *scope;
+  ast::Func *node;
 };
 using FuncPtr = std::unique_ptr<Func>;
 
 struct FunKey {
   Name name;
   FuncParams params;
-};
-
-struct MemKey {
-  Name name;
-  MemAccess access;
-  MemScope scope;
-};
-
-struct MemFunKey {
-  Name name;
-  FuncParams params;
-  MemAccess access;
-  MemScope scope;
 };
 
 }

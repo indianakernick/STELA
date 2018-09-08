@@ -13,13 +13,7 @@
 #include <memory>
 #include <string_view>
 #include "location.hpp"
-
-namespace stela::sym {
-
-struct Symbol;
-struct Func;
-
-}
+#include <experimental/optional>
 
 namespace stela::ast {
 
@@ -38,31 +32,50 @@ using NodePtr = std::unique_ptr<Node>;
 struct Type : Node {};
 using TypePtr = std::unique_ptr<Type>;
 
+struct Expression : Node {};
+using ExprPtr = std::unique_ptr<Expression>;
+
 struct Statement : Node {};
 using StatPtr = std::unique_ptr<Statement>;
 
-struct Expression : Statement {};
-using ExprPtr = std::unique_ptr<Expression>;
+struct Declaration : Statement {};
+using DeclPtr = std::unique_ptr<Declaration>;
+
+struct Assignment : Statement {};
+using AsgnPtr = std::unique_ptr<Assignment>;
 
 struct Literal : Expression {};
 using LitrPtr = std::unique_ptr<Literal>;
-
-struct Declaration : Statement {};
-using DeclPtr = std::unique_ptr<Declaration>;
 
 using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
 
-struct ArrayType final : Type {
-  TypePtr elem;
-  
+struct BuiltinType final : Type {
+  // not a strong enum
+  // BuiltinType::Int instead of BuiltinType::TypeEnum::Int
+  enum Enum {
+    Char,
+    Bool,
+    Float,
+    Double,
+    String,
+    Int,
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64
+  } value;
+
   void accept(Visitor &) override;
 };
 
-struct MapType final : Type {
-  TypePtr key;
-  TypePtr val;
+struct ArrayType final : Type {
+  TypePtr elem;
   
   void accept(Visitor &) override;
 };
@@ -85,29 +98,35 @@ struct FuncType final : Type {
   void accept(Visitor &) override;
 };
 
+struct TypeAlias;
+
 struct NamedType final : Type {
   Name name;
-  sym::Symbol *definition = nullptr;
+  TypeAlias *definition = nullptr;
   
   void accept(Visitor &) override;
 };
 
-struct NestedType final : Type {
+struct NamespacedType final : Type {
   TypePtr parent;
   Name name;
-  sym::Symbol *definition = nullptr;
+  TypeAlias *definition = nullptr;
+  
+  void accept(Visitor &) override;
+};
+
+struct Field {
+  Name name;
+  TypePtr type;
+};
+
+struct StructType final : Type {
+  std::vector<Field> fields;
   
   void accept(Visitor &) override;
 };
 
 //------------------------------ Expressions -----------------------------------
-
-/// Assignment operator
-enum class AssignOp {
-  assign,
-  add, sub, mul, div, mod, pow,
-  bit_or, bit_xor, bit_and, bit_shl, bit_shr
-};
 
 /// Binary operator
 enum class BinOp {
@@ -120,26 +139,13 @@ enum class BinOp {
 
 /// Unary operator
 enum class UnOp {
-  neg,
-  bool_not, bit_not,
-  pre_incr, pre_decr,
-  post_incr, post_decr
-};
-
-struct Assignment final : Expression {
-  ExprPtr left;
-  AssignOp oper;
-  ExprPtr right;
-  sym::Func *definition = nullptr;
-  
-  void accept(Visitor &) override;
+  neg, bool_not, bit_not
 };
 
 struct BinaryExpr final : Expression {
   ExprPtr left;
   BinOp oper;
   ExprPtr right;
-  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -147,17 +153,18 @@ struct BinaryExpr final : Expression {
 struct UnaryExpr final : Expression {
   UnOp oper;
   ExprPtr expr;
-  sym::Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
 
 using FuncArgs = std::vector<ExprPtr>;
 
+struct Func;
+
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
-  sym::Func *definition = nullptr;
+  Func *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -165,7 +172,7 @@ struct FuncCall final : Expression {
 struct MemberIdent final : Expression {
   ExprPtr object;
   Name member;
-  sym::Symbol *definition = nullptr;
+  Field *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -179,14 +186,12 @@ struct Subscript final : Expression {
 
 struct Identifier final : Expression {
   Name name;
-  sym::Symbol *definition = nullptr;
+  // either DeclAssign, Var or Let
+  // lowest common base is Statement
+  // null if the identifier refers to a function
+  // error if the identifier refers to a type
+  Statement *definition = nullptr;
   
-  void accept(Visitor &) override;
-};
-
-struct Self final : Expression {
-  sym::Symbol *definition = nullptr;
-
   void accept(Visitor &) override;
 };
 
@@ -203,10 +208,6 @@ struct Ternary final : Expression {
 struct Block final : Statement {
   std::vector<StatPtr> nodes;
   
-  void accept(Visitor &) override;
-};
-
-struct EmptyStatement final : Statement {
   void accept(Visitor &) override;
 };
 
@@ -252,17 +253,10 @@ struct While final : Statement {
   void accept(Visitor &) override;
 };
 
-struct RepeatWhile final : Statement {
-  StatPtr body;
-  ExprPtr cond;
-  
-  void accept(Visitor &) override;
-};
-
 struct For final : Statement {
-  StatPtr init;
+  AsgnPtr init;
   ExprPtr cond;
-  ExprPtr incr;
+  AsgnPtr incr;
   StatPtr body;
   
   void accept(Visitor &) override;
@@ -280,6 +274,7 @@ using FuncParams = std::vector<FuncParam>;
 
 struct Func final : Declaration {
   Name name;
+  std::experimental::optional<FuncParam> receiver;
   FuncParams params;
   TypePtr ret;
   Block body;
@@ -306,59 +301,57 @@ struct Let final : Declaration {
 struct TypeAlias final : Declaration {
   Name name;
   TypePtr type;
+  bool strong;
   
   void accept(Visitor &) override;
 };
 
-struct Init final : Declaration {
-  FuncParams params;
-  Block body;
+//------------------------------- Assignments ----------------------------------
+
+/// Assignment operator
+enum class AssignOp {
+  add, sub, mul, div, mod, pow,
+  bit_or, bit_xor, bit_and, bit_shl, bit_shr
+};
+
+/// Compound assignment a *= 4
+struct CompAssign final : Assignment {
+  ExprPtr left;
+  AssignOp oper;
+  ExprPtr right;
   
   void accept(Visitor &) override;
 };
 
-/// Access level of a member
-enum class MemAccess {
-  public_,
-  private_,
-  default_
-};
-
-/// The scope of a member is either in the object or on the type
-enum class MemScope {
-  member,
-  static_
-};
-
-enum class MemMut {
-  constant,
-  mutating
-};
-
-struct Member {
-  MemAccess access;
-  MemScope scope;
-  MemMut mut;
-  DeclPtr node;
-};
-
-struct Struct final : Declaration {
-  Name name;
-  std::vector<Member> body;
+/// Increment and decrement operators a++
+struct IncrDecr final : Assignment {
+  ExprPtr expr;
+  bool incr;
   
   void accept(Visitor &) override;
 };
 
-struct EnumCase {
-  Name name;
-  ExprPtr value;
-  Loc loc;
+/// Regular assignment a = 4
+struct Assign final : Assignment {
+  ExprPtr left;
+  ExprPtr right;
+  
+  void accept(Visitor &) override;
 };
 
-struct Enum final : Declaration {
+/// Short-hand variable declaration a := 4
+struct DeclAssign final : Assignment {
   Name name;
-  std::vector<EnumCase> cases;
+  ExprPtr expr;
   
+  void accept(Visitor &) override;
+};
+
+/// A function call with a discarded return value a()
+/// This allows function calls to be statements
+struct CallAssign final : Assignment {
+  FuncCall call;
+
   void accept(Visitor &) override;
 };
 
@@ -394,17 +387,6 @@ struct ArrayLiteral final : Literal {
   void accept(Visitor &) override;
 };
 
-struct MapPair {
-  ExprPtr key;
-  ExprPtr val;
-};
-
-struct MapLiteral final : Literal {
-  std::vector<MapPair> pairs;
-  
-  void accept(Visitor &) override;
-};
-
 struct Lambda final : Literal {
   FuncParams params;
   TypePtr ret;
@@ -421,58 +403,66 @@ public:
   
   /* LCOV_EXCL_START */
   
+  // types
+  virtual void visit(BuiltinType &) {}
   virtual void visit(ArrayType &) {}
-  virtual void visit(MapType &) {}
   virtual void visit(FuncType &) {}
   virtual void visit(NamedType &) {}
-  virtual void visit(NestedType &) {}
+  virtual void visit(NamespacedType &) {}
+  virtual void visit(StructType &) {}
   
-  virtual void visit(Assignment &) {}
+  // expressions
   virtual void visit(BinaryExpr &) {}
   virtual void visit(UnaryExpr &) {}
   virtual void visit(FuncCall &) {}
   virtual void visit(MemberIdent &) {}
   virtual void visit(Subscript &) {}
   virtual void visit(Identifier &) {}
-  virtual void visit(Self &) {}
   virtual void visit(Ternary &) {}
   
+  // statements
   virtual void visit(Block &) {}
-  virtual void visit(EmptyStatement &) {}
   virtual void visit(If &) {}
   virtual void visit(Switch &) {}
   virtual void visit(Break &) {}
   virtual void visit(Continue &) {}
   virtual void visit(Return &) {}
   virtual void visit(While &) {}
-  virtual void visit(RepeatWhile &) {}
   virtual void visit(For &) {}
   
+  // declarations
   virtual void visit(Func &) {}
   virtual void visit(Var &) {}
   virtual void visit(Let &) {}
   virtual void visit(TypeAlias &) {}
-  virtual void visit(Init &) {}
-  virtual void visit(Struct &) {}
-  virtual void visit(Enum &) {}
   
+  // assignments
+  virtual void visit(CompAssign &) {}
+  virtual void visit(IncrDecr &) {}
+  virtual void visit(Assign &) {}
+  virtual void visit(DeclAssign &) {}
+  virtual void visit(CallAssign &) {}
+  
+  // literals
   virtual void visit(StringLiteral &) {}
   virtual void visit(CharLiteral &) {}
   virtual void visit(NumberLiteral &) {}
   virtual void visit(BoolLiteral &) {}
   virtual void visit(ArrayLiteral &) {}
-  virtual void visit(MapLiteral &) {}
   virtual void visit(Lambda &) {}
   
   /* LCOV_EXCL_END */
 };
+
+using Decls = std::vector<ast::DeclPtr>;
 
 }
 
 namespace stela {
 
 struct AST {
-  std::vector<ast::DeclPtr> global;
+  ast::Decls builtin;
+  ast::Decls global;
 };
 
 }

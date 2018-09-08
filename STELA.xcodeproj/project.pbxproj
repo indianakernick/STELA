@@ -24,16 +24,13 @@
 		4572CA8920FB25EE00EA1A56 /* html format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8820FB25EE00EA1A56 /* html format.cpp */; };
 		4572CA8C20FB33CF00EA1A56 /* scope manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8A20FB33CF00EA1A56 /* scope manager.cpp */; };
 		4572CA8F20FB4CEC00EA1A56 /* infer type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8D20FB4CEC00EA1A56 /* infer type.cpp */; };
-		4572CA9220FB4F9A00EA1A56 /* clone type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9020FB4F9A00EA1A56 /* clone type.cpp */; };
 		4572CA9520FC445200EA1A56 /* builtin symbols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9320FC445200EA1A56 /* builtin symbols.cpp */; };
 		4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA9620FC462800EA1A56 /* operator name.cpp */; };
 		4572CAA2210716A800EA1A56 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
-		4572CAA5210ED57200EA1A56 /* member access scope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAA3210ED57200EA1A56 /* member access scope.cpp */; };
 		4572CAA8210EEE6300EA1A56 /* compare params args.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAA6210EEE6300EA1A56 /* compare params args.cpp */; };
 		4572CAAB210EF60500EA1A56 /* scope insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAA9210EF60500EA1A56 /* scope insert.cpp */; };
 		4572CAAE210EF61100EA1A56 /* scope lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAAC210EF61100EA1A56 /* scope lookup.cpp */; };
 		4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAAF210EFDFE00EA1A56 /* symbols.cpp */; };
-		4572CAB3210F123B00EA1A56 /* scope find.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAB1210F123B00EA1A56 /* scope find.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -47,6 +44,8 @@
 		45EE9C3C20E3AB1600CC3289 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3720E3AB1600CC3289 /* syntax.cpp */; };
 		45EE9C3D20E3AB1600CC3289 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3920E3AB1600CC3289 /* main.cpp */; };
 		45EE9C4220E3AB5900CC3289 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C4120E3AB5900CC3289 /* main.cpp */; };
+		45F4435E213F898300B28F05 /* parse asgn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45F4435C213F898300B28F05 /* parse asgn.cpp */; };
+		45F44361213FC49B00B28F05 /* compare types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45F4435F213FC49B00B28F05 /* compare types.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -123,14 +122,10 @@
 		4572CA8B20FB33CF00EA1A56 /* scope manager.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope manager.hpp"; sourceTree = "<group>"; };
 		4572CA8D20FB4CEC00EA1A56 /* infer type.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "infer type.cpp"; sourceTree = "<group>"; };
 		4572CA8E20FB4CEC00EA1A56 /* infer type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "infer type.hpp"; sourceTree = "<group>"; };
-		4572CA9020FB4F9A00EA1A56 /* clone type.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "clone type.cpp"; sourceTree = "<group>"; };
-		4572CA9120FB4F9A00EA1A56 /* clone type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "clone type.hpp"; sourceTree = "<group>"; };
 		4572CA9320FC445200EA1A56 /* builtin symbols.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "builtin symbols.cpp"; sourceTree = "<group>"; };
 		4572CA9420FC445200EA1A56 /* builtin symbols.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "builtin symbols.hpp"; sourceTree = "<group>"; };
 		4572CA9620FC462800EA1A56 /* operator name.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "operator name.cpp"; sourceTree = "<group>"; };
 		4572CA9720FC462800EA1A56 /* operator name.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "operator name.hpp"; sourceTree = "<group>"; };
-		4572CAA3210ED57200EA1A56 /* member access scope.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "member access scope.cpp"; sourceTree = "<group>"; };
-		4572CAA4210ED57200EA1A56 /* member access scope.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "member access scope.hpp"; sourceTree = "<group>"; };
 		4572CAA6210EEE6300EA1A56 /* compare params args.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "compare params args.cpp"; sourceTree = "<group>"; };
 		4572CAA7210EEE6300EA1A56 /* compare params args.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "compare params args.hpp"; sourceTree = "<group>"; };
 		4572CAA9210EF60500EA1A56 /* scope insert.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scope insert.cpp"; sourceTree = "<group>"; };
@@ -138,8 +133,6 @@
 		4572CAAC210EF61100EA1A56 /* scope lookup.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scope lookup.cpp"; sourceTree = "<group>"; };
 		4572CAAD210EF61100EA1A56 /* scope lookup.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope lookup.hpp"; sourceTree = "<group>"; };
 		4572CAAF210EFDFE00EA1A56 /* symbols.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = symbols.cpp; sourceTree = "<group>"; };
-		4572CAB1210F123B00EA1A56 /* scope find.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scope find.cpp"; sourceTree = "<group>"; };
-		4572CAB2210F123B00EA1A56 /* scope find.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope find.hpp"; sourceTree = "<group>"; };
 		45A723372129525700BFE7FB /* scope traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope traverse.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -177,6 +170,10 @@
 		45EE9C3E20E3AB1E00CC3289 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		45EE9C3F20E3AB4800CC3289 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
 		45EE9C4120E3AB5900CC3289 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		45F4435C213F898300B28F05 /* parse asgn.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse asgn.cpp"; sourceTree = "<group>"; };
+		45F4435D213F898300B28F05 /* parse asgn.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse asgn.hpp"; sourceTree = "<group>"; };
+		45F4435F213FC49B00B28F05 /* compare types.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "compare types.cpp"; sourceTree = "<group>"; };
+		45F44360213FC49B00B28F05 /* compare types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "compare types.hpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -216,25 +213,21 @@
 				4572CA7220F4732C00EA1A56 /* traverse.hpp */,
 				4572CA8A20FB33CF00EA1A56 /* scope manager.cpp */,
 				4572CA8B20FB33CF00EA1A56 /* scope manager.hpp */,
-				4572CA9020FB4F9A00EA1A56 /* clone type.cpp */,
-				4572CA9120FB4F9A00EA1A56 /* clone type.hpp */,
 				4572CA8D20FB4CEC00EA1A56 /* infer type.cpp */,
 				4572CA8E20FB4CEC00EA1A56 /* infer type.hpp */,
 				4572CA9320FC445200EA1A56 /* builtin symbols.cpp */,
 				4572CA9420FC445200EA1A56 /* builtin symbols.hpp */,
 				4572CA9620FC462800EA1A56 /* operator name.cpp */,
 				4572CA9720FC462800EA1A56 /* operator name.hpp */,
-				4572CAA3210ED57200EA1A56 /* member access scope.cpp */,
-				4572CAA4210ED57200EA1A56 /* member access scope.hpp */,
 				4572CAA6210EEE6300EA1A56 /* compare params args.cpp */,
 				4572CAA7210EEE6300EA1A56 /* compare params args.hpp */,
 				4572CAA9210EF60500EA1A56 /* scope insert.cpp */,
 				4572CAAA210EF60500EA1A56 /* scope insert.hpp */,
 				4572CAAC210EF61100EA1A56 /* scope lookup.cpp */,
 				4572CAAD210EF61100EA1A56 /* scope lookup.hpp */,
-				4572CAB1210F123B00EA1A56 /* scope find.cpp */,
-				4572CAB2210F123B00EA1A56 /* scope find.hpp */,
 				45A723372129525700BFE7FB /* scope traverse.hpp */,
+				45F4435F213FC49B00B28F05 /* compare types.cpp */,
+				45F44360213FC49B00B28F05 /* compare types.hpp */,
 			);
 			name = "Semantic Analysis";
 			sourceTree = "<group>";
@@ -417,6 +410,8 @@
 				450E328C20E89C9500F222F1 /* parse litr.hpp */,
 				450E328E20E89D2F00F222F1 /* parse expr.cpp */,
 				450E328F20E89D2F00F222F1 /* parse expr.hpp */,
+				45F4435C213F898300B28F05 /* parse asgn.cpp */,
+				45F4435D213F898300B28F05 /* parse asgn.hpp */,
 			);
 			name = "Syntax Analysis";
 			sourceTree = "<group>";
@@ -561,16 +556,16 @@
 				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,
 				450E329420E89D6100F222F1 /* parse stat.cpp in Sources */,
 				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
+				45F4435E213F898300B28F05 /* parse asgn.cpp in Sources */,
 				4572CA8920FB25EE00EA1A56 /* html format.cpp in Sources */,
 				4572CA8C20FB33CF00EA1A56 /* scope manager.cpp in Sources */,
-				4572CAA5210ED57200EA1A56 /* member access scope.cpp in Sources */,
 				4572CA8F20FB4CEC00EA1A56 /* infer type.cpp in Sources */,
 				4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */,
+				45F44361213FC49B00B28F05 /* compare types.cpp in Sources */,
 				4572CA7320F4732C00EA1A56 /* traverse.cpp in Sources */,
 				4572CAA8210EEE6300EA1A56 /* compare params args.cpp in Sources */,
 				4572CA9520FC445200EA1A56 /* builtin symbols.cpp in Sources */,
 				450E329620E89D6100F222F1 /* parse litr.cpp in Sources */,
-				4572CA9220FB4F9A00EA1A56 /* clone type.cpp in Sources */,
 				450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */,
 				4572CAAB210EF60500EA1A56 /* scope insert.cpp in Sources */,
 				4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */,
@@ -582,7 +577,6 @@
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
-				4572CAB3210F123B00EA1A56 /* scope find.cpp in Sources */,
 				45EE9C2520E23D1C00CC3289 /* number literal.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -813,7 +807,11 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"$(PROJECT_DIR)/include",
+				);
+				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wall",
@@ -834,7 +832,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				GCC_OPTIMIZATION_LEVEL = 3;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
+				HEADER_SEARCH_PATHS = (
+					/usr/local/include,
+					"$(PROJECT_DIR)/include",
+				);
+				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
 					"-Wall",

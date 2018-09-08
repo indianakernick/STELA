@@ -10,21 +10,11 @@
 
 #include "parse expr.hpp"
 #include "parse decl.hpp"
+#include "parse asgn.hpp"
 
 using namespace stela;
 
 namespace {
-
-// an expression followed by a ; is a statement
-ast::StatPtr parseExprStatement(ParseTokens &tok) {
-  if (ast::StatPtr node = parseExpr(tok)) {
-    Context ctx = tok.context("after expression");
-    tok.expectOp(";");
-    return node;
-  } else {
-    return nullptr;
-  }
-}
 
 ast::StatPtr parseIf(ParseTokens &tok) {
   if (!tok.checkKeyword("if")) {
@@ -131,30 +121,17 @@ ast::StatPtr parseWhile(ParseTokens &tok) {
   return whileNode;
 }
 
-ast::StatPtr parseRepeatWhile(ParseTokens &tok) {
-  if (!tok.checkKeyword("repeat")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in repeat statement");
-  auto repeat = std::make_unique<ast::RepeatWhile>();
-  repeat->loc = tok.lastLoc();
-  repeat->body = tok.expectNode(parseStat, "statement or block");
-  tok.expectKeyword("while");
-  tok.expectOp("(");
-  repeat->cond = tok.expectNode(parseExpr, "condition expression");
-  tok.expectOp(")");
+ast::AsgnPtr parseOptAsgnSemi(ParseTokens &tok) {
+  ast::AsgnPtr node = parseAsgn(tok);
   tok.expectOp(";");
-  return repeat;
+  return node;
 }
 
-ast::StatPtr parseForInit(ParseTokens &tok) {
-  if (ast::StatPtr node = parseVar(tok)) return node;
-  if (ast::StatPtr node = parseLet(tok)) return node;
-  if (ast::StatPtr node = parseExpr(tok)) {
+ast::AsgnPtr parseAsgnSemi(ParseTokens &tok) {
+  if (ast::AsgnPtr node = parseAsgn(tok)) {
     tok.expectOp(";");
     return node;
   }
-  tok.expectOp(";");
   return nullptr;
 }
 
@@ -166,10 +143,10 @@ ast::StatPtr parseFor(ParseTokens &tok) {
   auto forNode = std::make_unique<ast::For>();
   forNode->loc = tok.lastLoc();
   tok.expectOp("(");
-  forNode->init = parseForInit(tok); // init statement is optional
+  forNode->init = parseOptAsgnSemi(tok); // init assignment is optional
   forNode->cond = tok.expectNode(parseExpr, "condition expression");
   tok.expectOp(";");
-  forNode->incr = parseExpr(tok); // incr expression is optional
+  forNode->incr = parseAsgn(tok); // incr assignment is optional
   tok.expectOp(")");
   forNode->body = tok.expectNode(parseStat, "statement or block");
   return forNode;
@@ -199,16 +176,10 @@ ast::StatPtr stela::parseStat(ParseTokens &tok) {
   if (ast::StatPtr node = parseContinue(tok)) return node;
   if (ast::StatPtr node = parseReturn(tok)) return node;
   if (ast::StatPtr node = parseWhile(tok)) return node;
-  if (ast::StatPtr node = parseRepeatWhile(tok)) return node;
   if (ast::StatPtr node = parseFor(tok)) return node;
   if (ast::StatPtr node = parseBlock(tok)) return node;
   if (ast::StatPtr node = parseDecl(tok)) return node;
-  if (ast::StatPtr node = parseExprStatement(tok)) return node;
-  if (tok.checkOp(";")) {
-    auto empty = std::make_unique<ast::EmptyStatement>();
-    empty->loc = tok.lastLoc();
-    return empty;
-  }
+  if (ast::StatPtr node = parseAsgnSemi(tok)) return node;
   return nullptr;
 }
 

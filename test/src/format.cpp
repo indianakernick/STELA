@@ -15,118 +15,45 @@
 
 TEST_GROUP(Format, {
   const char *source = R"(
-struct Rational {
-  // all members of a struct are implicitly public
-  var n: Int64;
-  var d: Int64;
-  
-  init(num: Int64) {
-    // self is optional
-    // self.n = num;
-    // self.d = 1;
-    n = num;
-    d = 1;
-  }
-  
-  // if we didn't provide any constructors then this one would have been
-  // implicitly generated. Since we provided our own constructor,
-  // init(num: Int64)
-  // this one is not implicitly generated, so we have to define it
-  init(n: Int64, d: Int64) {
-    self.n = n;
-    self.d = d;
-  }
-} // optional ;
+type Rational struct {
+  n: Int64;
+  d: Int64;
+};
 
-// global variables are not allowed
-// var half = Rational(1, 2);
-// global constants are allowed though
-let half = Rational(1, 2);
-// speaking of global, like C++ but unlike Swift,
-// constants, type declartions and functions are allowed at global scope
-// but nothing else
+type Vec3 struct {
+  x: Float;
+  y: Float;
+  z: Float;
+};
 
-struct Vec3 {
-  // if all properties have default values, there is an implicit init()
-  // but only if the user doesn't declare any other constructors
-  var x = 0.0;
-  var y = 0.0;
-  var z = 0.0;
-  
-  /*
-  This declaration prevents the init(Float, Float, Float) constructor from being
-  implicitly generated
-  init(val: Float) {
-    x = val;
-    y = val;
-    z = val;
-  }
-  
-  not implicity generated if the above constructor is present
-  init(x: Float, y: Float, z: Float) {
-    self.x = x;
-    self.y = y;
-    self.z = z;
-  }
-  */
-}
-
-// calling implicitly generated constructor
 let origin = Vec3(0, 0, 0);
 
-struct IntStack {
-  // member variables are implicitly private
-  // you can mark them private if you want
-  private var data: [Int];
-  /*
-  the `data` member is an array of ints
-  arrays are objects with member functions
-  arrays have very similar interfaces to std::vector<> from C++
-  */
-  
-   init() {} // implicitly generated
-  
-  // member functions are implicitly public
-  // you can mark them public if you want
-  public func push(value: Int) {
-    data.push_back(value);
-  }
-  func pop() {
-    let top = data.back();
-    data.pop_back();
-    return top;
-  }
-  func top() {
-    return data.back();
-  }
-  func empty() {
-    return data.empty();
-  }
-  
-  static func justPop(stack: inout IntStack) {
-    while (!stack.empty()) {
-      stack.pop();
-      continue; // for no reason
-    }
-  }
+type IntStack struct {
+  data: [Int];
 };
 
-enum ABC {
-  a = 65,
-  b = 66,
-  c = 67
+func (self: inout IntStack) push(value: Int) {
+  self.data.push_back(value);
+}
+func (self: inout IntStack) pop() {
+  let top = data.back();
+  data.pop_back();
+  return top;
+}
+func (self: IntStack) top() {
+  return data.back();
+}
+func (self: IntStack) empty() {
+  return data.empty();
+}
+func justPop(stack: inout IntStack) {
+  while (!stack.empty()) {
+    stack.pop();
+    continue; // for no reason
+  }
 }
 
-let map: {String: [Int]} = {
-  "one_two_three": [1, 2, 3],
-  "four_five_six": [4, 5, 6],
-  "seven": [7],
-  "eight_nine": [8, 9]
-};
-
-let empty = {};
-
-let less = lambda (a: Int, b: Int) {
+let less = func(a: Int, b: Int) {
   return a < b;
 };
 
@@ -136,15 +63,15 @@ func isEqual(a: Int, b: Int) {
 
 let equal = isEqual;
 
-func sort(array: [Int], pred: (Int, Int) -> Bool) -> Void {
+func sort(array: [Int], pred: func(Int, Int)->Bool) {
   // sorting...
 }
 
-func customSwap(a: [Int], b: [Int], swap: (inout Int, inout Int) -> Void) {
+func customSwap(a: [Int], b: [Int], swap: func(inout Int, inout Int)) {
   // yeah...
 }
 
-struct EmptyStruct {}
+type EmptyStruct struct {};
 
 func ifs() {
   switch (1) {}
@@ -172,55 +99,50 @@ func ifs() {
     let just_like_C = "yeah"[1];
   }
   
-  if (true);
-  
-  typealias StrInt = {String:Int};
+  type StrInt = func(String) -> Int;
   
   while (expr) {
-    ++thing;
+    thing++;
     thing += ~yeah;
   }
-  
-  repeat {
-    ++thing;
-    thing += ~yeah;
-  } while (expr);
 
-  for (var i = 0; i != 10; ++i) {
-    ++thing;
+  for (i := 0; i != 10; i++) {
+    thing++;
     thing += ~yeah;
   }
-  for (i = 0; i != 10; ++i) {
-    ++thing;
+  for (i = 0; i != 10; i++) {
+    thing++;
     thing += ~yeah;
   }
   for (; false; ) {
-    ++thing;
+    thing++;
     thing += ~yeah;
   }
 }
 
-enum Dir {
-  up, right, down, left
-}
+type Dir Int;
+let Dir_up: Dir = 0;
+let Dir_right: Dir = 1;
+let Dir_down: Dir = 2;
+let Dir_left: Dir = 3;
 
 func anotherDummy(dir: Dir) {
-  var value = 5;
+  value := 5;
   switch (dir) {
-    case (Dir.up) {
+    case (Dir_up) {
       value += 2;
       continue;
     }
-    case (Dir.right) {
+    case (Dir_right) {
       value <<= 2;
       break;
     }
-    case (Dir.down) {
-      ++value;
+    case (Dir_down) {
+      value--;
       return value & 3;
     }
-    case (Dir.left) return 5;
-    default value--;
+    case (Dir_left) return 5;
+    default value -= 1;
   }
   return value;
 }

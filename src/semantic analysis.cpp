@@ -13,12 +13,11 @@
 #include "builtin symbols.hpp"
 #include "syntax analysis.hpp"
 
-stela::Symbols stela::createSym(const AST &ast, LogBuf &buf) {
+stela::Symbols stela::createSym(AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   Symbols syms;
-  BuiltinTypes types;
-  syms.scopes.push_back(createBuiltinScope(types));
-  auto global = std::make_unique<sym::NSScope>(syms.scopes.back().get());
+  BuiltinTypes types = pushBuiltins(syms.scopes, ast.builtin);
+  auto global = std::make_unique<sym::Scope>(syms.scopes.back().get(), sym::Scope::Type::ns);
   syms.scopes.push_back(std::move(global));
   traverse(syms.scopes, ast, log, types);
   return syms;

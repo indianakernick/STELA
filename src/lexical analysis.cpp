@@ -23,31 +23,25 @@ stela::Loc operator+(Utils::LineCol<> lineCol) {
 namespace {
 
 constexpr std::string_view keywords[] = {
-  "func", "inout", "return", "lambda", "mutating",
-  "struct", "static", "self", "init",
-  "public", "private",
-  "enum", "true", "false",
-  "let", "var",
-  "if", "else",
-  "switch", "case", "default",
-  "while", "for", "repeat",
-  "break", "continue",
-  "typealias"
+  "func", "inout", "return",
+  "struct", "true", "false",
+  "let", "var", "type",
+  "if", "else", "switch", "case", "default",
+  "while", "for", "break", "continue",
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 
 constexpr std::string_view oper[] = {
   "<<=", ">>=", "**=", "==", "!=", "<=", ">=", "&&", "||", "--", "++", "**",
-  "->", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>", "=", "!",
-  "<", ">", "&", "|", "^", "~", "{", "}", "(", ")", "[", "]", "+", "-", "*",
-  "/", "%", ".", ",", "?", ":", ";"
+  "->", ":=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>", "=",
+  "!", "<", ">", "&", "|", "^", "~", "{", "}", "(", ")", "[", "]", "+", "-",
+  "*", "/", "%", ".", ",", "?", ":", ";"
 };
 constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
 
 void begin(Token &token, const Utils::ParseString &str) {
   token.view = str.beginViewing();
-  token.loc.l = str.line();
-  token.loc.c = str.col();
+  token.loc = +str.lineCol();
 }
 
 void end(Token &token, const Utils::ParseString &str) {

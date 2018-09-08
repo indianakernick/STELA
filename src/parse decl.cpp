@@ -53,118 +53,17 @@ ast::DeclPtr stela::parseLet(ParseTokens &tok) {
 namespace {
 
 ast::DeclPtr parseTypealias(ParseTokens &tok) {
-  if (!tok.checkKeyword("typealias")) {
+  if (!tok.checkKeyword("type")) {
     return nullptr;
   }
   Context ctx = tok.context("in type alias");
   auto aliasNode = std::make_unique<ast::TypeAlias>();
   aliasNode->loc = tok.lastLoc();
   aliasNode->name = tok.expectID();
-  tok.expectOp("=");
+  aliasNode->strong = !tok.checkOp("=");
   aliasNode->type = tok.expectNode(parseType, "type");
   tok.expectOp(";");
   return aliasNode;
-}
-
-ast::DeclPtr parseInit(ParseTokens &tok) {
-  if (!tok.checkKeyword("init")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in init function");
-  auto init = std::make_unique<ast::Init>();
-  init->loc = tok.lastLoc();
-  init->params = parseFuncParams(tok);
-  init->body = parseFuncBody(tok);
-  return init;
-}
-
-ast::MemAccess parseMemAccess(ParseTokens &tok) {
-  if (tok.checkKeyword("private")) {
-    return ast::MemAccess::private_;
-  } else if (tok.checkKeyword("public")) {
-    return ast::MemAccess::public_;
-  } else {
-    return ast::MemAccess::default_;
-  }
-}
-
-ast::MemScope parseMemScope(ParseTokens &tok) {
-  if (tok.checkKeyword("static")) {
-    return ast::MemScope::static_;
-  } else {
-    return ast::MemScope::member;
-  }
-}
-
-ast::MemMut parseMemMut(ParseTokens &tok) {
-  if (tok.checkKeyword("mutating")) {
-    return ast::MemMut::mutating;
-  } else {
-    return ast::MemMut::constant;
-  }
-}
-
-ast::Member parseStructMember(ParseTokens &tok) {
-  ast::Member member;
-  member.access = parseMemAccess(tok);
-  member.scope = parseMemScope(tok);
-  member.mut = parseMemMut(tok);
-  if (member.mut == ast::MemMut::mutating) {
-    if (member.scope == ast::MemScope::static_) {
-      tok.log().error(tok.lastLoc()) << "Cannot apply mutating keyword to "
-        "static functions" << fatal;
-    }
-    member.node = tok.expectNode(parseFunc, "function declaration (after mutating keyword)");
-  } else {
-    member.node = tok.expectNode(parseDecl, "member declaration");
-  }
-  tok.extraSemi();
-  return member;
-}
-
-ast::DeclPtr parseStruct(ParseTokens &tok) {
-  if (!tok.checkKeyword("struct")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in struct");
-  auto structNode = std::make_unique<ast::Struct>();
-  structNode->loc = tok.lastLoc();
-  structNode->name = tok.expectID();
-  ctx.ident(structNode->name);
-  tok.expectOp("{");
-  while(!tok.checkOp("}")) {
-    structNode->body.push_back(parseStructMember(tok));
-  }
-  return structNode;
-}
-
-ast::EnumCase parseEnumCase(ParseTokens &tok) {
-  ast::EnumCase ecase;
-  ecase.loc = tok.loc();
-  ecase.name = tok.expectID();
-  if (tok.checkOp("=")) {
-    ecase.value = tok.expectNode(parseExpr, "expression or ,");
-  }
-  return ecase;
-}
-
-ast::DeclPtr parseEnum(ParseTokens &tok) {
-  if (!tok.checkKeyword("enum")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in enum");
-  auto enumNode = std::make_unique<ast::Enum>();
-  enumNode->loc = tok.lastLoc();
-  enumNode->name = tok.expectID();
-  ctx.ident(enumNode->name);
-  tok.expectOp("{");
-  if (tok.checkOp("}")) {
-    tok.log().error(tok.lastLoc()) << "enum must have at least one case" << fatal;
-  }
-  do {
-    enumNode->cases.push_back(parseEnumCase(tok));
-  } while (tok.expectEitherOp("}", ",") == ",");
-  return enumNode;
 }
 
 }
@@ -173,9 +72,6 @@ ast::DeclPtr stela::parseDecl(ParseTokens &tok) {
   if (ast::DeclPtr node = parseFunc(tok)) return node;
   if (ast::DeclPtr node = parseVar(tok)) return node;
   if (ast::DeclPtr node = parseLet(tok)) return node;
-  if (ast::DeclPtr node = parseInit(tok)) return node;
   if (ast::DeclPtr node = parseTypealias(tok)) return node;
-  if (ast::DeclPtr node = parseStruct(tok)) return node;
-  if (ast::DeclPtr node = parseEnum(tok)) return node;
   return nullptr;
 }

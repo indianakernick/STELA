@@ -7,19 +7,3 @@
 //
 
 #include "symbols.hpp"
-
-#define ACCEPT(TYPE)                                                            \
-  void stela::sym::TYPE::accept(ScopeVisitor &visitor) {                        \
-    visitor.visit(*this);                                                       \
-  }
-
-/* LCOV_EXCL_START */
-
-ACCEPT(NSScope)
-ACCEPT(BlockScope)
-ACCEPT(FuncScope)
-ACCEPT(FlowScope)
-ACCEPT(StructScope)
-ACCEPT(EnumScope)
-
-/* LCOV_EXCL_END */

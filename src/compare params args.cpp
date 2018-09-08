@@ -8,6 +8,8 @@
 
 #include "compare params args.hpp"
 
+#include "compare types.hpp"
+
 using namespace stela;
 
 namespace {
@@ -19,25 +21,27 @@ bool compare(
   Pred pred
 ) {
   return params.size() == args.size()
-    && std::equal(params.begin(), params.end(), args.begin(), pred);
+    && std::equal(params.cbegin(), params.cend(), args.cbegin(), pred);
 }
 
 }
 
 bool stela::compatParams(
+  const NameLookup &lkp,
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return compare(params, args, [] (sym::ExprType param, sym::ExprType arg) {
-    return param.type == arg.type && sym::callMutRef(param, arg);
+  return compare(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
+    return compareTypes(lkp, param.type, arg.type) && sym::callMutRef(param, arg);
   });
 }
 
 bool stela::sameParams(
+  const NameLookup &lkp,
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return compare(params, args, [] (sym::ExprType param, sym::ExprType arg) {
-    return param.type == arg.type;
+  return compare(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
+    return compareTypes(lkp, param.type, arg.type);
   });
 }

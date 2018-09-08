@@ -9,7 +9,6 @@
 #include "scope manager.hpp"
 
 #include <cassert>
-#include "compare params args.hpp"
 
 using namespace stela;
 
@@ -17,6 +16,13 @@ ScopeMan::ScopeMan(sym::Scopes &scopes)
   : scopes{scopes} {
   assert(scopes.size() >= 2);
   scope = scopes.back().get();
+}
+
+sym::Scope *ScopeMan::enterScope(const sym::Scope::Type type) {
+  auto newScope = std::make_unique<sym::Scope>(scope, type);
+  scope = newScope.get();
+  scopes.push_back(std::move(newScope));
+  return scope;
 }
 
 void ScopeMan::leaveScope() {
@@ -28,20 +34,12 @@ sym::Scope *ScopeMan::cur() const {
   return scope;
 }
 
-namespace {
-
-sym::NSScope *assertNS(sym::Scope *const scope) {
-  sym::NSScope *const ns = dynamic_cast<sym::NSScope *>(scope);
-  assert(ns);
-  return ns;
+sym::Scope *ScopeMan::builtin() const {
+  assert(scopes[0]->type == sym::Scope::Type::ns);
+  return scopes[0].get();
 }
 
-}
-
-sym::NSScope *ScopeMan::builtin() const {
-  return assertNS(scopes[0].get());
-}
-
-sym::NSScope *ScopeMan::global() const {
-  return assertNS(scopes[1].get());
+sym::Scope *ScopeMan::global() const {
+  assert(scopes[1]->type == sym::Scope::Type::ns);
+  return scopes[1].get();
 }

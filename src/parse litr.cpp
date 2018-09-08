@@ -74,26 +74,8 @@ ast::LitrPtr parseArray(ParseTokens &tok) {
   return array;
 }
 
-ast::LitrPtr parseMap(ParseTokens &tok) {
-  if (!tok.checkOp("{")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in map literal");
-  auto map = std::make_unique<ast::MapLiteral>();
-  map->loc = tok.lastLoc();
-  if (!tok.checkOp("}")) {
-    do {
-      ast::MapPair &pair = map->pairs.emplace_back();
-      pair.key = tok.expectNode(parseExpr, "key expression");
-      tok.expectOp(":");
-      pair.val = tok.expectNode(parseExpr, "value expression");
-    } while (tok.expectEitherOp(",", "}") == ",");
-  }
-  return map;
-}
-
 ast::LitrPtr parseLambda(ParseTokens &tok) {
-  if (!tok.checkKeyword("lambda")) {
+  if (!tok.checkKeyword("func")) {
     return nullptr;
   }
   Context ctx = tok.context("in lambda expression");
@@ -113,7 +95,6 @@ ast::LitrPtr stela::parseLitr(ParseTokens &tok) {
   if (ast::LitrPtr node = parseNumber(tok)) return node;
   if (ast::LitrPtr node = parseBool(tok)) return node;
   if (ast::LitrPtr node = parseArray(tok)) return node;
-  if (ast::LitrPtr node = parseMap(tok)) return node;
   if (ast::LitrPtr node = parseLambda(tok)) return node;
   return nullptr;
 }

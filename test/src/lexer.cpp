@@ -57,8 +57,13 @@ void printTokens(const Tokens &tokens) {
 TEST_GROUP(Lexer, {
   StreamLog log;
 
+  TEST(Empty source, {
+    const Tokens tokens = lex("", log);
+    ASSERT_TRUE(tokens.empty());
+  });
+
   TEST(Hello world, {
-    const std::vector<Token> tokens = lex(R"(func main(argc: Int) {
+    const Tokens tokens = lex(R"(func main(argc: Int) {
       print("Hello world!");
       return 0;
     })", log);

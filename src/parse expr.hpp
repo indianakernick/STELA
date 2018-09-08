@@ -14,6 +14,16 @@
 
 namespace stela {
 
+// parse an expression that is probably an lvalue
+// appropriate for left-hand side of assignment
+// a is an lvalue
+// a.b is an lvalue
+// a[b] is an lvalue
+// a() might be an lvalue
+// a.b() might be an lvalue
+// doesn't return expressions that cannot be an lvalue
+// a + b cannot be an lvalue for example
+ast::ExprPtr parseNested(ParseTokens &);
 ast::ExprPtr parseExpr(ParseTokens &);
 
 }

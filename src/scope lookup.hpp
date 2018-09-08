@@ -16,19 +16,25 @@
 
 namespace stela {
 
-sym::Symbol *lookupType(sym::Scope *, Log &, const ast::TypePtr &);
-sym::FuncParams lookupParams(sym::Scope *, Log &, const ast::FuncParams &);
+sym::FuncParams convertParams(
+  const std::experimental::optional<ast::FuncParam> &,
+  const ast::FuncParams &
+);
 
-class TypeLookup {
+class NameLookup {
 public:
-  TypeLookup(ScopeMan &, Log &);
-
-  sym::Symbol *lookupType(const ast::TypePtr &);
-  sym::FuncParams lookupParams(const ast::FuncParams &);
+  NameLookup(sym::Scope *, Log &);
+  
+  ast::TypeAlias *lookupType(ast::NamedType &) const;
+  ast::TypeAlias *lookupType(ast::NamespacedType &) const;
+  
+  ast::Type *lookupConcreteType(ast::Type *) const;
 
 private:
-  ScopeMan &man;
+  sym::Scope *scope;
   Log &log;
+  
+  ast::TypeAlias *lookupType(sym::Scope *, ast::NamedType &) const;
 };
 
 class ExprLookup {
@@ -82,22 +88,18 @@ public:
   ExprLookup(sym::Scope *, Log &);
   
   void call();
-  sym::Func *lookupFunc(const sym::FuncParams &, Loc);
+  ast::Func *lookupFunc(const sym::FuncParams &, Loc);
     // memFunExpr(expr)
     //   pop expr
     //   pop member
     //   pop call
     //   member function lookup
     //   push expr
-    // memFunExpr(type)
-    //   pop stuff
-    //   static member function lookup
-    //   push expr
     // freeFun()
     //   pop stuff
     //   free function lookup
     //   push expr
-  sym::Func *lookupFunc(const sym::Name &, const sym::FuncParams &, Loc);
+  ast::Func *lookupFunc(const sym::Name &, const sym::FuncParams &, Loc);
     // effectively this:
     //   call()
     //   lookupIdent(name)
@@ -105,23 +107,17 @@ public:
     // but just do free function lookup
   
   void member(const sym::Name &);
-  sym::Symbol *lookupMember(Loc);
+  ast::Field *lookupMember(Loc);
     // memVarExpr(expr)
     //   pop expr
     //   pop member
     //   member variable lookup
     //   push expr
     //   return object
-    // memVarExpr(type)
-    //   pop type
-    //   pop member
-    //   static member variable lookup
-    //   push expr
-    //   return object
     // else
     //   return null
   
-  sym::Symbol *lookupIdent(const sym::Name &, Loc);
+  ast::Statement *lookupIdent(const sym::Name &, Loc);
     // standard lookup
     // if name is function
     //   exprs.push_back({Expr::Type::free_fun, name});
@@ -130,11 +126,6 @@ public:
     //   exprs.push_back({Expr::Type::expr});
     //   set etype
     //   return object
-    // if name is struct or enum
-    //   exprs.push_back({Expr::Type::type});
-    //   set etype to struct or enum
-    //   currentEtype = false;
-  sym::Symbol *lookupSelf(Loc);
   
   void setExpr(sym::ExprType);
   void enterSubExpr();
@@ -147,7 +138,6 @@ private:
       member,
       free_fun,
       expr,
-      type,
       subexpr
     } type;
     sym::Name name;
@@ -161,8 +151,7 @@ private:
   sym::ExprType etype;
   
   void pushExpr(sym::ExprType);
-  sym::Object *pushObj(sym::Object *);
-  sym::Symbol *pushStatic(sym::Symbol *);
+  ast::Statement *pushObj(sym::Object *);
   bool memVarExpr(Expr::Type) const;
     // return top == type && below top == member && below below top != call
   bool memFunExpr(Expr::Type) const;
@@ -171,18 +160,12 @@ private:
     // return top == type && below top == call
   
   sym::Name popName();
-  sym::Symbol *popType();
-  sym::Func *popCallPushRet(sym::Func *);
-  sym::MemFunKey sMemFunKey(sym::StructType *, const sym::FuncParams &);
-  sym::MemFunKey iMemFunKey(sym::StructType *, const sym::FuncParams &);
-  sym::MemKey sMemKey(sym::StructType *);
-  sym::MemKey iMemKey(sym::StructType *);
+  sym::ExprType popExpr();
+  ast::Func *popCallPushRet(sym::Func *);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
-  sym::Symbol *lookupMem(sym::StructScope *, const sym::MemKey &, Loc);
-  sym::Object *lookupMem(sym::EnumScope *, const sym::Name &, Loc);
   sym::Func *lookupFun(sym::Scope *, const sym::FunKey &, Loc);
-  sym::Func *lookupFun(sym::StructScope *, const sym::MemFunKey &, Loc);
+  sym::FunKey funKey(sym::ExprType, const sym::FuncParams &);
 };
 
 }

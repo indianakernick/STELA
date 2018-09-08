@@ -13,10 +13,11 @@ using namespace stela;
 namespace {
 
 ast::TypePtr parseFuncType(ParseTokens &tok) {
-  if (!tok.checkOp("(")) {
+  if (!tok.checkKeyword("func")) {
     return nullptr;
   }
   Context ctx = tok.context("in function type");
+  tok.expectOp("(");
   auto type = std::make_unique<ast::FuncType>();
   type->loc = tok.lastLoc();
   if (!tok.checkOp(")")) {
@@ -26,9 +27,10 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
       param.type = tok.expectNode(parseType, "type");
     } while (tok.expectEitherOp(")", ",") == ",");
   }
-  ctx.desc("after function parameter types");
-  tok.expectOp("->");
-  type->ret = tok.expectNode(parseType, "type");
+  if (tok.checkOp("->")) {
+    ctx.desc("after ->");
+    type->ret = tok.expectNode(parseType, "type");
+  }
   return type;
 }
 
@@ -44,20 +46,6 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
   return arrayType;
 }
 
-ast::TypePtr parseMapType(ParseTokens &tok) {
-  if (!tok.checkOp("{")) {
-    return nullptr;
-  }
-  Context ctx = tok.context("in map type");
-  auto mapType = std::make_unique<ast::MapType>();
-  mapType->loc = tok.lastLoc();
-  mapType->key = tok.expectNode(parseType, "key type");
-  tok.expectOp(":");
-  mapType->val = tok.expectNode(parseType, "value type");
-  tok.expectOp("}");
-  return mapType;
-}
-
 ast::TypePtr parseNamedType(ParseTokens &tok) {
   if (!tok.peekIdentType()) {
     return nullptr;
@@ -68,27 +56,42 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
   return namedType;
 }
 
-ast::TypePtr parseBasicType(ParseTokens &tok) {
-  if (ast::TypePtr type = parseFuncType(tok)) return type;
-  if (ast::TypePtr type = parseArrayType(tok)) return type;
-  if (ast::TypePtr type = parseMapType(tok)) return type;
-  if (ast::TypePtr type = parseNamedType(tok)) return type;
-  return nullptr;
-}
-
-ast::TypePtr parseNestedType(ParseTokens &tok) {
-  ast::TypePtr left = parseBasicType(tok);
+ast::TypePtr parseNamespacedType(ParseTokens &tok) {
+  ast::TypePtr left = parseNamedType(tok);
   if (left == nullptr) {
     return nullptr;
   }
   while (tok.checkOp(".")) {
-    auto nest = std::make_unique<ast::NestedType>();
+    auto nest = std::make_unique<ast::NamespacedType>();
     nest->loc = tok.lastLoc();
     nest->parent = std::move(left);
     nest->name = tok.expectID();
     left = std::move(nest);
   }
   return left;
+}
+
+ast::Field parseStructMember(ParseTokens &tok) {
+  ast::Field field;
+  field.name = tok.expectID();
+  tok.expectOp(":");
+  field.type = tok.expectNode(parseType, "type after :");
+  tok.expectOp(";");
+  return field;
+}
+
+ast::TypePtr parseStructType(ParseTokens &tok) {
+  if (!tok.checkKeyword("struct")) {
+    return nullptr;
+  }
+  auto strut = std::make_unique<ast::StructType>();
+  strut->loc = tok.lastLoc();
+  Context ctx = tok.context("in struct type");
+  tok.expectOp("{");
+  while (!tok.checkOp("}")) {
+    strut->fields.push_back(parseStructMember(tok));
+  }
+  return strut;
 }
 
 }
@@ -102,5 +105,10 @@ ast::ParamRef stela::parseRef(ParseTokens &tok) {
 }
 
 ast::TypePtr stela::parseType(ParseTokens &tok) {
-  return parseNestedType(tok);
+  if (ast::TypePtr type = parseFuncType(tok)) return type;
+  if (ast::TypePtr type = parseArrayType(tok)) return type;
+  if (ast::TypePtr type = parseNamedType(tok)) return type;
+  if (ast::TypePtr type = parseNamespacedType(tok)) return type;
+  if (ast::TypePtr type = parseStructType(tok)) return type;
+  return nullptr;
 }

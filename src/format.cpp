@@ -22,15 +22,8 @@ public:
     type.elem->accept(*this);
     pushOp("]");
   }
-  void visit(ast::MapType &type) override {
-    pushOp("{");
-    type.key->accept(*this);
-    pushOp(":");
-    pushSpace();
-    type.val->accept(*this);
-    pushOp("}");
-  }
   void visit(ast::FuncType &type) override {
+    pushKey("func");
     pushOp("(");
     for (auto p = type.params.cbegin(); p != type.params.cend(); ++p) {
       if (p->ref == ast::ParamRef::inout) {
@@ -43,52 +36,43 @@ public:
       }
     }
     pushOp(")");
-    pushSpace();
-    pushOp("->");
-    pushSpace();
-    type.ret->accept(*this);
+    if (type.ret) {
+      pushSpace();
+      pushOp("->");
+      pushSpace();
+      type.ret->accept(*this);
+    }
   }
   void visit(ast::NamedType &type) override {
     push(Tag::type_name, type.name);
   }
-  void visit(ast::NestedType &type) override {
+  void visit(ast::NamespacedType &type) override {
     type.parent->accept(*this);
     pushOp(".");
     push(Tag::type_name, type.name);
   }
-  
-  void visit(ast::Assignment &as) override {
-    as.left->accept(*this);
-    pushSpace();
-    switch (as.oper) {
-      case ast::AssignOp::assign:
-        pushOp("="); break;
-      case ast::AssignOp::add:
-        pushOp("+="); break;
-      case ast::AssignOp::sub:
-        pushOp("-="); break;
-      case ast::AssignOp::mul:
-        pushOp("*="); break;
-      case ast::AssignOp::div:
-        pushOp("/="); break;
-      case ast::AssignOp::mod:
-        pushOp("%="); break;
-      case ast::AssignOp::pow:
-        pushOp("**="); break;
-      case ast::AssignOp::bit_or:
-        pushOp("|="); break;
-      case ast::AssignOp::bit_xor:
-        pushOp("^="); break;
-      case ast::AssignOp::bit_and:
-        pushOp("&="); break;
-      case ast::AssignOp::bit_shl:
-        pushOp("<<="); break;
-      case ast::AssignOp::bit_shr:
-        pushOp(">>="); break;
+  void visit(ast::StructType &strt) override {
+    pushKey("struct");
+    pushOp("{");
+    if (strt.fields.empty()) {
+      pushOp("}");
+      return;
     }
-    pushSpace();
-    as.right->accept(*this);
+    pushNewline();
+    ++indent;
+    for (const ast::Field &field : strt.fields) {
+      pushIndent();
+      push(Tag::plain, field.name);
+      pushOp(":");
+      pushSpace();
+      field.type->accept(*this);
+      pushNewline();
+    }
+    --indent;
+    pushIndent();
+    pushOp("}");
   }
+  
   void visit(ast::BinaryExpr &bin) override {
     bin.left->accept(*this);
     pushSpace();
@@ -143,18 +127,9 @@ public:
         pushOp("!"); break;
       case ast::UnOp::bit_not:
         pushOp("~"); break;
-      case ast::UnOp::pre_incr:
-        pushOp("++"); break;
-      case ast::UnOp::pre_decr:
-        pushOp("--"); break;
-      default: ;
+      default: assert(false);
     }
     un.expr->accept(*this);
-    if (un.oper == ast::UnOp::post_incr) {
-      pushOp("++");
-    } else if (un.oper == ast::UnOp::post_decr) {
-      pushOp("--");
-    }
   }
   void visit(ast::FuncCall &call) override {
     call.func->accept(*this);
@@ -173,9 +148,6 @@ public:
   }
   void visit(ast::Identifier &id) override {
     push(Tag::plain, id.name);
-  }
-  void visit(ast::Self &) override {
-    push(Tag::keyword, "self");
   }
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
@@ -202,23 +174,17 @@ public:
     pushIndent();
     pushOp("}");
   }
-  void visit(ast::EmptyStatement &) override {
-    if (tokens.back().tag == Tag::plain && tokens.back().text == " ") {
-      tokens.pop_back();
-    }
-    pushOp(";");
-  }
   void visit(ast::If &fi) override {
     pushKey("if");
     pushOp("(");
     fi.cond->accept(*this);
     pushOp(")");
     pushSpace();
-    pushStat(fi.body);
+    fi.body->accept(*this);
     if (fi.elseBody) {
       pushSpace();
       pushKey("else");
-      pushStat(fi.elseBody);
+      fi.elseBody->accept(*this);
     }
   }
   void visit(ast::Switch &swtch) override {
@@ -245,7 +211,7 @@ public:
       } else {
         pushKey("default");
       }
-      pushStat(cs.body);
+      cs.body->accept(*this);
       pushNewline();
     }
     --indent;
@@ -274,23 +240,13 @@ public:
     whl.cond->accept(*this);
     pushOp(")");
     pushSpace();
-    pushStat(whl.body);
-  }
-  void visit(ast::RepeatWhile &rep) override {
-    pushKey("repeat");
-    pushStat(rep.body);
-    pushSpace();
-    pushKey("while");
-    pushOp("(");
-    rep.cond->accept(*this);
-    pushOp(")");
-    pushOp(";");
+    whl.body->accept(*this);
   }
   void visit(ast::For &fr) override {
     pushKey("for");
     pushOp("(");
     if (fr.init) {
-      pushStat(fr.init);
+      fr.init->accept(*this);
     } else {
       pushOp(";");
     }
@@ -300,6 +256,10 @@ public:
     pushSpace();
     if (fr.incr) {
       fr.incr->accept(*this);
+      assert(!tokens.empty());
+      assert(tokens.back().tag == Tag::oper);
+      assert(tokens.back().text == ";");
+      tokens.pop_back();
     }
     pushOp(")");
     pushSpace();
@@ -347,73 +307,73 @@ public:
     pushOp(";");
   }
   void visit(ast::TypeAlias &alias) override {
-    pushKeyName("typealias", alias.name);
+    pushKeyName("type", alias.name);
     pushSpace();
     pushOp("=");
     pushSpace();
     alias.type->accept(*this);
     pushOp(";");
   }
-  void visit(ast::Init &init) override {
-    push(Tag::keyword, "init");
-    pushParams(init.params);
+  
+  void visit(ast::CompAssign &as) override {
+    as.left->accept(*this);
     pushSpace();
-    init.body.accept(*this);
+    switch (as.oper) {
+      case ast::AssignOp::add:
+        pushOp("+="); break;
+      case ast::AssignOp::sub:
+        pushOp("-="); break;
+      case ast::AssignOp::mul:
+        pushOp("*="); break;
+      case ast::AssignOp::div:
+        pushOp("/="); break;
+      case ast::AssignOp::mod:
+        pushOp("%="); break;
+      case ast::AssignOp::pow:
+        pushOp("**="); break;
+      case ast::AssignOp::bit_or:
+        pushOp("|="); break;
+      case ast::AssignOp::bit_xor:
+        pushOp("^="); break;
+      case ast::AssignOp::bit_and:
+        pushOp("&="); break;
+      case ast::AssignOp::bit_shl:
+        pushOp("<<="); break;
+      case ast::AssignOp::bit_shr:
+        pushOp(">>="); break;
+    }
+    pushSpace();
+    as.right->accept(*this);
+    pushOp(";");
   }
-  void visit(ast::Struct &strt) override {
-    pushKeyName("struct", strt.name);
-    pushSpace();
-    pushOp("{");
-    if (strt.body.empty()) {
-      pushOp("}");
-      return;
+  void visit(ast::IncrDecr &incrDecr) override {
+    incrDecr.expr->accept(*this);
+    if (incrDecr.incr) {
+      pushOp("++");
+    } else {
+      pushOp("--");
     }
-    pushNewline();
-    ++indent;
-    for (const ast::Member &mem : strt.body) {
-      pushIndent();
-      if (mem.access == ast::MemAccess::public_) {
-        pushKey("public");
-      } else if (mem.access == ast::MemAccess::private_) {
-        pushKey("private");
-      }
-      if (mem.scope == ast::MemScope::static_) {
-        pushKey("static");
-      }
-      mem.node->accept(*this);
-      pushNewline();
-    }
-    --indent;
-    pushIndent();
-    pushOp("}");
+    pushOp(";");
   }
-  void visit(ast::Enum &enm) override {
-    pushKeyName("enum", enm.name);
+  void visit(ast::Assign &as) override {
+    as.left->accept(*this);
     pushSpace();
-    pushOp("{");
-    if (enm.cases.empty()) {
-      pushOp("}");
-      return;
-    }
-    pushNewline();
-    ++indent;
-    for (auto cs = enm.cases.cbegin(); cs != enm.cases.cend(); ++cs) {
-      pushIndent();
-      push(Tag::plain, cs->name);
-      if (cs->value) {
-        pushSpace();
-        pushOp("=");
-        pushSpace();
-        cs->value->accept(*this);
-      }
-      if (cs != enm.cases.cend() - 1) {
-        pushOp(",");
-      }
-      pushNewline();
-    }
-    --indent;
-    pushIndent();
-    pushOp("}");
+    pushOp("=");
+    pushSpace();
+    as.right->accept(*this);
+    pushOp(";");
+  }
+  void visit(ast::DeclAssign &as) override {
+    push(Tag::plain, as.name);
+    pushSpace();
+    pushOp(":=");
+    pushSpace();
+    as.expr->accept(*this);
+    pushOp(";");
+  }
+  void visit(ast::CallAssign &as) override {
+    as.call.accept(*this);
+    pushOp(";");
   }
   
   void visit(ast::StringLiteral &str) override {
@@ -447,40 +407,17 @@ public:
     }
     pushOp("]");
   }
-  void visit(ast::MapLiteral &map) override {
-    pushOp("{");
-    if (map.pairs.empty()) {
-      pushOp("}");
-      return;
-    }
-    pushNewline();
-    ++indent;
-    for (auto p = map.pairs.cbegin(); p != map.pairs.cend(); ++p) {
-      pushIndent();
-      p->key->accept(*this);
-      pushOp(":");
-      pushSpace();
-      p->val->accept(*this);
-      if (p != map.pairs.cend() - 1) {
-        pushOp(",");
-        pushSpace();
-      }
-      pushNewline();
-    }
-    --indent;
-    pushIndent();
-    pushOp("}");
-  }
   void visit(ast::Lambda &lam) override {
-    pushOp("{");
+    pushKey("func");
     pushParams(lam.params);
     pushSpace();
-    pushKey("in");
-    pushNewline();
-    ++indent;
-    pushBlockBody(lam.body);
-    --indent;
-    pushOp("}");
+    if (lam.ret) {
+      pushOp("->");
+      pushSpace();
+      lam.ret->accept(*this);
+      pushSpace();
+    }
+    lam.body.accept(*this);
   }
   
   fmt::Tokens tokens;
@@ -559,16 +496,10 @@ private:
     }
     pushOp(")");
   }
-  void pushStat(ast::StatPtr &stat) {
-    stat->accept(*this);
-    if (auto *const expr = dynamic_cast<ast::Expression *>(stat.get())) {
-      pushOp(";");
-    }
-  }
   void pushBlockBody(ast::Block &block) {
     for (ast::StatPtr &stat : block.nodes) {
       pushIndent();
-      pushStat(stat);
+      stat->accept(*this);
       pushNewline();
     }
   }

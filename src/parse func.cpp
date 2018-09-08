@@ -13,6 +13,29 @@
 
 using namespace stela;
 
+namespace {
+
+ast::FuncParam parseParam(ParseTokens &tok) {
+  ast::FuncParam param;
+  param.loc = tok.loc();
+  param.name = tok.expectID();
+  tok.expectOp(":");
+  param.ref = parseRef(tok);
+  param.type = tok.expectNode(parseType, "type");
+  return param;
+}
+
+std::experimental::optional<ast::FuncParam> parseReceiver(ParseTokens &tok) {
+  if (!tok.checkOp("(")) {
+    return std::experimental::nullopt;
+  }
+  ast::FuncParam param = parseParam(tok);
+  tok.expectOp(")");
+  return param;
+}
+
+}
+
 ast::FuncParams stela::parseFuncParams(ParseTokens &tok) {
   Context ctx = tok.context("in parameter list");
   tok.expectOp("(");
@@ -21,12 +44,7 @@ ast::FuncParams stela::parseFuncParams(ParseTokens &tok) {
   }
   ast::FuncParams params;
   do {
-    ast::FuncParam &param = params.emplace_back();
-    param.loc = tok.loc();
-    param.name = tok.expectID();
-    tok.expectOp(":");
-    param.ref = parseRef(tok);
-    param.type = tok.expectNode(parseType, "type");
+    params.push_back(parseParam(tok));
   } while (tok.expectEitherOp(")", ",") == ",");
   return params;
 }
@@ -60,6 +78,7 @@ ast::DeclPtr stela::parseFunc(ParseTokens &tok) {
   Context ctx = tok.context("in function declaration");
   auto funcNode = std::make_unique<ast::Func>();
   funcNode->loc = tok.lastLoc();
+  funcNode->receiver = parseReceiver(tok);
   funcNode->name = tok.expectID();
   ctx.ident(funcNode->name);
   funcNode->params = parseFuncParams(tok);

@@ -11,6 +11,7 @@
 #include "infer type.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
+#include "compare types.hpp"
 #include "scope manager.hpp"
 #include "scope traverse.hpp"
 
@@ -21,15 +22,8 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(sym::Scopes &scopes, Log &log, const BuiltinTypes &bnt)
-    : man{scopes}, log{log}, ins{man.global(), log, bnt}, tlk{man, log}, bnt{bnt} {}
+    : man{scopes}, log{log}, ins{man.global(), log}, tlk{man.cur(), log}, bnt{bnt} {}
   
-  void visitStat(const ast::StatPtr &stat) {
-    if (ast::Expression *expr = dynamic_cast<ast::Expression *>(stat.get())) {
-      getExprType(man, log, bnt, expr);
-    } else if (stat) {
-      stat->accept(*this);
-    }
-  }
   void visitExpr(const ast::ExprPtr &expr) {
     if (expr) {
       getExprType(man, log, bnt, expr.get());
@@ -38,24 +32,26 @@ public:
   void visitCond(const ast::ExprPtr &expr) {
     assert(expr);
     const sym::ExprType etype = getExprType(man, log, bnt, expr.get());
-    if (etype.type != bnt.Bool) {
+    if (!compareTypes(tlk, etype.type, bnt.Bool)) {
       log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
     }
   }
   
   void visit(ast::Block &block) override {
-    ins.push<UnorderedInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push(man.enterScope(sym::Scope::Type::block));
     for (const ast::StatPtr &stat : block.nodes) {
-      visitStat(stat);
+      stat->accept(*this);
     }
     ins.pop();
     man.leaveScope();
   }
   void visit(ast::If &fi) override {
-    ins.push<UnorderedInserter>(man.enterScope<sym::BlockScope>(), log);
+    ins.push(man.enterScope(sym::Scope::Type::block));
     visitCond(fi.cond);
-    visitStat(fi.body);
-    visitStat(fi.elseBody);
+    fi.body->accept(*this);
+    if (fi.elseBody) {
+      fi.elseBody->accept(*this);
+    }
     ins.pop();
     man.leaveScope();
   }
@@ -65,7 +61,7 @@ public:
     for (const ast::SwitchCase &cs : swich.cases) {
       if (cs.expr) {
         const sym::ExprType caseType = getExprType(man, log, bnt, cs.expr.get());
-        if (caseType.type != etype.type) {
+        if (!compareTypes(tlk, caseType.type, etype.type)) {
           log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
         }
       } else {
@@ -74,15 +70,15 @@ public:
         }
         foundDef = true;
       }
-      ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
-      visitStat(cs.body);
+      ins.push(man.enterScope(sym::Scope::Type::flow));
+      cs.body->accept(*this);
       ins.pop();
       man.leaveScope();
     }
   }
   void checkFlowKeyword(const std::string_view keyword, const Loc loc) {
-    sym::Scope *const flow = findNearestNot<sym::BlockScope>(man.cur());
-    if (dynamic_cast<sym::FlowScope *>(flow) == nullptr) {
+    sym::Scope *const flow = findNearestNot(sym::Scope::Type::block, man.cur());
+    if (flow->type != sym::Scope::Type::flow) {
       log.error(loc) << "Invalid usage of keyword \"" << keyword
         << "\" outside of loop or switch" << fatal;
     }
@@ -97,51 +93,47 @@ public:
     visitExpr(ret.expr);
   }
   void visit(ast::While &wile) override {
-    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
+    ins.push(man.enterScope(sym::Scope::Type::flow));
     visitCond(wile.cond);
-    visitStat(wile.body);
-    ins.pop();
-    man.leaveScope();
-  }
-  void visit(ast::RepeatWhile &repWhile) override {
-    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
-    visitStat(repWhile.body);
-    visitCond(repWhile.cond);
+    wile.body->accept(*this);
     ins.pop();
     man.leaveScope();
   }
   void visit(ast::For &four) override {
-    ins.push<UnorderedInserter>(man.enterScope<sym::FlowScope>(), log);
-    visitStat(four.init);
+    ins.push(man.enterScope(sym::Scope::Type::flow));
+    four.init->accept(*this);
     visitCond(four.cond);
-    visitExpr(four.incr);
-    visitStat(four.body);
+    four.incr->accept(*this);
+    four.body->accept(*this);
     ins.pop();
     man.leaveScope();
   }
 
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = ins.insert(func);
-    funcSym->scope = man.enterScope<sym::FuncScope>();
+    funcSym->scope = man.enterScope(sym::Scope::Type::func);
     ins.enterFuncScope(funcSym, func);
-    ins.push<UnorderedInserter>(funcSym->scope, log);
+    ins.push(funcSym->scope);
     for (const ast::StatPtr &stat : func.body.nodes) {
-      visitStat(stat);
+      stat->accept(*this);
     }
     ins.pop();
     man.leaveScope();
   }
-  sym::Symbol *objectType(
+  ast::Type *objectType(
     const ast::TypePtr &type,
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    const sym::ExprType exprType = expr ? getExprType(man, log, bnt, expr.get()) : sym::ExprType{};
-    sym::Symbol *const symType = type ? tlk.lookupType(type) : exprType.type;
-    if (exprType.type != nullptr && exprType.type != symType) {
+    const sym::ExprType exprType = expr ? getExprType(man, log, bnt, expr.get()) : sym::null_type;
+    if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type.get(), exprType.type)) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
-    return symType;
+    if (type) {
+      return type.get();
+    } else {
+      return exprType.type;
+    }
   }
   void visit(ast::Var &var) override {
     sym::ExprType etype;
@@ -161,57 +153,45 @@ public:
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
-    aliasSym->type = tlk.lookupType(alias.type);
+    aliasSym->node = &alias;
+    tlk.lookupConcreteType(alias.type.get());
   }
   
-  void visit(ast::Init &init) override {
-    auto *strutIns = dynamic_cast<StructInserter *>(ins.get());
-    if (strutIns == nullptr) {
-      log.error(init.loc) << "Init function must be member of a struct" << fatal;
-    }
-    sym::Func *const funcSym = strutIns->insert(init);
-    funcSym->scope = man.enterScope<sym::FuncScope>();
-    strutIns->enterFuncScope(funcSym, init);
-    ins.push<UnorderedInserter>(funcSym->scope, log);
-    for (const ast::StatPtr &stat : init.body.nodes) {
-      visitStat(stat);
-    }
-    ins.pop();
-    man.leaveScope();
+  void visit(ast::CompAssign &as) override {
+    const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
+    const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
+    //lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
   }
-  void visit(ast::Struct &strut) override {
-    auto *structSym = ins.insert<sym::StructType>(strut);
-    structSym->scope = man.enterScope<sym::StructScope>();
-    StructInserter *inserter = ins.push<StructInserter>(structSym, log);
-    for (const ast::Member &mem : strut.body) {
-      inserter->accessScope(mem);
-      mem.node->accept(*this);
-    }
-    ins.pop();
-    man.leaveScope();
+  void visit(ast::IncrDecr &as) override {
+    //lkp.lookupFunc(sym::Name(as.incr ? "a++" : "a--"), {left, right}, as.loc);
   }
-  void visit(ast::Enum &num) override {
-    auto *enumSym = ins.insert<sym::EnumType>(num);
-    enumSym->scope = man.enterScope<sym::EnumScope>();
-    EnumInserter inserter{enumSym, log};
-    for (const ast::EnumCase &cs : num.cases) {
-      if (cs.value) {
-        const sym::ExprType type = getExprType(man, log, bnt, cs.value.get());
-        if (type.type != bnt.Int64 && type.type != enumSym) {
-          log.error(cs.loc) << "Enum case \"" << cs.name
-            << "\" must have value of Int or another case" << fatal;
-        }
-      }
-      inserter.insert(cs);
+  void visit(ast::Assign &as) override {
+    const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
+    const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
+    if (!compareTypes(tlk, left.type, right.type)) {
+      log.error(as.loc) << "Assignment types do not match" << fatal;
     }
-    man.leaveScope();
+  }
+  void visit(ast::DeclAssign &as) override {
+    sym::ExprType etype;
+    etype.type = objectType(nullptr, as.expr, as.loc);
+    etype.mut = sym::ValueMut::var;
+    etype.ref = sym::ValueRef::val;
+    auto *varSym = ins.insert<sym::Object>(as);
+    varSym->etype = etype;
+  }
+  void visit(ast::CallAssign &as) override {
+    const sym::ExprType etype = getExprType(man, log, bnt, &as.call);
+    if (etype.type) {
+      log.error(as.loc) << "Discarded return value" << fatal;
+    }
   }
 
 private:
   ScopeMan man;
   Log &log;
   InserterManager ins;
-  TypeLookup tlk;
+  NameLookup tlk;
   const BuiltinTypes &bnt;
 };
 

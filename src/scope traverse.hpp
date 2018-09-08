@@ -13,23 +13,21 @@
 
 namespace stela {
 
-template <typename ScopeType>
-ScopeType *findNearest(sym::Scope *const scope) {
+inline sym::Scope *findNearest(const sym::Scope::Type type, sym::Scope *const scope) {
   if (scope == nullptr) {
     return nullptr;
-  } else if (auto *dynamic = dynamic_cast<ScopeType *>(scope)) {
-    return dynamic;
+  } else if (scope->type == type) {
+    return scope;
   } else {
-    return findNearest<ScopeType>(scope->parent);
+    return findNearest(type, scope->parent);
   }
 }
 
-template <typename... ScopeType>
-sym::Scope *findNearestNot(sym::Scope *const scope) {
+inline sym::Scope *findNearestNot(const sym::Scope::Type type, sym::Scope *const scope) {
   if (scope == nullptr) {
     return nullptr;
-  } else if ((dynamic_cast<ScopeType *>(scope) || ...)) {
-    return findNearestNot<ScopeType...>(scope->parent);
+  } else if (scope->type == type) {
+    return findNearestNot(type, scope->parent);
   } else {
     return scope;
   }

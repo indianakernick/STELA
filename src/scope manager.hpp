@@ -17,18 +17,11 @@ class ScopeMan {
 public:
   explicit ScopeMan(sym::Scopes &);
   
-  template <typename Scope>
-  Scope *enterScope() {
-    auto newScope = std::make_unique<Scope>(scope);
-    Scope *const newScopePtr = newScope.get();
-    scope = newScopePtr;
-    scopes.push_back(std::move(newScope));
-    return newScopePtr;
-  }
+  sym::Scope *enterScope(sym::Scope::Type);
   void leaveScope();
   sym::Scope *cur() const;
-  sym::NSScope *builtin() const;
-  sym::NSScope *global() const;
+  sym::Scope *builtin() const;
+  sym::Scope *global() const;
 
 private:
   sym::Scopes &scopes;
