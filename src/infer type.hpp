@@ -16,7 +16,7 @@
 
 namespace stela {
 
-sym::ExprType getExprType(ScopeMan &, Log &, const BuiltinTypes &, ast::Expression *);
+sym::ExprType getExprType(ScopeMan &, Log &, const Builtins &, ast::Expression *);
 
 }
 

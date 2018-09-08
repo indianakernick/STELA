@@ -60,7 +60,6 @@ struct BuiltinType final : Type {
     Float,
     Double,
     String,
-    Int,
     Int8,
     Int16,
     Int32,

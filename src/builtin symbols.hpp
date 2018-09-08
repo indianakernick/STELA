@@ -14,13 +14,17 @@
 
 namespace stela {
 
-struct BuiltinTypes {
+// char    
+// bool
+// float
+// int
+
+struct Builtins {
   ast::BuiltinType *Char;
   ast::BuiltinType *Bool;
   ast::BuiltinType *Float;
   ast::BuiltinType *Double;
   ast::BuiltinType *String;
-  ast::BuiltinType *Int;
   ast::BuiltinType *Int8;
   ast::BuiltinType *Int16;
   ast::BuiltinType *Int32;
@@ -29,9 +33,17 @@ struct BuiltinTypes {
   ast::BuiltinType *UInt16;
   ast::BuiltinType *UInt32;
   ast::BuiltinType *UInt64;
+  
+  bool isInteger(ast::BuiltinType *) const;
+  bool isNumber(ast::BuiltinType *) const;
+  
+  bool validIncr(bool, ast::BuiltinType *) const;
+  bool validOp(ast::UnOp, ast::BuiltinType *) const;
+  bool validOp(ast::BinOp, ast::BuiltinType *, ast::BuiltinType *) const;
+  bool validOp(ast::AssignOp, ast::BuiltinType *, ast::BuiltinType *) const;
 };
 
-BuiltinTypes pushBuiltins(sym::Scopes &, ast::Decls &);
+Builtins makeBuiltins(sym::Scopes &, ast::Decls &);
 
 }
 

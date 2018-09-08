@@ -29,6 +29,7 @@ public:
   ast::TypeAlias *lookupType(ast::NamespacedType &) const;
   
   ast::Type *lookupConcreteType(ast::Type *) const;
+  ast::BuiltinType *lookupBuiltinType(ast::Type *) const;
 
 private:
   sym::Scope *scope;

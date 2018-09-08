@@ -11,6 +11,7 @@
 #include "infer type.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
+#include "operator name.hpp"
 #include "compare types.hpp"
 #include "scope manager.hpp"
 #include "scope traverse.hpp"
@@ -21,7 +22,7 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(sym::Scopes &scopes, Log &log, const BuiltinTypes &bnt)
+  Visitor(sym::Scopes &scopes, Log &log, const Builtins &bnt)
     : man{scopes}, log{log}, ins{man.global(), log}, tlk{man.cur(), log}, bnt{bnt} {}
   
   void visitExpr(const ast::ExprPtr &expr) {
@@ -160,10 +161,25 @@ public:
   void visit(ast::CompAssign &as) override {
     const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
     const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
-    //lkp.lookupFunc(sym::Name(opName(as.oper)), {left, right}, as.loc);
+    if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
+      if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
+        if (bnt.validOp(as.oper, builtinLeft, builtinRight)) {
+          if (left.mut == sym::ValueMut::var) {
+            return;
+          }
+        }
+      }
+    }
+    log.error(as.loc) << "Invalid operands to compound assignment operator " << opName(as.oper) << fatal;
   }
   void visit(ast::IncrDecr &as) override {
-    //lkp.lookupFunc(sym::Name(as.incr ? "a++" : "a--"), {left, right}, as.loc);
+    const sym::ExprType etype = getExprType(man, log, bnt, as.expr.get());
+    if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
+      if (bnt.validIncr(as.incr, builtin)) {
+        return;
+      }
+    }
+    log.error(as.loc) << "Invalid operand to unary operator " << (as.incr ? "++" : "--") << fatal;
   }
   void visit(ast::Assign &as) override {
     const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
@@ -192,12 +208,12 @@ private:
   Log &log;
   InserterManager ins;
   NameLookup tlk;
-  const BuiltinTypes &bnt;
+  const Builtins &bnt;
 };
 
 }
 
-void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log, const BuiltinTypes &types) {
+void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log, const Builtins &types) {
   Visitor visitor{scopes, log, types};
   for (const ast::DeclPtr &decl : ast.global) {
     decl->accept(visitor);

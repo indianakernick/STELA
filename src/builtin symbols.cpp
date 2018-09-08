@@ -43,7 +43,7 @@ ast::BuiltinType *pushType(
   return ptr;
 }
 
-void insertTypes(sym::Table &table, ast::Decls &decls, BuiltinTypes &t) {
+void insertTypes(sym::Table &table, ast::Decls &decls, Builtins &t) {
   #define INSERT(TYPE)                                                          \
     t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, #TYPE);
   
@@ -73,152 +73,96 @@ void insertTypes(sym::Table &table, ast::Decls &decls, BuiltinTypes &t) {
   #undef INSERT
 }
 
-/*
-
-THIS IS JUST FOR TYPE CHECKING
-
-Operators are not function calls.
-Operators are put on the symbol table to check types.
-The operators defined in this file can only be applied to primitive types
-
-*/
-
-#define INSERT_INT(OP)                                                          \
-  INSERT(OP, Char);                                                             \
-  INSERT(OP, Int);                                                              \
-  INSERT(OP, Int8);                                                             \
-  INSERT(OP, Int16);                                                            \
-  INSERT(OP, Int32);                                                            \
-  INSERT(OP, Int64);                                                            \
-  INSERT(OP, UInt8);                                                            \
-  INSERT(OP, UInt16);                                                           \
-  INSERT(OP, UInt32);                                                           \
-  INSERT(OP, UInt64)
-
-#define INSERT_NUM(OP)                                                          \
-  INSERT_INT(OP);                                                               \
-  INSERT(OP, Float);                                                            \
-  INSERT(OP, Double)
-
-#define INSERT_ALL(OP)                                                          \
-  INSERT_NUM(OP);                                                               \
-  INSERT(OP, Bool);                                                             \
-  INSERT(OP, String);
-
-sym::SymbolPtr makeBinOp(ast::Type *type, ast::Type *ret) {
-  auto func = std::make_unique<sym::Func>();
-  func->ret = {ret, sym::ValueMut::let, sym::ValueRef::val};
-  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
-  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
-  return func;
 }
 
-sym::SymbolPtr makeAssignOp(ast::Type *type) {
-  auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueMut::var, sym::ValueRef::ref};
-  func->params.push_back({type, sym::ValueMut::var, sym::ValueRef::ref});
-  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
-  return func;
+bool Builtins::isInteger(ast::BuiltinType *type) const {
+  return type == Char ||
+         type == Int8 ||
+         type == Int16 ||
+         type == Int32 ||
+         type == Int64 ||
+         type == UInt8 ||
+         type == UInt16 ||
+         type == UInt32 ||
+         type == UInt64;
 }
 
-void insertAssign(sym::Table &table, const BuiltinTypes &t) {
-  #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::AssignOp::OP)), makeAssignOp(t.TYPE)})
-  
-  INSERT_NUM(add);
-  INSERT(add, String);
-  INSERT_NUM(sub);
-  INSERT_NUM(mul);
-  INSERT_NUM(div);
-  INSERT_NUM(mod);
-  INSERT_NUM(pow);
-  INSERT_INT(bit_or);
-  INSERT_INT(bit_xor);
-  INSERT_INT(bit_and);
-  INSERT_INT(bit_shl);
-  INSERT_INT(bit_shr);
-  
-  #undef INSERT
+bool Builtins::isNumber(ast::BuiltinType *type) const {
+  return isInteger(type) ||
+         type == Float ||
+         type == Double;
 }
 
-void insertBin(sym::Table &table, const BuiltinTypes &t) {
-  #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(t.TYPE, t.TYPE)})
-  
-  INSERT(bool_or, Bool);
-  INSERT(bool_and, Bool);
-  INSERT_INT(bit_or);
-  INSERT_INT(bit_xor);
-  INSERT_INT(bit_and);
-  INSERT_INT(bit_shl);
-  INSERT_INT(bit_shr);
-  INSERT_NUM(add);
-  INSERT(add, String);
-  INSERT_NUM(sub);
-  INSERT_NUM(mul);
-  INSERT_NUM(div);
-  INSERT_NUM(mod);
-  INSERT_NUM(pow);
-  
-  #undef INSERT
-  #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::BinOp::OP)), makeBinOp(t.TYPE, t.Bool)})
-  
-  INSERT_ALL(eq);
-  INSERT_ALL(ne);
-  INSERT_NUM(lt);
-  INSERT_NUM(le);
-  INSERT_NUM(gt);
-  INSERT_NUM(ge);
-  
-  #undef INSERT
+bool Builtins::validIncr(bool incr [[maybe_unused]], ast::BuiltinType *type) const {
+  return isNumber(type);
 }
 
-sym::SymbolPtr makeUnOp(ast::Type *type) {
-  auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueMut::let, sym::ValueRef::val};
-  func->params.push_back({type, sym::ValueMut::let, sym::ValueRef::val});
-  return func;
+bool Builtins::validOp(const ast::UnOp op, ast::BuiltinType *type) const {
+  switch (op) {
+    case ast::UnOp::neg:
+      return isNumber(type);
+    case ast::UnOp::bool_not:
+      return type == Bool;
+    case ast::UnOp::bit_not:
+      return isInteger(type);
+  }
 }
 
-void insertUn(sym::Table &table, const BuiltinTypes &t) {
-  #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(opName(ast::UnOp::OP)), makeUnOp(t.TYPE)})
-  
-  INSERT_NUM(neg);
-  INSERT(bool_not, Bool);
-  INSERT_INT(bit_not);
-  
-  #undef INSERT
+bool Builtins::validOp(const ast::BinOp op, ast::BuiltinType *left, ast::BuiltinType *right) const {
+  if (left != right) {
+    return false;
+  }
+  #define VALID(OP, COND)                                                       \
+    case ast::BinOp::OP: return COND
+  switch (op) {
+    VALID(bool_or, left == Bool);
+    VALID(bool_and, left == Bool);
+    VALID(bit_or, isInteger(left));
+    VALID(bit_xor, isInteger(left));
+    VALID(bit_and, isInteger(left));
+    VALID(bit_shl, isInteger(left));
+    VALID(bit_shr, isInteger(left));
+    VALID(add, isNumber(left) || left == String);
+    VALID(sub, isNumber(left));
+    VALID(mul, isNumber(left));
+    VALID(div, isNumber(left));
+    VALID(mod, isNumber(left));
+    VALID(pow, isNumber(left));
+    VALID(eq, true);
+    VALID(ne, true);
+    VALID(lt, isNumber(left));
+    VALID(le, isNumber(left));
+    VALID(gt, isNumber(left));
+    VALID(ge, isNumber(left));
+  }
+  #undef VALID
 }
 
-sym::SymbolPtr makeIncrDecr(ast::Type *type) {
-  auto func = std::make_unique<sym::Func>();
-  func->ret = {type, sym::ValueMut::let, sym::ValueRef::val};
-  func->params.push_back({type, sym::ValueMut::var, sym::ValueRef::ref});
-  return func;
+bool Builtins::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::BuiltinType *right) const {
+  if (left != right) {
+    return false;
+  }
+  #define VALID(OP, COND)                                                       \
+    case ast::AssignOp::OP: return COND
+  switch (op) {
+    VALID(add, isNumber(left) || left == String);
+    VALID(sub, isNumber(left));
+    VALID(mul, isNumber(left));
+    VALID(div, isNumber(left));
+    VALID(mod, isNumber(left));
+    VALID(pow, isNumber(left));
+    VALID(bit_or, isInteger(left));
+    VALID(bit_and, isInteger(left));
+    VALID(bit_xor, isInteger(left));
+    VALID(bit_shl, isInteger(left));
+    VALID(bit_shr, isInteger(left));
+  }
 }
 
-void insertIncrDecr(sym::Table &table, const BuiltinTypes &t) {
-  #define INSERT(OP, TYPE)                                                      \
-    table.insert({sym::Name(#OP), makeIncrDecr(t.TYPE)})
-  
-  INSERT_NUM(a--);
-  INSERT_NUM(a++);
-  
-  #undef INSERT
-}
-
-}
-
-BuiltinTypes stela::pushBuiltins(sym::Scopes &scopes, ast::Decls &decls) {
+Builtins stela::makeBuiltins(sym::Scopes &scopes, ast::Decls &decls) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::Scope::Type::ns);
-  BuiltinTypes types;
+  Builtins types;
   insertTypes(scope->table, decls, types);
-  insertAssign(scope->table, types);
-  insertBin(scope->table, types);
-  insertUn(scope->table, types);
-  insertIncrDecr(scope->table, types);
   scopes.push_back(std::move(scope));
   return types;
 }

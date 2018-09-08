@@ -16,7 +16,7 @@
 
 namespace stela {
 
-void traverse(sym::Scopes &, const AST &, Log &, const BuiltinTypes &);
+void traverse(sym::Scopes &, const AST &, Log &, const Builtins &);
 
 }
 

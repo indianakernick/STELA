@@ -16,7 +16,7 @@
 stela::Symbols stela::createSym(AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   Symbols syms;
-  BuiltinTypes types = pushBuiltins(syms.scopes, ast.builtin);
+  Builtins types = makeBuiltins(syms.scopes, ast.builtin);
   auto global = std::make_unique<sym::Scope>(syms.scopes.back().get(), sym::Scope::Type::ns);
   syms.scopes.push_back(std::move(global));
   traverse(syms.scopes, ast, log, types);

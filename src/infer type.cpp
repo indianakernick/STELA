@@ -19,17 +19,39 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan &man, Log &log, const BuiltinTypes &types)
+  Visitor(ScopeMan &man, Log &log, const Builtins &types)
     : lkp{man.cur(), log}, tlk{man.cur(), log}, man{man}, log{log}, bnt{types} {}
 
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
     const sym::ExprType right = visitValueExpr(bin.right.get());
-    lkp.lookupFunc(sym::Name(opName(bin.oper)), {left, right}, bin.loc);
+    if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
+      if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
+        if (bnt.validOp(bin.oper, builtinLeft, builtinRight)) {
+          sym::ExprType retExpr;
+          retExpr.type = left.type;
+          retExpr.mut = sym::ValueMut::let;
+          retExpr.ref = sym::ValueRef::val;
+          lkp.setExpr(retExpr);
+          return;
+        }
+      }
+    }
+    log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
-    const sym::ExprType type = visitValueExpr(un.expr.get());
-    lkp.lookupFunc(sym::Name(opName(un.oper)), {type}, un.loc);
+    const sym::ExprType etype = visitValueExpr(un.expr.get());
+    if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
+      if (bnt.validOp(un.oper, builtin)) {
+        sym::ExprType retExpr;
+        retExpr.type = etype.type;
+        retExpr.mut = sym::ValueMut::let;
+        retExpr.ref = sym::ValueRef::val;
+        lkp.setExpr(retExpr);
+        return;
+      }
+    }
+    log.error(un.loc) << "Invalid operand to unary expression " << opName(un.oper) << fatal;
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
@@ -115,7 +137,7 @@ private:
   NameLookup tlk;
   ScopeMan &man;
   Log &log;
-  const BuiltinTypes &bnt;
+  const Builtins &bnt;
 };
 
 }
@@ -123,7 +145,7 @@ private:
 sym::ExprType stela::getExprType(
   ScopeMan &man,
   Log &log,
-  const BuiltinTypes &bnt,
+  const Builtins &bnt,
   ast::Expression *expr
 ) {
   return Visitor{man, log, bnt}.visitValueExpr(expr);

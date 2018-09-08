@@ -267,9 +267,9 @@ TEST_GROUP(Semantics, {
       }
     
       func main() {
-        let middle = mid(origin, newVec(2.0, 4.0));
-        let two = newVec(2.0, 4.0).x;
-        let four = two + middle.y;
+        let middle: Vec = mid(origin, newVec(2.0, 4.0));
+        let two: Double = newVec(2.0, 4.0).x;
+        let four: Double = two + middle.y;
       }
     )";
     createSym(source, log);

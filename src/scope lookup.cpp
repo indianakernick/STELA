@@ -84,6 +84,10 @@ ast::Type *NameLookup::lookupConcreteType(ast::Type *type) const {
   }
 }
 
+ast::BuiltinType *NameLookup::lookupBuiltinType(ast::Type *type) const {
+  return dynamic_cast<ast::BuiltinType *>(lookupConcreteType(type));
+}
+
 ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) const {
   if (sym::Symbol *symbol = find(scope, sym::Name(type.name))) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
