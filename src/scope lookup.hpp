@@ -30,6 +30,7 @@ public:
   
   ast::Type *lookupConcreteType(ast::Type *) const;
   ast::BuiltinType *lookupBuiltinType(ast::Type *) const;
+  void validateType(ast::Type *) const;
 
 private:
   sym::Scope *scope;

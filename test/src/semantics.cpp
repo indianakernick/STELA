@@ -132,7 +132,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Sym - Colliding type and function, {
+  TEST(Sym - Colliding type and func, {
     const char *source = R"(
       type fn func();
       func fn() {}
@@ -306,7 +306,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Struct - Colliding function and variable, {
+  TEST(Struct - Colliding func field, {
     const char *source = R"(
       type MyStruct struct {
         fn: Int;
@@ -327,7 +327,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Struct - Access undefined member var, {
+  TEST(Struct - Access undef field, {
     const char *source = R"(
       type MyStruct struct {
         var ajax: Int;
@@ -383,7 +383,7 @@ TEST_GROUP(Semantics, {
   TEST(Non-bool ternary condition, {
     const char *source = R"(
       func main() {
-        ("nope" ? 4 : 6);
+        let test = ("nope" ? 4 : 6);
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -392,7 +392,7 @@ TEST_GROUP(Semantics, {
   TEST(Ternary condition type mismatch, {
     const char *source = R"(
       func main() {
-        (true ? 4 : "nope");
+        let test = (true ? 4 : "nope");
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -403,7 +403,7 @@ TEST_GROUP(Semantics, {
       type Type struct {};
     
       func main() {
-        let type = Type;
+        let t = Type;
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -411,15 +411,17 @@ TEST_GROUP(Semantics, {
   
   TEST(Returning an object, {
     const char *source = R"(
+      type Deep struct {
+        x: Int;
+      };
+      type Inner struct {
+        deep: Deep;
+      };
       type Outer struct {
-        inner: struct {
-          deep: struct {
-            x: Int;
-          };
-        };
+        inner: Inner;
       };
     
-      func (self: Outer) getInner() {
+      func (self: Outer) getInner() -> Inner {
         return self.inner;
       }
     

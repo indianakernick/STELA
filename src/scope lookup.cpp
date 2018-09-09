@@ -88,6 +88,22 @@ ast::BuiltinType *NameLookup::lookupBuiltinType(ast::Type *type) const {
   return dynamic_cast<ast::BuiltinType *>(lookupConcreteType(type));
 }
 
+void NameLookup::validateType(ast::Type *type) const {
+  ast::Type *concrete = lookupConcreteType(type);
+  if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
+    std::vector<std::string_view> names;
+    names.reserve(strut->fields.size());
+    for (const ast::Field &field : strut->fields) {
+      names.push_back(field.name);
+    }
+    std::sort(names.begin(), names.end());
+    const auto dup = std::adjacent_find(names.cbegin(), names.cend());
+    if (dup != names.cend()) {
+      log.error(type->loc) << "Duplicate field \"" << *dup << "\" in struct" << fatal;
+    }
+  }
+}
+
 ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) const {
   if (sym::Symbol *symbol = find(scope, sym::Name(type.name))) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
@@ -208,8 +224,9 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
     NameLookup lkp{scope, log};
     ast::Type *type = lkp.lookupConcreteType(popExpr().type);
     const sym::Name name = popName();
-    // type might be null if the expression is a function call that returns void
-    // doesn't matter here because null isn't a struct
+    if (type == nullptr) {
+      log.error(loc) << "Cannot access field of void expression" << fatal;
+    }
     if (auto *strut = dynamic_cast<ast::StructType *>(type)) {
       for (ast::Field &field : strut->fields) {
         if (field.name == name) {

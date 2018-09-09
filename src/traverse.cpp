@@ -127,6 +127,9 @@ public:
     const Loc loc
   ) {
     const sym::ExprType exprType = expr ? getExprType(man, log, bnt, expr.get()) : sym::null_type;
+    if (type) {
+      tlk.validateType(type.get());
+    }
     if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type.get(), exprType.type)) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
@@ -155,7 +158,7 @@ public:
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
     aliasSym->node = &alias;
-    tlk.lookupConcreteType(alias.type.get());
+    tlk.validateType(alias.type.get());
   }
   
   void visit(ast::CompAssign &as) override {
@@ -186,6 +189,9 @@ public:
     const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
     if (!compareTypes(tlk, left.type, right.type)) {
       log.error(as.loc) << "Assignment types do not match" << fatal;
+    }
+    if (left.mut == sym::ValueMut::let) {
+      log.error(as.loc) << "Left side of assignment must be mutable" << fatal;
     }
   }
   void visit(ast::DeclAssign &as) override {
