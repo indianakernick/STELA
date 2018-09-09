@@ -81,10 +81,10 @@ std::string_view stela::opName(const ast::BinOp op) {
 std::string_view stela::opName(const ast::UnOp op) {
   switch (op) {
     case ast::UnOp::neg:
-      return "-a";
+      return "-";
     case ast::UnOp::bool_not:
-      return "!a";
+      return "!";
     case ast::UnOp::bit_not:
-      return "~a";
+      return "~";
   }
 }

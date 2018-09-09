@@ -222,7 +222,14 @@ public:
   }
   
   void visit(ast::Func &func) override {
-    pushKeyName("func", func.name);
+    pushKey("func");
+    if (func.receiver) {
+      pushOp("(");
+      pushParam(*func.receiver);
+      pushOp(")");
+      pushSpace();
+    }
+    push(Tag::plain, func.name);
     pushParams(func.params);
     pushSpace();
     if (func.ret) {
@@ -400,16 +407,19 @@ private:
     pushKey(keyword);
     push(Tag::plain, name);
   }
+  void pushParam(const ast::FuncParam &param) {
+    push(Tag::plain, param.name);
+    pushOp(":");
+    pushSpace();
+    if (param.ref == ast::ParamRef::inout) {
+      pushKey("inout");
+    }
+    param.type->accept(*this);
+  }
   void pushParams(const ast::FuncParams &params) {
     pushOp("(");
     for (auto p = params.cbegin(); p != params.cend(); ++p) {
-      push(Tag::plain, p->name);
-      pushOp(":");
-      pushSpace();
-      if (p->ref == ast::ParamRef::inout) {
-        pushKey("inout");
-      }
-      p->type->accept(*this);
+      pushParam(*p);
       if (p != params.cend() - 1) {
         pushOp(",");
         pushSpace();
