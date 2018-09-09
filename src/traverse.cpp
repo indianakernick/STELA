@@ -130,6 +130,9 @@ public:
     if (type) {
       tlk.validateType(type.get());
     }
+    if (expr && exprType.type == nullptr) {
+      log.error(loc) << "Cannot initialize variable with void expression" << fatal;
+    }
     if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type.get(), exprType.type)) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }

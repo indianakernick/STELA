@@ -732,4 +732,49 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Expr - Storing void, {
+    const char *source = R"(
+      func nothing() {}
+    
+      func main() {
+        let void = nothing();
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Access field on void, {
+    const char *source = R"(
+      func nothing() {}
+    
+      func main() {
+        let value = nothing().field;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Access field on int, {
+    const char *source = R"(
+      func integer() -> Int {
+        return 0;
+      }
+    
+      func main() {
+        let value = integer().field;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Call a float, {
+    const char *source = R"(
+      func main() {
+        let fl = 3.0;
+        fl(5.0);
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

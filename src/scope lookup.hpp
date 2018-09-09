@@ -101,12 +101,6 @@ public:
     //   pop stuff
     //   free function lookup
     //   push expr
-  ast::Func *lookupFunc(const sym::Name &, const sym::FuncParams &, Loc);
-    // effectively this:
-    //   call()
-    //   lookupIdent(name)
-    //   return lookupFunc(params, loc);
-    // but just do free function lookup
   
   void member(const sym::Name &);
   ast::Field *lookupMember(Loc);

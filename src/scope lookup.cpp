@@ -167,16 +167,6 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
   log.error(loc) << "Function call operator applied to invalid subject" << fatal;
 }
 
-ast::Func *ExprLookup::lookupFunc(
-  const sym::Name &name,
-  const sym::FuncParams &params,
-  const Loc loc
-) {
-  sym::Func *const func = lookupFun(scope, {name, params}, loc);
-  pushExpr(func->ret);
-  return func->node;
-}
-
 void ExprLookup::member(const sym::Name &name) {
   exprs.push_back({Expr::Type::member, name});
 }
@@ -187,7 +177,7 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
     ast::Type *type = lkp.lookupConcreteType(popExpr().type);
     const sym::Name name = popName();
     if (type == nullptr) {
-      log.error(loc) << "Cannot access field of void expression" << fatal;
+      log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto *strut = dynamic_cast<ast::StructType *>(type)) {
       for (ast::Field &field : strut->fields) {
@@ -198,7 +188,7 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
       }
       log.error(loc) << "No field \"" << name << "\" found in struct" << fatal;
     } else {
-      log.error(loc) << "Can only access members of struct objects" << fatal;
+      log.error(loc) << "Cannot access field \"" << name << "\" of non-struct expression" << fatal;
     }
   }
   return nullptr;
