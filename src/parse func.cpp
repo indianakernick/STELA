@@ -25,13 +25,13 @@ ast::FuncParam parseParam(ParseTokens &tok) {
   return param;
 }
 
-std::experimental::optional<ast::FuncParam> parseReceiver(ParseTokens &tok) {
+ast::Receiver parseReceiver(ParseTokens &tok) {
   if (!tok.checkOp("(")) {
     return std::experimental::nullopt;
   }
   ast::FuncParam param = parseParam(tok);
   tok.expectOp(")");
-  return param;
+  return ast::Receiver{std::move(param)};
 }
 
 }
