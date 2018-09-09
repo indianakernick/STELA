@@ -9,6 +9,7 @@
 #include "scope lookup.hpp"
 
 #include <cassert>
+#include <algorithm>
 #include "scope traverse.hpp"
 #include "compare params args.hpp"
 
