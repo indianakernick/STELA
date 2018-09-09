@@ -41,6 +41,8 @@ add_library(STELA STATIC
         "src/parse litr.hpp"
         "src/parse expr.cpp"
         "src/parse expr.hpp"
+        "src/parse asgn.cpp"
+        "src/parse asgn.hpp"
         "src/semantic analysis.cpp"
         "src/traverse.cpp"
         "src/traverse.hpp"
@@ -57,17 +59,15 @@ add_library(STELA STATIC
         "src/builtin symbols.hpp"
         "src/operator name.cpp"
         "src/operator name.hpp"
-        "src/member access scope.cpp"
-        "src/member access scope.hpp"
         "src/compare params args.cpp"
         "src/compare params args.hpp"
         "src/scope insert.cpp"
         "src/scope insert.hpp"
         "src/scope lookup.cpp"
         "src/scope lookup.hpp"
-        "src/scope find.cpp"
-        "src/scope find.hpp"
         "src/scope traverse.hpp"
+        "src/compare types.cpp"
+        "src/compare types.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

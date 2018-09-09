@@ -343,7 +343,7 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Access undef field, {
     const char *source = R"(
       type MyStruct struct {
-        var ajax: Int;
+        ajax: Int;
       };
     
       func oh_no() {
@@ -579,7 +579,7 @@ TEST_GROUP(Semantics, {
   TEST(Loops - For var scope, {
     const char *source = R"(
       func main() {
-        for (var i = 0; i != 10; ++i) {}
+        for (i := 0; i != 10; i++) {}
         i = 3;
       }
     )";
