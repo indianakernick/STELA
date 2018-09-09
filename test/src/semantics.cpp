@@ -18,8 +18,6 @@ TEST_GROUP(Semantics, {
   StreamLog log;
   log.pri(LogPri::warning);
   
-  #if 0
-  
   TEST(Empty source, {
     const auto [symbols, ast] = createSym("", log);
     ASSERT_EQ(symbols.scopes.size(), 2);
@@ -79,8 +77,6 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
-  
-  #endif
   
   TEST(Func - Redef strong alias, {
     const char *source = R"(
@@ -281,16 +277,18 @@ TEST_GROUP(Semantics, {
         s: String;
       };
     
-      func append(str: inout String) {
-        str += " is still a string";
+      func append(string: inout String) {
+        string += " is still a string";
       }
     
-      func append(str: inout MyString) {
-        append(str.s);
+      // rename this function to appendImpl and it fails
+      // raname it to append and it succeeds
+      func append(mstr: inout MyString) {
+        append(mstr.s);
       }
     
       func main() {
-        var thing = MyString();
+        var thing: MyString;
         thing.s = "A string";
         append(thing);
       }
@@ -324,7 +322,7 @@ TEST_GROUP(Semantics, {
       type MyStruct struct {
         m: Int;
         m: Float;
-      }
+      };
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
@@ -333,7 +331,7 @@ TEST_GROUP(Semantics, {
     const char *source = R"(
       type MyStruct struct {
         var ajax: Int;
-      }
+      };
     
       func oh_no() {
         var s: MyStruct;
@@ -402,7 +400,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Assign regular type, {
     const char *source = R"(
-      type Type struct {}
+      type Type struct {};
     
       func main() {
         let type = Type;
@@ -417,9 +415,9 @@ TEST_GROUP(Semantics, {
         inner: struct {
           deep: struct {
             x: Int;
-          }
-        }
-      }
+          };
+        };
+      };
     
       func (self: Outer) getInner() {
         return self.inner;

@@ -36,7 +36,7 @@ struct Symbol {
 using SymbolPtr = std::unique_ptr<Symbol>;
 
 using Name = std::string;
-using Table = std::unordered_map<Name, SymbolPtr>;
+using Table = std::unordered_multimap<Name, SymbolPtr>;
 
 struct Scope {
   enum class Type {

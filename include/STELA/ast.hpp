@@ -263,11 +263,16 @@ struct For final : Statement {
 
 //------------------------------ Declarations ----------------------------------
 
-struct FuncParam {
+struct FuncParam final : Declaration {
   Name name;
   ParamRef ref;
   TypePtr type;
   Loc loc;
+  
+  // visitor disabled for FuncParam
+  void accept(Visitor &) override {
+    assert(false);
+  }
 };
 using FuncParams = std::vector<FuncParam>;
 

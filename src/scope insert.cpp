@@ -30,6 +30,7 @@ auto makeParam(const sym::ExprType &etype, const ast::FuncParam &param) {
   auto paramSym = std::make_unique<sym::Object>();
   paramSym->loc = param.loc;
   paramSym->etype = etype;
+  paramSym->node = const_cast<ast::FuncParam *>(&param);
   return paramSym;
 }
 
@@ -49,6 +50,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
   sym::FuncPtr funcSym = makeFunc(func.loc);
   funcSym->params = convertParams(func.receiver, func.params);
   funcSym->ret = retType(func);
+  funcSym->node = const_cast<ast::Func *>(&func);
   const auto [beg, end] = scope()->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
