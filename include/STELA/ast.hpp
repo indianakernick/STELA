@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <memory>
+#include <cassert>
 #include <string_view>
 #include "location.hpp"
 #include <experimental/optional>
