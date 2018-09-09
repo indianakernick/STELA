@@ -25,6 +25,7 @@ public:
     auto symbol = std::make_unique<Symbol>();
     Symbol *const ret = symbol.get();
     symbol->loc = node.loc;
+    symbol->node = const_cast<AST_Node *>(&node);
     insert(sym::Name(node.name), std::move(symbol));
     return ret;
   }

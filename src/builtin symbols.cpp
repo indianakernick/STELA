@@ -73,89 +73,124 @@ void insertTypes(sym::Table &table, ast::Decls &decls, Builtins &t) {
   #undef INSERT
 }
 
+using TypeEnum = ast::BuiltinType::Enum;
+
+bool isBoolType(const TypeEnum type) {
+  return type == TypeEnum::Bool;
 }
 
-bool Builtins::isInteger(ast::BuiltinType *type) const {
-  return type == Char ||
-         type == Int8 ||
-         type == Int16 ||
-         type == Int32 ||
-         type == Int64 ||
-         type == UInt8 ||
-         type == UInt16 ||
-         type == UInt32 ||
-         type == UInt64;
+bool isBitwiseType(const TypeEnum type) {
+  return TypeEnum::Int8 <= type && type <= TypeEnum::UInt64;
 }
 
-bool Builtins::isNumber(ast::BuiltinType *type) const {
-  return isInteger(type) ||
-         type == Float ||
-         type == Double;
+bool isArithType(const TypeEnum type) {
+  return TypeEnum::Char <= type && type <= TypeEnum::UInt64;
 }
 
-bool Builtins::validIncr(bool incr [[maybe_unused]], ast::BuiltinType *type) const {
-  return isNumber(type);
+template <typename Enum>
+auto operator+(const Enum e) -> std::underlying_type_t<Enum> {
+  return static_cast<std::underlying_type_t<Enum>>(e);
 }
 
-bool Builtins::validOp(const ast::UnOp op, ast::BuiltinType *type) const {
+template <typename Enum>
+bool incRange(const Enum e, const Enum min, const Enum max) {
+  assert(min <= max);
+  return +min <= e && e <= +max;
+}
+
+bool isBoolOp(const ast::BinOp op) {
+  return op == ast::BinOp::bool_or || op == ast::BinOp::bool_and;
+}
+
+bool isBitwiseOp(const ast::BinOp op) {
+  return +ast::BinOp::bit_or <= +op && +op <= +ast::BinOp::bit_shr;
+}
+
+bool isEqualOp(const ast::BinOp op) {
+  return op == ast::BinOp::eq || op == ast::BinOp::ne;
+}
+
+bool isOrderOp(const ast::BinOp op) {
+  return +ast::BinOp::lt <= +op && +op <= +ast::BinOp::ge;
+}
+
+bool isArithOp(const ast::BinOp op) {
+  return +ast::BinOp::add <= +op && +op <= +ast::BinOp::pow;
+}
+
+bool isBitwiseOp(const ast::AssignOp op) {
+  return +ast::AssignOp::bit_or <= +op && +op <= +ast::AssignOp::bit_shr;
+}
+
+bool isArithOp(const ast::AssignOp op) {
+  return +ast::AssignOp::add <= +op && +op <= +ast::AssignOp::pow;
+}
+
+}
+
+bool stela::validIncr(ast::BuiltinType *type) {
+  return isArithType(type->value);
+}
+
+bool stela::validOp(const ast::UnOp op, ast::BuiltinType *type) {
   switch (op) {
     case ast::UnOp::neg:
-      return isNumber(type);
+      return isArithType(type->value);
     case ast::UnOp::bool_not:
-      return type == Bool;
+      return isBoolType(type->value);
     case ast::UnOp::bit_not:
-      return isInteger(type);
+      return isBitwiseType(type->value);
   }
 }
 
-bool Builtins::validOp(const ast::BinOp op, ast::BuiltinType *left, ast::BuiltinType *right) const {
-  if (left != right) {
-    return false;
-  }
-  #define VALID(OP, COND)                                                       \
-    case ast::BinOp::OP: return COND
-  switch (op) {
-    VALID(bool_or, left == Bool);
-    VALID(bool_and, left == Bool);
-    VALID(bit_or, isInteger(left));
-    VALID(bit_xor, isInteger(left));
-    VALID(bit_and, isInteger(left));
-    VALID(bit_shl, isInteger(left));
-    VALID(bit_shr, isInteger(left));
-    VALID(add, isNumber(left) || left == String);
-    VALID(sub, isNumber(left));
-    VALID(mul, isNumber(left));
-    VALID(div, isNumber(left));
-    VALID(mod, isNumber(left));
-    VALID(pow, isNumber(left));
-    VALID(eq, true);
-    VALID(ne, true);
-    VALID(lt, isNumber(left));
-    VALID(le, isNumber(left));
-    VALID(gt, isNumber(left));
-    VALID(ge, isNumber(left));
-  }
-  #undef VALID
+ast::BuiltinType *checkType(bool(*category)(TypeEnum), ast::BuiltinType *type) {
+  return category(type->value) ? type : nullptr;
 }
 
-bool Builtins::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::BuiltinType *right) const {
+ast::BuiltinType *stela::validOp(
+  const Builtins &bnt,
+  const ast::BinOp op,
+  ast::BuiltinType *left,
+  ast::BuiltinType *right
+) {
+  if (left != right) {
+    return nullptr;
+  }
+  if (isBoolOp(op)) {
+    return checkType(isBoolType, left);
+  } else if (isBitwiseOp(op)) {
+    return checkType(isBitwiseType, left);
+  } else if (isEqualOp(op)) {
+    return bnt.Bool;
+  } else if (isOrderOp(op)) {
+    return isArithType(left->value) ? bnt.Bool : nullptr;
+  } else if (isArithOp(op)) {
+    // @TODO maybe remove this
+    if (op == ast::BinOp::add && left->value == TypeEnum::String) {
+      return left;
+    }
+    return checkType(isArithType, left);
+  } else {
+    assert(false);
+    return nullptr;
+  }
+}
+
+bool stela::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::BuiltinType *right) {
   if (left != right) {
     return false;
   }
-  #define VALID(OP, COND)                                                       \
-    case ast::AssignOp::OP: return COND
-  switch (op) {
-    VALID(add, isNumber(left) || left == String);
-    VALID(sub, isNumber(left));
-    VALID(mul, isNumber(left));
-    VALID(div, isNumber(left));
-    VALID(mod, isNumber(left));
-    VALID(pow, isNumber(left));
-    VALID(bit_or, isInteger(left));
-    VALID(bit_and, isInteger(left));
-    VALID(bit_xor, isInteger(left));
-    VALID(bit_shl, isInteger(left));
-    VALID(bit_shr, isInteger(left));
+  if (isArithOp(op)) {
+    // @TODO maybe remove this
+    if (op == ast::AssignOp::add && left->value == TypeEnum::String) {
+      return true;
+    }
+    return isArithType(left->value);
+  } else if (isBitwiseOp(op)) {
+    return isBitwiseType(left->value);
+  } else {
+    assert(false);
+    return false;
   }
 }
 

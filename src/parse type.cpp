@@ -73,6 +73,7 @@ ast::TypePtr parseNamespacedType(ParseTokens &tok) {
 
 ast::Field parseStructMember(ParseTokens &tok) {
   ast::Field field;
+  field.loc = tok.loc();
   field.name = tok.expectID();
   tok.expectOp(":");
   field.type = tok.expectNode(parseType, "type after :");

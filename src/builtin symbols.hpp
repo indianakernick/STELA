@@ -14,17 +14,23 @@
 
 namespace stela {
 
-// char    
+// When are sized integers useful?
+// Compatability with C++
+// Writing fast code
+// ...
+
+// char
 // bool
-// float
+// real
 // int
+// byte
+// uint
 
 struct Builtins {
-  ast::BuiltinType *Char;
   ast::BuiltinType *Bool;
+  ast::BuiltinType *Char;
   ast::BuiltinType *Float;
   ast::BuiltinType *Double;
-  ast::BuiltinType *String;
   ast::BuiltinType *Int8;
   ast::BuiltinType *Int16;
   ast::BuiltinType *Int32;
@@ -33,15 +39,13 @@ struct Builtins {
   ast::BuiltinType *UInt16;
   ast::BuiltinType *UInt32;
   ast::BuiltinType *UInt64;
-  
-  bool isInteger(ast::BuiltinType *) const;
-  bool isNumber(ast::BuiltinType *) const;
-  
-  bool validIncr(bool, ast::BuiltinType *) const;
-  bool validOp(ast::UnOp, ast::BuiltinType *) const;
-  bool validOp(ast::BinOp, ast::BuiltinType *, ast::BuiltinType *) const;
-  bool validOp(ast::AssignOp, ast::BuiltinType *, ast::BuiltinType *) const;
+  ast::BuiltinType *String;
 };
+
+bool validIncr(ast::BuiltinType *);
+bool validOp(ast::UnOp, ast::BuiltinType *);
+ast::BuiltinType *validOp(const Builtins &, ast::BinOp, ast::BuiltinType *, ast::BuiltinType *);
+bool validOp(ast::AssignOp, ast::BuiltinType *, ast::BuiltinType *);
 
 Builtins makeBuiltins(sym::Scopes &, ast::Decls &);
 

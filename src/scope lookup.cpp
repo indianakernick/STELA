@@ -91,15 +91,19 @@ ast::BuiltinType *NameLookup::lookupBuiltinType(ast::Type *type) const {
 void NameLookup::validateType(ast::Type *type) const {
   ast::Type *concrete = lookupConcreteType(type);
   if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    std::vector<std::string_view> names;
+    std::vector<std::pair<std::string_view, Loc>> names;
     names.reserve(strut->fields.size());
     for (const ast::Field &field : strut->fields) {
-      names.push_back(field.name);
+      names.push_back({field.name, field.loc});
     }
-    std::sort(names.begin(), names.end());
-    const auto dup = std::adjacent_find(names.cbegin(), names.cend());
+    std::sort(names.begin(), names.end(), [] (auto a, auto b) {
+      return a.first < b.first;
+    });
+    const auto dup = std::adjacent_find(names.cbegin(), names.cend(), [] (auto a, auto b) {
+      return a.first == b.first;
+    });
     if (dup != names.cend()) {
-      log.error(type->loc) << "Duplicate field \"" << *dup << "\" in struct" << fatal;
+      log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
     }
   }
 }

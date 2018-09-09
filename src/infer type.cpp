@@ -27,9 +27,9 @@ public:
     const sym::ExprType right = visitValueExpr(bin.right.get());
     if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
       if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
-        if (bnt.validOp(bin.oper, builtinLeft, builtinRight)) {
+        if (auto *retType = validOp(bnt, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
-          retExpr.type = left.type;
+          retExpr.type = retType;
           retExpr.mut = sym::ValueMut::let;
           retExpr.ref = sym::ValueRef::val;
           lkp.setExpr(retExpr);
@@ -42,7 +42,7 @@ public:
   void visit(ast::UnaryExpr &un) override {
     const sym::ExprType etype = visitValueExpr(un.expr.get());
     if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
-      if (bnt.validOp(un.oper, builtin)) {
+      if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
         retExpr.type = etype.type;
         retExpr.mut = sym::ValueMut::let;

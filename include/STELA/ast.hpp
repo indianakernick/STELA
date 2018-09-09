@@ -55,11 +55,11 @@ struct BuiltinType final : Type {
   // not a strong enum
   // BuiltinType::Int instead of BuiltinType::TypeEnum::Int
   enum Enum {
-    Char,
+    // builtin symbols.cpp depends on the order
     Bool,
+    Char,
     Float,
     Double,
-    String,
     Int8,
     Int16,
     Int32,
@@ -67,7 +67,8 @@ struct BuiltinType final : Type {
     UInt8,
     UInt16,
     UInt32,
-    UInt64
+    UInt64,
+    String
   } value;
 
   void accept(Visitor &) override;
@@ -117,6 +118,7 @@ struct NamespacedType final : Type {
 struct Field {
   Name name;
   TypePtr type;
+  Loc loc;
 };
 
 struct StructType final : Type {
@@ -129,10 +131,10 @@ struct StructType final : Type {
 
 /// Binary operator
 enum class BinOp {
+  // builtin symbols.cpp depends on the order
   bool_or, bool_and,
-  bit_or, bit_xor, bit_and,
+  bit_or, bit_xor, bit_and, bit_shl, bit_shr,
   eq, ne, lt, le, gt, ge,
-  bit_shl, bit_shr,
   add, sub, mul, div, mod, pow
 };
 
@@ -267,7 +269,6 @@ struct FuncParam final : Declaration {
   Name name;
   ParamRef ref;
   TypePtr type;
-  Loc loc;
   
   // visitor disabled for FuncParam
   void accept(Visitor &) override {
@@ -314,6 +315,7 @@ struct TypeAlias final : Declaration {
 
 /// Assignment operator
 enum class AssignOp {
+  // builtin symbols.cpp depends on the order
   add, sub, mul, div, mod, pow,
   bit_or, bit_xor, bit_and, bit_shl, bit_shr
 };

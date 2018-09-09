@@ -67,6 +67,7 @@ public:
       pushOp(":");
       pushSpace();
       field.type->accept(*this);
+      pushOp(";");
       pushNewline();
     }
     --indent;

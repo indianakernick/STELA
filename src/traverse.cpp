@@ -166,9 +166,11 @@ public:
     const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
     if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
       if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
-        if (bnt.validOp(as.oper, builtinLeft, builtinRight)) {
+        if (validOp(as.oper, builtinLeft, builtinRight)) {
           if (left.mut == sym::ValueMut::var) {
             return;
+          } else {
+            log.error(as.loc) << "Left side of compound assignment must be mutable" << fatal;
           }
         }
       }
@@ -178,7 +180,7 @@ public:
   void visit(ast::IncrDecr &as) override {
     const sym::ExprType etype = getExprType(man, log, bnt, as.expr.get());
     if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
-      if (bnt.validIncr(as.incr, builtin)) {
+      if (validIncr(builtin)) {
         return;
       }
     }
