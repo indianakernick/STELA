@@ -8,6 +8,7 @@
 
 #include "format.hpp"
 
+#include "operator name.hpp"
 #include "syntax analysis.hpp"
 
 using namespace stela;
@@ -76,59 +77,12 @@ public:
   void visit(ast::BinaryExpr &bin) override {
     bin.left->accept(*this);
     pushSpace();
-    switch (bin.oper) {
-      case ast::BinOp::bool_or:
-        pushOp("||"); break;
-      case ast::BinOp::bool_and:
-        pushOp("&&"); break;
-      case ast::BinOp::bit_or:
-        pushOp("|"); break;
-      case ast::BinOp::bit_xor:
-        pushOp("^"); break;
-      case ast::BinOp::bit_and:
-        pushOp("&"); break;
-      case ast::BinOp::eq:
-        pushOp("=="); break;
-      case ast::BinOp::ne:
-        pushOp("!="); break;
-      case ast::BinOp::lt:
-        pushOp("<"); break;
-      case ast::BinOp::le:
-        pushOp("<="); break;
-      case ast::BinOp::gt:
-        pushOp(">"); break;
-      case ast::BinOp::ge:
-        pushOp(">="); break;
-      case ast::BinOp::bit_shl:
-        pushOp("<<"); break;
-      case ast::BinOp::bit_shr:
-        pushOp(">>"); break;
-      case ast::BinOp::add:
-        pushOp("+"); break;
-      case ast::BinOp::sub:
-        pushOp("-"); break;
-      case ast::BinOp::mul:
-        pushOp("*"); break;
-      case ast::BinOp::div:
-        pushOp("/"); break;
-      case ast::BinOp::mod:
-        pushOp("%"); break;
-      case ast::BinOp::pow:
-        pushOp("**"); break;
-    }
+    pushOp(opName(bin.oper));
     pushSpace();
     bin.right->accept(*this);
   }
   void visit(ast::UnaryExpr &un) override {
-    switch (un.oper) {
-      case ast::UnOp::neg:
-        pushOp("-"); break;
-      case ast::UnOp::bool_not:
-        pushOp("!"); break;
-      case ast::UnOp::bit_not:
-        pushOp("~"); break;
-      default: assert(false);
-    }
+    pushOp(opName(un.oper));
     un.expr->accept(*this);
   }
   void visit(ast::FuncCall &call) override {
@@ -318,30 +272,7 @@ public:
   void visit(ast::CompAssign &as) override {
     as.left->accept(*this);
     pushSpace();
-    switch (as.oper) {
-      case ast::AssignOp::add:
-        pushOp("+="); break;
-      case ast::AssignOp::sub:
-        pushOp("-="); break;
-      case ast::AssignOp::mul:
-        pushOp("*="); break;
-      case ast::AssignOp::div:
-        pushOp("/="); break;
-      case ast::AssignOp::mod:
-        pushOp("%="); break;
-      case ast::AssignOp::pow:
-        pushOp("**="); break;
-      case ast::AssignOp::bit_or:
-        pushOp("|="); break;
-      case ast::AssignOp::bit_xor:
-        pushOp("^="); break;
-      case ast::AssignOp::bit_and:
-        pushOp("&="); break;
-      case ast::AssignOp::bit_shl:
-        pushOp("<<="); break;
-      case ast::AssignOp::bit_shr:
-        pushOp(">>="); break;
-    }
+    pushOp(opName(as.oper));
     pushSpace();
     as.right->accept(*this);
     pushOp(";");
