@@ -108,18 +108,6 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
 
-  TEST(Sym - Undefined, {
-    const char *source = R"(
-      func myFunction(i: Number) {
-        
-      }
-      func myFunction(i: Int) {
-        
-      }
-    )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
-  });
-
   TEST(Func - Overloading, {
     const char *source = R"(
       func myFunction(n: Float) {
@@ -130,6 +118,31 @@ TEST_GROUP(Semantics, {
       }
     )";
     createSym(source, log);
+  });
+  
+  TEST(Func - Discarded return, {
+    const char *source = R"(
+      func myFunction() -> Int {
+        return 5;
+      }
+    
+      func main() {
+        myFunction();
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Sym - Undefined, {
+    const char *source = R"(
+      func myFunction(i: Number) {
+        
+      }
+      func myFunction(i: Int) {
+        
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Sym - Colliding type and func, {

@@ -77,6 +77,7 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   
   if (auto *call = dynamic_cast<ast::FuncCall *>(left.get())) {
     auto assign = std::make_unique<ast::CallAssign>();
+    assign->loc = call->loc;
     assign->call = std::move(*call);
     return assign;
   }
