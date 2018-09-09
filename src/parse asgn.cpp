@@ -82,5 +82,5 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
     return assign;
   }
   
-  return nullptr;
+  tok.log().error(left->loc) << "Expression used outside of assignment or function call" << fatal;
 }

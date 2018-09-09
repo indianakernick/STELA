@@ -53,15 +53,17 @@ func justPop(stack: inout IntStack) {
   }
 }
 
-let less = func(a: Int, b: Int) {
+let less = func(a: Int, b: Int) -> Bool {
   return a < b;
 };
 
-func isEqual(a: Int, b: Int) {
+func isEqual(a: Int, b: Int) -> Bool {
   return a == b;
 }
 
 let equal = isEqual;
+
+let ray = ['r', 'a', 'y'];
 
 func sort(array: [Int], pred: func(Int, Int)->Bool) {
   // sorting...
@@ -77,7 +79,7 @@ func ifs() {
   switch (1) {}
 
   if (expr) {
-    var dummy = (5 ? 'e' : 'f');
+    var dummy: Char = (5 ? 'e' : 'f');
   }
 
   if (expr) {
@@ -114,7 +116,7 @@ func ifs() {
     thing++;
     thing += ~yeah;
   }
-  for (; false; ) {
+  for (; false && true; ) {
     thing++;
     thing += ~yeah;
   }

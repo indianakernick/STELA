@@ -272,9 +272,11 @@ struct FuncParam final : Declaration {
   TypePtr type;
   
   // visitor disabled for FuncParam
+  /* LCOV_EXCL_START */
   void accept(Visitor &) override {
     assert(false);
   }
+  /* LCOV_EXCL_END */
 };
 using FuncParams = std::vector<FuncParam>;
 using Receiver = std::experimental::optional<FuncParam>;

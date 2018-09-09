@@ -644,4 +644,92 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
+  
+  TEST(Expr - CompAssign to const, {
+    const char *source = R"(
+      func main() {
+        let constant = 0;
+        constant += 4;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - CompAssign bitwise float, {
+    const char *source = R"(
+      func main() {
+        let float = 2.0;
+        float |= 4.0;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Increment struct, {
+    const char *source = R"(
+      func main() {
+        var strut: struct{};
+        strut++;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Assign diff types, {
+    const char *source = R"(
+      func main() {
+        var num = 5;
+        var str = "5";
+        num = str;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Unary operators, {
+    const char *source = R"(
+      func main() {
+        let test0 = -(5);
+        let test1 = -(5.0);
+        let test2 = -('5');
+        let test3 = ~(5);
+        let test4 = !(false);
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Bitwise ops, {
+    const char *source = R"(
+      func main() {
+        let five = 5;
+        let ten = five << 1;
+        let two = ten & 2;
+        let t = true;
+        let false0 = ten < two;
+        let false1 = t && false0;
+      }
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Add float int, {
+    const char *source = R"(
+      func main() {
+        let f = 3.0;
+        let i = 3;
+        let sum = f + i;
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Bitwise not float, {
+    const char *source = R"(
+      func main() {
+        let test = ~(3.0);
+      }
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

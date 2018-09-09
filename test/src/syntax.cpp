@@ -436,6 +436,17 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
+  TEST(Switch - no case, {
+    const char *source = R"(
+      func dummy() {
+        switch (expr) {
+          break;
+        }
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Decl - Var and Let, {
     const char *source = R"(
       func dummy() {
@@ -1068,6 +1079,24 @@ TEST_GROUP(Syntax, {
           IS_ID(gt->left, "b");
           IS_ID(gt->right, "c");
         IS_ID(ge->right, "d");
+  });
+  
+  TEST(Expr - Result unused, {
+    const char *source = R"(
+      func dummy() {
+        a.b.c;
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
+  TEST(Expr - unary +, {
+    const char *source = R"(
+      func dummy() {
+        let a = +;
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Factorial, {
