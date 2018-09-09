@@ -14,11 +14,13 @@
 #include "semantics.hpp"
 
 int main() {
-  const int failures = !testLexer() + !testSyntax() + !testSemantics() + !testFormat();
+  const int failures = !testFormat() + !testLexer() + !testSyntax() + !testSemantics();
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
+  } else if (failures == 1) {
+    std::cout << "1 TEST FAILED!\n";
   } else {
-    std::cout << "SOME TESTS FAILED!\n";
+    std::cout << failures << " TESTS FAILED!\n";
   }
   return failures;
 }

@@ -39,22 +39,6 @@ sym::Scope *parentScope(sym::Scope *const scope) {
   }
 }
 
-sym::ValueMut refToMut(const ast::ParamRef ref) {
-  if (ref == ast::ParamRef::inout) {
-    return sym::ValueMut::var;
-  } else {
-    return sym::ValueMut::let;
-  }
-}
-
-sym::ValueRef refToRef(const ast::ParamRef ref) {
-  if (ref == ast::ParamRef::inout) {
-    return sym::ValueRef::ref;
-  } else {
-    return sym::ValueRef::val;
-  }
-}
-
 }
 
 NameLookup::NameLookup(sym::Scope *scope, Log &log)
@@ -84,28 +68,12 @@ ast::Type *NameLookup::lookupConcreteType(ast::Type *type) const {
   }
 }
 
-ast::BuiltinType *NameLookup::lookupBuiltinType(ast::Type *type) const {
-  return dynamic_cast<ast::BuiltinType *>(lookupConcreteType(type));
-}
-
-void NameLookup::validateType(ast::Type *type) const {
+ast::Type *NameLookup::validateType(ast::Type *type) const {
   ast::Type *concrete = lookupConcreteType(type);
-  if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    std::vector<std::pair<std::string_view, Loc>> names;
-    names.reserve(strut->fields.size());
-    for (const ast::Field &field : strut->fields) {
-      names.push_back({field.name, field.loc});
-    }
-    std::sort(names.begin(), names.end(), [] (auto a, auto b) {
-      return a.first < b.first;
-    });
-    const auto dup = std::adjacent_find(names.cbegin(), names.cend(), [] (auto a, auto b) {
-      return a.first == b.first;
-    });
-    if (dup != names.cend()) {
-      log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
-    }
+  if (auto *strut = dynamic_cast<ast::StructType *>(type)) {
+    validateStruct(strut);
   }
+  return concrete;
 }
 
 ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) const {
@@ -124,32 +92,21 @@ ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) 
   }
 }
 
-namespace {
-
-sym::ExprType convert(const ast::FuncParam &param) {
-  return {
-    param.type.get(),
-    refToMut(param.ref),
-    refToRef(param.ref)
-  };
-}
-
-}
-
-sym::FuncParams stela::convertParams(
-  const std::experimental::optional<ast::FuncParam> &receiver,
-  const ast::FuncParams &params
-) {
-  sym::FuncParams symParams;
-  if (receiver) {
-    symParams.push_back(convert(*receiver));
-  } else {
-    symParams.push_back(sym::null_type);
+void NameLookup::validateStruct(ast::StructType *strut) const {
+  std::vector<std::pair<std::string_view, Loc>> names;
+  names.reserve(strut->fields.size());
+  for (const ast::Field &field : strut->fields) {
+    names.push_back({field.name, field.loc});
   }
-  for (const ast::FuncParam &param : params) {
-    symParams.push_back(convert(param));
+  std::sort(names.begin(), names.end(), [] (auto a, auto b) {
+    return a.first < b.first;
+  });
+  const auto dup = std::adjacent_find(names.cbegin(), names.cend(), [] (auto a, auto b) {
+    return a.first == b.first;
+  });
+  if (dup != names.cend()) {
+    log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
   }
-  return symParams;
 }
 
 ExprLookup::ExprLookup(sym::Scope *const scope, Log &log)

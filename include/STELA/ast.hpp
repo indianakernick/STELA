@@ -276,10 +276,11 @@ struct FuncParam final : Declaration {
   }
 };
 using FuncParams = std::vector<FuncParam>;
+using Receiver = std::experimental::optional<FuncParam>;
 
 struct Func final : Declaration {
   Name name;
-  std::experimental::optional<FuncParam> receiver;
+  Receiver receiver;
   FuncParams params;
   TypePtr ret;
   Block body;

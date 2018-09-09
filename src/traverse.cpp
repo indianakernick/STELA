@@ -164,8 +164,8 @@ public:
   void visit(ast::CompAssign &as) override {
     const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
     const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
-    if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
-      if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
+    if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
+      if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
         if (validOp(as.oper, builtinLeft, builtinRight)) {
           if (left.mut == sym::ValueMut::var) {
             return;
@@ -179,7 +179,7 @@ public:
   }
   void visit(ast::IncrDecr &as) override {
     const sym::ExprType etype = getExprType(man, log, bnt, as.expr.get());
-    if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
+    if (auto *builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
       if (validIncr(builtin)) {
         return;
       }

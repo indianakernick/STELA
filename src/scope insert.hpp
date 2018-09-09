@@ -41,7 +41,7 @@ public:
 private:
   std::vector<sym::Scope *> stack;
   Log &log;
-  NameLookup lkp;
+  NameLookup tlk;
 };
 
 }

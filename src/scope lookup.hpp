@@ -16,11 +16,6 @@
 
 namespace stela {
 
-sym::FuncParams convertParams(
-  const std::experimental::optional<ast::FuncParam> &,
-  const ast::FuncParams &
-);
-
 class NameLookup {
 public:
   NameLookup(sym::Scope *, Log &);
@@ -29,14 +24,19 @@ public:
   ast::TypeAlias *lookupType(ast::NamespacedType &) const;
   
   ast::Type *lookupConcreteType(ast::Type *) const;
-  ast::BuiltinType *lookupBuiltinType(ast::Type *) const;
-  void validateType(ast::Type *) const;
+  ast::Type *validateType(ast::Type *) const;
+  
+  template <typename Type>
+  Type *lookupConcrete(ast::Type *type) const {
+    return dynamic_cast<Type *>(lookupConcreteType(type));
+  }
 
 private:
   sym::Scope *scope;
   Log &log;
   
   ast::TypeAlias *lookupType(sym::Scope *, ast::NamedType &) const;
+  void validateStruct(ast::StructType *) const;
 };
 
 class ExprLookup {

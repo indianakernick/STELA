@@ -34,6 +34,48 @@ auto makeParam(const sym::ExprType &etype, const ast::FuncParam &param) {
   return paramSym;
 }
 
+sym::ValueMut refToMut(const ast::ParamRef ref) {
+  if (ref == ast::ParamRef::inout) {
+    return sym::ValueMut::var;
+  } else {
+    return sym::ValueMut::let;
+  }
+}
+
+sym::ValueRef refToRef(const ast::ParamRef ref) {
+  if (ref == ast::ParamRef::inout) {
+    return sym::ValueRef::ref;
+  } else {
+    return sym::ValueRef::val;
+  }
+}
+
+sym::ExprType convert(const NameLookup &tlk, const ast::FuncParam &param) {
+  tlk.validateType(param.type.get());
+  return {
+    param.type.get(),
+    refToMut(param.ref),
+    refToRef(param.ref)
+  };
+}
+
+sym::FuncParams convertParams(
+  const NameLookup &tlk,
+  const ast::Receiver &receiver,
+  const ast::FuncParams &params
+) {
+  sym::FuncParams symParams;
+  if (receiver) {
+    symParams.push_back(convert(tlk, *receiver));
+  } else {
+    symParams.push_back(sym::null_type);
+  }
+  for (const ast::FuncParam &param : params) {
+    symParams.push_back(convert(tlk, param));
+  }
+  return symParams;
+}
+
 }
 
 void InserterManager::insert(const sym::Name &name, sym::SymbolPtr symbol) {
@@ -48,7 +90,16 @@ void InserterManager::insert(const sym::Name &name, sym::SymbolPtr symbol) {
 
 sym::Func *InserterManager::insert(const ast::Func &func) {
   sym::FuncPtr funcSym = makeFunc(func.loc);
-  funcSym->params = convertParams(func.receiver, func.params);
+  if (func.receiver) {
+    if (auto *strut = tlk.lookupConcrete<ast::StructType>(func.receiver->type.get())) {
+      for (const ast::Field &field : strut->fields) {
+        if (field.name == func.name) {
+          log.error(func.loc) << "Colliding function and field \"" << func.name << "\"" << fatal;
+        }
+      }
+    }
+  }
+  funcSym->params = convertParams(tlk, func.receiver, func.params);
   funcSym->ret = retType(func);
   funcSym->node = const_cast<ast::Func *>(&func);
   const auto [beg, end] = scope()->table.equal_range(sym::Name(func.name));
@@ -56,7 +107,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
     sym::Symbol *const symbol = s->second.get();
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
     if (dupFunc) {
-      if (sameParams(lkp, dupFunc->params, funcSym->params)) {
+      if (sameParams(tlk, dupFunc->params, funcSym->params)) {
         log.error(funcSym->loc) << "Redefinition of function \"" << func.name
           << "\" previously declared at " << symbol->loc << fatal;
       }
@@ -88,7 +139,7 @@ void InserterManager::enterFuncScope(sym::Func *funcSym, const ast::Func &func) 
 }
 
 InserterManager::InserterManager(sym::Scope *scope, Log &log)
-  : log{log}, lkp{scope, log} {
+  : log{log}, tlk{scope, log} {
   push(scope);
 }
 

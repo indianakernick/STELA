@@ -25,8 +25,8 @@ public:
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
     const sym::ExprType right = visitValueExpr(bin.right.get());
-    if (auto *builtinLeft = tlk.lookupBuiltinType(left.type)) {
-      if (auto *builtinRight = tlk.lookupBuiltinType(right.type)) {
+    if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
+      if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
         if (auto *retType = validOp(bnt, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
           retExpr.type = retType;
@@ -41,7 +41,7 @@ public:
   }
   void visit(ast::UnaryExpr &un) override {
     const sym::ExprType etype = visitValueExpr(un.expr.get());
-    if (auto *builtin = tlk.lookupBuiltinType(etype.type)) {
+    if (auto *builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
       if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
         retExpr.type = etype.type;
