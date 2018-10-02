@@ -14,7 +14,7 @@
 #include "semantics.hpp"
 
 int main() {
-  const int failures = /*testFormat() +*/ testLexer() + testSyntax() + testSemantics();
+  const int failures = testFormat() + testLexer() + testSyntax() + testSemantics();
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
   } else if (failures == 1) {
