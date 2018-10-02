@@ -32,6 +32,13 @@ matrix:
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test"]
+        packages: ["g++-8"]
+    env: COMPILER=g++-8
+  - os: linux
+    compiler: gcc
+    addons:
+      apt:
+        sources: ["ubuntu-toolchain-r-test"]
         packages: ["g++-7"]
     env:
       - COMPILER=g++-7
