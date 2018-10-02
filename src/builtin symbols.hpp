@@ -14,32 +14,23 @@
 
 namespace stela {
 
-// When are sized integers useful?
-// Compatability with C++
-// Writing fast code
-// ...
-
-// char
 // bool
-// real
-// int
 // byte
+// char
+// real
+// sint
 // uint
 
 struct Builtins {
   ast::BuiltinType *Bool;
+  ast::BuiltinType *Byte;
   ast::BuiltinType *Char;
-  ast::BuiltinType *Float;
-  ast::BuiltinType *Double;
-  ast::BuiltinType *Int8;
-  ast::BuiltinType *Int16;
-  ast::BuiltinType *Int32;
-  ast::BuiltinType *Int64;
-  ast::BuiltinType *UInt8;
-  ast::BuiltinType *UInt16;
-  ast::BuiltinType *UInt32;
-  ast::BuiltinType *UInt64;
-  ast::BuiltinType *String;
+  ast::BuiltinType *Real;
+  ast::BuiltinType *Sint;
+  ast::BuiltinType *Uint;
+  
+  // Alias of char[]
+  std::unique_ptr<ast::ArrayType> string;
 };
 
 bool validIncr(ast::BuiltinType *);

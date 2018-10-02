@@ -76,7 +76,7 @@ bool parseIdent(Token &token, Utils::ParseString &str) {
 }
 
 bool parseNumber(Token &token, Utils::ParseString &str, Log &log) {
-  const size_t numberChars = validNumberLiteral(str.view(), log);
+  const size_t numberChars = validNumberLiteral(str.view(), token.loc, log);
   if (numberChars == 0) {
     return false;
   } else {

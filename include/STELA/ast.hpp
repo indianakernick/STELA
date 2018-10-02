@@ -58,18 +58,11 @@ struct BuiltinType final : Type {
   enum Enum {
     // builtin symbols.cpp depends on the order
     Bool,
+    Byte,
     Char,
-    Float,
-    Double,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    UInt8,
-    UInt16,
-    UInt32,
-    UInt64,
-    String
+    Real,
+    Sint,
+    Uint
   } value;
 
   void accept(Visitor &) override;

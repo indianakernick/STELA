@@ -170,9 +170,8 @@ func anotherDummy(dir: Dir) {
     const std::string html = stela::htmlFormat(tokens, styles);
     ASSERT_FALSE(html.empty());
     std::ofstream file("default.html", std::ios::ate);
-    if (file.is_open()) {
-      file << html;
-    }
+    ASSERT_TRUE(file.is_open());
+    file << html;
   });
   
   TEST(HTML non-default styles, {

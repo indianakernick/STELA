@@ -8,65 +8,216 @@
 
 #include "number literal.hpp"
 
+#include <limits>
 #include <cassert>
+
+using namespace stela;
 
 namespace {
 
+// OH FOR FUCK SAKE! I'VE BEEN WAITING FOR STD::FROM_CHARS FOR SO LONG!
+// @TODO refactor this when we get std::from_chars
+
+struct from_chars_result {
+  const char *ptr;
+  bool err;
+};
+
 template <typename Number>
-size_t valid(const std::string_view str, char *const end, const Number num) {
-  if (errno != ERANGE && !(str.data() == end && num == Number{})) {
-    if (end - str.data() <= static_cast<ptrdiff_t>(str.size())) {
-      return end - str.data();
+from_chars_result from_chars(const char *first, const char *last, Number &number) {
+  char *end;
+  errno = 0;
+  std::string nullTerm(first, std::min(32l, last - first));
+  if constexpr (std::is_floating_point_v<Number>) {
+    const long double ld = std::strtold(nullTerm.c_str(), &end);
+    if (errno != 0 || (end == nullTerm.c_str() && ld == 0.0l)) {
+      return {first, true};
+    }
+    using Limits = std::numeric_limits<Number>;
+    if (ld < static_cast<long double>(Limits::lowest()) || ld > static_cast<long double>(Limits::max())) {
+      return {first, true};
+    }
+    number = static_cast<Number>(ld);
+    return {first + (end - nullTerm.c_str()), false};
+  } else if constexpr (std::is_signed_v<Number>) {
+    const long long ll = std::strtoll(nullTerm.c_str(), &end, 0);
+    if (errno != 0 || (end == nullTerm.c_str() && ll == 0)) {
+      return {first, true};
+    }
+    using Limits = std::numeric_limits<Number>;
+    if (ll < static_cast<long long>(Limits::lowest()) || ll > static_cast<long long>(Limits::max())) {
+      return {first, true};
+    }
+    number = static_cast<Number>(ll);
+    return {first + (end - nullTerm.c_str()), false};
+  } else if constexpr (std::is_unsigned_v<Number>) {
+    const unsigned long long ull = std::strtoull(nullTerm.c_str(), &end, 0);
+    if (errno != 0 || (end == nullTerm.c_str() && ull == 0)) {
+      return {first, true};
+    }
+    using Limits = std::numeric_limits<Number>;
+    if (ull > static_cast<unsigned long long>(Limits::max())) {
+      return {first, true};
+    }
+    number = static_cast<Number>(ull);
+    return {first + (end - nullTerm.c_str()), false};
+  }
+}
+
+template <typename Dst, typename Src>
+bool inRange(const Src num) {
+  using Limits = std::numeric_limits<Dst>;
+  return static_cast<Src>(Limits::lowest()) <= num &&
+         num <= static_cast<Src>(Limits::max()) &&
+         num == static_cast<Src>(static_cast<Dst>(num));
+}
+
+bool eqEither(const char value, const char a, const char b) {
+  return value == a || value == b;
+}
+
+template <typename Number>
+bool hasValidSuffix(const char suffix, const Number num, const Loc loc, Log &log) {
+  if (eqEither(suffix, 'b', 'B')) {
+    if (inRange<Byte>(num)) {
+      return true;
+    } else {
+      log.error(loc) << "Number literal cannot be represented as byte" << fatal;
     }
   }
+  
+  if (eqEither(suffix, 'c', 'C')) {
+    if (inRange<Char>(num)) {
+      return true;
+    } else {
+      log.error(loc) << "Number literal cannot be represented as char" << fatal;
+    }
+  }
+  
+  if (eqEither(suffix, 'r', 'R')) {
+    if (inRange<Real>(num)) {
+      return true;
+    } else {
+      log.error(loc) << "Number literal cannot be represented as real" << fatal;
+    }
+  }
+  
+  if (eqEither(suffix, 's', 'S')) {
+    if (inRange<Sint>(num)) {
+      return true;
+    } else {
+      log.error(loc) << "Number literal cannot be represented as sint" << fatal;
+    }
+  }
+  
+  if (eqEither(suffix, 'u', 'U')) {
+    if (inRange<Uint>(num)) {
+      return true;
+    } else {
+      log.error(loc) << "Number literal cannot be represented as uint" << fatal;
+    }
+  }
+  
+  return false;
+}
+
+}
+
+size_t stela::validNumberLiteral(const std::string_view str, const Loc loc, Log &log) {
+  assert(!str.empty());
+  
+  // real, uint, sint
+  from_chars_result res;
+  
+  Real real;
+  res = from_chars(str.cbegin(), str.cend(), real);
+  if (!res.err) {
+    const size_t size = res.ptr - str.cbegin();
+    if (hasValidSuffix(*res.ptr, real, loc, log)) {
+      return size + 1;
+    }
+    return size;
+  }
+  
+  Uint uint;
+  res = from_chars(str.cbegin(), str.cend(), uint);
+  if (!res.err) {
+    const size_t size = res.ptr - str.cbegin();
+    if (hasValidSuffix(*res.ptr, uint, loc, log)) {
+      return size + 1;
+    }
+    return size;
+  }
+  
+  Sint sint;
+  res = from_chars(str.cbegin(), str.cend(), sint);
+  if (!res.err) {
+    const size_t size = res.ptr - str.cbegin();
+    if (hasValidSuffix(*res.ptr, sint, loc, log)) {
+      return size + 1;
+    }
+    return size;
+  }
+  
   return 0;
 }
 
-}
-
-size_t stela::validNumberLiteral(const std::string_view str, Log &) {
-  // @TODO take a more manual approach to perhaps get better errors when we
-  // encounter an invalid literal
-
-  // check double
-  // then check int64
-  // then check uint64
-  
-  char *end;
-  errno = 0;
-  const auto d = std::strtod(str.data(), &end);
-  if (const size_t size = valid(str, end, d)) {
-    return size;
-  }
-  errno = 0;
-  const auto ll = std::strtoll(str.data(), &end, 0);
-  if (const size_t size = valid(str, end, ll)) {
-    return size;
-  }
-  errno = 0;
-  const auto ull = std::strtoull(str.data(), &end, 0);
-  return valid(str, end, ull);
-}
-
 stela::NumberVariant stela::parseNumberLiteral(const std::string_view str, Log &) {
-  char *end;
-  errno = 0;
-  const auto ll = std::strtoll(str.data(), &end, 0);
-  if (valid(str, end, ll) == str.size()) {
-    return NumberVariant{static_cast<int64_t>(ll)};
+  assert(!str.empty());
+  
+  if (eqEither(str.back(), 'b', 'B')) {
+    Byte byte;
+    from_chars(str.cbegin(), str.cend(), byte);
+    return byte;
   }
-  errno = 0;
-  const auto ull = std::strtoull(str.data(), &end, 0);
-  if (valid(str, end, ull) == str.size()) {
-    return NumberVariant{static_cast<uint64_t>(ull)};
+  
+  if (eqEither(str.back(), 'c', 'C')) {
+    Char ch;
+    from_chars(str.cbegin(), str.cend(), ch);
+    return ch;
   }
-  errno = 0;
-  const auto d = std::strtod(str.data(), &end);
-  if (valid(str, end, d) == str.size()) {
-    return NumberVariant{d};
+  
+  if (eqEither(str.back(), 'r', 'R')) {
+    Real real;
+    from_chars(str.cbegin(), str.cend(), real);
+    return real;
   }
+  
+  if (eqEither(str.back(), 's', 'S')) {
+    Sint sint;
+    from_chars(str.cbegin(), str.cend(), sint);
+    return sint;
+  }
+  
+  if (eqEither(str.back(), 'u', 'U')) {
+    Uint uint;
+    from_chars(str.cbegin(), str.cend(), uint);
+    return uint;
+  }
+  
+  // sint, uint, real
+  from_chars_result res;
+  
+  Sint sint;
+  res = from_chars(str.cbegin(), str.cend(), sint);
+  if (res.ptr == str.cend()) {
+    return sint;
+  }
+  
+  Uint uint;
+  res = from_chars(str.cbegin(), str.cend(), uint);
+  if (res.ptr == str.cend()) {
+    return uint;
+  }
+  
+  Real real;
+  res = from_chars(str.cbegin(), str.cend(), real);
+  if (res.ptr == str.cend()) {
+    return real;
+  }
+  
   /* LCOV_EXCL_START */
   assert(false);
-  return NumberVariant{0.0};
+  return NumberVariant{};
   /* LCOV_EXCL_END */
 }

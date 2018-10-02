@@ -6,9 +6,9 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef format_hpp
-#define format_hpp
+#ifndef test_format_hpp
+#define test_format_hpp
 
-bool testFormat();
+int testFormat();
 
 #endif

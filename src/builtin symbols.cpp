@@ -47,30 +47,19 @@ void insertTypes(sym::Table &table, ast::Decls &decls, Builtins &t) {
   #define INSERT(TYPE)                                                          \
     t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, #TYPE);
   
-  INSERT(Char);
   INSERT(Bool);
-  INSERT(Float);
-  INSERT(Double);
-  INSERT(String);
-  INSERT(Int8);
-  INSERT(Int16);
-  INSERT(Int32);
-  INSERT(Int64);
-  INSERT(UInt8);
-  INSERT(UInt16);
-  INSERT(UInt32);
-  INSERT(UInt64);
-  
-  auto alias = std::make_unique<ast::TypeAlias>();
-  alias->name = "Int";
-  alias->strong = false;
-  auto intName = std::make_unique<ast::NamedType>();
-  intName->name = "Int64";
-  alias->type = std::move(intName);
-  table.insert({sym::Name("Int"), makeSymbol(alias.get())});
-  decls.push_back(std::move(alias));
-  
+  INSERT(Byte);
+  INSERT(Char);
+  INSERT(Real);
+  INSERT(Sint);
+  INSERT(Uint);
+
   #undef INSERT
+  
+  auto charName = std::make_unique<ast::NamedType>();
+  charName->name = "Char";
+  t.string = std::make_unique<ast::ArrayType>();
+  t.string->elem = std::move(charName);
 }
 
 using TypeEnum = ast::BuiltinType::Enum;
@@ -80,11 +69,11 @@ bool isBoolType(const TypeEnum type) {
 }
 
 bool isBitwiseType(const TypeEnum type) {
-  return TypeEnum::Int8 <= type && type <= TypeEnum::UInt64;
+  return type == TypeEnum::Byte || type == TypeEnum::Uint;
 }
 
 bool isArithType(const TypeEnum type) {
-  return TypeEnum::Char <= type && type <= TypeEnum::UInt64;
+  return TypeEnum::Char <= type && type <= TypeEnum::Uint;
 }
 
 template <typename Enum>
@@ -165,10 +154,6 @@ ast::BuiltinType *stela::validOp(
   } else if (isOrderOp(op)) {
     return isArithType(left->value) ? bnt.Bool : nullptr;
   } else if (isArithOp(op)) {
-    // @TODO maybe remove this
-    if (op == ast::BinOp::add && left->value == TypeEnum::String) {
-      return left;
-    }
     return checkType(isArithType, left);
   } else {
     assert(false);
@@ -181,10 +166,6 @@ bool stela::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::Builtin
     return false;
   }
   if (isArithOp(op)) {
-    // @TODO maybe remove this
-    if (op == ast::AssignOp::add && left->value == TypeEnum::String) {
-      return true;
-    }
     return isArithType(left->value);
   } else if (isBitwiseOp(op)) {
     return isBitwiseType(left->value);

@@ -527,7 +527,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "INSTALL_DIR=/usr/local/include/STELA\nrm -dfR $INSTALL_DIR\nmkdir $INSTALL_DIR\ncp -RpX \"$PROJECT_DIR/include/STELA/\" $INSTALL_DIR";
+			shellScript = "INSTALL_DIR=/usr/local/include/STELA\nrm -dfR $INSTALL_DIR\nmkdir $INSTALL_DIR\ncp -RpX \"$PROJECT_DIR/include/STELA/\" $INSTALL_DIR\n";
 		};
 		45BBA43C20D7AFE9006108C1 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

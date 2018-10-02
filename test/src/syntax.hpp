@@ -6,9 +6,9 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef syntax_hpp
-#define syntax_hpp
+#ifndef test_syntax_hpp
+#define test_syntax_hpp
 
-bool testSyntax();
+int testSyntax();
 
 #endif

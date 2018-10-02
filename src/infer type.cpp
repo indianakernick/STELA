@@ -92,7 +92,7 @@ public:
   
   void visit(ast::StringLiteral &) override {
     sym::ExprType etype;
-    etype.type = bnt.String;
+    etype.type = bnt.string.get();
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
@@ -107,12 +107,16 @@ public:
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, log);
     sym::ExprType etype;
-    if (num.type == NumberVariant::Float) {
-      etype.type = bnt.Double;
-    } else if (num.type == NumberVariant::Int) {
-      etype.type = bnt.Int64;
-    } else if (num.type == NumberVariant::UInt) {
-      etype.type = bnt.UInt64;
+    if (std::holds_alternative<Byte>(num)) {
+      etype.type = bnt.Byte;
+    } else if (std::holds_alternative<Char>(num)) {
+      etype.type = bnt.Char;
+    } else if (std::holds_alternative<Real>(num)) {
+      etype.type = bnt.Real;
+    } else if (std::holds_alternative<Sint>(num)) {
+      etype.type = bnt.Sint;
+    } else if (std::holds_alternative<Uint>(num)) {
+      etype.type = bnt.Uint;
     }
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;

@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef log_counter_hpp
-#define log_counter_hpp
+#ifndef test_log_counter_hpp
+#define test_log_counter_hpp
 
 #include <STELA/log.hpp>
 

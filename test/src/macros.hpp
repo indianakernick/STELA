@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef macros_hpp
-#define macros_hpp
+#ifndef test_macros_hpp
+#define test_macros_hpp
 
 #include <vector>
 #include <iomanip>
@@ -101,26 +101,26 @@
   }
 
 #define TEST_GROUP(NAME, ...)                                                   \
-  bool test##NAME() {                                                           \
+  int test##NAME() {                                                            \
     std::cerr << "Testing " #NAME "\n";                                         \
     std::vector<std::pair<std::string_view, bool>> results;                     \
     { __VA_ARGS__ }                                                             \
     std::cerr << '\n';                                                          \
-    bool passedAll = true;                                                      \
+    int failures = 0;                                                           \
     for (const auto &pair : results) {                                          \
       std::cerr << std::left << std::setw(32) << pair.first;                    \
       if (pair.second) {                                                        \
         std::cerr << "PASSED\n";                                                \
       } else {                                                                  \
         std::cerr << "FAILED\n";                                                \
-        passedAll = false;                                                      \
+        ++failures;                                                             \
       }                                                                         \
     }                                                                           \
     std::cerr << '\n';                                                          \
-    if (passedAll) {                                                            \
+    if (failures == 0) {                                                        \
       std::cerr << #NAME " PASSED!\n\n";                                        \
     }                                                                           \
-    return passedAll;                                                           \
+    return failures;                                                            \
   }
 
 #endif

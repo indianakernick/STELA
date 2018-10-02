@@ -22,7 +22,7 @@ TEST_GROUP(Semantics, {
     const auto [symbols, ast] = createSym("", log);
     ASSERT_EQ(symbols.scopes.size(), 2);
     ASSERT_TRUE(ast.global.empty());
-    ASSERT_EQ(ast.builtin.size(), 14);
+    ASSERT_EQ(ast.builtin.size(), 6);
   });
   
   TEST(Func - Redef, {
@@ -39,10 +39,10 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Redef with params, {
     const char *source = R"(
-      func myFunction(i: Int, f: Float) {
+      func myFunction(i: Sint, f: Real) {
         
       }
-      func myFunction(i: Int, f: Float) {
+      func myFunction(i: Sint, f: Real) {
         
       }
     )";
@@ -51,11 +51,11 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Redef weak alias, {
     const char *source = R"(
-      type Number = Int;
+      type Number = Sint;
       func myFunction(i: Number) {
         
       }
-      func myFunction(i: Int) {
+      func myFunction(i: Sint) {
         
       }
     )";
@@ -64,14 +64,14 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Redef multi weak alias, {
     const char *source = R"(
-      type Integer = Int;
+      type Integer = Sint;
       type Number = Integer;
       type SpecialNumber = Number;
       type TheNumber = SpecialNumber;
       func myFunction(i: TheNumber) {
         
       }
-      func myFunction(i: Int) {
+      func myFunction(i: Sint) {
         
       }
     )";
@@ -80,7 +80,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Redef strong alias, {
     const char *source = R"(
-      type Integer = Int;
+      type Integer = Sint;
       type Number Integer;
       type SpecialNumber = Number;
       type TheNumber = SpecialNumber;
@@ -96,12 +96,12 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Overload strong alias, {
     const char *source = R"(
-      type Number Float;
-      type Real Float;
+      type Number Real;
+      type Float Real;
       func myFunction(i: Number) {
         
       }
-      func myFunction(i: Real) {
+      func myFunction(i: Float) {
         
       }
     )";
@@ -110,10 +110,10 @@ TEST_GROUP(Semantics, {
 
   TEST(Func - Overloading, {
     const char *source = R"(
-      func myFunction(n: Float) {
+      func myFunction(n: Real) {
         
       }
-      func myFunction(n: Int) {
+      func myFunction(n: Sint) {
         
       }
     )";
@@ -122,7 +122,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Func - Discarded return, {
     const char *source = R"(
-      func myFunction() -> Int {
+      func myFunction() -> Sint {
         return 5;
       }
     
@@ -138,7 +138,7 @@ TEST_GROUP(Semantics, {
       func myFunction(i: Number) {
         
       }
-      func myFunction(i: Int) {
+      func myFunction(i: Sint) {
         
       }
     )";
@@ -155,7 +155,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Var - Var type inference, {
     const char *source = R"(
-      var num = 5;
+      var integer = 5;
+      var alsoInteger: Sint = 5;
     )";
     const auto [symbols, ast] = createSym(source, log);
     /*ASSERT_EQ(symbols.scopes.size(), 2);
@@ -171,7 +172,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Var - Let type inference, {
     const char *source = R"(
-      let pi = 3.14;
+      let float = 3.14;
+      let alsoFloat: Real = 3.14;
     )";
     const auto [symbols, ast] = createSym(source, log);
     /*ASSERT_EQ(symbols.scopes.size(), 2);
@@ -187,8 +189,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Var - Big num type inference, {
     const char *source = R"(
-      let big = 18446744073709551615;
-      let neg = -9223372036854775807;
+      let big: Uint = 4294967295;
+      let neg: Sint = -2147483648;
     )";
     const auto [symbols, ast] = createSym(source, log);
     /*ASSERT_EQ(symbols.scopes.size(), 2);
@@ -204,33 +206,33 @@ TEST_GROUP(Semantics, {
   
   TEST(Var - exprs, {
     const char *source = R"(
-      let num: Int = 0;
-      //var f: (Float, inout String) -> [Double];
-      //var m: [{Float: Int}];
-      //let a: [Float] = [1.2, 3.4, 5.6];
+      let num: Sint = 0;
+      //var f: (Real, inout [Char]) -> [Real];
+      //var m: [{Real: Sint}];
+      //let a: [Real] = [1.2, 3.4, 5.6];
     )";
     createSym(source, log);
   });
   
   TEST(Var - Redefine var, {
     const char *source = R"(
-      var x: Int;
-      var x: Double;
+      var x: Sint;
+      var x: Real;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Var - Redefine let, {
     const char *source = R"(
-      let x: Int = 0;
-      let x: Double = 0.0;
+      let x: Sint = 0;
+      let x: Real = 0.0;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Var - Type mismatch, {
     const char *source = R"(
-      let x: Int = 2.5;
+      let x: Sint = 2.5;
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
@@ -245,11 +247,11 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Main, {
     const char *source = R"(
       type Vec struct {
-        x: Double;
-        y: Double;
+        x: Real;
+        y: Real;
       };
     
-      func newVec(x: Double, y: Double) -> Vec {
+      func newVec(x: Real, y: Real) -> Vec {
         var self: Vec;
         self.x = x;
         self.y = y;
@@ -263,7 +265,7 @@ TEST_GROUP(Semantics, {
         self.y += other.y;
       }
     
-      func (self: inout Vec) div(val: Double) {
+      func (self: inout Vec) div(val: Real) {
         self.x /= val;
         self.y /= val;
       }
@@ -277,8 +279,8 @@ TEST_GROUP(Semantics, {
     
       func main() {
         let middle: Vec = mid(origin, newVec(2.0, 4.0));
-        let two: Double = newVec(2.0, 4.0).x;
-        let four: Double = two + middle.y;
+        let two: Real = newVec(2.0, 4.0).x;
+        let four: Real = two + middle.y;
       }
     )";
     createSym(source, log);
@@ -287,23 +289,21 @@ TEST_GROUP(Semantics, {
   TEST(Struct - More, {
     const char *source = R"(
       type MyString struct {
-        s: String;
+        s: [Char];
       };
     
-      func append(string: inout String) {
-        string += " is still a string";
+      func change(string: inout [Char]) {
+        string = "still a string";
       }
     
-      // rename this function to appendImpl and it fails
-      // raname it to append and it succeeds
-      func append(mstr: inout MyString) {
-        append(mstr.s);
+      func change(mstr: inout MyString) {
+        change(mstr.s);
       }
     
       func main() {
         var thing: MyString;
-        thing.s = "A string";
-        append(thing);
+        thing.s = "a string";
+        change(thing);
       }
     )";
     createSym(source, log);
@@ -322,7 +322,7 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Colliding func field, {
     const char *source = R"(
       type MyStruct struct {
-        fn: Int;
+        fn: Sint;
       };
     
       func (self: MyStruct) fn() {}
@@ -333,8 +333,8 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Dup member, {
     const char *source = R"(
       type MyStruct struct {
-        m: Int;
-        m: Float;
+        m: Sint;
+        m: Real;
       };
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
@@ -343,7 +343,7 @@ TEST_GROUP(Semantics, {
   TEST(Struct - Access undef field, {
     const char *source = R"(
       type MyStruct struct {
-        ajax: Int;
+        ajax: Sint;
       };
     
       func oh_no() {
@@ -356,8 +356,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Swap literals, {
     const char *source = R"(
-      func swap(a: inout Int, b: inout Int) {
-        let temp: Int = a;
+      func swap(a: inout Sint, b: inout Sint) {
+        let temp: Sint = a;
         a = b;
         b = temp;
       }
@@ -425,7 +425,7 @@ TEST_GROUP(Semantics, {
   TEST(Returning an object, {
     const char *source = R"(
       type Deep struct {
-        x: Int;
+        x: Sint;
       };
       type Inner struct {
         deep: Deep;
@@ -440,7 +440,7 @@ TEST_GROUP(Semantics, {
     
       func main() {
         var outer: Outer;
-        let x: Int = outer.getInner().deep.x;
+        let x: Sint = outer.getInner().deep.x;
       }
     )";
     createSym(source, log);
@@ -692,7 +692,7 @@ TEST_GROUP(Semantics, {
         let test0 = -(5);
         let test1 = -(5.0);
         let test2 = -('5');
-        let test3 = ~(5);
+        let test3 = ~(5u);
         let test4 = !(false);
       }
     )";
@@ -702,9 +702,9 @@ TEST_GROUP(Semantics, {
   TEST(Expr - Bitwise ops, {
     const char *source = R"(
       func main() {
-        let five = 5;
-        let ten = five << 1;
-        let two = ten & 2;
+        let five = 5u;
+        let ten = five << 1u;
+        let two = ten & 2u;
         let t = true;
         let false0 = ten < two;
         let false1 = t && false0;
@@ -757,7 +757,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Expr - Access field on int, {
     const char *source = R"(
-      func integer() -> Int {
+      func integer() -> Sint {
         return 0;
       }
     
@@ -776,5 +776,25 @@ TEST_GROUP(Semantics, {
       }
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Number literals, {
+    const char *source = R"(
+      let n02: Sint = 2147483647;
+      let n03: Sint = -2147483648;
+      let n04: Real = -3000000000;
+      let n05: Uint = 4294967295;
+      let n06: Real = 5000000000;
+      let n07: Real = 3.14;
+      let n08: Real = 3e2;
+      let n09: Sint = 300;
+      let n10: Byte = 255b;
+      let n11: Char = 127c;
+      let n12: Char = -128c;
+      let n13: Real = 27r;
+      let n14: Sint = 3e2s;
+      let n15: Uint = 4e4u;
+    )";
+    createSym(source, log);
   });
 });

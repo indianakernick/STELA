@@ -6,9 +6,9 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef lexer_hpp
-#define lexer_hpp
+#ifndef test_lexer_hpp
+#define test_lexer_hpp
 
-bool testLexer();
+int testLexer();
 
 #endif

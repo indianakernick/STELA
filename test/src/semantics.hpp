@@ -6,9 +6,9 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef semantics_hpp
-#define semantics_hpp
+#ifndef test_semantics_hpp
+#define test_semantics_hpp
 
-bool testSemantics();
+int testSemantics();
 
 #endif

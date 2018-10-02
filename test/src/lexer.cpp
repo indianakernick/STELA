@@ -218,11 +218,11 @@ TEST_GROUP(Lexer, {
       // ints
       "0 1 2 -0 -1 -2 00 01 02 -00 -01 -02 0x0 0x1 0x2 -0x0 -0x1 -0x2\n"
       // uint64 max
-      "18446744073709551615 01777777777777777777777 0xFFFFFFFFFFFFFFFF\n"
+      "4294967295 037777777777 0xFFFFFFFF\n"
       // int64 max
-      "9223372036854775807 0777777777777777777777 0x7FFFFFFFFFFFFFFF\n"
+      "2147483647 017777777777 0x7FFFFFFF\n"
       // int64 min
-      "-9223372036854775808 -01000000000000000000000 -0x8000000000000000\n"
+      "-2147483648 -020000000000 -0x80000000\n"
       // floats
       "0.0 0.1 0.2  4.0 4.1 4.9  -0.0 -0.1 -0.2  1e4 1e+4 1e-4  -1e4 -1e+4 -1e-4\n"
       // hex floats
@@ -233,6 +233,26 @@ TEST_GROUP(Lexer, {
     for (const Token &tok : tokens) {
       ASSERT_EQ(tok.type, Token::Type::number);
     }
+  });
+  
+  TEST(Byte out of range, {
+    ASSERT_THROWS(lex("256b", log), FatalError);
+  });
+  
+  TEST(Char out of range, {
+    ASSERT_THROWS(lex("128c", log), FatalError);
+  });
+  
+  /*TEST(Real out of range, {
+    ASSERT_THROWS(lex("4.40282e+38r", log), FatalError);
+  });*/
+  
+  TEST(Sint out of range, {
+    ASSERT_THROWS(lex("2147483648s", log), FatalError);
+  });
+  
+  TEST(Uint out of range, {
+    ASSERT_THROWS(lex("4294967296u", log), FatalError);
   });
   
   TEST(Invalid token, {
