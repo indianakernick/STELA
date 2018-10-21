@@ -42,14 +42,14 @@ sym::Scope *parentScope(sym::Scope *const scope) {
 
 }
 
-NameLookup::NameLookup(sym::Scope *scope, Log &log)
-  : scope{scope}, log{log} {}
+NameLookup::NameLookup(ScopeMan &man, Log &log)
+  : man{man}, log{log} {}
 
 ast::TypeAlias *NameLookup::lookupType(ast::NamedType &type) const {
   if (type.definition) {
     return type.definition;
   } else {
-    return lookupType(scope, type);
+    return lookupType(man.cur(), type);
   }
 }
 
@@ -110,8 +110,8 @@ void NameLookup::validateStruct(ast::StructType *strut) const {
   }
 }
 
-ExprLookup::ExprLookup(sym::Scope *const scope, Log &log)
-  : scope{scope}, log{log}, etype{sym::null_type} {}
+ExprLookup::ExprLookup(ScopeMan &man, Log &log)
+  : man{man}, log{log}, etype{sym::null_type} {}
 
 void ExprLookup::call() {
   exprs.push_back({Expr::Type::call});
@@ -137,7 +137,7 @@ sym::Func *ExprLookup::lookupFun(
         log.error(loc) << "Calling \"" << key.name
           << "\" but it is not a function. " << symbol->loc << fatal;
       }
-      if (compatParams(NameLookup{scope, log}, func->params, key.params)) {
+      if (compatParams(NameLookup{man, log}, func->params, key.params)) {
         return referTo(func);
       }
     }
@@ -156,10 +156,10 @@ ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::Func
 
 ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
   if (memFunExpr(Expr::Type::expr)) {
-    return popCallPushRet(lookupFun(scope, funKey(popExpr(), params), loc));
+    return popCallPushRet(lookupFun(man.cur(), funKey(popExpr(), params), loc));
   }
   if (call(Expr::Type::free_fun)) {
-    return popCallPushRet(lookupFun(scope, funKey(sym::null_type, params), loc));
+    return popCallPushRet(lookupFun(man.cur(), funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
     log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
@@ -173,7 +173,7 @@ void ExprLookup::member(const sym::Name &name) {
 
 ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
-    NameLookup lkp{scope, log};
+    NameLookup lkp{man, log};
     ast::Type *type = lkp.lookupConcreteType(popExpr().type);
     const sym::Name name = popName();
     if (type == nullptr) {
@@ -211,7 +211,7 @@ sym::Symbol *ExprLookup::lookupIdent(
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
-  sym::Symbol *symbol = lookupIdent(scope, name, loc);
+  sym::Symbol *symbol = lookupIdent(man.cur(), name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     if (exprs.back().type != Expr::Type::call) {
       log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;

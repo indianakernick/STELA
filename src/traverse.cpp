@@ -22,8 +22,8 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan man, sym::Module &module, Symbols &syms, Log &log)
-    : man{man}, log{log}, ins{man.global(), log}, tlk{man.cur(), log}, module{module}, syms{syms} {}
+  Visitor(ScopeMan &man, sym::Module &module, Symbols &syms, Log &log)
+    : man{man}, log{log}, ins{man, log}, tlk{man, log}, module{module}, syms{syms} {}
   
   void visitExpr(const ast::ExprPtr &expr) {
     if (expr) {
@@ -39,21 +39,19 @@ public:
   }
   
   void visit(ast::Block &block) override {
-    ins.push(man.enterScope(sym::Scope::Type::block));
+    man.enterScope(sym::Scope::Type::block);
     for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
-    ins.pop();
     man.leaveScope();
   }
   void visit(ast::If &fi) override {
-    ins.push(man.enterScope(sym::Scope::Type::block));
+    man.enterScope(sym::Scope::Type::block);
     visitCond(fi.cond);
     fi.body->accept(*this);
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     }
-    ins.pop();
     man.leaveScope();
   }
   void visit(ast::Switch &swich) override {
@@ -71,9 +69,8 @@ public:
         }
         foundDef = true;
       }
-      ins.push(man.enterScope(sym::Scope::Type::flow));
+      man.enterScope(sym::Scope::Type::flow);
       cs.body->accept(*this);
-      ins.pop();
       man.leaveScope();
     }
   }
@@ -94,19 +91,17 @@ public:
     visitExpr(ret.expr);
   }
   void visit(ast::While &wile) override {
-    ins.push(man.enterScope(sym::Scope::Type::flow));
+    man.enterScope(sym::Scope::Type::flow);
     visitCond(wile.cond);
     wile.body->accept(*this);
-    ins.pop();
     man.leaveScope();
   }
   void visit(ast::For &four) override {
-    ins.push(man.enterScope(sym::Scope::Type::flow));
+    man.enterScope(sym::Scope::Type::flow);
     four.init->accept(*this);
     visitCond(four.cond);
     four.incr->accept(*this);
     four.body->accept(*this);
-    ins.pop();
     man.leaveScope();
   }
 
@@ -114,11 +109,9 @@ public:
     sym::Func *const funcSym = ins.insert(func);
     funcSym->scope = man.enterScope(sym::Scope::Type::func);
     ins.enterFuncScope(funcSym, func);
-    ins.push(funcSym->scope);
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);
     }
-    ins.pop();
     man.leaveScope();
   }
   ast::Type *objectType(
@@ -215,18 +208,9 @@ public:
   }
 
 private:
-  ScopeMan man;
+  ScopeMan &man;
   Log &log;
   InserterManager ins;
-  
-  
-  
-  
-  // THE SCOPE STORED IN NAME LOOKUP NEEDS TO BE UPDATED WHEN THE CURRENT SCOPE CHANGES
-  
-  
-  
-  
   NameLookup tlk;
   sym::Module &module;
   Symbols &syms;
@@ -234,7 +218,7 @@ private:
 
 }
 
-void stela::traverse(ScopeMan man, sym::Module &module, Symbols &syms, Log &log) {
+void stela::traverse(ScopeMan &man, sym::Module &module, Symbols &syms, Log &log) {
   Visitor visitor{man, module, syms, log};
   for (const ast::DeclPtr &decl : module.decls) {
     decl->accept(visitor);

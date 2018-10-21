@@ -79,12 +79,12 @@ sym::FuncParams convertParams(
 }
 
 void InserterManager::insert(const sym::Name &name, sym::SymbolPtr symbol) {
-  const auto iter = scope()->table.find(name);
-  if (iter != scope()->table.end()) {
+  const auto iter = man.cur()->table.find(name);
+  if (iter != man.cur()->table.end()) {
     log.error(symbol->loc) << "Redefinition of symbol \"" << name
       << "\" previously declared at " << iter->second->loc << fatal;
   } else {
-    scope()->table.insert({name, std::move(symbol)});
+    man.cur()->table.insert({name, std::move(symbol)});
   }
 }
 
@@ -102,7 +102,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
   funcSym->params = convertParams(tlk, func.receiver, func.params);
   funcSym->ret = retType(func);
   funcSym->node = const_cast<ast::Func *>(&func);
-  const auto [beg, end] = scope()->table.equal_range(sym::Name(func.name));
+  const auto [beg, end] = man.cur()->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
@@ -118,7 +118,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
     }
   }
   sym::Func *const ret = funcSym.get();
-  scope()->table.insert({sym::Name(func.name), std::move(funcSym)});
+  man.cur()->table.insert({sym::Name(func.name), std::move(funcSym)});
   return ret;
 }
 
@@ -138,22 +138,5 @@ void InserterManager::enterFuncScope(sym::Func *funcSym, const ast::Func &func) 
   }
 }
 
-InserterManager::InserterManager(sym::Scope *scope, Log &log)
-  : log{log}, tlk{scope, log} {
-  push(scope);
-}
-
-void InserterManager::push(sym::Scope *const scope) {
-  assert(scope);
-  stack.push_back(scope);
-}
-
-void InserterManager::pop() {
-  assert(!stack.empty());
-  stack.pop_back();
-}
-
-sym::Scope *InserterManager::scope() const {
-  assert(!stack.empty());
-  return stack.back();
-}
+InserterManager::InserterManager(ScopeMan &man, Log &log)
+  : log{log}, man{man}, tlk{man, log} {}

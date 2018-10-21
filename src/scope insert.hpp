@@ -18,7 +18,7 @@ namespace stela {
 
 class InserterManager {
 public:
-  InserterManager(sym::Scope *, Log &);
+  InserterManager(ScopeMan &, Log &);
   
   template <typename Symbol, typename AST_Node>
   Symbol *insert(const AST_Node &node) {
@@ -33,14 +33,10 @@ public:
   void insert(const sym::Name &, sym::SymbolPtr);
   sym::Func *insert(const ast::Func &);
   void enterFuncScope(sym::Func *, const ast::Func &);
-  
-  void push(sym::Scope *);
-  void pop();
-  sym::Scope *scope() const;
 
 private:
-  std::vector<sym::Scope *> stack;
   Log &log;
+  ScopeMan &man;
   NameLookup tlk;
 };
 

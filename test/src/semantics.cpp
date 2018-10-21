@@ -280,6 +280,16 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Sym - Type in func, {
+    const char *source = R"(
+      func fn() {
+        type Number = Real;
+        let n: Number = 4.3;
+      }
+    )";
+    createSym(source, log);
+  });
+  
   TEST(Var - Var type inference, {
     const char *source = R"(
       var integer = 5;

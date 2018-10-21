@@ -16,7 +16,7 @@
 
 namespace stela {
 
-void traverse(ScopeMan, sym::Module &, Symbols &, Log &);
+void traverse(ScopeMan &, sym::Module &, Symbols &, Log &);
 
 }
 

@@ -34,11 +34,9 @@ sym::Scope *ScopeMan::cur() const {
 }
 
 sym::Scope *ScopeMan::builtin() const {
-  assert(!scopes.empty());
-  assert(scopes[0]->type == sym::Scope::Type::ns);
-  assert(scopes[0]->parent);
-  assert(scopes[0]->parent->type == sym::Scope::Type::ns);
-  return scopes[0]->parent;
+  assert(global()->parent);
+  assert(global()->parent->type == sym::Scope::Type::ns);
+  return global()->parent;
 }
 
 sym::Scope *ScopeMan::global() const {

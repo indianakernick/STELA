@@ -15,6 +15,9 @@ namespace stela {
 
 class ScopeMan {
 public:
+  ScopeMan(ScopeMan &&) = default;
+  ScopeMan &operator=(ScopeMan &&) = default;
+  
   ScopeMan(sym::Scopes &, sym::Scope *);
   
   sym::Scope *enterScope(sym::Scope::Type);

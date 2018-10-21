@@ -20,7 +20,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(ScopeMan &man, Log &log, const sym::Builtins &btn)
-    : lkp{man.cur(), log}, tlk{man.cur(), log}, man{man}, log{log}, btn{btn} {}
+    : lkp{man, log}, tlk{man, log}, man{man}, log{log}, btn{btn} {}
 
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
