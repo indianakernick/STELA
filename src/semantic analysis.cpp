@@ -18,7 +18,7 @@ using namespace stela;
 
 Symbols stela::initModules(LogBuf &) {
   Symbols syms;
-  syms.modules.insert({"builtin", makeBuiltinModule(syms.builtins)});
+  syms.modules.insert({"$builtin", makeBuiltinModule(syms.builtins)});
   return syms;
 }
 

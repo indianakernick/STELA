@@ -457,8 +457,9 @@ public:
   /* LCOV_EXCL_END */
 };
 
-using Decls = std::vector<ast::DeclPtr>;
-using Types = std::vector<ast::TypePtr>;
+using Decls = std::vector<DeclPtr>;
+using Types = std::vector<TypePtr>;
+using Names = std::vector<Name>;
 
 }
 
@@ -467,7 +468,7 @@ namespace stela {
 struct AST {
   ast::Decls global;
   ast::Name name;
-  std::vector<ast::Name> imports;
+  ast::Names imports;
 };
 
 using ASTs = std::vector<AST>;

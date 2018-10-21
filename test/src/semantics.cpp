@@ -9,6 +9,7 @@
 #include "semantics.hpp"
 
 #include "macros.hpp"
+#include <STELA/modules.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
 
@@ -23,6 +24,13 @@ Symbols createSym(const std::string_view source, LogBuf &log) {
   return syms;
 }
 
+AST makeModuleAST(const ast::Name name, std::vector<ast::Name> &&imports) {
+  AST ast;
+  ast.name = name;
+  ast.imports = std::move(imports);
+  return ast;
+}
+
 TEST_GROUP(Semantics, {
   StreamLog log;
   log.pri(LogPri::warning);
@@ -31,7 +39,7 @@ TEST_GROUP(Semantics, {
     const Symbols syms = createSym("", log);
     ASSERT_EQ(syms.modules.size(), 2);
     
-    auto btn = syms.modules.find("builtin");
+    auto btn = syms.modules.find("$builtin");
     ASSERT_NE(btn, syms.modules.end());
     const sym::Module &builtin = btn->second;
     ASSERT_EQ(builtin.scopes.size(), 1);
@@ -44,6 +52,82 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(main.scopes.size(), 1);
     ASSERT_EQ(main.decls.size(), 0);
     ASSERT_EQ(main.types.size(), 0);
+  });
+  
+  TEST(Modules - Regular, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {"b", "c"}));
+    asts.push_back(makeModuleAST("b", {"d", "e"}));
+    asts.push_back(makeModuleAST("c", {}));
+    asts.push_back(makeModuleAST("d", {"c"}));
+    asts.push_back(makeModuleAST("e", {"d"}));
+    asts.push_back(makeModuleAST("f", {"d", "e"}));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    ASSERT_EQ(order.size(), 6);
+    ASSERT_EQ(order[0], 2); // c
+    ASSERT_EQ(order[1], 3); // d
+    ASSERT_EQ(order[2], 4); // e
+    ASSERT_EQ(order[3], 1); // b
+    ASSERT_EQ(order[4], 0); // a
+    ASSERT_EQ(order[5], 5); // f
+  });
+  
+  TEST(Modules - No imports, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {}));
+    asts.push_back(makeModuleAST("b", {}));
+    asts.push_back(makeModuleAST("c", {}));
+    asts.push_back(makeModuleAST("d", {}));
+    asts.push_back(makeModuleAST("e", {}));
+    asts.push_back(makeModuleAST("f", {}));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    ASSERT_EQ(order.size(), 6);
+    ASSERT_EQ(order[0], 0); // a
+    ASSERT_EQ(order[1], 1); // b
+    ASSERT_EQ(order[2], 2); // c
+    ASSERT_EQ(order[3], 3); // d
+    ASSERT_EQ(order[4], 4); // e
+    ASSERT_EQ(order[5], 5); // f
+  });
+  
+  TEST(Modules - Invalid import, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {}));
+    asts.push_back(makeModuleAST("b", {"aye"}));
+    ASSERT_THROWS(findModuleOrder(asts, log), FatalError);
+  });
+  
+  TEST(Modules - Cycle, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {"b"}));
+    asts.push_back(makeModuleAST("b", {"e"}));
+    asts.push_back(makeModuleAST("c", {"d"}));
+    asts.push_back(makeModuleAST("d", {"e"}));
+    asts.push_back(makeModuleAST("e", {"c"}));
+    ASSERT_THROWS(findModuleOrder(asts, log), FatalError);
+  });
+  
+  TEST(Modules - Self import, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {"a"}));
+    ASSERT_THROWS(findModuleOrder(asts, log), FatalError);
+  });
+  
+  TEST(Modules - None, {
+    ASSERT_TRUE(findModuleOrder({}, log).empty());
+  });
+  
+  TEST(Modules - Import external, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {"external_a", "b"}));
+    asts.push_back(makeModuleAST("b", {"external_b"}));
+    ast::Names external;
+    external.push_back("external_a");
+    external.push_back("external_b");
+    const ModuleOrder order = findModuleOrder(asts, external, log);
+    ASSERT_EQ(order.size(), 2);
+    ASSERT_EQ(order[0], 1); // b
+    ASSERT_EQ(order[1], 0); // a
   });
   
   TEST(Func - Redef, {

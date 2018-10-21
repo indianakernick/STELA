@@ -16,11 +16,12 @@ namespace {
 
 class Visitor {
 public:
-  Visitor(const ASTs &asts, LogBuf &buf)
+  Visitor(const ASTs &asts, const ast::Names &compiled, LogBuf &buf)
     : order{},
       stack{},
       visited(asts.size(), false),
       asts{asts},
+      compiled{compiled},
       log{buf, LogCat::semantic} {
     order.reserve(asts.size());
     stack.reserve(asts.size());
@@ -41,7 +42,9 @@ public:
         return visit(i);
       }
     }
-    log.error() << "Module \"" << name << "\" not found" << fatal;
+    if (std::find(compiled.cbegin(), compiled.cend(), name) == compiled.cend()) {
+      log.error() << "Module \"" << name << "\" not found" << fatal;
+    }
   }
 
   void visit(const size_t index) {
@@ -69,13 +72,18 @@ private:
   std::vector<size_t> stack;
   std::vector<bool> visited;
   const ASTs &asts;
+  const ast::Names &compiled;
   Log log;
 };
 
 }
 
 ModuleOrder stela::findModuleOrder(const ASTs &asts, LogBuf &buf) {
-  Visitor visitor{asts, buf};
+  return findModuleOrder(asts, {}, buf);
+}
+
+ModuleOrder stela::findModuleOrder(const ASTs &asts, const ast::Names &compiled, LogBuf &buf) {
+  Visitor visitor{asts, compiled, buf};
   visitor.visit();
   return visitor.order;
 }
