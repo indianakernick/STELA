@@ -1,5 +1,6 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.9)
 # need 3.8 for cxx_std_17
+# need 3.9 for IPO
 # I commented cxx_std_17 and tested successfully with cmake 3.2
 project(STELA)
 
@@ -100,6 +101,15 @@ target_compile_features(STELA
         PUBLIC
         cxx_std_17
 )
+
+include(CheckIPOSupported)
+
+check_ipo_supported(RESULT result)
+if(result)
+        set_target_properties(STELA
+                PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
+        )
+endif()
 
 install(TARGETS STELA
         ARCHIVE DESTINATION lib
