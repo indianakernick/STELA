@@ -14,6 +14,7 @@
 		450E329420E89D6100F222F1 /* parse stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328520E89A4700F222F1 /* parse stat.cpp */; };
 		450E329520E89D6100F222F1 /* parse decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328820E89B5C00F222F1 /* parse decl.cpp */; };
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
+		455F4187217BF0CF00C62BBF /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455F4186217BF0CF00C62BBF /* modules.cpp */; };
 		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
 		4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6C20F35B3E00EA1A56 /* ast.cpp */; };
@@ -102,6 +103,8 @@
 		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
+		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
+		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
 		4572CA6620F32D3C00EA1A56 /* semantics.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = semantics.cpp; sourceTree = "<group>"; };
 		4572CA6720F32D3C00EA1A56 /* semantics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = semantics.hpp; sourceTree = "<group>"; };
@@ -207,6 +210,7 @@
 			isa = PBXGroup;
 			children = (
 				4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */,
+				455F4186217BF0CF00C62BBF /* modules.cpp */,
 				4572CA6C20F35B3E00EA1A56 /* ast.cpp */,
 				4572CAAF210EFDFE00EA1A56 /* symbols.cpp */,
 				4572CA7120F4732C00EA1A56 /* traverse.cpp */,
@@ -335,6 +339,7 @@
 				45EE9C2E20E3AAE300CC3289 /* log.hpp */,
 				45EE9C2C20E3AAE300CC3289 /* lexical analysis.hpp */,
 				45EE9C2B20E3AAE300CC3289 /* syntax analysis.hpp */,
+				455F4185217BEDA700C62BBF /* modules.hpp */,
 				4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */,
 				4572CA7D20F9951400EA1A56 /* format.hpp */,
 				4572CA8120F9FE1B00EA1A56 /* console format.hpp */,
@@ -554,6 +559,7 @@
 				450E329120E89D6100F222F1 /* context stack.cpp in Sources */,
 				450E329220E89D6100F222F1 /* parse type.cpp in Sources */,
 				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,
+				455F4187217BF0CF00C62BBF /* modules.cpp in Sources */,
 				450E329420E89D6100F222F1 /* parse stat.cpp in Sources */,
 				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
 				45F4435E213F898300B28F05 /* parse asgn.cpp in Sources */,

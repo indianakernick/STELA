@@ -12,17 +12,18 @@
 #include "log.hpp"
 #include "ast.hpp"
 #include "symbols.hpp"
+#include "modules.hpp"
 
 namespace stela {
 
-Symbols createSym(AST &, LogBuf &);
-
-struct SymbolsAST {
-  Symbols sym;
-  AST ast;
-};
-
-SymbolsAST createSym(std::string_view, LogBuf &);
+/// Initialize the builtin and standard library modules
+Symbols initModules(LogBuf &);
+/// Perform semantic analysis on an AST and create a module. The declarations
+/// are moved out of the AST object and into the module object. AST object can
+/// discarded
+void compileModule(Symbols &, AST &, LogBuf &);
+/// Compile the ASTs into Modules in the right order
+void compileModules(Symbols &, const ModuleOrder &, ASTs &, LogBuf &);
 
 }
 

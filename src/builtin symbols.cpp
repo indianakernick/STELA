@@ -43,7 +43,7 @@ ast::BuiltinType *pushType(
   return ptr;
 }
 
-void insertTypes(sym::Table &table, ast::Decls &decls, Builtins &t) {
+void insertTypes(sym::Table &table, ast::Decls &decls, ast::Types &types, sym::Builtins &t) {
   #define INSERT(TYPE)                                                          \
     t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, #TYPE);
   
@@ -56,10 +56,13 @@ void insertTypes(sym::Table &table, ast::Decls &decls, Builtins &t) {
 
   #undef INSERT
   
+  // A string literal has the type [Char]
   auto charName = std::make_unique<ast::NamedType>();
   charName->name = "Char";
-  t.string = std::make_unique<ast::ArrayType>();
-  t.string->elem = std::move(charName);
+  auto string = std::make_unique<ast::ArrayType>();
+  string->elem = std::move(charName);
+  t.string = string.get();
+  types.push_back(std::move(string));
 }
 
 using TypeEnum = ast::BuiltinType::Enum;
@@ -137,7 +140,7 @@ ast::BuiltinType *checkType(bool(*category)(TypeEnum), ast::BuiltinType *type) {
 }
 
 ast::BuiltinType *stela::validOp(
-  const Builtins &bnt,
+  const sym::Builtins &btn,
   const ast::BinOp op,
   ast::BuiltinType *left,
   ast::BuiltinType *right
@@ -150,9 +153,9 @@ ast::BuiltinType *stela::validOp(
   } else if (isBitwiseOp(op)) {
     return checkType(isBitwiseType, left);
   } else if (isEqualOp(op)) {
-    return bnt.Bool;
+    return btn.Bool;
   } else if (isOrderOp(op)) {
-    return isArithType(left->value) ? bnt.Bool : nullptr;
+    return isArithType(left->value) ? btn.Bool : nullptr;
   } else if (isArithOp(op)) {
     return checkType(isArithType, left);
   } else {
@@ -175,10 +178,11 @@ bool stela::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::Builtin
   }
 }
 
-Builtins stela::makeBuiltins(sym::Scopes &scopes, ast::Decls &decls) {
+sym::Module stela::makeBuiltinModule(sym::Builtins &btn) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::Scope::Type::ns);
-  Builtins types;
-  insertTypes(scope->table, decls, types);
-  scopes.push_back(std::move(scope));
-  return types;
+  sym::Module module;
+  insertTypes(scope->table, module.decls, module.types, btn);
+  btn.scope = scope.get();
+  module.scopes.push_back(std::move(scope));
+  return module;
 }

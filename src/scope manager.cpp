@@ -12,10 +12,9 @@
 
 using namespace stela;
 
-ScopeMan::ScopeMan(sym::Scopes &scopes)
-  : scopes{scopes} {
-  assert(scopes.size() >= 2);
-  scope = scopes.back().get();
+ScopeMan::ScopeMan(sym::Scopes &scopes, sym::Scope *scope)
+  : scopes{scopes}, scope{scope} {
+  assert(scope);
 }
 
 sym::Scope *ScopeMan::enterScope(const sym::Scope::Type type) {
@@ -35,11 +34,15 @@ sym::Scope *ScopeMan::cur() const {
 }
 
 sym::Scope *ScopeMan::builtin() const {
+  assert(!scopes.empty());
   assert(scopes[0]->type == sym::Scope::Type::ns);
-  return scopes[0].get();
+  assert(scopes[0]->parent);
+  assert(scopes[0]->parent->type == sym::Scope::Type::ns);
+  return scopes[0]->parent;
 }
 
 sym::Scope *ScopeMan::global() const {
-  assert(scopes[1]->type == sym::Scope::Type::ns);
-  return scopes[1].get();
+  assert(!scopes.empty());
+  assert(scopes[0]->type == sym::Scope::Type::ns);
+  return scopes[0].get();
 }

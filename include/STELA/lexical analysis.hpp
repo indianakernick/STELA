@@ -14,6 +14,9 @@
 
 namespace stela {
 
+/// Split a source file into tokens. Multiple std::string_views refer directly
+/// to the source string in later phases so the source should remain available
+/// until compilation is complete.
 Tokens lex(std::string_view, LogBuf &);
 
 }

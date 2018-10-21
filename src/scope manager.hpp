@@ -15,7 +15,7 @@ namespace stela {
 
 class ScopeMan {
 public:
-  explicit ScopeMan(sym::Scopes &);
+  ScopeMan(sym::Scopes &, sym::Scope *);
   
   sym::Scope *enterScope(sym::Scope::Type);
   void leaveScope();

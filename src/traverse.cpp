@@ -22,18 +22,18 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(sym::Scopes &scopes, Log &log, const Builtins &bnt)
-    : man{scopes}, log{log}, ins{man.global(), log}, tlk{man.cur(), log}, bnt{bnt} {}
+  Visitor(ScopeMan man, sym::Module &module, Symbols &syms, Log &log)
+    : man{man}, log{log}, ins{man.global(), log}, tlk{man.cur(), log}, module{module}, syms{syms} {}
   
   void visitExpr(const ast::ExprPtr &expr) {
     if (expr) {
-      getExprType(man, log, bnt, expr.get());
+      getExprType(man, log, syms.builtins, expr.get());
     }
   }
   void visitCond(const ast::ExprPtr &expr) {
     assert(expr);
-    const sym::ExprType etype = getExprType(man, log, bnt, expr.get());
-    if (!compareTypes(tlk, etype.type, bnt.Bool)) {
+    const sym::ExprType etype = getExprType(man, log, syms.builtins, expr.get());
+    if (!compareTypes(tlk, etype.type, syms.builtins.Bool)) {
       log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
     }
   }
@@ -57,11 +57,11 @@ public:
     man.leaveScope();
   }
   void visit(ast::Switch &swich) override {
-    const sym::ExprType etype = getExprType(man, log, bnt, swich.expr.get());
+    const sym::ExprType etype = getExprType(man, log, syms.builtins, swich.expr.get());
     bool foundDef = false;
     for (const ast::SwitchCase &cs : swich.cases) {
       if (cs.expr) {
-        const sym::ExprType caseType = getExprType(man, log, bnt, cs.expr.get());
+        const sym::ExprType caseType = getExprType(man, log, syms.builtins, cs.expr.get());
         if (!compareTypes(tlk, caseType.type, etype.type)) {
           log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
         }
@@ -126,7 +126,7 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    const sym::ExprType exprType = expr ? getExprType(man, log, bnt, expr.get()) : sym::null_type;
+    const sym::ExprType exprType = expr ? getExprType(man, log, syms.builtins, expr.get()) : sym::null_type;
     if (type) {
       tlk.validateType(type.get());
     }
@@ -165,8 +165,8 @@ public:
   }
   
   void visit(ast::CompAssign &as) override {
-    const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
-    const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
+    const sym::ExprType left = getExprType(man, log, syms.builtins, as.left.get());
+    const sym::ExprType right = getExprType(man, log, syms.builtins, as.right.get());
     if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
       if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
         if (validOp(as.oper, builtinLeft, builtinRight)) {
@@ -181,7 +181,7 @@ public:
     log.error(as.loc) << "Invalid operands to compound assignment operator " << opName(as.oper) << fatal;
   }
   void visit(ast::IncrDecr &as) override {
-    const sym::ExprType etype = getExprType(man, log, bnt, as.expr.get());
+    const sym::ExprType etype = getExprType(man, log, syms.builtins, as.expr.get());
     if (auto *builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
       if (validIncr(builtin)) {
         return;
@@ -190,8 +190,8 @@ public:
     log.error(as.loc) << "Invalid operand to unary operator " << (as.incr ? "++" : "--") << fatal;
   }
   void visit(ast::Assign &as) override {
-    const sym::ExprType left = getExprType(man, log, bnt, as.left.get());
-    const sym::ExprType right = getExprType(man, log, bnt, as.right.get());
+    const sym::ExprType left = getExprType(man, log, syms.builtins, as.left.get());
+    const sym::ExprType right = getExprType(man, log, syms.builtins, as.right.get());
     if (!compareTypes(tlk, left.type, right.type)) {
       log.error(as.loc) << "Assignment types do not match" << fatal;
     }
@@ -208,7 +208,7 @@ public:
     varSym->etype = etype;
   }
   void visit(ast::CallAssign &as) override {
-    const sym::ExprType etype = getExprType(man, log, bnt, &as.call);
+    const sym::ExprType etype = getExprType(man, log, syms.builtins, &as.call);
     if (etype.type) {
       log.error(as.loc) << "Discarded return value" << fatal;
     }
@@ -218,15 +218,25 @@ private:
   ScopeMan man;
   Log &log;
   InserterManager ins;
+  
+  
+  
+  
+  // THE SCOPE STORED IN NAME LOOKUP NEEDS TO BE UPDATED WHEN THE CURRENT SCOPE CHANGES
+  
+  
+  
+  
   NameLookup tlk;
-  const Builtins &bnt;
+  sym::Module &module;
+  Symbols &syms;
 };
 
 }
 
-void stela::traverse(sym::Scopes &scopes, const AST &ast, Log &log, const Builtins &types) {
-  Visitor visitor{scopes, log, types};
-  for (const ast::DeclPtr &decl : ast.global) {
+void stela::traverse(ScopeMan man, sym::Module &module, Symbols &syms, Log &log) {
+  Visitor visitor{man, module, syms, log};
+  for (const ast::DeclPtr &decl : module.decls) {
     decl->accept(visitor);
   }
 }

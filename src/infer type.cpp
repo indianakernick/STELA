@@ -19,15 +19,15 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan &man, Log &log, const Builtins &types)
-    : lkp{man.cur(), log}, tlk{man.cur(), log}, man{man}, log{log}, bnt{types} {}
+  Visitor(ScopeMan &man, Log &log, const sym::Builtins &btn)
+    : lkp{man.cur(), log}, tlk{man.cur(), log}, man{man}, log{log}, btn{btn} {}
 
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
     const sym::ExprType right = visitValueExpr(bin.right.get());
     if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
       if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
-        if (auto *retType = validOp(bnt, bin.oper, builtinLeft, builtinRight)) {
+        if (auto *retType = validOp(btn, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
           retExpr.type = retType;
           retExpr.mut = sym::ValueMut::let;
@@ -56,7 +56,7 @@ public:
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      params.push_back(getExprType(man, log, bnt, expr.get()));
+      params.push_back(getExprType(man, log, btn, expr.get()));
     }
     return params;
   }
@@ -75,7 +75,7 @@ public:
   }
   void visit(ast::Ternary &tern) override {
     const sym::ExprType cond = visitValueExpr(tern.cond.get());
-    if (!compareTypes(tlk, cond.type, bnt.Bool)) {
+    if (!compareTypes(tlk, cond.type, btn.Bool)) {
       log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
     }
     const sym::ExprType tru = visitValueExpr(tern.tru.get());
@@ -92,14 +92,14 @@ public:
   
   void visit(ast::StringLiteral &) override {
     sym::ExprType etype;
-    etype.type = bnt.string.get();
+    etype.type = btn.string;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
   void visit(ast::CharLiteral &) override {
     sym::ExprType etype;
-    etype.type = bnt.Char;
+    etype.type = btn.Char;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
@@ -108,15 +108,15 @@ public:
     const NumberVariant num = parseNumberLiteral(n.value, log);
     sym::ExprType etype;
     if (std::holds_alternative<Byte>(num)) {
-      etype.type = bnt.Byte;
+      etype.type = btn.Byte;
     } else if (std::holds_alternative<Char>(num)) {
-      etype.type = bnt.Char;
+      etype.type = btn.Char;
     } else if (std::holds_alternative<Real>(num)) {
-      etype.type = bnt.Real;
+      etype.type = btn.Real;
     } else if (std::holds_alternative<Sint>(num)) {
-      etype.type = bnt.Sint;
+      etype.type = btn.Sint;
     } else if (std::holds_alternative<Uint>(num)) {
-      etype.type = bnt.Uint;
+      etype.type = btn.Uint;
     }
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
@@ -124,7 +124,7 @@ public:
   }
   void visit(ast::BoolLiteral &) override {
     sym::ExprType etype;
-    etype.type = bnt.Bool;
+    etype.type = btn.Bool;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
@@ -141,7 +141,7 @@ private:
   NameLookup tlk;
   ScopeMan &man;
   Log &log;
-  const Builtins &bnt;
+  const sym::Builtins &btn;
 };
 
 }
@@ -149,8 +149,8 @@ private:
 sym::ExprType stela::getExprType(
   ScopeMan &man,
   Log &log,
-  const Builtins &bnt,
+  const sym::Builtins &btn,
   ast::Expression *expr
 ) {
-  return Visitor{man, log, bnt}.visitValueExpr(expr);
+  return Visitor{man, log, btn}.visitValueExpr(expr);
 }

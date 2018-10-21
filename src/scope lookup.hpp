@@ -46,9 +46,9 @@ public:
   
   object.member(args)
   
-  call() {call}
-  member("member") {call, m"member"}
-  lookupIndent("object") {call, m"member", etype}
+  call()                 {call}
+  member("member")       {call, m"member"}
+  lookupIdent("object")  {call, m"member", etype}
   lookupMember("member") {call, m"member", etype}
   lookupFunc({args})     {expr}
    
@@ -56,23 +56,23 @@ public:
   
   doStuff(args)
   
-  call() {call}
+  call()                 {call}
   lookupIdent("doStuff") {call, i"doStuff"}
-  getExprType() return null
+  getExprType()          return null
   lookupFunc({args})     {expr}
-  getExprType() return func->ret
+  getExprType()          return func->ret
   
 --------------------------------------------------------------------------------
   
   object.subobject.member(args)
   
-  call() {call}
-  member("member") {call, member"member"}
-  member("subobject") {call, member"member", member"subobject"}
+  call()                {call}
+  member("member")      {call, member"member"}
+  member("subobject")   {call, member"member", member"subobject"}
   lookupIdent("object") {call, member"member", member"subobject", expr}
-  lookupMember() {call, member"member", expr} return subobject currentType = false
-  lookupMember() {call, member"member", expr} return null
-  lookupFunc({args}) {expr} need subobject here
+  lookupMember()        {call, member"member", expr} return subobject currentType = false
+  lookupMember()        {call, member"member", expr} return null
+  lookupFunc({args})    {expr} need subobject here
     pop call member expr
     push expr
 
@@ -80,11 +80,11 @@ public:
 
   object.member
   
-  member("member") {m"member"}
+  member("member")      {m"member"}
   lookupIdent("object") {m"member", expr}
-  getExprType() currentType = false;
-  lookupMember() {expr} currentType = true;
-  getExprType() returnedType = true;
+  getExprType()         currentType = false;
+  lookupMember()        {expr} currentType = true;
+  getExprType()         returnedType = true;
   */
   
   ExprLookup(sym::Scope *, Log &);
@@ -141,6 +141,12 @@ private:
     Expr(Type);
     Expr(Type, const sym::Name &);
   };
+  
+  struct FunKey {
+    sym::Name name;
+    sym::FuncParams params;
+  };
+  
   sym::Scope *const scope;
   Log &log;
   std::vector<Expr> exprs;
@@ -160,8 +166,8 @@ private:
   ast::Func *popCallPushRet(sym::Func *);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
-  sym::Func *lookupFun(sym::Scope *, const sym::FunKey &, Loc);
-  sym::FunKey funKey(sym::ExprType, const sym::FuncParams &);
+  sym::Func *lookupFun(sym::Scope *, const FunKey &, Loc);
+  FunKey funKey(sym::ExprType, const sym::FuncParams &);
 };
 
 }

@@ -12,11 +12,11 @@
 #include "ast.hpp"
 #include "symbols.hpp"
 #include "log output.hpp"
-#include "builtin symbols.hpp"
+#include "scope manager.hpp"
 
 namespace stela {
 
-void traverse(sym::Scopes &, const AST &, Log &, const Builtins &);
+void traverse(ScopeMan, sym::Module &, Symbols &, Log &);
 
 }
 

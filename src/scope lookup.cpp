@@ -119,7 +119,7 @@ void ExprLookup::call() {
 
 sym::Func *ExprLookup::lookupFun(
   sym::Scope *scope,
-  const sym::FunKey &key,
+  const FunKey &key,
   const Loc loc
 ) {
   const auto [begin, end] = scope->table.equal_range(key.name);
@@ -145,8 +145,8 @@ sym::Func *ExprLookup::lookupFun(
   }
 }
 
-sym::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::FuncParams &params) {
-  sym::FunKey key;
+ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::FuncParams &params) {
+  FunKey key;
   key.params.reserve(1 + params.size());
   key.params.push_back(etype);
   key.params.insert(++key.params.begin(), params.cbegin(), params.cend());

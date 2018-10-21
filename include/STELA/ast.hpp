@@ -458,15 +458,19 @@ public:
 };
 
 using Decls = std::vector<ast::DeclPtr>;
+using Types = std::vector<ast::TypePtr>;
 
 }
 
 namespace stela {
 
 struct AST {
-  ast::Decls builtin;
   ast::Decls global;
+  ast::Name name;
+  std::vector<ast::Name> imports;
 };
+
+using ASTs = std::vector<AST>;
 
 }
 

@@ -14,31 +14,12 @@
 
 namespace stela {
 
-// bool
-// byte
-// char
-// real
-// sint
-// uint
-
-struct Builtins {
-  ast::BuiltinType *Bool;
-  ast::BuiltinType *Byte;
-  ast::BuiltinType *Char;
-  ast::BuiltinType *Real;
-  ast::BuiltinType *Sint;
-  ast::BuiltinType *Uint;
-  
-  // Alias of char[]
-  std::unique_ptr<ast::ArrayType> string;
-};
-
 bool validIncr(ast::BuiltinType *);
 bool validOp(ast::UnOp, ast::BuiltinType *);
-ast::BuiltinType *validOp(const Builtins &, ast::BinOp, ast::BuiltinType *, ast::BuiltinType *);
+ast::BuiltinType *validOp(const sym::Builtins &, ast::BinOp, ast::BuiltinType *, ast::BuiltinType *);
 bool validOp(ast::AssignOp, ast::BuiltinType *, ast::BuiltinType *);
 
-Builtins makeBuiltins(sym::Scopes &, ast::Decls &);
+sym::Module makeBuiltinModule(sym::Builtins &);
 
 }
 

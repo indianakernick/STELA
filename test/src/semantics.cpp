@@ -9,20 +9,41 @@
 #include "semantics.hpp"
 
 #include "macros.hpp"
+#include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
 
 using namespace stela;
 using namespace stela::ast;
+
+Symbols createSym(const std::string_view source, LogBuf &log) {
+  AST ast = createAST(source, log);
+  ast.name = "main";
+  Symbols syms = initModules(log);
+  compileModule(syms, ast, log);
+  return syms;
+}
 
 TEST_GROUP(Semantics, {
   StreamLog log;
   log.pri(LogPri::warning);
   
   TEST(Empty source, {
-    const auto [symbols, ast] = createSym("", log);
-    ASSERT_EQ(symbols.scopes.size(), 2);
-    ASSERT_TRUE(ast.global.empty());
-    ASSERT_EQ(ast.builtin.size(), 6);
+    const Symbols syms = createSym("", log);
+    ASSERT_EQ(syms.modules.size(), 2);
+    
+    auto btn = syms.modules.find("builtin");
+    ASSERT_NE(btn, syms.modules.end());
+    const sym::Module &builtin = btn->second;
+    ASSERT_EQ(builtin.scopes.size(), 1);
+    ASSERT_EQ(builtin.decls.size(), 6);
+    ASSERT_EQ(builtin.types.size(), 1);
+    
+    auto mayn = syms.modules.find("main");
+    ASSERT_NE(mayn, syms.modules.end());
+    const sym::Module &main = mayn->second;
+    ASSERT_EQ(main.scopes.size(), 1);
+    ASSERT_EQ(main.decls.size(), 0);
+    ASSERT_EQ(main.types.size(), 0);
   });
   
   TEST(Func - Redef, {

@@ -10,22 +10,31 @@
 
 #include "traverse.hpp"
 #include "log output.hpp"
+#include "scope manager.hpp"
 #include "builtin symbols.hpp"
 #include "syntax analysis.hpp"
 
-stela::Symbols stela::createSym(AST &ast, LogBuf &buf) {
-  Log log{buf, LogCat::semantic};
+using namespace stela;
+
+Symbols stela::initModules(LogBuf &) {
   Symbols syms;
-  Builtins types = makeBuiltins(syms.scopes, ast.builtin);
-  auto global = std::make_unique<sym::Scope>(syms.scopes.back().get(), sym::Scope::Type::ns);
-  syms.scopes.push_back(std::move(global));
-  traverse(syms.scopes, ast, log, types);
+  syms.modules.insert({"builtin", makeBuiltinModule(syms.builtins)});
   return syms;
 }
 
-stela::SymbolsAST stela::createSym(const std::string_view source, LogBuf &buf) {
-  SymbolsAST sa;
-  sa.ast = createAST(source, buf);
-  sa.sym = createSym(sa.ast, buf);
-  return sa;
+void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
+  Log log{buf, LogCat::semantic};
+  sym::Module module;
+  module.decls = std::move(ast.global);
+  ScopeMan man{module.scopes, syms.builtins.scope};
+  man.enterScope(sym::Scope::Type::ns);
+  traverse(man, module, syms, log);
+  syms.modules.emplace(ast.name, std::move(module));
+}
+
+void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {
+  syms.modules.reserve(1 + asts.size());
+  for (const size_t index : order) {
+    compileModule(syms, asts[index], buf);
+  }
 }

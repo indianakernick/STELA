@@ -9,20 +9,9 @@
 #ifndef stela_symbols_hpp
 #define stela_symbols_hpp
 
-#include <vector>
 #include <string>
-#include <memory>
-#include "location.hpp"
+#include "ast.hpp"
 #include <unordered_map>
-
-namespace stela::ast {
-
-struct Type;
-struct TypeAlias;
-struct Statement;
-struct Func;
-
-}
 
 namespace stela::sym {
 
@@ -116,9 +105,28 @@ struct Func final : Symbol {
 };
 using FuncPtr = std::unique_ptr<Func>;
 
-struct FunKey {
-  Name name;
-  FuncParams params;
+struct Module {
+  Scopes scopes;
+  ast::Decls decls;
+  ast::Types types;
+};
+
+using Modules = std::unordered_map<Name, Module>;
+
+struct Builtins {
+  // Builtin types
+  ast::BuiltinType *Bool;
+  ast::BuiltinType *Byte;
+  ast::BuiltinType *Char;
+  ast::BuiltinType *Real;
+  ast::BuiltinType *Sint;
+  ast::BuiltinType *Uint;
+  
+  // Alias of [char] used as the type of string literals
+  ast::Type *string;
+  
+  // Global scope of the builtin module
+  sym::Scope *scope;
 };
 
 }
@@ -126,7 +134,8 @@ struct FunKey {
 namespace stela {
 
 struct Symbols {
-  sym::Scopes scopes;
+  sym::Modules modules;
+  sym::Builtins builtins;
 };
 
 }
