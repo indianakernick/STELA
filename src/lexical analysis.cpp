@@ -28,6 +28,7 @@ constexpr std::string_view keywords[] = {
   "let", "var", "type",
   "if", "else", "switch", "case", "default",
   "while", "for", "break", "continue",
+  "module", "import",
 };
 constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
 

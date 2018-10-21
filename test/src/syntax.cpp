@@ -53,11 +53,32 @@ TEST_GROUP(Syntax, {
   TEST(No tokens, {
     const AST ast = createAST(Tokens{}, log);
     ASSERT_TRUE(ast.global.empty());
+    ASSERT_EQ(ast.name, "main");
+    ASSERT_TRUE(ast.imports.empty());
   });
   
   TEST(Empty source, {
     const AST ast = createAST("", log);
     ASSERT_TRUE(ast.global.empty());
+    ASSERT_EQ(ast.name, "main");
+    ASSERT_TRUE(ast.imports.empty());
+  });
+  
+  TEST(Modules, {
+    const char *source = R"(
+      module MyModule;
+    
+      func yup() {}
+    
+      import OtherModule;
+      import CoolModule;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    ASSERT_EQ(ast.name, "MyModule");
+    ASSERT_EQ(ast.imports.size(), 2);
+    ASSERT_EQ(ast.imports[0], "OtherModule");
+    ASSERT_EQ(ast.imports[1], "CoolModule");
   });
   
   TEST(EOF, {
@@ -69,7 +90,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       ;;;
     
-      if (expr) {}
+      if (true) {}
     )";
     try {
       NoLog noLog;

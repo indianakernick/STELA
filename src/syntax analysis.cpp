@@ -21,10 +21,20 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
   AST ast;
   ParseTokens tok(tokens, log);
   
-  tok.extraSemi();
+  if (tok.checkKeyword("module")) {
+    ast.name = tok.expectID();
+    tok.expectOp(";");
+    tok.extraSemi();
+  } else {
+    ast.name = "main";
+  }
   
   while (!tok.empty()) {
-    if (ast::DeclPtr node = parseDecl(tok)) {
+    if (tok.checkKeyword("import")) {
+      ast.imports.push_back(tok.expectID());
+      tok.expectOp(";");
+      tok.extraSemi();
+    } else if (ast::DeclPtr node = parseDecl(tok)) {
       ast.global.emplace_back(std::move(node));
       tok.extraSemi();
     } else {

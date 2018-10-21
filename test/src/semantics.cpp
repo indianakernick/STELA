@@ -18,7 +18,6 @@ using namespace stela::ast;
 
 Symbols createSym(const std::string_view source, LogBuf &log) {
   AST ast = createAST(source, log);
-  ast.name = "main";
   Symbols syms = initModules(log);
   compileModule(syms, ast, log);
   return syms;
