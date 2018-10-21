@@ -76,6 +76,23 @@ private:
   Log log;
 };
 
+void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogBuf &buf) {
+  ast::Names names;
+  names.reserve(asts.size() + compiled.size());
+  for (const AST &ast : asts) {
+    names.push_back(ast.name);
+  }
+  for (const ast::Name &name : compiled) {
+    names.push_back(name);
+  }
+  std::sort(names.begin(), names.end());
+  const auto dup = std::adjacent_find(names.cbegin(), names.cend());
+  if (dup != names.cend()) {
+    Log log{buf, LogCat::semantic};
+    log.error() << "Duplicate module \"" << *dup << "\"" << fatal;
+  }
+}
+
 }
 
 ModuleOrder stela::findModuleOrder(const ASTs &asts, LogBuf &buf) {
@@ -83,6 +100,7 @@ ModuleOrder stela::findModuleOrder(const ASTs &asts, LogBuf &buf) {
 }
 
 ModuleOrder stela::findModuleOrder(const ASTs &asts, const ast::Names &compiled, LogBuf &buf) {
+  checkDuplicateModules(asts, compiled, buf);
   Visitor visitor{asts, compiled, buf};
   visitor.visit();
   return visitor.order;

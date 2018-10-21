@@ -24,6 +24,9 @@ Symbols stela::initModules(LogBuf &) {
 
 void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
+  if (syms.modules.find(sym::Name{ast.name}) != syms.modules.cend()) {
+    log.error() << "Module \"" << ast.name << "\" has already been compiled" << fatal;
+  }
   sym::Module module;
   module.decls = std::move(ast.global);
   ScopeMan man{module.scopes, syms.builtins.scope};

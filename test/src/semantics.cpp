@@ -129,6 +129,29 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(order[1], 0); // a
   });
   
+  TEST(Modules - Duplicate, {
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {}));
+    ast::Names external;
+    external.push_back("a");
+    ASSERT_THROWS(findModuleOrder(asts, external, log), FatalError);
+  });
+  
+  TEST(Modules - Already compiled, {
+    const char *source = R"(
+      module a;
+    )";
+    Symbols syms = initModules(log);
+    {
+      AST ast = createAST(source, log);
+      compileModule(syms, ast, log);
+    }
+    {
+      AST ast = createAST(source, log);
+      ASSERT_THROWS(compileModule(syms, ast, log), FatalError);
+    }
+  });
+  
   TEST(Func - Redef, {
     const char *source = R"(
       func myFunction() {
