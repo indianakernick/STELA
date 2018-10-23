@@ -8,6 +8,7 @@
 
 #include "modules.hpp"
 
+#include <algorithm>
 #include "log output.hpp"
 
 using namespace stela;
