@@ -52,23 +52,15 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
   }
   auto namedType = std::make_unique<ast::NamedType>();
   namedType->loc = tok.loc();
-  namedType->name = tok.expectID();
+  const ast::Name name = tok.expectID();
+  if (tok.checkOp("::")) {
+    namedType->module = name;
+    Context ctx = tok.context("after scope operator");
+    namedType->name = tok.expectID();
+  } else {
+    namedType->name = name;
+  }
   return namedType;
-}
-
-ast::TypePtr parseNamespacedType(ParseTokens &tok) {
-  ast::TypePtr left = parseNamedType(tok);
-  if (left == nullptr) {
-    return nullptr;
-  }
-  while (tok.checkOp(".")) {
-    auto nest = std::make_unique<ast::NamespacedType>();
-    nest->loc = tok.lastLoc();
-    nest->parent = std::move(left);
-    nest->name = tok.expectID();
-    left = std::move(nest);
-  }
-  return left;
 }
 
 ast::Field parseStructMember(ParseTokens &tok) {
@@ -109,7 +101,6 @@ ast::TypePtr stela::parseType(ParseTokens &tok) {
   if (ast::TypePtr type = parseFuncType(tok)) return type;
   if (ast::TypePtr type = parseArrayType(tok)) return type;
   if (ast::TypePtr type = parseNamedType(tok)) return type;
-  if (ast::TypePtr type = parseNamespacedType(tok)) return type;
   if (ast::TypePtr type = parseStructType(tok)) return type;
   return nullptr;
 }

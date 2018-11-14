@@ -150,14 +150,49 @@ TEST_GROUP(Syntax, {
   
   TEST(Func - two param (no comma), {
     const char *source = R"(
-      func woops(first: String "oh_no": Int) {}
+      func woops(first: String oh_no: Int) {}
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Type - keyword, {
     const char *source = R"(
-      type Dummy = func;
+      type dummy = func;
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
+  TEST(Type - Name, {
+    const char *source = R"(
+      type dummy = name;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "dummy");
+    
+    auto *named = ASSERT_DOWN_CAST(const NamedType, alias->type.get());
+    ASSERT_TRUE(named->module.empty());
+    ASSERT_EQ(named->name, "name");
+  });
+  
+  TEST(Type - Name with module, {
+    const char *source = R"(
+      type dummy = mod::name;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0].get());
+    ASSERT_EQ(alias->name, "dummy");
+    
+    auto *named = ASSERT_DOWN_CAST(const NamedType, alias->type.get());
+    ASSERT_EQ(named->module, "mod");
+    ASSERT_EQ(named->name, "name");
+  });
+  
+  TEST(Type - Module without name, {
+    const char *source = R"(
+      type dummy = mod::;
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
@@ -738,20 +773,43 @@ TEST_GROUP(Syntax, {
       let five = 5;
       let alsoFive = five;
     )";
-    
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 2);
     
     {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      ASSERT_EQ(let->name, "five");
       auto *num = ASSERT_DOWN_CAST(const NumberLiteral, let->expr.get());
       ASSERT_EQ(num->value, "5");
     }
     {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      ASSERT_EQ(let->name, "alsoFive");
       auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr.get());
+      ASSERT_TRUE(ident->module.empty());
       ASSERT_EQ(ident->name, "five");
     }
+  });
+  
+  TEST(Expr - module identifier, {
+    const char *source = R"(
+      let constant = mod::name;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 1);
+    
+    auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+    ASSERT_EQ(let->name, "constant");
+    auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr.get());
+    ASSERT_EQ(ident->module, "mod");
+    ASSERT_EQ(ident->name, "name");
+  });
+  
+  TEST(Expr - module without identifier, {
+    const char *source = R"(
+      let constant = mod::;
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Expr - math, {

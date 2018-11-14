@@ -19,7 +19,6 @@ ACCEPT(BuiltinType)
 ACCEPT(ArrayType)
 ACCEPT(FuncType)
 ACCEPT(NamedType)
-ACCEPT(NamespacedType)
 ACCEPT(StructType)
 
 ACCEPT(BinaryExpr)

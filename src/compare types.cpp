@@ -37,9 +37,6 @@ public:
       def->type->accept(*this);  // a weak type alias is an existing type
     }
   }
-  void visit(ast::NamespacedType &right) override {
-    
-  }
   void visit(ast::StructType &right) override {
     eq = compare(left, right);
   }
@@ -67,9 +64,6 @@ private:
   }
   bool compare(ast::NamedType &left, ast::NamedType &right) {
     return left.name == right.name;
-  }
-  bool compare(ast::NamespacedType &left, ast::NamespacedType &right) {
-    return false;
   }
   bool compare(ast::StructType &left, ast::StructType &right) {
     const auto compareFields = [this] (const ast::Field &a, const ast::Field &b) {
@@ -104,9 +98,6 @@ public:
     } else {
       def->type->accept(*this); // a weak type alias is an existing type
     }
-  }
-  void visit(ast::NamespacedType &left) override {
-    
   }
   void visit(ast::StructType &left) override {
     visitImpl(left);

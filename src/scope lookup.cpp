@@ -53,16 +53,9 @@ ast::TypeAlias *NameLookup::lookupType(ast::NamedType &type) const {
   }
 }
 
-ast::TypeAlias *NameLookup::lookupType(ast::NamespacedType &type) const {
-  return nullptr;
-}
-
 ast::Type *NameLookup::lookupConcreteType(ast::Type *type) const {
   if (auto *named = dynamic_cast<ast::NamedType *>(type)) {
     ast::TypeAlias *alias = lookupType(*named);
-    return lookupConcreteType(alias->type.get());
-  } else if (auto *namespaced = dynamic_cast<ast::NamespacedType *>(type)) {
-    ast::TypeAlias *alias = lookupType(*namespaced);
     return lookupConcreteType(alias->type.get());
   } else {
     return type;

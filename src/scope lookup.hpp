@@ -21,7 +21,6 @@ public:
   NameLookup(ScopeMan &, Log &);
   
   ast::TypeAlias *lookupType(ast::NamedType &) const;
-  ast::TypeAlias *lookupType(ast::NamespacedType &) const;
   
   ast::Type *lookupConcreteType(ast::Type *) const;
   ast::Type *validateType(ast::Type *) const;

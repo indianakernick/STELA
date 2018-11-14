@@ -95,14 +95,7 @@ struct FuncType final : Type {
 struct TypeAlias;
 
 struct NamedType final : Type {
-  Name name;
-  TypeAlias *definition = nullptr;
-  
-  void accept(Visitor &) override;
-};
-
-struct NamespacedType final : Type {
-  TypePtr parent;
+  Name module;
   Name name;
   TypeAlias *definition = nullptr;
   
@@ -180,6 +173,7 @@ struct Subscript final : Expression {
 };
 
 struct Identifier final : Expression {
+  Name module;
   Name name;
   // either DeclAssign, Var or Let
   // lowest common base is Statement
@@ -411,7 +405,6 @@ public:
   virtual void visit(ArrayType &) {}
   virtual void visit(FuncType &) {}
   virtual void visit(NamedType &) {}
-  virtual void visit(NamespacedType &) {}
   virtual void visit(StructType &) {}
   
   // expressions

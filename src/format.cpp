@@ -45,12 +45,13 @@ public:
     }
   }
   void visit(ast::NamedType &type) override {
-    push(Tag::type_name, type.name);
-  }
-  void visit(ast::NamespacedType &type) override {
-    type.parent->accept(*this);
-    pushOp(".");
-    push(Tag::type_name, type.name);
+    if (type.module.empty()) {
+      push(Tag::type_name, type.name);
+    } else {
+      push(Tag::type_name, type.module);
+      pushOp("::");
+      push(Tag::type_name, type.name);
+    }
   }
   void visit(ast::StructType &strt) override {
     pushKey("struct");

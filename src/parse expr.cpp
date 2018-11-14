@@ -36,14 +36,20 @@ ast::FuncArgs parseFuncArgs(ParseTokens &tok) {
 }
 
 ast::ExprPtr parseIdent(ParseTokens &tok) {
-  if (tok.peekIdentType()) {
-    auto ident = std::make_unique<ast::Identifier>();
-    ident->loc = tok.loc();
-    ident->name = tok.expectID();
-    return ident;
-  } else {
+  if (!tok.peekIdentType()) {
     return nullptr;
   }
+  auto ident = std::make_unique<ast::Identifier>();
+  ident->loc = tok.loc();
+  const ast::Name name = tok.expectID();
+  if (tok.checkOp("::")) {
+    ident->module = name;
+    Context ctx = tok.context("after scope operator");
+    ident->name = tok.expectID();
+  } else {
+    ident->name = name;
+  }
+  return ident;
 }
 
 ast::ExprPtr parseTerm(ParseTokens &tok) {
