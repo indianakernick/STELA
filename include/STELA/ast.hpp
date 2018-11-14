@@ -12,9 +12,9 @@
 #include <vector>
 #include <memory>
 #include <cassert>
+#include <optional>
 #include <string_view>
 #include "location.hpp"
-#include <experimental/optional>
 
 namespace stela::ast {
 
@@ -272,7 +272,7 @@ struct FuncParam final : Declaration {
   /* LCOV_EXCL_END */
 };
 using FuncParams = std::vector<FuncParam>;
-using Receiver = std::experimental::optional<FuncParam>;
+using Receiver = std::optional<FuncParam>;
 
 struct Func final : Declaration {
   Name name;

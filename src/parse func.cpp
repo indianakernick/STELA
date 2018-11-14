@@ -27,7 +27,7 @@ ast::FuncParam parseParam(ParseTokens &tok) {
 
 ast::Receiver parseReceiver(ParseTokens &tok) {
   if (!tok.checkOp("(")) {
-    return std::experimental::nullopt;
+    return std::nullopt;
   }
   ast::FuncParam param = parseParam(tok);
   tok.expectOp(")");
