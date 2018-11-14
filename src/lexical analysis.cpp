@@ -30,7 +30,7 @@ constexpr std::string_view keywords[] = {
   "while", "for", "break", "continue",
   "module", "import",
 };
-constexpr size_t numKeywords = sizeof(keywords) / sizeof(keywords[0]);
+constexpr size_t numKeywords = std::size(keywords);
 
 constexpr std::string_view oper[] = {
   "<<=", ">>=", "**=", "==", "!=", "<=", ">=", "&&", "||", "--", "++", "**",
@@ -38,7 +38,7 @@ constexpr std::string_view oper[] = {
   "!", "<", ">", "&", "|", "^", "~", "{", "}", "(", ")", "[", "]", "+", "-",
   "*", "/", "%", ".", ",", "?", ":", ";"
 };
-constexpr size_t numOper = sizeof(oper) / sizeof(oper[0]);
+constexpr size_t numOper = std::size(oper);
 
 void begin(Token &token, const Utils::ParseString &str) {
   token.view = str.beginViewing();
@@ -50,7 +50,7 @@ void end(Token &token, const Utils::ParseString &str) {
 }
 
 bool startIdent(const char c) {
-  return std::isalpha(c);
+  return std::isalpha(c) || c == '_';
 }
 
 bool continueIdent(const char c) {

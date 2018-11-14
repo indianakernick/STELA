@@ -9,29 +9,16 @@
 #include "compare params args.hpp"
 
 #include "compare types.hpp"
+#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
-
-namespace {
-
-template <typename Pred>
-bool compare(
-  const sym::FuncParams &params,
-  const sym::FuncParams &args,
-  Pred pred
-) {
-  return params.size() == args.size()
-    && std::equal(params.cbegin(), params.cend(), args.cbegin(), pred);
-}
-
-}
 
 bool stela::compatParams(
   const NameLookup &lkp,
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return compare(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
+  return Utils::equal_size(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
     return compareTypes(lkp, param.type, arg.type) && sym::callMutRef(param, arg);
   });
 }
@@ -41,7 +28,7 @@ bool stela::sameParams(
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return compare(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
+  return Utils::equal_size(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
     return compareTypes(lkp, param.type, arg.type);
   });
 }

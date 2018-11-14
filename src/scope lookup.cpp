@@ -9,9 +9,9 @@
 #include "scope lookup.hpp"
 
 #include <cassert>
-#include <algorithm>
 #include "scope traverse.hpp"
 #include "compare params args.hpp"
+#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
@@ -99,10 +99,10 @@ void NameLookup::validateStruct(ast::StructType *strut) const {
   for (const ast::Field &field : strut->fields) {
     names.push_back({field.name, field.loc});
   }
-  std::sort(names.begin(), names.end(), [] (auto a, auto b) {
+  Utils::sort(names, [] (auto a, auto b) {
     return a.first < b.first;
   });
-  const auto dup = std::adjacent_find(names.cbegin(), names.cend(), [] (auto a, auto b) {
+  const auto dup = Utils::adjacent_find(names, [] (auto a, auto b) {
     return a.first == b.first;
   });
   if (dup != names.cend()) {

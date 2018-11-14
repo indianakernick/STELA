@@ -8,7 +8,7 @@
 
 #include "compare types.hpp"
 
-#include <typeinfo>
+#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
@@ -57,18 +57,13 @@ private:
     return compareTypes(lkp, left.elem.get(), right.elem.get());
   }
   bool compare(ast::FuncType &left, ast::FuncType &right) {
-    if (left.params.size() != right.params.size()) {
+    const auto compareParams = [this] (const ast::ParamType &a, const ast::ParamType &b) {
+      return a.ref == b.ref && compareTypes(lkp, a.type.get(), b.type.get());
+    };
+    if (!compareTypes(lkp, left.ret.get(), right.ret.get())) {
       return false;
     }
-    for (size_t i = 0; i != left.params.size(); ++i) {
-      if (left.params[i].ref != right.params[i].ref) {
-        return false;
-      }
-      if (!compareTypes(lkp, left.params[i].type.get(), right.params[i].type.get())) {
-        return false;
-      }
-    }
-    return compareTypes(lkp, left.ret.get(), right.ret.get());
+    return Utils::equal_size(left.params, right.params, compareParams);
   }
   bool compare(ast::NamedType &left, ast::NamedType &right) {
     return left.name == right.name;
@@ -77,18 +72,10 @@ private:
     return false;
   }
   bool compare(ast::StructType &left, ast::StructType &right) {
-    if (left.fields.size() != right.fields.size()) {
-      return false;
-    }
-    for (size_t i = 0; i != left.fields.size(); ++i) {
-      if (left.fields[i].name != right.fields[i].name) {
-        return false;
-      }
-      if (!compareTypes(lkp, left.fields[i].type.get(), right.fields[i].type.get())) {
-        return false;
-      }
-    }
-    return true;
+    const auto compareFields = [this] (const ast::Field &a, const ast::Field &b) {
+      return a.name == b.name && compareTypes(lkp, a.type.get(), b.type.get());
+    };
+    return Utils::equal_size(left.fields, right.fields, compareFields);
   }
   template <typename Right>
   bool compare(Left &, Right &) {

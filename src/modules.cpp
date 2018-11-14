@@ -8,8 +8,8 @@
 
 #include "modules.hpp"
 
-#include <algorithm>
 #include "log output.hpp"
+#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
@@ -29,10 +29,8 @@ public:
   }
 
   void checkCycle(const size_t index, const ast::Name &name) {
-    for (auto s = stack.cbegin(); s != stack.cend(); ++s) {
-      if (*s == index) {
-        log.error() << "Cyclic dependencies detected in module \"" << name << "\"" << fatal;
-      }
+    if (Utils::contains(stack, index)) {
+      log.error() << "Cyclic dependencies detected in module \"" << name << "\"" << fatal;
     }
   }
 
@@ -43,7 +41,7 @@ public:
         return visit(i);
       }
     }
-    if (std::find(compiled.cbegin(), compiled.cend(), name) == compiled.cend()) {
+    if (!Utils::contains(compiled, name)) {
       log.error() << "Module \"" << name << "\" not found" << fatal;
     }
   }
@@ -83,11 +81,9 @@ void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogBuf 
   for (const AST &ast : asts) {
     names.push_back(ast.name);
   }
-  for (const ast::Name &name : compiled) {
-    names.push_back(name);
-  }
-  std::sort(names.begin(), names.end());
-  const auto dup = std::adjacent_find(names.cbegin(), names.cend());
+  names.insert(names.end(), compiled.cbegin(), compiled.cend());
+  Utils::sort(names);
+  const auto dup = Utils::adjacent_find(names);
   if (dup != names.cend()) {
     Log log{buf, LogCat::semantic};
     log.error() << "Duplicate module \"" << *dup << "\"" << fatal;
