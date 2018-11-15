@@ -18,7 +18,7 @@ namespace stela {
 
 class NameLookup {
 public:
-  NameLookup(ScopeMan &, Log &);
+  NameLookup(sym::Modules &, ScopeMan &, Log &);
   
   ast::TypeAlias *lookupType(ast::NamedType &) const;
   
@@ -31,6 +31,7 @@ public:
   }
 
 private:
+  sym::Modules &modules;
   ScopeMan &man;
   Log &log;
   
@@ -86,7 +87,7 @@ public:
   getExprType()         returnedType = true;
   */
   
-  ExprLookup(ScopeMan &, Log &);
+  ExprLookup(sym::Modules &, ScopeMan &, Log &);
   
   void call();
   ast::Func *lookupFunc(const sym::FuncParams &, Loc);
@@ -146,6 +147,7 @@ private:
     sym::FuncParams params;
   };
   
+  sym::Modules &modules;
   ScopeMan &man;
   Log &log;
   std::vector<Expr> exprs;

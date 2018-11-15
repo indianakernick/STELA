@@ -138,5 +138,5 @@ void InserterManager::enterFuncScope(sym::Func *funcSym, const ast::Func &func) 
   }
 }
 
-InserterManager::InserterManager(ScopeMan &man, Log &log)
-  : log{log}, man{man}, tlk{man, log} {}
+InserterManager::InserterManager(sym::Modules &modules, ScopeMan &man, Log &log)
+  : log{log}, man{man}, tlk{modules, man, log} {}

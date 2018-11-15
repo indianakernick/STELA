@@ -18,7 +18,7 @@ namespace stela {
 
 class InserterManager {
 public:
-  InserterManager(ScopeMan &, Log &);
+  InserterManager(sym::Modules &, ScopeMan &, Log &);
   
   template <typename Symbol, typename AST_Node>
   Symbol *insert(const AST_Node &node) {

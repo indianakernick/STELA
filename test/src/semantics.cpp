@@ -152,6 +152,59 @@ TEST_GROUP(Semantics, {
     }
   });
   
+  TEST(Modules - Import type, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = Real;
+      type SpecialNumber = Number;
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      type CoolNumber = ModA::SpecialNumber;
+      type Number = CoolNumber;
+    
+      func main() {
+        let n: Number = 5.0;
+        let r: Real = n;
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+  });
+  
+  TEST(Modules - Import type invalid module, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = ModB::Number;
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      type Number = Real;
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    ASSERT_THROWS(compileModules(syms, order, asts, log), FatalError);
+  });
+  
   TEST(Func - Redef, {
     const char *source = R"(
       func myFunction() {

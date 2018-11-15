@@ -19,8 +19,13 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan &man, Log &log, const sym::Builtins &btn)
-    : lkp{man, log}, tlk{man, log}, man{man}, log{log}, btn{btn} {}
+  Visitor(Symbols &syms, ScopeMan &man, Log &log)
+    : lkp{syms.modules, man, log},
+      tlk{syms.modules, man, log},
+      syms{syms},
+      man{man},
+      log{log},
+      btn{syms.builtins} {}
 
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
@@ -56,7 +61,7 @@ public:
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      params.push_back(getExprType(man, log, btn, expr.get()));
+      params.push_back(getExprType(syms, man, log, expr.get()));
     }
     return params;
   }
@@ -139,6 +144,7 @@ public:
 private:
   ExprLookup lkp;
   NameLookup tlk;
+  Symbols &syms;
   ScopeMan &man;
   Log &log;
   const sym::Builtins &btn;
@@ -147,10 +153,10 @@ private:
 }
 
 sym::ExprType stela::getExprType(
+  Symbols &syms,
   ScopeMan &man,
   Log &log,
-  const sym::Builtins &btn,
   ast::Expression *expr
 ) {
-  return Visitor{man, log, btn}.visitValueExpr(expr);
+  return Visitor{syms, man, log}.visitValueExpr(expr);
 }

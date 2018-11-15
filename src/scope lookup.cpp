@@ -42,14 +42,21 @@ sym::Scope *parentScope(sym::Scope *const scope) {
 
 }
 
-NameLookup::NameLookup(ScopeMan &man, Log &log)
-  : man{man}, log{log} {}
+NameLookup::NameLookup(sym::Modules &modules, ScopeMan &man, Log &log)
+  : modules{modules}, man{man}, log{log} {}
 
 ast::TypeAlias *NameLookup::lookupType(ast::NamedType &type) const {
   if (type.definition) {
     return type.definition;
-  } else {
+  } else if (type.module.empty()) {
     return lookupType(man.cur(), type);
+  } else {
+    auto iter = modules.find(sym::Name{type.module});
+    if (iter == modules.end()) {
+      log.error(type.loc) << "Module \"" << type.module << "\" is not imported by this module" << fatal;
+    }
+    // look in the global scope of the other module
+    return lookupType(iter->second.scopes[0].get(), type);
   }
 }
 
@@ -103,8 +110,8 @@ void NameLookup::validateStruct(ast::StructType *strut) const {
   }
 }
 
-ExprLookup::ExprLookup(ScopeMan &man, Log &log)
-  : man{man}, log{log}, etype{sym::null_type} {}
+ExprLookup::ExprLookup(sym::Modules &modules, ScopeMan &man, Log &log)
+  : modules{modules}, man{man}, log{log}, etype{sym::null_type} {}
 
 void ExprLookup::call() {
   exprs.push_back({Expr::Type::call});
@@ -130,7 +137,7 @@ sym::Func *ExprLookup::lookupFun(
         log.error(loc) << "Calling \"" << key.name
           << "\" but it is not a function. " << symbol->loc << fatal;
       }
-      if (compatParams(NameLookup{man, log}, func->params, key.params)) {
+      if (compatParams(NameLookup{modules, man, log}, func->params, key.params)) {
         return referTo(func);
       }
     }
@@ -166,7 +173,7 @@ void ExprLookup::member(const sym::Name &name) {
 
 ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
-    NameLookup lkp{man, log};
+    NameLookup lkp{modules, man, log};
     ast::Type *type = lkp.lookupConcreteType(popExpr().type);
     const sym::Name name = popName();
     if (type == nullptr) {
