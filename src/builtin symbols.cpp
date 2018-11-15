@@ -44,21 +44,21 @@ ast::BuiltinType *pushType(
 }
 
 void insertTypes(sym::Table &table, ast::Decls &decls, ast::Types &types, sym::Builtins &t) {
-  #define INSERT(TYPE)                                                          \
-    t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, #TYPE);
+  #define INSERT(TYPE, NAME)                                                          \
+    t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, NAME);
   
-  INSERT(Bool);
-  INSERT(Byte);
-  INSERT(Char);
-  INSERT(Real);
-  INSERT(Sint);
-  INSERT(Uint);
+  INSERT(Bool, "bool");
+  INSERT(Byte, "byte");
+  INSERT(Char, "char");
+  INSERT(Real, "real");
+  INSERT(Sint, "sint");
+  INSERT(Uint, "uint");
 
   #undef INSERT
   
-  // A string literal has the type [Char]
+  // A string literal has the type [char]
   auto charName = std::make_unique<ast::NamedType>();
-  charName->name = "Char";
+  charName->name = "char";
   auto string = std::make_unique<ast::ArrayType>();
   string->elem = std::move(charName);
   t.string = string.get();
