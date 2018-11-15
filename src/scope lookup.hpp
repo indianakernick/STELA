@@ -113,7 +113,7 @@ public:
     // else
     //   return null
   
-  ast::Statement *lookupIdent(const sym::Name &, Loc);
+  ast::Statement *lookupIdent(const sym::Name &, const sym::Name &, Loc);
     // standard lookup
     // if name is function
     //   exprs.push_back({Expr::Type::free_fun, name});
@@ -135,11 +135,15 @@ private:
       free_fun,
       expr,
       subexpr
-    } type;
+    };
+    
+    Type type;
     sym::Name name;
+    sym::Scope *scope;
     
     Expr(Type);
     Expr(Type, const sym::Name &);
+    Expr(Type, const sym::Name &, sym::Scope *);
   };
   
   struct FunKey {

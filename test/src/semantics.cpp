@@ -182,7 +182,102 @@ TEST_GROUP(Semantics, {
     compileModules(syms, order, asts, log);
   });
   
-  TEST(Modules - Import type invalid module, {
+  TEST(Modules - Import constant, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = Real;
+    
+      let five: Number = 5.0;
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      func main() {
+        let n: Real = ModA::five;
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+  });
+  
+  TEST(Modules - Import function, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = Real;
+    
+      func getFive() -> Number {
+        return 5.0;
+      }
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      func main() {
+        let n: Real = ModA::getFive();
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+  });
+  
+  TEST(Modules - Import struct, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = Real;
+    
+      type Vec2 struct {
+        x: Number;
+        y: Number;
+      };
+    
+      func getVec2() -> Vec2 {
+        var vec: Vec2;
+        vec.x = 5.0;
+        vec.y = 7.0;
+        return vec;
+      }
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      func main() {
+        let vec: ModA::Vec2 = ModA::getVec2();
+        let x: ModA::Number = vec.x;
+        let y: Real = vec.y;
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+  });
+  
+  TEST(Modules - Forgot to import, {
     const char *sourceA = R"(
       module ModA;
     

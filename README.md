@@ -22,9 +22,7 @@ __If a compilers expert is reading this, I would love some advice!__
     
    * generics (required to implement arrays, maps and lambdas)
    * arrays, maps, lambdas (their value expressions and type expressions)
-   * static properties on builtin types (`Int.max`, `Double.nan`, `Float.epsilon`)
-   * syntax for overloaded operators (`func +(a: Vec, b: Vec) -> Vec`). Semantic analyser already supports it
-   * standard math functions (`sin`, `cosh`, `sqrt`)
+   * standard math functions (`sin`, `log`, `sqrt`)
    * warnings about unused symbols (`unused variable "myVar"`)
    * probably a lot of stuff that I can't think of right now!
 

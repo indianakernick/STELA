@@ -22,10 +22,6 @@ sym::FuncPtr makeFunc(const Loc loc) {
   return funcSym;
 }
 
-sym::ExprType retType(const ast::Func &func) {
-  return {func.ret.get(), sym::ValueMut::let, sym::ValueRef::val};
-}
-
 auto makeParam(const sym::ExprType &etype, const ast::FuncParam &param) {
   auto paramSym = std::make_unique<sym::Object>();
   paramSym->loc = param.loc;
@@ -50,13 +46,17 @@ sym::ValueRef refToRef(const ast::ParamRef ref) {
   }
 }
 
-sym::ExprType convert(const NameLookup &tlk, const ast::FuncParam &param) {
-  tlk.validateType(param.type.get());
+sym::ExprType convert(const NameLookup &tlk, ast::Type *type, const ast::ParamRef ref) {
+  tlk.validateType(type);
   return {
-    param.type.get(),
-    refToMut(param.ref),
-    refToRef(param.ref)
+    type,
+    refToMut(ref),
+    refToRef(ref)
   };
+}
+
+sym::ExprType convert(const NameLookup &tlk, const ast::FuncParam &param) {
+  return convert(tlk, param.type.get(), param.ref);
 }
 
 sym::FuncParams convertParams(
@@ -100,7 +100,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
     }
   }
   funcSym->params = convertParams(tlk, func.receiver, func.params);
-  funcSym->ret = retType(func);
+  funcSym->ret = convert(tlk, func.ret.get(), ast::ParamRef::value);
   funcSym->node = const_cast<ast::Func *>(&func);
   const auto [beg, end] = man.cur()->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {

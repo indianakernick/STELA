@@ -159,7 +159,7 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     return popCallPushRet(lookupFun(man.cur(), funKey(popExpr(), params), loc));
   }
   if (call(Expr::Type::free_fun)) {
-    return popCallPushRet(lookupFun(man.cur(), funKey(sym::null_type, params), loc));
+    return popCallPushRet(lookupFun(exprs.back().scope, funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
     log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
@@ -210,13 +210,23 @@ sym::Symbol *ExprLookup::lookupIdent(
   }
 }
 
-ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
-  sym::Symbol *symbol = lookupIdent(man.cur(), name, loc);
+ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
+  sym::Scope *scope;
+  if (module.empty()) {
+    scope = man.cur();
+  } else {
+    auto iter = modules.find(module);
+    if (iter == modules.end()) {
+      log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
+    }
+    scope = iter->second.scopes[0].get();
+  }
+  sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     if (exprs.back().type != Expr::Type::call) {
       log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
     }
-    exprs.push_back({Expr::Type::free_fun, name});
+    exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
@@ -245,7 +255,7 @@ sym::ExprType ExprLookup::leaveSubExpr() {
 }
 
 ExprLookup::Expr::Expr(const Type type)
-  : type{type}, name{} {
+  : type{type}, name{}, scope{nullptr} {
   assert(
     type == Type::call ||
     type == Type::expr ||
@@ -254,8 +264,13 @@ ExprLookup::Expr::Expr(const Type type)
 }
 
 ExprLookup::Expr::Expr(const Type type, const sym::Name &name)
-  : type{type}, name{name} {
-  assert(type == Type::member || type == Type::free_fun);
+  : type{type}, name{name}, scope{nullptr} {
+  assert(type == Type::member);
+}
+
+ExprLookup::Expr::Expr(const Type type, const sym::Name &name, sym::Scope *scope)
+  : type{type}, name{name}, scope{scope} {
+  assert(type == Type::free_fun);
 }
 
 void ExprLookup::pushExpr(const sym::ExprType type) {
