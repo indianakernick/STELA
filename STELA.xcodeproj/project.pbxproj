@@ -103,6 +103,7 @@
 		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
+		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
@@ -249,6 +250,7 @@
 		45BBA3E320D63E3D006108C1 = {
 			isa = PBXGroup;
 			children = (
+				454EB7F9219E326E001A5D78 /* notes.txt */,
 				45BBA3F420D64086006108C1 /* README.md */,
 				45EE9C3020E3AAF500CC3289 /* CMakeLists.txt */,
 				450E327720E65D5400F222F1 /* .travis.yml */,

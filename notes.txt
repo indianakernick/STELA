@@ -1,0 +1,9 @@
+We cannot infer the type of an empty array literal. An empty array literal can
+be converted to a an empty int array or an empty bool array. When determining
+the type of an expression, we need to know the expected type (if there is one).
+
+var arr: [sint] = [];
+
+When determining the type of [], we need to know the type [sint]. We can check
+that [sint] is an array type and we know that [] is an empty array so we return
+[sint].

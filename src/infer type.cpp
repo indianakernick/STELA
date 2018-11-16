@@ -134,6 +134,23 @@ public:
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
+  /*void visit(ast::ArrayLiteral &arr) override {
+    if (arr.exprs.empty()) {
+      log.error(arr.loc) << "Empty array" << fatal;
+    }
+    const sym::ExprType expr = getExprType(syms, man, log, arr.exprs.front().get());
+    for (auto e = arr.exprs.cbegin() + 1; e != arr.exprs.cend(); ++e) {
+      const sym::ExprType currExpr = getExprType(syms, man, log, e->get());
+      if (!compareTypes(tlk, expr.type, currExpr.type)) {
+        log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
+      }
+    }
+    sym::ExprType etype;
+    // etype.type = array of expr.type;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
+    lkp.setExpr(etype);
+  }*/
 
   sym::ExprType visitValueExpr(ast::Node *const node) {
     lkp.enterSubExpr();
