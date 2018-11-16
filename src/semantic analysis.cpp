@@ -42,3 +42,5 @@ void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, 
     compileModule(syms, asts[index], buf);
   }
 }
+
+#include "retain ptr.hpp"

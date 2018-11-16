@@ -39,7 +39,7 @@ ast::ExprPtr parseIdent(ParseTokens &tok) {
   if (!tok.peekIdentType()) {
     return nullptr;
   }
-  auto ident = std::make_unique<ast::Identifier>();
+  auto ident = make_retain<ast::Identifier>();
   ident->loc = tok.loc();
   const ast::Name name = tok.expectID();
   if (tok.checkOp("::")) {
@@ -74,20 +74,20 @@ ast::ExprPtr stela::parseNested(ParseTokens &tok) {
   }
   while (true) {
     if (tok.peekOp("(")) {
-      auto call = std::make_unique<ast::FuncCall>();
+      auto call = make_retain<ast::FuncCall>();
       call->loc = tok.loc();
       call->func = std::move(left);
       call->args = parseFuncArgs(tok);
       left = std::move(call);
     } else if (tok.checkOp("[")) {
-      auto sub = std::make_unique<ast::Subscript>();
+      auto sub = make_retain<ast::Subscript>();
       sub->loc = tok.lastLoc();
       sub->object = std::move(left);
       sub->index = expectExpr(tok, parseExpr);
       tok.expectOp("]");
       left = std::move(sub);
     } else if (tok.checkOp(".")) {
-      auto mem = std::make_unique<ast::MemberIdent>();
+      auto mem = make_retain<ast::MemberIdent>();
       mem->loc = tok.lastLoc();
       mem->object = std::move(left);
       mem->member = tok.expectID();
@@ -102,7 +102,7 @@ ast::ExprPtr stela::parseNested(ParseTokens &tok) {
 namespace {
 
 ast::ExprPtr makeUnary(const ast::UnOp oper, ast::ExprPtr expr) {
-  auto unary = std::make_unique<ast::UnaryExpr>();
+  auto unary = make_retain<ast::UnaryExpr>();
   unary->loc = expr->loc;
   unary->oper = oper;
   unary->expr = std::move(expr);
@@ -129,7 +129,7 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
 }
 
 ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr left, ast::ExprPtr right) {
-  auto bin = std::make_unique<ast::BinaryExpr>();
+  auto bin = make_retain<ast::BinaryExpr>();
   bin->loc = left->loc;
   bin->left = std::move(left);
   bin->oper = oper;
@@ -306,7 +306,7 @@ ast::ExprPtr parseTern(ParseTokens &tok) {
     return nullptr;
   }
   if (tok.checkOp("?")) {
-    auto tern = std::make_unique<ast::Ternary>();
+    auto tern = make_retain<ast::Ternary>();
     tern->loc = left->loc;
     tern->cond = std::move(left);
     tern->tru = expectExpr(tok, parseTern);

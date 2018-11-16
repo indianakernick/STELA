@@ -10,11 +10,10 @@
 #define stela_ast_hpp
 
 #include <vector>
-#include <memory>
-#include <cassert>
 #include <optional>
 #include <string_view>
 #include "location.hpp"
+#include "retain ptr.hpp"
 
 namespace stela::ast {
 
@@ -22,31 +21,31 @@ class Visitor;
 
 //---------------------------------- Base --------------------------------------
 
-struct Node {
+struct Node : ref_count<Node> {
   virtual ~Node() = default;
   virtual void accept(Visitor &) = 0;
   
   Loc loc;
 };
-using NodePtr = std::unique_ptr<Node>;
+using NodePtr = retain_ptr<Node>;
 
 struct Type : Node {};
-using TypePtr = std::unique_ptr<Type>;
+using TypePtr = retain_ptr<Type>;
 
 struct Expression : Node {};
-using ExprPtr = std::unique_ptr<Expression>;
+using ExprPtr = retain_ptr<Expression>;
 
 struct Statement : Node {};
-using StatPtr = std::unique_ptr<Statement>;
+using StatPtr = retain_ptr<Statement>;
 
 struct Declaration : Statement {};
-using DeclPtr = std::unique_ptr<Declaration>;
+using DeclPtr = retain_ptr<Declaration>;
 
 struct Assignment : Statement {};
-using AsgnPtr = std::unique_ptr<Assignment>;
+using AsgnPtr = retain_ptr<Assignment>;
 
 struct Literal : Expression {};
-using LitrPtr = std::unique_ptr<Literal>;
+using LitrPtr = retain_ptr<Literal>;
 
 using Name = std::string_view;
 

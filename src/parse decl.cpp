@@ -20,7 +20,7 @@ ast::DeclPtr stela::parseVar(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in var declaration");
-  auto var = std::make_unique<ast::Var>();
+  auto var = make_retain<ast::Var>();
   var->loc = tok.lastLoc();
   var->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -38,7 +38,7 @@ ast::DeclPtr stela::parseLet(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in let declaration");
-  auto let = std::make_unique<ast::Let>();
+  auto let = make_retain<ast::Let>();
   let->loc = tok.lastLoc();
   let->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -57,7 +57,7 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in type alias");
-  auto aliasNode = std::make_unique<ast::TypeAlias>();
+  auto aliasNode = make_retain<ast::TypeAlias>();
   aliasNode->loc = tok.lastLoc();
   aliasNode->name = tok.expectID();
   aliasNode->strong = !tok.checkOp("=");

@@ -15,7 +15,7 @@ using namespace stela;
 namespace {
 
 ast::AsgnPtr makeAssign(ParseTokens &tok, const ast::AssignOp op, ast::ExprPtr left) {
-  auto assign = std::make_unique<ast::CompAssign>();
+  auto assign = make_retain<ast::CompAssign>();
   assign->loc = tok.lastLoc();
   assign->left = std::move(left);
   assign->oper = op;
@@ -32,7 +32,7 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   }
   if (auto *ident = dynamic_cast<ast::Identifier *>(left.get())) {
     if (tok.checkOp(":=")) {
-      auto decl = std::make_unique<ast::DeclAssign>();
+      auto decl = make_retain<ast::DeclAssign>();
       decl->loc = tok.lastLoc();
       decl->name = ident->name;
       decl->expr = tok.expectNode(parseExpr, "expression");
@@ -41,7 +41,7 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   }
   
   if (const bool incr = tok.checkOp("++"); incr || tok.checkOp("--")) {
-    auto incrDecr = std::make_unique<ast::IncrDecr>();
+    auto incrDecr = make_retain<ast::IncrDecr>();
     incrDecr->loc = tok.lastLoc();
     incrDecr->incr = incr;
     incrDecr->expr = std::move(left);
@@ -49,7 +49,7 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   }
   
   if (tok.checkOp("=")) {
-    auto assign = std::make_unique<ast::Assign>();
+    auto assign = make_retain<ast::Assign>();
     assign->loc = tok.lastLoc();
     assign->left = std::move(left);
     assign->right = tok.expectNode(parseExpr, "expression");
@@ -76,7 +76,7 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   #undef CHECK
   
   if (auto *call = dynamic_cast<ast::FuncCall *>(left.get())) {
-    auto assign = std::make_unique<ast::CallAssign>();
+    auto assign = make_retain<ast::CallAssign>();
     assign->loc = call->loc;
     assign->call = std::move(*call);
     return assign;

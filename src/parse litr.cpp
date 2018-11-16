@@ -19,7 +19,7 @@ namespace {
 template <typename Literal, bool Trim = false>
 ast::LitrPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   if (tok.peekType(type)) {
-    auto literal = std::make_unique<Literal>();
+    auto literal = make_retain<Literal>();
     literal->loc = tok.loc();
     literal->value = tok.expect(type);
     if constexpr (Trim) {
@@ -53,7 +53,7 @@ ast::LitrPtr parseBool(ParseTokens &tok) {
   } else {
     return nullptr;
   }
-  auto literal = std::make_unique<ast::BoolLiteral>();
+  auto literal = make_retain<ast::BoolLiteral>();
   literal->loc = tok.lastLoc();
   literal->value = value;
   return literal;
@@ -64,7 +64,7 @@ ast::LitrPtr parseArray(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in array literal");
-  auto array = std::make_unique<ast::ArrayLiteral>();
+  auto array = make_retain<ast::ArrayLiteral>();
   array->loc = tok.lastLoc();
   if (!tok.checkOp("]")) {
     do {
@@ -79,7 +79,7 @@ ast::LitrPtr parseLambda(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in lambda expression");
-  auto lambda = std::make_unique<ast::Lambda>();
+  auto lambda = make_retain<ast::Lambda>();
   lambda->loc = tok.lastLoc();
   lambda->params = parseFuncParams(tok);
   lambda->ret = parseFuncRet(tok);

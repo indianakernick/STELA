@@ -14,8 +14,8 @@ using namespace stela;
 
 namespace {
 
-std::unique_ptr<ast::BuiltinType> makeType(const ast::BuiltinType::Enum e) {
-  auto type = std::make_unique<ast::BuiltinType>();
+stela::retain_ptr<ast::BuiltinType> makeType(const ast::BuiltinType::Enum e) {
+  auto type = stela::make_retain<ast::BuiltinType>();
   type->value = e;
   return type;
 }
@@ -32,10 +32,10 @@ ast::BuiltinType *pushType(
   const ast::BuiltinType::Enum e,
   const ast::Name name
 ) {
-  auto alias = std::make_unique<ast::TypeAlias>();
+  auto alias = make_retain<ast::TypeAlias>();
   alias->name = name;
   alias->strong = false;
-  std::unique_ptr<ast::BuiltinType> type = makeType(e);
+  retain_ptr<ast::BuiltinType> type = makeType(e);
   ast::BuiltinType *ptr = type.get();
   alias->type = std::move(type);
   table.insert({sym::Name(name), makeSymbol(alias.get())});
@@ -57,9 +57,9 @@ void insertTypes(sym::Table &table, ast::Decls &decls, ast::Types &types, sym::B
   #undef INSERT
   
   // A string literal has the type [char]
-  auto charName = std::make_unique<ast::NamedType>();
+  auto charName = make_retain<ast::NamedType>();
   charName->name = "char";
-  auto string = std::make_unique<ast::ArrayType>();
+  auto string = make_retain<ast::ArrayType>();
   string->elem = std::move(charName);
   t.string = string.get();
   types.push_back(std::move(string));

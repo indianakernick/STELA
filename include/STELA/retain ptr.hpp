@@ -80,31 +80,45 @@ public:
     : ptr{nullptr} {}
   constexpr retain_ptr(std::nullptr_t) noexcept
     : ptr{nullptr} {}
+  
   explicit retain_ptr(const pointer ptr) noexcept
     : ptr{ptr} {}
   retain_ptr(retain_t, const pointer ptr) noexcept(noexcept(incr()))
     : ptr{ptr} {
     incr(ptr);
   }
+  
+  template <typename U>
+  explicit retain_ptr(const U *ptr) noexcept
+    : ptr{ptr} {}
+  template <typename U>
+  retain_ptr(retain_t, const U *ptr) noexcept
+    : ptr{ptr} {}
+  
   ~retain_ptr() noexcept(noexcept(decr())) {
     decr();
   }
-  
   retain_ptr &operator=(std::nullptr_t) noexcept(noexcept(reset())) {
     reset();
     return *this;
   }
-  retain_ptr(retain_ptr<T, R> &&other) noexcept
+  
+  template <typename U, typename Y>
+  retain_ptr(retain_ptr<U, Y> &&other) noexcept
     : ptr{other.detach()} {}
-  retain_ptr &operator=(retain_ptr<T, R> &&other) noexcept(noexcept(reset())) {
+  template <typename U, typename Y>
+  retain_ptr &operator=(retain_ptr<U, Y> &&other) noexcept(noexcept(reset())) {
     reset(other.detach());
     return *this;
   }
-  retain_ptr(const retain_ptr<T, R> &other) noexcept(noexcept(incr()))
+  
+  template <typename U, typename Y>
+  retain_ptr(const retain_ptr<U, Y> &other) noexcept(noexcept(incr()))
     : ptr{other.get()} {
     incr();
   }
-  retain_ptr &operator=(const retain_ptr<T, R> &other) noexcept(noexcept(reset()) && noexcept(incr())) {
+  template <typename U, typename Y>
+  retain_ptr &operator=(const retain_ptr<U, Y> &other) noexcept(noexcept(reset()) && noexcept(incr())) {
     reset(other.get());
     incr();
   }
@@ -118,6 +132,7 @@ public:
     ptr = newPtr;
     incr();
   }
+  
   void swap(retain_ptr<T, R> &other) noexcept {
     std::swap(ptr, other.ptr);
   }

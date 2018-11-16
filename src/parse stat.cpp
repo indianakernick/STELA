@@ -21,7 +21,7 @@ ast::StatPtr parseIf(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in if statement");
-  auto ifNode = std::make_unique<ast::If>();
+  auto ifNode = make_retain<ast::If>();
   ifNode->loc = tok.lastLoc();
   tok.expectOp("(");
   ifNode->cond = tok.expectNode(parseExpr, "condition expression");
@@ -38,7 +38,7 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in switch statement");
-  auto switchNode = std::make_unique<ast::Switch>();
+  auto switchNode = make_retain<ast::Switch>();
   switchNode->loc = tok.lastLoc();
   tok.expectOp("(");
   switchNode->expr = tok.expectNode(parseExpr, "expression");
@@ -74,7 +74,7 @@ ast::StatPtr parseKeywordStatement(ParseTokens &tok, const std::string_view name
   if (tok.checkKeyword(name)) {
     Context ctx = tok.context("after keyword");
     ctx.ident(name);
-    auto type = std::make_unique<Type>();
+    auto type = make_retain<Type>();
     type->loc = tok.lastLoc();
     tok.expectOp(";");
     return type;
@@ -94,7 +94,7 @@ ast::StatPtr parseContinue(ParseTokens &tok) {
 ast::StatPtr parseReturn(ParseTokens &tok) {
   if (tok.checkKeyword("return")) {
     Context ctx = tok.context("in return statement");
-    auto ret = std::make_unique<ast::Return>();
+    auto ret = make_retain<ast::Return>();
     ret->loc = tok.lastLoc();
     if (tok.checkOp(";")) {
       return ret;
@@ -112,7 +112,7 @@ ast::StatPtr parseWhile(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in while statement");
-  auto whileNode = std::make_unique<ast::While>();
+  auto whileNode = make_retain<ast::While>();
   whileNode->loc = tok.lastLoc();
   tok.expectOp("(");
   whileNode->cond = tok.expectNode(parseExpr, "condition expression");
@@ -140,7 +140,7 @@ ast::StatPtr parseFor(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in for statement");
-  auto forNode = std::make_unique<ast::For>();
+  auto forNode = make_retain<ast::For>();
   forNode->loc = tok.lastLoc();
   tok.expectOp("(");
   forNode->init = parseOptAsgnSemi(tok); // init assignment is optional
@@ -155,7 +155,7 @@ ast::StatPtr parseFor(ParseTokens &tok) {
 ast::StatPtr parseBlock(ParseTokens &tok) {
   if (tok.checkOp("{")) {
     Context ctx = tok.context("in block");
-    auto block = std::make_unique<ast::Block>();
+    auto block = make_retain<ast::Block>();
     block->loc = tok.lastLoc();
     while (ast::StatPtr node = parseStat(tok)) {
       block->nodes.emplace_back(std::move(node));

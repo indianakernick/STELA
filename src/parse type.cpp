@@ -18,7 +18,7 @@ ast::TypePtr parseFuncType(ParseTokens &tok) {
   }
   Context ctx = tok.context("in function type");
   tok.expectOp("(");
-  auto type = std::make_unique<ast::FuncType>();
+  auto type = make_retain<ast::FuncType>();
   type->loc = tok.lastLoc();
   if (!tok.checkOp(")")) {
     do {
@@ -39,7 +39,7 @@ ast::TypePtr parseArrayType(ParseTokens &tok) {
     return nullptr;
   }
   Context ctx = tok.context("in array type");
-  auto arrayType = std::make_unique<ast::ArrayType>();
+  auto arrayType = make_retain<ast::ArrayType>();
   arrayType->loc = tok.lastLoc();
   arrayType->elem = tok.expectNode(parseType, "element type");
   tok.expectOp("]");
@@ -50,7 +50,7 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
   if (!tok.peekIdentType()) {
     return nullptr;
   }
-  auto namedType = std::make_unique<ast::NamedType>();
+  auto namedType = make_retain<ast::NamedType>();
   namedType->loc = tok.loc();
   const ast::Name name = tok.expectID();
   if (tok.checkOp("::")) {
@@ -77,7 +77,7 @@ ast::TypePtr parseStructType(ParseTokens &tok) {
   if (!tok.checkKeyword("struct")) {
     return nullptr;
   }
-  auto strut = std::make_unique<ast::StructType>();
+  auto strut = make_retain<ast::StructType>();
   strut->loc = tok.lastLoc();
   Context ctx = tok.context("in struct type");
   tok.expectOp("{");

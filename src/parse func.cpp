@@ -76,7 +76,7 @@ ast::DeclPtr stela::parseFunc(ParseTokens &tok) {
   }
   
   Context ctx = tok.context("in function declaration");
-  auto funcNode = std::make_unique<ast::Func>();
+  auto funcNode = make_retain<ast::Func>();
   funcNode->loc = tok.lastLoc();
   funcNode->receiver = parseReceiver(tok);
   funcNode->name = tok.expectID();
