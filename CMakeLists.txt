@@ -71,7 +71,7 @@ add_library(STELA STATIC
         "src/compare types.cpp"
         "src/compare types.hpp"
         "src/modules.cpp"
-        "src/intrusive ptr.hpp"
+        "src/retain ptr.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
