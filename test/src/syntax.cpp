@@ -560,7 +560,9 @@ TEST_GROUP(Syntax, {
   
   TEST(Decl - global, {
     const char *source = R"(
-      ;;; // a few extra semicolons never hurt anyone
+      module my_awesome_module;
+    
+      ; // an extra semicolon never hurt anyone
     
       if (expr) {} // that's not a declaration
     )";

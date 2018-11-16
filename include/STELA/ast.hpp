@@ -54,7 +54,7 @@ using Name = std::string_view;
 
 struct BuiltinType final : Type {
   // not a strong enum
-  // BuiltinType::Int instead of BuiltinType::TypeEnum::Int
+  // BuiltinType::Int instead of BuiltinType::Enum::Int
   enum Enum {
     // builtin symbols.cpp depends on the order
     Bool,

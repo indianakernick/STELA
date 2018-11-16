@@ -46,12 +46,14 @@ public:
   Log(LogBuf &, LogCat);
   
   LogStream verbose(Loc);
+  LogStream status(Loc);
   LogStream info(Loc);
   LogStream warn(Loc);
   LogStream error(Loc);
   LogStream log(LogPri, Loc);
   
   LogStream verbose();
+  LogStream status();
   LogStream info();
   LogStream warn();
   LogStream error();

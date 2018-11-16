@@ -25,6 +25,7 @@ enum class LogCat : uint8_t {
 /// Logging priority
 enum class LogPri : uint8_t {
   verbose,
+  status,
   info,
   warning,
   error,

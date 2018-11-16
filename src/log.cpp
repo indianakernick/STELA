@@ -31,6 +31,8 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
   switch (pri) {
     case LogPri::verbose:
       return stream << "verbosity";
+    case LogPri::status:
+      return stream << "status";
     case LogPri::info:
       return stream << "info";
     case LogPri::warning:
@@ -145,6 +147,8 @@ void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
 void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
   if (pri == LogPri::verbose) {
     std::cerr << con::text_magenta;
+  } else if (pri == LogPri::status) {
+    std::cerr << con::text_green;
   } else if (pri == LogPri::info) {
     std::cerr << con::text_blue;
   } else if (pri == LogPri::warning) {

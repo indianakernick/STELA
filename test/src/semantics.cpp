@@ -32,7 +32,7 @@ AST makeModuleAST(const ast::Name name, std::vector<ast::Name> &&imports) {
 
 TEST_GROUP(Semantics, {
   StreamLog log;
-  log.pri(LogPri::warning);
+  log.pri(LogPri::status);
   
   TEST(Empty source, {
     const Symbols syms = createSym("", log);
@@ -299,6 +299,8 @@ TEST_GROUP(Semantics, {
     const ModuleOrder order = findModuleOrder(asts, log);
     ASSERT_THROWS(compileModules(syms, order, asts, log), FatalError);
   });
+  
+  log.pri(LogPri::warning);
   
   TEST(Func - Redef, {
     const char *source = R"(

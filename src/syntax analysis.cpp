@@ -29,6 +29,8 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
     ast.name = "main";
   }
   
+  log.status() << "Parsing module \"" << ast.name << "\"" << endlog;
+  
   while (!tok.empty()) {
     if (tok.checkKeyword("import")) {
       ast.imports.push_back(tok.expectID());
