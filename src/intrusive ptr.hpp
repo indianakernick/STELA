@@ -15,54 +15,57 @@
 
 namespace stela {
 
+struct no_ref_incr_t {};
+constexpr no_ref_incr_t no_ref_incr {};
+
 template <typename T>
 class intrusive_ptr {
 public:
-  using element_type = T;
-
   constexpr intrusive_ptr() noexcept
     : ptr{nullptr} {}
   constexpr intrusive_ptr(std::nullptr_t) noexcept
     : ptr{nullptr} {}
-  explicit intrusive_ptr(T *ptr) noexcept
+  template <typename U>
+  explicit intrusive_ptr(U *const ptr) noexcept
     : ptr{ptr} {
-    if (ptr) {
-      intrusive_incr(ptr);
-    }
+    incr();
   }
+  template <typename U>
+  explicit intrusive_ptr(no_ref_incr_t, U *const ptr) noexcept
+    : ptr{ptr} {}
   ~intrusive_ptr() noexcept {
-    if (ptr) {
-      intrusive_decr(ptr);
-    }
+    decr();
   }
   
-  intrusive_ptr(intrusive_ptr<T> &&other) noexcept
-    : ptr{std::exchange(other.ptr, nullptr)} {}
-  intrusive_ptr &operator=(intrusive_ptr<T> &&other) noexcept {
-    reset(std::exchange(other.ptr, nullptr));
+  template <typename U>
+  intrusive_ptr(intrusive_ptr<U> &&other) noexcept
+    : ptr{other.release()} {}
+  template <typename U>
+  intrusive_ptr &operator=(intrusive_ptr<U> &&other) noexcept {
+    reset(other.release());
     return *this;
   }
-  intrusive_ptr(const intrusive_ptr<T> &other) noexcept
-    : ptr{other.ptr} {
-    if (ptr) {
-      intrusive_incr(ptr);
-    }
+  template <typename U>
+  intrusive_ptr(const intrusive_ptr<U> &other) noexcept
+    : ptr{other.get()} {
+    incr();
   }
-  intrusive_ptr &operator=(const intrusive_ptr<T> &other) noexcept {
-    reset(other.ptr);
-    if (ptr) {
-      intrusive_incr(ptr);
-    }
+  template <typename U>
+  intrusive_ptr &operator=(const intrusive_ptr<U> &other) noexcept {
+    reset(other.get());
+    incr();
   }
   
-  void reset(T *const newPtr = nullptr) noexcept {
-    if (ptr) {
-      intrusive_decr(ptr);
-    }
+  template <typename U = T>
+  void reset(U *const newPtr = nullptr) noexcept {
+    decr();
     ptr = newPtr;
   }
   void swap(intrusive_ptr<T> &other) noexcept {
     std::swap(ptr, other.ptr);
+  }
+  void release() noexcept {
+    return std::exchange(ptr, nullptr);
   }
   
   T *get() const noexcept {
@@ -76,12 +79,27 @@ public:
     assert(ptr);
     return ptr;
   }
+  T &operator[](const ptrdiff_t i) const noexcept {
+    assert(ptr);
+    return ptr[i];
+  }
   explicit operator bool() const noexcept {
     return ptr;
   }
 
 private:
   T *ptr;
+  
+  void incr() const noexcept {
+    if (ptr) {
+      intrusive_incr(ptr);
+    }
+  }
+  void decr() const noexcept {
+    if (ptr) {
+      intrusive_decr(ptr);
+    }
+  }
 };
 
 template <typename T, typename... Args>
@@ -94,6 +112,7 @@ class ref_count;
 
 template <typename T>
 void intrusive_incr(ref_count<T> *const ptr) noexcept {
+  static_assert(std::is_base_of_v<ref_count<T>, T>);
   assert(ptr->count != ~uint8_t{});
   ++ptr->count;
 }
