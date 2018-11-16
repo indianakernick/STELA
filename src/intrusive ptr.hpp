@@ -39,10 +39,10 @@ public:
   
   template <typename U>
   intrusive_ptr(intrusive_ptr<U> &&other) noexcept
-    : ptr{other.release()} {}
+    : ptr{other.detach()} {}
   template <typename U>
   intrusive_ptr &operator=(intrusive_ptr<U> &&other) noexcept {
-    reset(other.release());
+    reset(other.detach());
     return *this;
   }
   template <typename U>
@@ -64,7 +64,7 @@ public:
   void swap(intrusive_ptr<T> &other) noexcept {
     std::swap(ptr, other.ptr);
   }
-  void release() noexcept {
+  void detach() noexcept {
     return std::exchange(ptr, nullptr);
   }
   
@@ -84,7 +84,70 @@ public:
     return ptr[i];
   }
   explicit operator bool() const noexcept {
-    return ptr;
+    return ptr != nullptr;
+  }
+  
+  template <typename U>
+  bool operator==(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr == rhs.ptr;
+  }
+  template <typename U>
+  bool operator!=(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr != rhs.ptr;
+  }
+  template <typename U>
+  bool operator<(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr < rhs.ptr;
+  }
+  template <typename U>
+  bool operator>(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr > rhs.ptr;
+  }
+  template <typename U>
+  bool operator<=(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr <= rhs.ptr;
+  }
+  template <typename U>
+  bool operator>=(const intrusive_ptr<U> &rhs) const noexcept {
+    return ptr >= rhs.ptr;
+  }
+  
+  friend bool operator==(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr == nullptr;
+  }
+  friend bool operator!=(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr != nullptr;
+  }
+  friend bool operator<(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr < nullptr;
+  }
+  friend bool operator>(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr > nullptr;
+  }
+  friend bool operator<=(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr <= nullptr;
+  }
+  friend bool operator>=(const intrusive_ptr<T> &lhs, std::nullptr_t) noexcept {
+    return lhs.ptr >= nullptr;
+  }
+  
+  friend bool operator==(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr == rhs.ptr;
+  }
+  friend bool operator!=(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr != rhs.ptr;
+  }
+  friend bool operator<(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr < rhs.ptr;
+  }
+  friend bool operator>(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr > rhs.ptr;
+  }
+  friend bool operator<=(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr <= rhs.ptr;
+  }
+  friend bool operator>=(std::nullptr_t, const intrusive_ptr<T> &rhs) noexcept {
+    return nullptr >= rhs.ptr;
   }
 
 private:
@@ -102,10 +165,26 @@ private:
   }
 };
 
+template <typename T>
+void swap(intrusive_ptr<T> &a, intrusive_ptr<T> &b) {
+  a.swap(b);
+}
+
 template <typename T, typename... Args>
 intrusive_ptr<T> make_intrusive(Args &&... args) noexcept {
   return intrusive_ptr<T>{new T (std::forward<Args>(args)...)};
 }
+
+}
+
+template <typename T>
+struct std::hash<intrusive_ptr<T>> {
+  size_t operator()(const intrusive_ptr<T> &ptr) const noexcept {
+    return reinterpret_cast<size_t>(ptr.get());
+  }
+};
+
+namespace stela {
 
 template <typename T>
 class ref_count;
