@@ -20,6 +20,7 @@ add_library(STELA STATIC
         "include/STELA/console format.hpp"
         "include/STELA/html format.hpp"
         "include/STELA/modules.hpp"
+        "include/STELA/ref count.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"

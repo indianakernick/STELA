@@ -12,39 +12,45 @@
 #include <cstdint>
 #include <utility>
 #include <cassert>
+#include "ref count.hpp"
 
 /* LCOV_EXCL_START */
 
 namespace stela {
 
 template <typename T>
-struct retain_traits;
-
-template <typename T>
-class ref_count {
-  unsigned count = 1;
-
-  friend retain_traits<T>;
-};
-
-template <typename T>
 struct retain_traits {
   using pointer = T *;
 
-  static void increment(ref_count<T> *const ptr) noexcept {
-    static_assert(std::is_base_of_v<ref_count<T>, T>);
-    assert(ptr->count != ~unsigned{});
-    ++ptr->count;
-  }
-  static void decrement(ref_count<T> *const ptr) noexcept {
-    assert(ptr->count != 0);
-    --ptr->count;
-    if (ptr->count == 0) {
-      delete ptr;
+  template <typename U>
+  static void increment(ref_count<U> *const ptr) noexcept {
+    if constexpr (std::is_same_v<T, U>) {
+      static_assert(std::is_base_of_v<ref_count<T>, T>);
+      assert(ptr->count != ~unsigned{});
+      ++ptr->count;
+    } else {
+      retain_traits<U>::increment(ptr);
     }
   }
-  static unsigned use_count(ref_count<T> *const ptr) noexcept {
-    return ptr->count;
+  template <typename U>
+  static void decrement(ref_count<U> *const ptr) noexcept {
+    if constexpr (std::is_same_v<T, U>) {
+      assert(ptr->count != 0);
+      --ptr->count;
+      if (ptr->count == 0) {
+        delete static_cast<T *>(ptr);
+      }
+    } else {
+      retain_traits<U>::decrement(ptr);
+    }
+  }
+  template <typename U>
+  static unsigned use_count(ref_count<U> *const ptr) noexcept {
+    if constexpr (std::is_same_v<T, U>) {
+      return ptr->count;
+    } else {
+      return retain_traits<U>::use_count(ptr);
+    }
   }
 };
 
@@ -126,7 +132,7 @@ public:
     return ptr != nullptr;
   }
   
-  unsigned use_count() const noexcept(noexcept(traits_type::use_count(nullptr))) {
+  unsigned use_count() const noexcept(noexcept(traits_type::use_count(std::declval<pointer>()))) {
     if (ptr) {
       return traits_type::use_count(ptr);
     } else {
@@ -197,12 +203,12 @@ public:
 private:
   pointer ptr;
   
-  void incr() const noexcept(noexcept(traits_type::increment(nullptr))) {
+  void incr() const noexcept(noexcept(traits_type::increment(std::declval<pointer>()))) {
     if (ptr) {
       traits_type::increment(ptr);
     }
   }
-  void decr() const noexcept(noexcept(traits_type::decrement(nullptr))) {
+  void decr() const noexcept(noexcept(traits_type::decrement(std::declval<pointer>()))) {
     if (ptr) {
       traits_type::decrement(ptr);
     }
