@@ -105,7 +105,6 @@
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
-		454EB7FC219F75B6001A5D78 /* ref count.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "ref count.hpp"; sourceTree = "<group>"; };
 		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
@@ -209,14 +208,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		454EB7FA219E465B001A5D78 /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-				454EB7FB219E4681001A5D78 /* retain ptr.hpp */,
-			);
-			name = Utilities;
-			sourceTree = "<group>";
-		};
 		4572CA6120F32C8000EA1A56 /* Semantic Analysis */ = {
 			isa = PBXGroup;
 			children = (
@@ -287,7 +278,6 @@
 		45BBA3F320D63E7B006108C1 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				454EB7FA219E465B001A5D78 /* Utilities */,
 				4572CA7E20F9985D00EA1A56 /* Formatting */,
 				4572CA6120F32C8000EA1A56 /* Semantic Analysis */,
 				45EE9C4820E4D23E00CC3289 /* Syntax Analysis */,
@@ -357,7 +347,7 @@
 				4572CA7D20F9951400EA1A56 /* format.hpp */,
 				4572CA8120F9FE1B00EA1A56 /* console format.hpp */,
 				4572CA8720FB254600EA1A56 /* html format.hpp */,
-				454EB7FC219F75B6001A5D78 /* ref count.hpp */,
+				454EB7FB219E4681001A5D78 /* retain ptr.hpp */,
 			);
 			path = STELA;
 			sourceTree = "<group>";

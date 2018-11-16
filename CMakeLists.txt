@@ -20,7 +20,7 @@ add_library(STELA STATIC
         "include/STELA/console format.hpp"
         "include/STELA/html format.hpp"
         "include/STELA/modules.hpp"
-        "include/STELA/ref count.hpp"
+        "include/STELA/retain ptr.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -72,7 +72,6 @@ add_library(STELA STATIC
         "src/compare types.cpp"
         "src/compare types.hpp"
         "src/modules.cpp"
-        "src/retain ptr.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

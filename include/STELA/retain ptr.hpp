@@ -12,11 +12,23 @@
 #include <cstdint>
 #include <utility>
 #include <cassert>
-#include "ref count.hpp"
+#include <type_traits>
 
 /* LCOV_EXCL_START */
 
 namespace stela {
+
+template <typename T>
+struct retain_traits;
+
+template <typename T>
+class ref_count {
+  friend retain_traits<T>;
+  unsigned count = 1;
+  
+protected:
+  ref_count() = default;
+};
 
 template <typename T>
 struct retain_traits {
@@ -228,8 +240,8 @@ retain_ptr<T> make_retain(Args &&... args) noexcept {
 }
 
 template <typename T>
-struct std::hash<retain_ptr<T>> {
-  size_t operator()(const retain_ptr<T> &ptr) const noexcept {
+struct std::hash<stela::retain_ptr<T>> {
+  size_t operator()(const stela::retain_ptr<T> &ptr) const noexcept {
     return reinterpret_cast<size_t>(ptr.get());
   }
 };
