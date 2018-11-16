@@ -16,9 +16,11 @@ struct retain_traits;
 
 template <typename T>
 class ref_count {
-  unsigned count = 1;
-
   friend retain_traits<T>;
+  unsigned count = 1;
+  
+protected:
+  ref_count() = default;
 };
 
 }
