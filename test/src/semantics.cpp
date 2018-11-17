@@ -43,14 +43,12 @@ TEST_GROUP(Semantics, {
     const sym::Module &builtin = btn->second;
     ASSERT_EQ(builtin.scopes.size(), 1);
     ASSERT_EQ(builtin.decls.size(), 0);
-    ASSERT_EQ(builtin.types.size(), 0);
     
     auto mayn = syms.modules.find("main");
     ASSERT_NE(mayn, syms.modules.end());
     const sym::Module &main = mayn->second;
     ASSERT_EQ(main.scopes.size(), 1);
     ASSERT_EQ(main.decls.size(), 0);
-    ASSERT_EQ(main.types.size(), 0);
   });
   
   TEST(Modules - Regular, {

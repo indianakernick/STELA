@@ -451,7 +451,6 @@ public:
 };
 
 using Decls = std::vector<DeclPtr>;
-using Types = std::vector<TypePtr>;
 using Names = std::vector<Name>;
 
 }

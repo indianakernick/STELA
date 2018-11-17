@@ -108,7 +108,6 @@ using FuncPtr = std::unique_ptr<Func>;
 struct Module {
   Scopes scopes;
   ast::Decls decls;
-  ast::Types types;
 };
 
 using Modules = std::unordered_map<Name, Module>;
