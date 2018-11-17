@@ -66,6 +66,7 @@ struct BuiltinType final : Type {
 
   void accept(Visitor &) override;
 };
+using BuiltinTypePtr = retain_ptr<BuiltinType>;
 
 struct ArrayType final : Type {
   TypePtr elem;

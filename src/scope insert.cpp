@@ -22,11 +22,11 @@ sym::FuncPtr makeFunc(const Loc loc) {
   return funcSym;
 }
 
-auto makeParam(const sym::ExprType &etype, const ast::FuncParam &param) {
+auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
   auto paramSym = std::make_unique<sym::Object>();
   paramSym->loc = param.loc;
   paramSym->etype = etype;
-  paramSym->node = const_cast<ast::FuncParam *>(&param);
+  paramSym->node = {retain, &param};
   return paramSym;
 }
 
@@ -46,7 +46,7 @@ sym::ValueRef refToRef(const ast::ParamRef ref) {
   }
 }
 
-sym::ExprType convert(const NameLookup &tlk, ast::Type *type, const ast::ParamRef ref) {
+sym::ExprType convert(const NameLookup &tlk, const ast::TypePtr &type, const ast::ParamRef ref) {
   tlk.validateType(type);
   return {
     type,
@@ -56,7 +56,7 @@ sym::ExprType convert(const NameLookup &tlk, ast::Type *type, const ast::ParamRe
 }
 
 sym::ExprType convert(const NameLookup &tlk, const ast::FuncParam &param) {
-  return convert(tlk, param.type.get(), param.ref);
+  return convert(tlk, param.type, param.ref);
 }
 
 sym::FuncParams convertParams(
@@ -88,10 +88,10 @@ void InserterManager::insert(const sym::Name &name, sym::SymbolPtr symbol) {
   }
 }
 
-sym::Func *InserterManager::insert(const ast::Func &func) {
+sym::Func *InserterManager::insert(ast::Func &func) {
   sym::FuncPtr funcSym = makeFunc(func.loc);
   if (func.receiver) {
-    if (auto *strut = tlk.lookupConcrete<ast::StructType>(func.receiver->type.get())) {
+    if (auto strut = tlk.lookupConcrete<ast::StructType>(func.receiver->type)) {
       for (const ast::Field &field : strut->fields) {
         if (field.name == func.name) {
           log.error(func.loc) << "Colliding function and field \"" << func.name << "\"" << fatal;
@@ -100,8 +100,8 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
     }
   }
   funcSym->params = convertParams(tlk, func.receiver, func.params);
-  funcSym->ret = convert(tlk, func.ret.get(), ast::ParamRef::value);
-  funcSym->node = const_cast<ast::Func *>(&func);
+  funcSym->ret = convert(tlk, func.ret, ast::ParamRef::value);
+  funcSym->node = {retain, &func};
   const auto [beg, end] = man.cur()->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
@@ -122,7 +122,7 @@ sym::Func *InserterManager::insert(const ast::Func &func) {
   return ret;
 }
 
-void InserterManager::enterFuncScope(sym::Func *funcSym, const ast::Func &func) {
+void InserterManager::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
       sym::Name(func.params[i].name),
@@ -130,7 +130,7 @@ void InserterManager::enterFuncScope(sym::Func *funcSym, const ast::Func &func) 
     });
   }
   if (func.receiver) {
-    const ast::FuncParam &param = *func.receiver;
+    ast::FuncParam &param = *func.receiver;
     funcSym->scope->table.insert({
       sym::Name(param.name),
       makeParam(funcSym->params[0], param)

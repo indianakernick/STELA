@@ -14,7 +14,7 @@
 
 namespace stela {
 
-bool compareTypes(const NameLookup &, ast::Type *, ast::Type *);
+bool compareTypes(const NameLookup &, const ast::TypePtr &, const ast::TypePtr &);
 
 }
 

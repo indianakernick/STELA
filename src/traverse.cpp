@@ -119,23 +119,23 @@ public:
     }
     man.leaveScope();
   }
-  ast::Type *objectType(
+  ast::TypePtr objectType(
     const ast::TypePtr &type,
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
     const sym::ExprType exprType = expr ? getExprType(syms, man, log, expr.get()) : sym::null_type;
     if (type) {
-      tlk.validateType(type.get());
+      tlk.validateType(type);
     }
     if (expr && exprType.type == nullptr) {
       log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
-    if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type.get(), exprType.type)) {
+    if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type, exprType.type)) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
     if (type) {
-      return type.get();
+      return type;
     } else {
       return exprType.type;
     }
@@ -158,15 +158,15 @@ public:
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = ins.insert<sym::TypeAlias>(alias);
-    aliasSym->node = &alias;
-    tlk.validateType(alias.type.get());
+    aliasSym->node = {retain, &alias};
+    tlk.validateType(alias.type);
   }
   
   void visit(ast::CompAssign &as) override {
     const sym::ExprType left = getExprType(syms, man, log, as.left.get());
     const sym::ExprType right = getExprType(syms, man, log, as.right.get());
-    if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
-      if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
+    if (auto builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
+      if (auto builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
         if (validOp(as.oper, builtinLeft, builtinRight)) {
           if (left.mut == sym::ValueMut::var) {
             return;
@@ -180,7 +180,7 @@ public:
   }
   void visit(ast::IncrDecr &as) override {
     const sym::ExprType etype = getExprType(syms, man, log, as.expr.get());
-    if (auto *builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
+    if (auto builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
       if (validIncr(builtin)) {
         return;
       }

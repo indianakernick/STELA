@@ -14,38 +14,26 @@ using namespace stela;
 
 namespace {
 
-stela::retain_ptr<ast::BuiltinType> makeType(const ast::BuiltinType::Enum e) {
-  auto type = stela::make_retain<ast::BuiltinType>();
-  type->value = e;
-  return type;
-}
-
-std::unique_ptr<sym::TypeAlias> makeSymbol(ast::TypeAlias *node) {
-  auto symbol = std::make_unique<sym::TypeAlias>();
-  symbol->node = node;
-  return symbol;
-}
-
-ast::BuiltinType *pushType(
+stela::retain_ptr<ast::BuiltinType> pushType(
   sym::Table &table,
-  ast::Decls &decls,
   const ast::BuiltinType::Enum e,
   const ast::Name name
 ) {
+  auto type = stela::make_retain<ast::BuiltinType>();
+  type->value = e;
   auto alias = make_retain<ast::TypeAlias>();
   alias->name = name;
   alias->strong = false;
-  retain_ptr<ast::BuiltinType> type = makeType(e);
-  ast::BuiltinType *ptr = type.get();
-  alias->type = std::move(type);
-  table.insert({sym::Name(name), makeSymbol(alias.get())});
-  decls.push_back(std::move(alias));
-  return ptr;
+  alias->type = type;
+  auto symbol = std::make_unique<sym::TypeAlias>();
+  symbol->node = std::move(alias);
+  table.insert({sym::Name(name), std::move(symbol)});
+  return type;
 }
 
-void insertTypes(sym::Table &table, ast::Decls &decls, ast::Types &types, sym::Builtins &t) {
-  #define INSERT(TYPE, NAME)                                                          \
-    t.TYPE = pushType(table, decls, ast::BuiltinType::TYPE, NAME);
+void insertTypes(sym::Table &table, sym::Builtins &t) {
+  #define INSERT(TYPE, NAME)                                                    \
+    t.TYPE = pushType(table, ast::BuiltinType::TYPE, NAME);
   
   INSERT(Bool, "bool");
   INSERT(Byte, "byte");
@@ -61,8 +49,7 @@ void insertTypes(sym::Table &table, ast::Decls &decls, ast::Types &types, sym::B
   charName->name = "char";
   auto string = make_retain<ast::ArrayType>();
   string->elem = std::move(charName);
-  t.string = string.get();
-  types.push_back(std::move(string));
+  t.string = std::move(string);
 }
 
 using TypeEnum = ast::BuiltinType::Enum;
@@ -120,11 +107,11 @@ bool isArithOp(const ast::AssignOp op) {
 
 }
 
-bool stela::validIncr(ast::BuiltinType *type) {
+bool stela::validIncr(const ast::BuiltinTypePtr &type) {
   return isArithType(type->value);
 }
 
-bool stela::validOp(const ast::UnOp op, ast::BuiltinType *type) {
+bool stela::validOp(const ast::UnOp op, const ast::BuiltinTypePtr &type) {
   switch (op) {
     case ast::UnOp::neg:
       return isArithType(type->value);
@@ -135,15 +122,15 @@ bool stela::validOp(const ast::UnOp op, ast::BuiltinType *type) {
   }
 }
 
-ast::BuiltinType *checkType(bool(*category)(TypeEnum), ast::BuiltinType *type) {
+ast::BuiltinTypePtr checkType(bool(*category)(TypeEnum), const ast::BuiltinTypePtr &type) {
   return category(type->value) ? type : nullptr;
 }
 
-ast::BuiltinType *stela::validOp(
+ast::BuiltinTypePtr stela::validOp(
   const sym::Builtins &btn,
   const ast::BinOp op,
-  ast::BuiltinType *left,
-  ast::BuiltinType *right
+  const ast::BuiltinTypePtr &left,
+  const ast::BuiltinTypePtr &right
 ) {
   if (left != right) {
     return nullptr;
@@ -164,7 +151,11 @@ ast::BuiltinType *stela::validOp(
   }
 }
 
-bool stela::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::BuiltinType *right) {
+bool stela::validOp(
+  const ast::AssignOp op,
+  const ast::BuiltinTypePtr &left,
+  const ast::BuiltinTypePtr &right
+) {
   if (left != right) {
     return false;
   }
@@ -181,7 +172,7 @@ bool stela::validOp(const ast::AssignOp op, ast::BuiltinType *left, ast::Builtin
 sym::Module stela::makeBuiltinModule(sym::Builtins &btn) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::Scope::Type::ns);
   sym::Module module;
-  insertTypes(scope->table, module.decls, module.types, btn);
+  insertTypes(scope->table, btn);
   btn.scope = scope.get();
   module.scopes.push_back(std::move(scope));
   return module;

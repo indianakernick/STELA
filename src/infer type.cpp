@@ -30,9 +30,9 @@ public:
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
     const sym::ExprType right = visitValueExpr(bin.right.get());
-    if (auto *builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
-      if (auto *builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
-        if (auto *retType = validOp(btn, bin.oper, builtinLeft, builtinRight)) {
+    if (auto builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
+      if (auto builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
+        if (auto retType = validOp(btn, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
           retExpr.type = retType;
           retExpr.mut = sym::ValueMut::let;
@@ -46,7 +46,7 @@ public:
   }
   void visit(ast::UnaryExpr &un) override {
     const sym::ExprType etype = visitValueExpr(un.expr.get());
-    if (auto *builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
+    if (auto builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
       if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
         retExpr.type = etype.type;
@@ -134,7 +134,7 @@ public:
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
-  /*void visit(ast::ArrayLiteral &arr) override {
+  void visit(ast::ArrayLiteral &arr) override {
     if (arr.exprs.empty()) {
       log.error(arr.loc) << "Empty array" << fatal;
     }
@@ -145,12 +145,15 @@ public:
         log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
       }
     }
+    auto array = make_retain<ast::ArrayType>();
+    array->loc = arr.loc;
+    array->elem = expr.type;
     sym::ExprType etype;
-    // etype.type = array of expr.type;
+    etype.type = std::move(array);
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
-  }*/
+  }
 
   sym::ExprType visitValueExpr(ast::Node *const node) {
     lkp.enterSubExpr();

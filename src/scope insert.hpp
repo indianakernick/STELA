@@ -21,18 +21,18 @@ public:
   InserterManager(sym::Modules &, ScopeMan &, Log &);
   
   template <typename Symbol, typename AST_Node>
-  Symbol *insert(const AST_Node &node) {
+  Symbol *insert(AST_Node &node) {
     auto symbol = std::make_unique<Symbol>();
     Symbol *const ret = symbol.get();
     symbol->loc = node.loc;
-    symbol->node = const_cast<AST_Node *>(&node);
+    symbol->node = {retain, &node};
     insert(sym::Name(node.name), std::move(symbol));
     return ret;
   }
   
   void insert(const sym::Name &, sym::SymbolPtr);
-  sym::Func *insert(const ast::Func &);
-  void enterFuncScope(sym::Func *, const ast::Func &);
+  sym::Func *insert(ast::Func &);
+  void enterFuncScope(sym::Func *, ast::Func &);
 
 private:
   Log &log;

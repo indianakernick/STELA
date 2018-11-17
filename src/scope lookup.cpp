@@ -60,18 +60,18 @@ ast::TypeAlias *NameLookup::lookupType(ast::NamedType &type) const {
   }
 }
 
-ast::Type *NameLookup::lookupConcreteType(ast::Type *type) const {
-  if (auto *named = dynamic_cast<ast::NamedType *>(type)) {
+ast::TypePtr NameLookup::lookupConcreteType(const ast::TypePtr &type) const {
+  if (auto named = dynamic_pointer_cast<ast::NamedType>(type)) {
     ast::TypeAlias *alias = lookupType(*named);
-    return lookupConcreteType(alias->type.get());
+    return lookupConcreteType(alias->type);
   } else {
     return type;
   }
 }
 
-ast::Type *NameLookup::validateType(ast::Type *type) const {
-  ast::Type *concrete = lookupConcreteType(type);
-  if (auto *strut = dynamic_cast<ast::StructType *>(type)) {
+ast::TypePtr NameLookup::validateType(const ast::TypePtr &type) const {
+  ast::TypePtr concrete = lookupConcreteType(type);
+  if (auto strut = dynamic_pointer_cast<ast::StructType>(type)) {
     validateStruct(strut);
   }
   return concrete;
@@ -80,7 +80,7 @@ ast::Type *NameLookup::validateType(ast::Type *type) const {
 ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) const {
   if (sym::Symbol *symbol = find(scope, sym::Name(type.name))) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
-      type.definition = alias->node;
+      type.definition = alias->node.get();
       alias->referenced = true;
       return type.definition;
     }
@@ -93,7 +93,7 @@ ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) 
   }
 }
 
-void NameLookup::validateStruct(ast::StructType *strut) const {
+void NameLookup::validateStruct(const retain_ptr<ast::StructType> &strut) const {
   std::vector<std::pair<std::string_view, Loc>> names;
   names.reserve(strut->fields.size());
   for (const ast::Field &field : strut->fields) {
@@ -174,15 +174,15 @@ void ExprLookup::member(const sym::Name &name) {
 ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
     NameLookup lkp{modules, man, log};
-    ast::Type *type = lkp.lookupConcreteType(popExpr().type);
+    ast::TypePtr type = lkp.lookupConcreteType(popExpr().type);
     const sym::Name name = popName();
     if (type == nullptr) {
       log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
-    if (auto *strut = dynamic_cast<ast::StructType *>(type)) {
+    if (auto strut = dynamic_pointer_cast<ast::StructType>(std::move(type))) {
       for (ast::Field &field : strut->fields) {
         if (field.name == name) {
-          pushExpr(memberType(etype, field.type.get()));
+          pushExpr(memberType(etype, field.type));
           return &field;
         }
       }
@@ -273,14 +273,14 @@ ExprLookup::Expr::Expr(const Type type, const sym::Name &name, sym::Scope *scope
   assert(type == Type::free_fun);
 }
 
-void ExprLookup::pushExpr(const sym::ExprType type) {
+void ExprLookup::pushExpr(const sym::ExprType &type) {
   exprs.push_back({Expr::Type::expr});
   etype = type;
 }
 
 ast::Statement *ExprLookup::pushObj(sym::Object *const obj) {
   pushExpr(obj->etype);
-  return obj->node;
+  return obj->node.get();
 }
 
 bool ExprLookup::memVarExpr(const Expr::Type type) const {
@@ -329,5 +329,5 @@ ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   assert(exprs.back().type == Expr::Type::call);
   exprs.pop_back();
   pushExpr(func->ret);
-  return func->node;
+  return func->node.get();
 }

@@ -48,7 +48,7 @@ using ScopePtr = std::unique_ptr<Scope>;
 using Scopes = std::vector<ScopePtr>;
 
 struct TypeAlias final : Symbol {
-  ast::TypeAlias *node;
+  retain_ptr<ast::TypeAlias> node;
 };
 
 enum class ValueMut : uint8_t {
@@ -62,36 +62,36 @@ enum class ValueRef : uint8_t  {
 };
 
 struct ExprType {
-  ast::Type *type = nullptr;
+  ast::TypePtr type;
   ValueMut mut;
   ValueRef ref;
 };
 
-constexpr ValueMut common(const ValueMut a, const ValueMut b) {
+inline ValueMut common(const ValueMut a, const ValueMut b) {
   return a == ValueMut::let ? a : b;
 }
 
-constexpr ValueRef common(const ValueRef a, const ValueRef b) {
+inline ValueRef common(const ValueRef a, const ValueRef b) {
   return a == ValueRef::val ? a : b;
 }
 
-constexpr ExprType memberType(const ExprType obj, ast::Type *mem) {
+inline ExprType memberType(const ExprType &obj, const ast::TypePtr &mem) {
   return {mem, obj.mut, obj.ref};
 }
 
-constexpr bool callMut(const ValueMut param, const ValueMut arg) {
+inline bool callMut(const ValueMut param, const ValueMut arg) {
   return static_cast<uint8_t>(param) <= static_cast<uint8_t>(arg);
 }
 
-constexpr bool callMutRef(const ExprType param, const ExprType arg) {
+inline bool callMutRef(const ExprType &param, const ExprType &arg) {
   return param.ref == sym::ValueRef::val || callMut(param.mut, arg.mut);
 }
 
-constexpr ExprType null_type {};
+inline const ExprType null_type {};
 
 struct Object final : Symbol {
   ExprType etype;
-  ast::Statement *node;
+  ast::StatPtr node;
 };
 
 // the first parameter is the receiver
@@ -101,7 +101,7 @@ struct Func final : Symbol {
   ExprType ret;
   FuncParams params;
   Scope *scope;
-  ast::Func *node;
+  retain_ptr<ast::Func> node;
 };
 using FuncPtr = std::unique_ptr<Func>;
 
@@ -115,15 +115,15 @@ using Modules = std::unordered_map<Name, Module>;
 
 struct Builtins {
   // Builtin types
-  ast::BuiltinType *Bool;
-  ast::BuiltinType *Byte;
-  ast::BuiltinType *Char;
-  ast::BuiltinType *Real;
-  ast::BuiltinType *Sint;
-  ast::BuiltinType *Uint;
+  ast::BuiltinTypePtr Bool;
+  ast::BuiltinTypePtr Byte;
+  ast::BuiltinTypePtr Char;
+  ast::BuiltinTypePtr Real;
+  ast::BuiltinTypePtr Sint;
+  ast::BuiltinTypePtr Uint;
   
   // Alias of [char] used as the type of string literals
-  ast::Type *string;
+  ast::TypePtr string;
   
   // Global scope of the builtin module
   sym::Scope *scope;

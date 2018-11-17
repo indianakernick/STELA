@@ -22,12 +22,12 @@ public:
   
   ast::TypeAlias *lookupType(ast::NamedType &) const;
   
-  ast::Type *lookupConcreteType(ast::Type *) const;
-  ast::Type *validateType(ast::Type *) const;
+  ast::TypePtr lookupConcreteType(const ast::TypePtr &) const;
+  ast::TypePtr validateType(const ast::TypePtr &) const;
   
   template <typename Type>
-  Type *lookupConcrete(ast::Type *type) const {
-    return dynamic_cast<Type *>(lookupConcreteType(type));
+  retain_ptr<Type> lookupConcrete(const ast::TypePtr &type) const {
+    return dynamic_pointer_cast<Type>(lookupConcreteType(type));
   }
 
 private:
@@ -36,7 +36,7 @@ private:
   Log &log;
   
   ast::TypeAlias *lookupType(sym::Scope *, ast::NamedType &) const;
-  void validateStruct(ast::StructType *) const;
+  void validateStruct(const retain_ptr<ast::StructType> &) const;
 };
 
 class ExprLookup {
@@ -157,7 +157,7 @@ private:
   std::vector<Expr> exprs;
   sym::ExprType etype;
   
-  void pushExpr(sym::ExprType);
+  void pushExpr(const sym::ExprType &);
   ast::Statement *pushObj(sym::Object *);
   bool memVarExpr(Expr::Type) const;
     // return top == type && below top == member && below below top != call

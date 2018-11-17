@@ -14,10 +14,15 @@
 
 namespace stela {
 
-bool validIncr(ast::BuiltinType *);
-bool validOp(ast::UnOp, ast::BuiltinType *);
-ast::BuiltinType *validOp(const sym::Builtins &, ast::BinOp, ast::BuiltinType *, ast::BuiltinType *);
-bool validOp(ast::AssignOp, ast::BuiltinType *, ast::BuiltinType *);
+bool validIncr(const ast::BuiltinTypePtr &);
+bool validOp(ast::UnOp, const ast::BuiltinTypePtr &);
+retain_ptr<ast::BuiltinType> validOp(
+  const sym::Builtins &,
+  ast::BinOp,
+  const ast::BuiltinTypePtr &,
+  const ast::BuiltinTypePtr &
+);
+bool validOp(ast::AssignOp, const ast::BuiltinTypePtr &, const ast::BuiltinTypePtr &);
 
 sym::Module makeBuiltinModule(sym::Builtins &);
 

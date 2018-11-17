@@ -51,13 +51,13 @@ private:
     return left.value == right.value;
   }
   bool compare(ast::ArrayType &left, ast::ArrayType &right) {
-    return compareTypes(lkp, left.elem.get(), right.elem.get());
+    return compareTypes(lkp, left.elem, right.elem);
   }
   bool compare(ast::FuncType &left, ast::FuncType &right) {
     const auto compareParams = [this] (const ast::ParamType &a, const ast::ParamType &b) {
-      return a.ref == b.ref && compareTypes(lkp, a.type.get(), b.type.get());
+      return a.ref == b.ref && compareTypes(lkp, a.type, b.type);
     };
-    if (!compareTypes(lkp, left.ret.get(), right.ret.get())) {
+    if (!compareTypes(lkp, left.ret, right.ret)) {
       return false;
     }
     return Utils::equal_size(left.params, right.params, compareParams);
@@ -67,7 +67,7 @@ private:
   }
   bool compare(ast::StructType &left, ast::StructType &right) {
     const auto compareFields = [this] (const ast::Field &a, const ast::Field &b) {
-      return a.name == b.name && compareTypes(lkp, a.type.get(), b.type.get());
+      return a.name == b.name && compareTypes(lkp, a.type, b.type);
     };
     return Utils::equal_size(left.fields, right.fields, compareFields);
   }
@@ -119,14 +119,14 @@ private:
 
 }
 
-bool stela::compareTypes(const NameLookup &lkp, ast::Type *a, ast::Type *b) {
+bool stela::compareTypes(const NameLookup &lkp, const ast::TypePtr &a, const ast::TypePtr &b) {
   if (a == b) {
     return true;
   }
   if (a == nullptr || b == nullptr) {
     return false;
   }
-  LeftVisitor left{lkp, b};
+  LeftVisitor left{lkp, b.get()};
   a->accept(left);
   return left.eq;
 }
