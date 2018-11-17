@@ -21,7 +21,7 @@ class Visitor;
 
 //---------------------------------- Base --------------------------------------
 
-struct Node : ref_count<Node> {
+struct Node : ref_count {
   virtual ~Node() = default;
   virtual void accept(Visitor &) = 0;
   

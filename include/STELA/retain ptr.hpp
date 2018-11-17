@@ -9,131 +9,111 @@
 #ifndef stela_retain_ptr_hpp
 #define stela_retain_ptr_hpp
 
+/* LCOV_EXCL_START */
+
+// switch out stela::retain_ptr for std::shared_ptr
+#if 0
+
+#include <memory>
+
+namespace stela {
+
+struct ref_count {};
+
+template <typename T>
+using retain_ptr = std::shared_ptr<T>;
+
+template <typename T, typename... Args>
+auto make_retain(Args &&... args) noexcept {
+  return std::make_shared<T>(std::forward<Args>(args)...);
+}
+
+}
+
+#else
+
 #include <cstdint>
 #include <utility>
 #include <cassert>
-#include <type_traits>
-
-/* LCOV_EXCL_START */
 
 namespace stela {
 
 template <typename T>
-struct retain_traits;
+class retain_ptr;
 
-template <typename T>
-class ref_count {
-  friend retain_traits<T>;
-  unsigned count = 1;
+struct ref_count {
+  template <typename T>
+  friend class retain_ptr;
   
 protected:
   ref_count() = default;
-};
 
-template <typename T>
-struct retain_traits {
-  using pointer = T *;
-
-  template <typename U>
-  static void increment(ref_count<U> *const ptr) noexcept {
-    if constexpr (std::is_same_v<T, U>) {
-      static_assert(std::is_base_of_v<ref_count<T>, T>);
-      assert(ptr->count != ~unsigned{});
-      ++ptr->count;
-    } else {
-      retain_traits<U>::increment(ptr);
-    }
-  }
-  template <typename U>
-  static void decrement(ref_count<U> *const ptr) noexcept {
-    if constexpr (std::is_same_v<T, U>) {
-      assert(ptr->count != 0);
-      --ptr->count;
-      if (ptr->count == 0) {
-        delete static_cast<T *>(ptr);
-      }
-    } else {
-      retain_traits<U>::decrement(ptr);
-    }
-  }
-  template <typename U>
-  static unsigned use_count(ref_count<U> *const ptr) noexcept {
-    if constexpr (std::is_same_v<T, U>) {
-      return ptr->count;
-    } else {
-      return retain_traits<U>::use_count(ptr);
-    }
-  }
+private:
+  uint32_t count = 1;
 };
 
 struct retain_t {};
 constexpr retain_t retain {};
 
-template <typename T, typename R = retain_traits<T>>
+template <typename T>
 class retain_ptr {
 public:
   using element_type = T;
-  using traits_type = R;
-  using pointer = typename traits_type::pointer;
+  using pointer = T *;
 
   constexpr retain_ptr() noexcept
     : ptr{nullptr} {}
   constexpr retain_ptr(std::nullptr_t) noexcept
     : ptr{nullptr} {}
   
-  explicit retain_ptr(const pointer ptr) noexcept
-    : ptr{ptr} {}
-  retain_ptr(retain_t, const pointer ptr) noexcept(noexcept(incr()))
-    : ptr{ptr} {
-    incr(ptr);
-  }
-  
   template <typename U>
-  explicit retain_ptr(const U *ptr) noexcept
+  explicit retain_ptr(U *const ptr) noexcept
     : ptr{ptr} {}
   template <typename U>
-  retain_ptr(retain_t, const U *ptr) noexcept
+  retain_ptr(retain_t, U *const ptr) noexcept
     : ptr{ptr} {}
   
-  ~retain_ptr() noexcept(noexcept(decr())) {
+  ~retain_ptr() noexcept {
     decr();
   }
-  retain_ptr &operator=(std::nullptr_t) noexcept(noexcept(reset())) {
+  retain_ptr &operator=(std::nullptr_t) noexcept {
     reset();
     return *this;
   }
   
-  template <typename U, typename Y>
-  retain_ptr(retain_ptr<U, Y> &&other) noexcept
+  template <typename U>
+  retain_ptr(retain_ptr<U> &&other) noexcept
     : ptr{other.detach()} {}
-  template <typename U, typename Y>
-  retain_ptr &operator=(retain_ptr<U, Y> &&other) noexcept(noexcept(reset())) {
+  template <typename U>
+  retain_ptr &operator=(retain_ptr<U> &&other) noexcept {
     reset(other.detach());
     return *this;
   }
   
-  template <typename U, typename Y>
-  retain_ptr(const retain_ptr<U, Y> &other) noexcept(noexcept(incr()))
+  template <typename U>
+  retain_ptr(const retain_ptr<U> &other) noexcept
     : ptr{other.get()} {
     incr();
   }
-  template <typename U, typename Y>
-  retain_ptr &operator=(const retain_ptr<U, Y> &other) noexcept(noexcept(reset()) && noexcept(incr())) {
+  template <typename U>
+  retain_ptr &operator=(const retain_ptr<U> &other) noexcept {
     reset(other.get());
     incr();
   }
   
-  void reset(const pointer newPtr = nullptr) noexcept(noexcept(decr())) {
+  template <typename U = T>
+  void reset(U *const newPtr = nullptr) noexcept {
     decr();
     ptr = newPtr;
   }
-  void reset(retain_t, const pointer newPtr) noexcept(noexcept(decr()) && noexcept(incr())) {
+  template <typename U = T>
+  void reset(retain_t, U *const newPtr) noexcept {
     decr();
     ptr = newPtr;
     incr();
   }
   
-  void swap(retain_ptr<T, R> &other) noexcept {
+  void swap(retain_ptr<T> &other) noexcept {
     std::swap(ptr, other.ptr);
   }
   [[nodiscard]] pointer detach() noexcept {
@@ -151,41 +131,26 @@ public:
     assert(ptr);
     return ptr;
   }
-  element_type &operator[](const ptrdiff_t i) const noexcept {
-    assert(ptr);
-    return ptr[i];
-  }
   explicit operator bool() const noexcept {
     return ptr != nullptr;
   }
   
-  unsigned use_count() const noexcept(noexcept(traits_type::use_count(std::declval<pointer>()))) {
-    if (ptr) {
-      return traits_type::use_count(ptr);
-    } else {
-      return 0;
-    }
-  }
-  bool unique() const noexcept(noexcept(use_count())) {
-    return use_count() == 1;
-  }
-  
-  bool operator==(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator==(const retain_ptr<T> &rhs) const noexcept {
     return ptr == rhs.ptr;
   }
-  bool operator!=(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator!=(const retain_ptr<T> &rhs) const noexcept {
     return ptr != rhs.ptr;
   }
-  bool operator<(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator<(const retain_ptr<T> &rhs) const noexcept {
     return ptr < rhs.ptr;
   }
-  bool operator>(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator>(const retain_ptr<T> &rhs) const noexcept {
     return ptr > rhs.ptr;
   }
-  bool operator<=(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator<=(const retain_ptr<T> &rhs) const noexcept {
     return ptr <= rhs.ptr;
   }
-  bool operator>=(const retain_ptr<T, R> &rhs) const noexcept {
+  bool operator>=(const retain_ptr<T> &rhs) const noexcept {
     return ptr >= rhs.ptr;
   }
   
@@ -230,14 +195,24 @@ public:
 private:
   pointer ptr;
   
-  void incr() const noexcept(noexcept(traits_type::increment(std::declval<pointer>()))) {
+  void incr() const noexcept {
     if (ptr) {
-      traits_type::increment(ptr);
+      incr(ptr);
     }
   }
-  void decr() const noexcept(noexcept(traits_type::decrement(std::declval<pointer>()))) {
+  static void incr(ref_count *const ptr) noexcept {
+    assert(ptr->count != ~uint32_t{});
+    ++ptr->count;
+  }
+  void decr() const noexcept {
     if (ptr) {
-      traits_type::decrement(ptr);
+      decr(ptr);
+    }
+  }
+  static void decr(ref_count *const ptr) noexcept {
+    assert(ptr->count != 0);
+    if (--ptr->count == 0) {
+      delete static_cast<T *>(ptr);
     }
   }
 };
@@ -260,6 +235,8 @@ struct std::hash<stela::retain_ptr<T>> {
     return reinterpret_cast<size_t>(ptr.get());
   }
 };
+
+#endif
 
 /* LCOV_EXCL_END */
 
