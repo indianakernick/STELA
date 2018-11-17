@@ -9,109 +9,11 @@
 #ifndef stela_retain_ptr_hpp
 #define stela_retain_ptr_hpp
 
-/* LCOV_EXCL_START */
-
-// switch out stela::retain_ptr for std::shared_ptr
-#if 1
-
-#include <memory>
-
-namespace stela {
-
-namespace ast {
-
-struct Node;
-
-}
-
-using ref_count = std::enable_shared_from_this<ast::Node>;
-
-struct retain_t {};
-constexpr retain_t retain {};
-
-template <typename T>
-class retain_ptr : public std::shared_ptr<T> {
-public:
-  constexpr retain_ptr() noexcept
-    : std::shared_ptr<T>{} {}
-  constexpr retain_ptr(std::nullptr_t) noexcept
-    : std::shared_ptr<T>{nullptr} {}
-  
-  template <typename U>
-  retain_ptr(retain_t, U *const ptr)
-    : std::shared_ptr<T>{std::dynamic_pointer_cast<T>(ptr->shared_from_this())} {
-    assert(*this);
-  }
-  
-  retain_ptr &operator=(std::nullptr_t) noexcept {
-    std::shared_ptr<T>::operator=(nullptr);
-    return *this;
-  }
-  
-  // Move constructors
-  template <typename U>
-  retain_ptr(retain_ptr<U> &&other) noexcept
-    : std::shared_ptr<T>{std::move(other)} {}
-  retain_ptr(retain_ptr<T> &&other)
-    : std::shared_ptr<T>{std::move(other)} {}
-  template <typename U>
-  retain_ptr(std::shared_ptr<U> &&other) noexcept
-    : std::shared_ptr<T>{std::move(other)} {}
-  retain_ptr(std::shared_ptr<T> &&other)
-    : std::shared_ptr<T>{std::move(other)} {}
-  
-  // Move assignment
-  template <typename U>
-  retain_ptr &operator=(retain_ptr<U> &&other) noexcept {
-    std::shared_ptr<T>::operator=(std::move(other));
-    return *this;
-  }
-  retain_ptr &operator=(retain_ptr<T> &&other) noexcept {
-    std::shared_ptr<T>::operator=(std::move(other));
-    return *this;
-  }
-  
-  // Copy constructors
-  template <typename U>
-  retain_ptr(const retain_ptr<U> &other)
-    : std::shared_ptr<T>{other} {}
-  retain_ptr(const retain_ptr<T> &other)
-    : std::shared_ptr<T>{other} {}
-  template <typename U>
-  retain_ptr(const std::shared_ptr<U> &other)
-    : std::shared_ptr<T>{other} {}
-  retain_ptr(const std::shared_ptr<T> &other)
-    : std::shared_ptr<T>{other} {}
-  
-  // Copy assignment
-  template <typename U>
-  retain_ptr &operator=(const retain_ptr<U> &other) noexcept {
-    std::shared_ptr<T>::operator=(other);
-    return *this;
-  }
-  retain_ptr &operator=(const retain_ptr<T> &other) noexcept {
-    std::shared_ptr<T>::operator=(other);
-    return *this;
-  }
-};
-
-template <typename T, typename... Args>
-auto make_retain(Args &&... args) noexcept {
-  return std::make_shared<T>(std::forward<Args>(args)...);
-}
-
-template <typename Derived, typename Base>
-retain_ptr<Derived> dynamic_pointer_cast(const retain_ptr<Base> &base) {
-  return std::dynamic_pointer_cast<Derived>(base);
-}
-
-}
-
-#else
-
 #include <cstdint>
 #include <utility>
 #include <cassert>
+
+/* LCOV_EXCL_START */
 
 namespace stela {
 
@@ -355,8 +257,6 @@ struct std::hash<stela::retain_ptr<T>> {
     return reinterpret_cast<size_t>(ptr.get());
   }
 };
-
-#endif
 
 /* LCOV_EXCL_END */
 
