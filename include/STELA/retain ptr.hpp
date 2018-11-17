@@ -230,6 +230,12 @@ private:
 };
 
 template <typename T>
+explicit retain_ptr(T *) -> retain_ptr<T>;
+
+template <typename T>
+retain_ptr(retain_t, T *) -> retain_ptr<T>;
+
+template <typename T>
 void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
   a.swap(b);
 }
