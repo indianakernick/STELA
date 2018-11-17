@@ -18,7 +18,10 @@
 
 namespace stela {
 
-struct ref_count {};
+struct ref_count {
+protected:
+  ref_count() = default;
+};
 
 template <typename T>
 using retain_ptr = std::shared_ptr<T>;
@@ -28,6 +31,9 @@ auto make_retain(Args &&... args) noexcept {
   return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
+template <typename Derived, typename Base>
+retain_ptr<Derived> dynamic_pointer_cast(const retain_ptr<Base> &base) {
+  return std::dynamic_pointer_cast(base);
 }
 
 #else
@@ -71,7 +77,9 @@ public:
     : ptr{ptr} {}
   template <typename U>
   retain_ptr(retain_t, U *const ptr) noexcept
-    : ptr{ptr} {}
+    : ptr{ptr} {
+    incr();
+  }
   
   ~retain_ptr() noexcept {
     decr();
@@ -81,24 +89,46 @@ public:
     return *this;
   }
   
+  // Move constructors
   template <typename U>
   retain_ptr(retain_ptr<U> &&other) noexcept
     : ptr{other.detach()} {}
+  retain_ptr(retain_ptr<T> &&other) noexcept
+    : ptr{other.detach()} {}
+  
+  // Move assignment
   template <typename U>
   retain_ptr &operator=(retain_ptr<U> &&other) noexcept {
     reset(other.detach());
     return *this;
   }
+  retain_ptr &operator=(retain_ptr<T> &&other) noexcept {
+    reset(other.detach());
+    return *this;
+  }
   
+  // Copy constructors
   template <typename U>
   retain_ptr(const retain_ptr<U> &other) noexcept
     : ptr{other.get()} {
     incr();
   }
+  retain_ptr(const retain_ptr<T> &other) noexcept
+    : ptr{other.get()} {
+    incr();
+  }
+  
+  // Copy assignment
   template <typename U>
   retain_ptr &operator=(const retain_ptr<U> &other) noexcept {
     reset(other.get());
     incr();
+    return *this;
+  }
+  retain_ptr &operator=(const retain_ptr<T> &other) noexcept {
+    reset(other.get());
+    incr();
+    return *this;
   }
   
   template <typename U = T>
@@ -133,6 +163,18 @@ public:
   }
   explicit operator bool() const noexcept {
     return ptr != nullptr;
+  }
+  
+  uint32_t use_count() const noexcept {
+    if (ptr) {
+      ref_count *const refPtr = ptr;
+      return refPtr->count;
+    } else {
+      return 0;
+    }
+  }
+  bool unique() const noexcept {
+    return use_count() == 1;
   }
   
   bool operator==(const retain_ptr<T> &rhs) const noexcept {
@@ -197,22 +239,19 @@ private:
   
   void incr() const noexcept {
     if (ptr) {
-      incr(ptr);
+      ref_count *const refPtr = ptr;
+      assert(refPtr->count != ~uint32_t{});
+      ++refPtr->count;
     }
   }
-  static void incr(ref_count *const ptr) noexcept {
-    assert(ptr->count != ~uint32_t{});
-    ++ptr->count;
-  }
+  
   void decr() const noexcept {
     if (ptr) {
-      decr(ptr);
-    }
-  }
-  static void decr(ref_count *const ptr) noexcept {
-    assert(ptr->count != 0);
-    if (--ptr->count == 0) {
-      delete static_cast<T *>(ptr);
+      ref_count *const refPtr = ptr;
+      assert(refPtr->count != 0);
+      if (--refPtr->count == 0) {
+        delete ptr;
+      }
     }
   }
 };
@@ -225,6 +264,16 @@ void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
 template <typename T, typename... Args>
 retain_ptr<T> make_retain(Args &&... args) noexcept {
   return retain_ptr<T>{new T (std::forward<Args>(args)...)};
+}
+
+template <typename Derived, typename Base>
+retain_ptr<Derived> dynamic_pointer_cast(const retain_ptr<Base> &base) {
+  return retain_ptr<Derived>(retain, dynamic_cast<Derived *>(base.get()));
+}
+
+template <typename Derived, typename Base>
+retain_ptr<Derived> dynamic_pointer_cast(retain_ptr<Base> &&base) {
+  return retain_ptr<Derived>(dynamic_cast<Derived *>(base.detach()));
 }
 
 }
