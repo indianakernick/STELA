@@ -22,8 +22,8 @@ __If a compilers expert is reading this, I would love some advice!__
     
    * check that the return expression matches return type
    * `expected bool expression but got byte expression`
-   * casting (requires new syntax)
-   * struct initialization (also requires new syntax)
+   * casting
+   * struct initialization
    * lambdas and function pointers (the type system treats them both the same)
    * warnings about unused symbols (`unused variable "myVar"`)
    * array operations (size, push_back, pop_back)

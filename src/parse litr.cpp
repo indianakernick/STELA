@@ -66,12 +66,19 @@ ast::LitrPtr parseArray(ParseTokens &tok) {
   Context ctx = tok.context("in array literal");
   auto array = make_retain<ast::ArrayLiteral>();
   array->loc = tok.lastLoc();
-  if (!tok.checkOp("]")) {
-    do {
-      array->exprs.push_back(tok.expectNode(parseExpr, "expression"));
-    } while (tok.expectEitherOp(",", "]") == ",");
-  }
+  array->exprs = parseExprList(tok, "]");
   return array;
+}
+
+ast::LitrPtr parseInitList(ParseTokens &tok) {
+  if (!tok.checkOp("{")) {
+    return nullptr;
+  }
+  Context ctx = tok.context("in initializer list");
+  auto list = make_retain<ast::InitList>();
+  list->loc = tok.lastLoc();
+  list->exprs = parseExprList(tok, "}");
+  return list;
 }
 
 ast::LitrPtr parseLambda(ParseTokens &tok) {
@@ -95,6 +102,7 @@ ast::LitrPtr stela::parseLitr(ParseTokens &tok) {
   if (ast::LitrPtr node = parseNumber(tok)) return node;
   if (ast::LitrPtr node = parseBool(tok)) return node;
   if (ast::LitrPtr node = parseArray(tok)) return node;
+  if (ast::LitrPtr node = parseInitList(tok)) return node;
   if (ast::LitrPtr node = parseLambda(tok)) return node;
   return nullptr;
 }

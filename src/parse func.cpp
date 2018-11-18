@@ -61,7 +61,6 @@ ast::TypePtr stela::parseFuncRet(ParseTokens &tok) {
 ast::Block stela::parseFuncBody(ParseTokens &tok) {
   ast::Block body;
   body.loc = tok.loc();
-  Context ctx = tok.context("in body");
   tok.expectOp("{");
   while (ast::StatPtr node = parseStat(tok)) {
     body.nodes.emplace_back(std::move(node));
@@ -75,7 +74,7 @@ ast::DeclPtr stela::parseFunc(ParseTokens &tok) {
     return nullptr;
   }
   
-  Context ctx = tok.context("in function declaration");
+  Context ctx = tok.context("in function");
   auto funcNode = make_retain<ast::Func>();
   funcNode->loc = tok.lastLoc();
   funcNode->receiver = parseReceiver(tok);

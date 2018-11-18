@@ -26,7 +26,7 @@ type Vec3 struct {
   z: Float;
 };
 
-let origin = Vec3(0, 0, 0);
+let origin = make Vec3 {0.0, 0.0, 0.0};
 
 type IntStack struct {
   data: [Int];

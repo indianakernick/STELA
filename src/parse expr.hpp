@@ -25,6 +25,7 @@ namespace stela {
 // a + b cannot be an lvalue
 ast::ExprPtr parseNested(ParseTokens &);
 ast::ExprPtr parseExpr(ParseTokens &);
+std::vector<ast::ExprPtr> parseExprList(ParseTokens &, ast::Name);
 
 }
 

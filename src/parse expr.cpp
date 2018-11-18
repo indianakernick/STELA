@@ -22,19 +22,6 @@ ast::ExprPtr expectExpr(ParseTokens &tok, ParseFunc &&parse) {
   return tok.expectNode(parse, "expression");
 }
 
-ast::FuncArgs parseFuncArgs(ParseTokens &tok) {
-  Context ctx = tok.context("function argument list");
-  tok.expectOp("(");
-  if (tok.checkOp(")")) {
-    return {};
-  }
-  ast::FuncArgs args;
-  do {
-    args.push_back(expectExpr(tok, parseExpr));
-  } while (tok.expectEitherOp(",", ")") == ",");
-  return args;
-}
-
 ast::ExprPtr parseIdent(ParseTokens &tok) {
   if (!tok.peekIdentType()) {
     return nullptr;
@@ -73,11 +60,12 @@ ast::ExprPtr stela::parseNested(ParseTokens &tok) {
     return nullptr;
   }
   while (true) {
-    if (tok.peekOp("(")) {
+    if (tok.checkOp("(")) {
       auto call = make_retain<ast::FuncCall>();
       call->loc = tok.loc();
       call->func = std::move(left);
-      call->args = parseFuncArgs(tok);
+      Context ctx = tok.context("in function argument list");
+      call->args = parseExprList(tok, ")");
       left = std::move(call);
     } else if (tok.checkOp("[")) {
       auto sub = make_retain<ast::Subscript>();
@@ -123,6 +111,13 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
     return makeUnary(ast::UnOp::bool_not, tok);
   } else if (tok.checkOp("~")) {
     return makeUnary(ast::UnOp::bit_not, tok);
+  } else if (tok.checkKeyword("make")) {
+    auto make = make_retain<ast::Make>();
+    make->loc = tok.lastLoc();
+    Context ctx = tok.context("in make expression");
+    make->type = tok.expectNode(parseType, "type");
+    make->expr = expectExpr(tok, parseUnary);
+    return make;
   } else {
     return parseNested(tok);
   }
@@ -321,4 +316,15 @@ ast::ExprPtr parseTern(ParseTokens &tok) {
 
 ast::ExprPtr stela::parseExpr(ParseTokens &tok) {
   return parseTern(tok);
+}
+
+std::vector<ast::ExprPtr> stela::parseExprList(ParseTokens &tok, const ast::Name end) {
+  if (tok.checkOp(end)) {
+    return {};
+  }
+  std::vector<ast::ExprPtr> exprs;
+  do {
+    exprs.push_back(expectExpr(tok, parseExpr));
+  } while (tok.expectEitherOp(",", end) == ",");
+  return exprs;
 }

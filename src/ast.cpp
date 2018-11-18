@@ -28,6 +28,7 @@ ACCEPT(MemberIdent)
 ACCEPT(Subscript)
 ACCEPT(Identifier)
 ACCEPT(Ternary)
+ACCEPT(Make)
 
 ACCEPT(Block)
 ACCEPT(If)
@@ -54,6 +55,7 @@ ACCEPT(CharLiteral)
 ACCEPT(NumberLiteral)
 ACCEPT(BoolLiteral)
 ACCEPT(ArrayLiteral)
+ACCEPT(InitList)
 ACCEPT(Lambda)
 
 /* LCOV_EXCL_END */

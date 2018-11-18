@@ -737,6 +737,53 @@ TEST_GROUP(Syntax, {
     }
   });
   
+  TEST(Expr - Init List, {
+    const char *source = R"(
+      let vec: Vec2 = {2.0, 3.0};
+      let zero: sint = {};
+      let abc = make Tup3 {"a", "b", "c"};
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 3);
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      ASSERT_EQ(let->name, "vec");
+        auto *type = ASSERT_DOWN_CAST(const NamedType, let->type.get());
+          ASSERT_EQ(type->name, "Vec2");
+        auto *list = ASSERT_DOWN_CAST(const InitList, let->expr.get());
+          ASSERT_EQ(list->exprs.size(), 2);
+          IS_NUM(list->exprs[0], "2.0");
+          IS_NUM(list->exprs[1], "3.0");
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      ASSERT_EQ(let->name, "zero");
+        auto *type = ASSERT_DOWN_CAST(const NamedType, let->type.get());
+          ASSERT_EQ(type->name, "sint");
+        auto *list = ASSERT_DOWN_CAST(const InitList, let->expr.get());
+          ASSERT_TRUE(list->exprs.empty());
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[2].get());
+      ASSERT_EQ(let->name, "abc");
+        ASSERT_FALSE(let->type);
+        auto *make = ASSERT_DOWN_CAST(const Make, let->expr.get());
+          auto *type = ASSERT_DOWN_CAST(const NamedType, make->type.get());
+            ASSERT_EQ(type->name, "Tup3");
+          auto *list = ASSERT_DOWN_CAST(const InitList, make->expr.get());
+            ASSERT_EQ(list->exprs.size(), 3);
+            auto *a = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[0].get());
+              ASSERT_EQ(a->value, "a");
+            auto *b = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[1].get());
+              ASSERT_EQ(b->value, "b");
+            auto *c = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[2].get());
+              ASSERT_EQ(c->value, "c");
+    }
+  });
+  
   TEST(Expr - Lambda, {
     const char *source = R"(
       let nothing = func() {};
@@ -770,7 +817,7 @@ TEST_GROUP(Syntax, {
     }
   });
   
-  TEST(Expr - identifier, {
+  TEST(Expr - Identifier, {
     const char *source = R"(
       let five = 5;
       let alsoFive = five;
@@ -793,7 +840,61 @@ TEST_GROUP(Syntax, {
     }
   });
   
-  TEST(Expr - module identifier, {
+  TEST(Expr - Make, {
+    const char *source = R"(
+      let five = make uint make sint 5.0;
+      let six = make real (6);
+      let one = make sint !false;
+      let two = make real 6 / 3.0;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 4);
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0].get());
+      ASSERT_EQ(let->name, "five");
+      auto *make_uint = ASSERT_DOWN_CAST(const Make, let->expr.get());
+        auto *uint = ASSERT_DOWN_CAST(const NamedType, make_uint->type.get());
+          ASSERT_EQ(uint->name, "uint");
+        auto *make_sint = ASSERT_DOWN_CAST(const Make, make_uint->expr.get());
+          auto *sint = ASSERT_DOWN_CAST(const NamedType, make_sint->type.get());
+            ASSERT_EQ(sint->name, "sint");
+          IS_NUM(make_sint->expr, "5.0");
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1].get());
+      ASSERT_EQ(let->name, "six");
+      auto *make_real = ASSERT_DOWN_CAST(const Make, let->expr.get());
+        auto *real = ASSERT_DOWN_CAST(const NamedType, make_real->type.get());
+          ASSERT_EQ(real->name, "real");
+        IS_NUM(make_real->expr, "6");
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[2].get());
+      ASSERT_EQ(let->name, "one");
+      auto *make_sint = ASSERT_DOWN_CAST(const Make, let->expr.get());
+        auto *sint = ASSERT_DOWN_CAST(const NamedType, make_sint->type.get());
+          ASSERT_EQ(sint->name, "sint");
+        auto *bnot = IS_UOP(make_sint->expr, bool_not);
+          auto *boolLit = ASSERT_DOWN_CAST(const BoolLiteral, bnot->expr.get());
+            ASSERT_FALSE(boolLit->value);
+    }
+    
+    {
+      auto *let = ASSERT_DOWN_CAST(const Let, ast.global[3].get());
+      ASSERT_EQ(let->name, "two");
+      auto *div = IS_BOP(let->expr, div);
+        auto *make_real = ASSERT_DOWN_CAST(const Make, div->left.get());
+          auto *real = ASSERT_DOWN_CAST(const NamedType, make_real->type.get());
+            ASSERT_EQ(real->name, "real");
+          IS_NUM(make_real->expr, "6");
+        IS_NUM(div->right, "3.0");
+    }
+  });
+  
+  TEST(Expr - Module identifier, {
     const char *source = R"(
       let constant = mod::name;
     )";
@@ -807,7 +908,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ident->name, "name");
   });
   
-  TEST(Expr - module without identifier, {
+  TEST(Expr - Module without identifier, {
     const char *source = R"(
       let constant = mod::;
     )";
@@ -1171,7 +1272,7 @@ TEST_GROUP(Syntax, {
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
-  TEST(Expr - unary +, {
+  TEST(Expr - Unary +, {
     const char *source = R"(
       func dummy() {
         let a = +;

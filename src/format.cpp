@@ -89,7 +89,9 @@ public:
   }
   void visit(ast::FuncCall &call) override {
     call.func->accept(*this);
-    pushArgs(call.args);
+    pushOp("(");
+    pushExprs(call.args);
+    pushOp(")");
   }
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
@@ -121,6 +123,14 @@ public:
     pushOp(":");
     pushSpace();
     tern.fals->accept(*this);
+  }
+  void visit(ast::Make &make) override {
+    pushKey("make");
+    make.type->accept(*this);
+    pushSpace();
+    pushOp("(");
+    make.expr->accept(*this);
+    pushOp(")");
   }
   
   void visit(ast::Block &block) override {
@@ -344,14 +354,13 @@ public:
   }
   void visit(ast::ArrayLiteral &arr) override {
     pushOp("[");
-    for (auto e = arr.exprs.cbegin(); e != arr.exprs.cend(); ++e) {
-      (*e)->accept(*this);
-      if (e != arr.exprs.cend() - 1) {
-        pushOp(",");
-        pushSpace();
-      }
-    }
+    pushExprs(arr.exprs);
     pushOp("]");
+  }
+  void visit(ast::InitList &list) override {
+    pushOp("{");
+    pushExprs(list.exprs);
+    pushOp("}");
   }
   void visit(ast::Lambda &lam) override {
     pushKey("func");
@@ -434,16 +443,14 @@ private:
     }
     pushOp(")");
   }
-  void pushArgs(const ast::FuncArgs &args) {
-    pushOp("(");
-    for (auto a = args.cbegin(); a != args.cend(); ++a) {
-      (*a)->accept(*this);
-      if (a != args.cend() - 1) {
+  void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
+    for (auto e = exprs.cbegin(); e != exprs.cend(); ++e) {
+      (*e)->accept(*this);
+      if (e != exprs.cend() - 1) {
         pushOp(",");
         pushSpace();
       }
     }
-    pushOp(")");
   }
   void pushBlockBody(ast::Block &block) {
     for (ast::StatPtr &stat : block.nodes) {

@@ -196,6 +196,13 @@ struct Ternary final : Expression {
   void accept(Visitor &) override;
 };
 
+struct Make final : Expression {
+  TypePtr type;
+  ExprPtr expr;
+  
+  void accept(Visitor &) override;
+};
+
 //------------------------------- Statements -----------------------------------
 
 struct Block final : Statement {
@@ -388,6 +395,12 @@ struct ArrayLiteral final : Literal {
   void accept(Visitor &) override;
 };
 
+struct InitList final : Literal {
+  std::vector<ExprPtr> exprs;
+  
+  void accept(Visitor &) override;
+};
+
 struct Lambda final : Literal {
   FuncParams params;
   TypePtr ret;
@@ -419,6 +432,7 @@ public:
   virtual void visit(Subscript &) {}
   virtual void visit(Identifier &) {}
   virtual void visit(Ternary &) {}
+  virtual void visit(Make &) {}
   
   // statements
   virtual void visit(Block &) {}
@@ -449,6 +463,7 @@ public:
   virtual void visit(NumberLiteral &) {}
   virtual void visit(BoolLiteral &) {}
   virtual void visit(ArrayLiteral &) {}
+  virtual void visit(InitList &) {}
   virtual void visit(Lambda &) {}
   
   /* LCOV_EXCL_END */
