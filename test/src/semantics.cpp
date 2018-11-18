@@ -34,10 +34,6 @@ TEST_GROUP(Semantics, {
   StreamLog log;
   log.pri(LogPri::status);
   
-  #if 0
-  
-  #endif
-  
   TEST(Empty source, {
     const Symbols syms = createSym("", log);
     ASSERT_EQ(syms.modules.size(), 2);
