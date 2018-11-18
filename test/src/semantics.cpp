@@ -36,6 +36,8 @@ TEST_GROUP(Semantics, {
   
   #if 0
   
+  #endif
+  
   TEST(Empty source, {
     const Symbols syms = createSym("", log);
     ASSERT_EQ(syms.modules.size(), 2);
@@ -1049,8 +1051,6 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
-  
-  #endif
   
   TEST(Expr - Storing void, {
     const char *source = R"(

@@ -199,7 +199,7 @@ public:
   }
   void visit(ast::CallAssign &as) override {
     const sym::ExprType etype = getExprType(ctx, {retain, &as.call}, nullptr);
-    if (etype.type) {
+    if (etype.type != sym::void_type.type) {
       ctx.log.error(as.loc) << "Discarded return value" << fatal;
     }
   }
