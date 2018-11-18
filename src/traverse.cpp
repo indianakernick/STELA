@@ -25,14 +25,9 @@ public:
   explicit Visitor(sym::Ctx ctx)
     : ctx{ctx} {}
   
-  void visitExpr(const ast::ExprPtr &expr) {
-    if (expr) {
-      getExprType(ctx, expr.get());
-    }
-  }
   void visitCond(const ast::ExprPtr &expr) {
     assert(expr);
-    const sym::ExprType etype = getExprType(ctx, expr.get());
+    const sym::ExprType etype = getExprType(ctx, expr, ctx.btn.Bool);
     if (!compareTypes(ctx, etype.type, ctx.btn.Bool)) {
       ctx.log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
     }
@@ -55,11 +50,11 @@ public:
     ctx.man.leaveScope();
   }
   void visit(ast::Switch &swich) override {
-    const sym::ExprType etype = getExprType(ctx, swich.expr.get());
+    const sym::ExprType etype = getExprType(ctx, swich.expr, nullptr);
     bool foundDef = false;
     for (const ast::SwitchCase &cs : swich.cases) {
       if (cs.expr) {
-        const sym::ExprType caseType = getExprType(ctx, cs.expr.get());
+        const sym::ExprType caseType = getExprType(ctx, cs.expr, etype.type);
         if (!compareTypes(ctx, caseType.type, etype.type)) {
           ctx.log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
         }
@@ -88,7 +83,9 @@ public:
     checkFlowKeyword("continue", continu.loc);
   }
   void visit(ast::Return &ret) override {
-    visitExpr(ret.expr);
+    if (ret.expr) {
+      getExprType(ctx, ret.expr, nullptr);
+    }
   }
   void visit(ast::While &wile) override {
     ctx.man.enterScope(sym::Scope::Type::flow);
@@ -119,10 +116,10 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    sym::ExprType exprType = expr ? getExprType(ctx, expr.get()) : sym::null_type;
     if (type) {
       validateType(ctx, type);
     }
+    sym::ExprType exprType = expr ? getExprType(ctx, expr, type) : sym::null_type;
     if (expr && !exprType.type) {
       ctx.log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
@@ -158,8 +155,8 @@ public:
   }
   
   void visit(ast::CompAssign &as) override {
-    const sym::ExprType left = getExprType(ctx, as.left.get());
-    const sym::ExprType right = getExprType(ctx, as.right.get());
+    const sym::ExprType left = getExprType(ctx, as.left, nullptr);
+    const sym::ExprType right = getExprType(ctx, as.right, left.type);
     if (auto builtinLeft = lookupConcrete<ast::BuiltinType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BuiltinType>(ctx, right.type)) {
         if (validOp(as.oper, builtinLeft, builtinRight)) {
@@ -174,7 +171,7 @@ public:
     ctx.log.error(as.loc) << "Invalid operands to compound assignment operator " << opName(as.oper) << fatal;
   }
   void visit(ast::IncrDecr &as) override {
-    const sym::ExprType etype = getExprType(ctx, as.expr.get());
+    const sym::ExprType etype = getExprType(ctx, as.expr, nullptr);
     if (auto builtin = lookupConcrete<ast::BuiltinType>(ctx, etype.type)) {
       if (validIncr(builtin)) {
         return;
@@ -183,8 +180,8 @@ public:
     ctx.log.error(as.loc) << "Invalid operand to unary operator " << (as.incr ? "++" : "--") << fatal;
   }
   void visit(ast::Assign &as) override {
-    const sym::ExprType left = getExprType(ctx, as.left.get());
-    const sym::ExprType right = getExprType(ctx, as.right.get());
+    const sym::ExprType left = getExprType(ctx, as.left, nullptr);
+    const sym::ExprType right = getExprType(ctx, as.right, left.type);
     if (!compareTypes(ctx, left.type, right.type)) {
       ctx.log.error(as.loc) << "Assignment types do not match" << fatal;
     }
@@ -201,7 +198,7 @@ public:
     varSym->etype = etype;
   }
   void visit(ast::CallAssign &as) override {
-    const sym::ExprType etype = getExprType(ctx, &as.call);
+    const sym::ExprType etype = getExprType(ctx, {retain, &as.call}, nullptr);
     if (etype.type) {
       ctx.log.error(as.loc) << "Discarded return value" << fatal;
     }

@@ -14,7 +14,7 @@
 
 namespace stela {
 
-sym::ExprType getExprType(sym::Ctx, ast::Expression *);
+sym::ExprType getExprType(sym::Ctx, const ast::ExprPtr &, const ast::TypePtr &);
 
 }
 

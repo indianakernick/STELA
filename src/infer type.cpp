@@ -24,8 +24,8 @@ public:
     : lkp{ctx}, ctx{ctx} {}
 
   void visit(ast::BinaryExpr &bin) override {
-    const sym::ExprType left = visitValueExpr(bin.left.get());
-    const sym::ExprType right = visitValueExpr(bin.right.get());
+    const sym::ExprType left = visitValueExpr(bin.left);
+    const sym::ExprType right = visitValueExpr(bin.right);
     if (auto builtinLeft = lookupConcrete<ast::BuiltinType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BuiltinType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
@@ -41,7 +41,7 @@ public:
     ctx.log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
-    const sym::ExprType etype = visitValueExpr(un.expr.get());
+    const sym::ExprType etype = visitValueExpr(un.expr);
     if (auto builtin = lookupConcrete<ast::BuiltinType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
@@ -58,7 +58,7 @@ public:
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
       // @TODO use visitValueExpr here
-      params.push_back(getExprType(ctx, expr.get()));
+      params.push_back(getExprType(ctx, expr, nullptr));
     }
     return params;
   }
@@ -73,8 +73,8 @@ public:
     mem.definition = lkp.lookupMember(mem.loc);
   }
   void visit(ast::Subscript &sub) override {
-    const sym::ExprType obj = visitValueExpr(sub.object.get());
-    const sym::ExprType idx = visitValueExpr(sub.index.get());
+    const sym::ExprType obj = visitValueExpr(sub.object);
+    const sym::ExprType idx = visitValueExpr(sub.index);
     if (auto builtinIdx = lookupConcrete<ast::BuiltinType>(ctx, idx.type)) {
       if (validSubscript(builtinIdx)) {
         if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
@@ -90,12 +90,13 @@ public:
     id.definition = lkp.lookupIdent(sym::Name(id.module), sym::Name(id.name), id.loc);
   }
   void visit(ast::Ternary &tern) override {
-    const sym::ExprType cond = visitValueExpr(tern.cond.get());
+    ast::TypePtr resultType = type;
+    const sym::ExprType cond = visitValueExpr(tern.cond, ctx.btn.Bool);
     if (!compareTypes(ctx, cond.type, ctx.btn.Bool)) {
       ctx.log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
     }
-    const sym::ExprType tru = visitValueExpr(tern.tru.get());
-    const sym::ExprType fals = visitValueExpr(tern.fals.get());
+    const sym::ExprType tru = visitValueExpr(tern.tru, resultType);
+    const sym::ExprType fals = visitValueExpr(tern.fals, resultType);
     if (!compareTypes(ctx, tru.type, fals.type)) {
       ctx.log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
     }
@@ -146,19 +147,31 @@ public:
     lkp.setExpr(etype);
   }
   void visit(ast::ArrayLiteral &arr) override {
-    if (arr.exprs.empty()) {
-      ctx.log.error(arr.loc) << "Empty array" << fatal;
-    }
-    const sym::ExprType expr = getExprType(ctx, arr.exprs.front().get());
-    for (auto e = arr.exprs.cbegin() + 1; e != arr.exprs.cend(); ++e) {
-      const sym::ExprType currExpr = getExprType(ctx, e->get());
-      if (!compareTypes(ctx, expr.type, currExpr.type)) {
-        ctx.log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
+    ast::TypePtr elem = nullptr;
+    if (type) {
+      if (auto array = lookupConcrete<ast::ArrayType>(ctx, std::move(type))) {
+        elem = lookupStrongType(ctx, array->elem);
+      } else {
+        ctx.log.error(arr.loc) << "Expected x but got array" << fatal;
       }
+    }
+    if (arr.exprs.empty()) {
+      if (!elem) {
+        ctx.log.error(arr.loc) << "Could not infer type of empty array" << fatal;
+      }
+    } else {
+      sym::ExprType expr = getExprType(ctx, arr.exprs.front(), elem);
+      for (auto e = arr.exprs.cbegin() + 1; e != arr.exprs.cend(); ++e) {
+        const sym::ExprType currExpr = getExprType(ctx, *e, elem);
+        if (!compareTypes(ctx, expr.type, currExpr.type)) {
+          ctx.log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
+        }
+      }
+      elem = lookupStrongType(ctx, std::move(expr.type));
     }
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
-    array->elem = lookupStrongType(ctx, expr.type);
+    array->elem = std::move(elem);
     sym::ExprType etype;
     etype.type = std::move(array);
     etype.mut = sym::ValueMut::let;
@@ -167,19 +180,21 @@ public:
   }
   void visit(ast::Lambda &) override {}
 
-  sym::ExprType visitValueExpr(ast::Expression *const node) {
+  sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
+    this->type = type;
     lkp.enterSubExpr();
-    node->accept(*this);
+    expr->accept(*this);
     return lkp.leaveSubExpr();
   }
 
 private:
   ExprLookup lkp;
   sym::Ctx ctx;
+  ast::TypePtr type;
 };
 
 }
 
-sym::ExprType stela::getExprType(sym::Ctx ctx, ast::Expression *expr) {
-  return Visitor{ctx}.visitValueExpr(expr);
+sym::ExprType stela::getExprType(sym::Ctx ctx, const ast::ExprPtr &expr, const ast::TypePtr &type) {
+  return Visitor{ctx}.visitValueExpr(expr, type);
 }

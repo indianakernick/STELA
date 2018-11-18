@@ -1138,7 +1138,10 @@ TEST_GROUP(Semantics, {
   
   TEST(Expr - Array literals, {
     const char *source = R"(
-      //let empty: [sint] = [];
+      let empty: [sint] = [];
+      let nested_empty: [[[real]]] = [[[]]];
+      let nested_real: real = nested_empty[0][0][0];
+    
       let one: [sint] = [1];
       let two: [sint] = [1, 2];
       let three: [sint] = [1, 2, 3];
@@ -1159,6 +1162,27 @@ TEST_GROUP(Semantics, {
       let ten: [Number] = [number, getNum()];
     )";
     createSym(source, log);
+  });
+  
+  TEST(Expr - No expect array, {
+    const char *source = R"(
+      let number: sint = [1, 2, 3];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - No infer empty array, {
+    const char *source = R"(
+      let empty = [];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Unmatching types in array, {
+    const char *source = R"(
+      let arr = [1, 1.0, true];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
   TEST(Expr - Subscript, {
