@@ -181,6 +181,10 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
   }
   if (call(Expr::Type::free_fun)) {
     ctx.log.status() << "free function" << endlog;
+    ctx.log.status() << "exprs.size() " << exprs.size() << endlog;
+    ctx.log.status() << "exprs.back().type " << static_cast<int>(exprs.back().type) << endlog;
+    ctx.log.status() << "exprs.back().scope " << exprs.back().scope << endlog;
+    ctx.log.status() << "exprs.back().name " << exprs.back().name << endlog;
     return popCallPushRet(lookupFun(exprs.back().scope, funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
@@ -241,12 +245,14 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
       ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
     }
     scope = iter->second.scopes[0].get();
+    ctx.log.status() << "module scope " << scope << endlog;
   }
   sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     if (exprs.back().type != Expr::Type::call) {
       ctx.log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
     }
+    ctx.log.status() << "about to push scope " << scope << endlog;
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
   }
