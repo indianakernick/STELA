@@ -12,6 +12,7 @@
 #include "operator name.hpp"
 #include "compare types.hpp"
 #include "number literal.hpp"
+#include "builtin symbols.hpp"
 
 using namespace stela;
 
@@ -19,20 +20,15 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(Symbols &syms, ScopeMan &man, Log &log)
-    : lkp{syms.modules, man, log},
-      tlk{syms.modules, man, log},
-      syms{syms},
-      man{man},
-      log{log},
-      btn{syms.builtins} {}
+  explicit Visitor(sym::Ctx ctx)
+    : lkp{ctx}, ctx{ctx} {}
 
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left.get());
     const sym::ExprType right = visitValueExpr(bin.right.get());
-    if (auto builtinLeft = tlk.lookupConcrete<ast::BuiltinType>(left.type)) {
-      if (auto builtinRight = tlk.lookupConcrete<ast::BuiltinType>(right.type)) {
-        if (auto retType = validOp(btn, bin.oper, builtinLeft, builtinRight)) {
+    if (auto builtinLeft = lookupConcrete<ast::BuiltinType>(ctx, left.type)) {
+      if (auto builtinRight = lookupConcrete<ast::BuiltinType>(ctx, right.type)) {
+        if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
           retExpr.type = retType;
           retExpr.mut = sym::ValueMut::let;
@@ -42,11 +38,11 @@ public:
         }
       }
     }
-    log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
+    ctx.log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
     const sym::ExprType etype = visitValueExpr(un.expr.get());
-    if (auto builtin = tlk.lookupConcrete<ast::BuiltinType>(etype.type)) {
+    if (auto builtin = lookupConcrete<ast::BuiltinType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
         retExpr.type = etype.type;
@@ -56,12 +52,12 @@ public:
         return;
       }
     }
-    log.error(un.loc) << "Invalid operand to unary expression " << opName(un.oper) << fatal;
+    ctx.log.error(un.loc) << "Invalid operand to unary expression " << opName(un.oper) << fatal;
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
-      params.push_back(getExprType(syms, man, log, expr.get()));
+      params.push_back(getExprType(ctx, expr.get()));
     }
     return params;
   }
@@ -80,13 +76,13 @@ public:
   }
   void visit(ast::Ternary &tern) override {
     const sym::ExprType cond = visitValueExpr(tern.cond.get());
-    if (!compareTypes(tlk, cond.type, btn.Bool)) {
-      log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
+    if (!compareTypes(ctx, cond.type, ctx.btn.Bool)) {
+      ctx.log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
     }
     const sym::ExprType tru = visitValueExpr(tern.tru.get());
     const sym::ExprType fals = visitValueExpr(tern.fals.get());
-    if (!compareTypes(tlk, tru.type, fals.type)) {
-      log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
+    if (!compareTypes(ctx, tru.type, fals.type)) {
+      ctx.log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
     }
     sym::ExprType etype;
     etype.type = tru.type;
@@ -97,31 +93,31 @@ public:
   
   void visit(ast::StringLiteral &) override {
     sym::ExprType etype;
-    etype.type = btn.string;
+    etype.type = ctx.btn.string;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
   void visit(ast::CharLiteral &) override {
     sym::ExprType etype;
-    etype.type = btn.Char;
+    etype.type = ctx.btn.Char;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
   void visit(ast::NumberLiteral &n) override {
-    const NumberVariant num = parseNumberLiteral(n.value, log);
+    const NumberVariant num = parseNumberLiteral(n.value, ctx.log);
     sym::ExprType etype;
     if (std::holds_alternative<Byte>(num)) {
-      etype.type = btn.Byte;
+      etype.type = ctx.btn.Byte;
     } else if (std::holds_alternative<Char>(num)) {
-      etype.type = btn.Char;
+      etype.type = ctx.btn.Char;
     } else if (std::holds_alternative<Real>(num)) {
-      etype.type = btn.Real;
+      etype.type = ctx.btn.Real;
     } else if (std::holds_alternative<Sint>(num)) {
-      etype.type = btn.Sint;
+      etype.type = ctx.btn.Sint;
     } else if (std::holds_alternative<Uint>(num)) {
-      etype.type = btn.Uint;
+      etype.type = ctx.btn.Uint;
     }
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
@@ -129,20 +125,20 @@ public:
   }
   void visit(ast::BoolLiteral &) override {
     sym::ExprType etype;
-    etype.type = btn.Bool;
+    etype.type = ctx.btn.Bool;
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
   void visit(ast::ArrayLiteral &arr) override {
     if (arr.exprs.empty()) {
-      log.error(arr.loc) << "Empty array" << fatal;
+      ctx.log.error(arr.loc) << "Empty array" << fatal;
     }
-    const sym::ExprType expr = getExprType(syms, man, log, arr.exprs.front().get());
+    const sym::ExprType expr = getExprType(ctx, arr.exprs.front().get());
     for (auto e = arr.exprs.cbegin() + 1; e != arr.exprs.cend(); ++e) {
-      const sym::ExprType currExpr = getExprType(syms, man, log, e->get());
-      if (!compareTypes(tlk, expr.type, currExpr.type)) {
-        log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
+      const sym::ExprType currExpr = getExprType(ctx, e->get());
+      if (!compareTypes(ctx, expr.type, currExpr.type)) {
+        ctx.log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
       }
     }
     auto array = make_retain<ast::ArrayType>();
@@ -163,20 +159,11 @@ public:
 
 private:
   ExprLookup lkp;
-  NameLookup tlk;
-  Symbols &syms;
-  ScopeMan &man;
-  Log &log;
-  const sym::Builtins &btn;
+  sym::Ctx ctx;
 };
 
 }
 
-sym::ExprType stela::getExprType(
-  Symbols &syms,
-  ScopeMan &man,
-  Log &log,
-  ast::Expression *expr
-) {
-  return Visitor{syms, man, log}.visitValueExpr(expr);
+sym::ExprType stela::getExprType(sym::Ctx ctx, ast::Expression *expr) {
+  return Visitor{ctx}.visitValueExpr(expr);
 }

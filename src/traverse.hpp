@@ -9,14 +9,11 @@
 #ifndef stela_traverse_hpp
 #define stela_traverse_hpp
 
-#include "ast.hpp"
-#include "symbols.hpp"
-#include "log output.hpp"
-#include "scope manager.hpp"
+#include "context.hpp"
 
 namespace stela {
 
-void traverse(ScopeMan &, sym::Module &, Symbols &, Log &);
+void traverse(sym::Ctx, sym::Module &);
 
 }
 

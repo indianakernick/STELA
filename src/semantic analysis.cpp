@@ -32,7 +32,7 @@ void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   module.decls = std::move(ast.global);
   ScopeMan man{module.scopes, syms.builtins.scope};
   man.enterScope(sym::Scope::Type::ns);
-  traverse(man, module, syms, log);
+  traverse({syms.modules, syms.builtins, man, log}, module);
   syms.modules.emplace(ast.name, std::move(module));
 }
 

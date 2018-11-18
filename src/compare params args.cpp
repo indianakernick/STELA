@@ -14,21 +14,21 @@
 using namespace stela;
 
 bool stela::compatParams(
-  const NameLookup &lkp,
+  sym::Ctx ctx,
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return Utils::equal_size(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
-    return compareTypes(lkp, param.type, arg.type) && sym::callMutRef(param, arg);
+  return Utils::equal_size(params, args, [ctx] (sym::ExprType param, sym::ExprType arg) {
+    return compareTypes(ctx, param.type, arg.type) && sym::callMutRef(param, arg);
   });
 }
 
 bool stela::sameParams(
-  const NameLookup &lkp,
+  sym::Ctx ctx,
   const sym::FuncParams &params,
   const sym::FuncParams &args
 ) {
-  return Utils::equal_size(params, args, [&lkp] (sym::ExprType param, sym::ExprType arg) {
-    return compareTypes(lkp, param.type, arg.type);
+  return Utils::equal_size(params, args, [ctx] (sym::ExprType param, sym::ExprType arg) {
+    return compareTypes(ctx, param.type, arg.type);
   });
 }

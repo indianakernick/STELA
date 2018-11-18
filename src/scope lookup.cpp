@@ -40,44 +40,7 @@ sym::Scope *parentScope(sym::Scope *const scope) {
   }
 }
 
-}
-
-NameLookup::NameLookup(sym::Modules &modules, ScopeMan &man, Log &log)
-  : modules{modules}, man{man}, log{log} {}
-
-ast::TypeAlias *NameLookup::lookupType(ast::NamedType &type) const {
-  if (type.definition) {
-    return type.definition;
-  } else if (type.module.empty()) {
-    return lookupType(man.cur(), type);
-  } else {
-    auto iter = modules.find(sym::Name{type.module});
-    if (iter == modules.end()) {
-      log.error(type.loc) << "Module \"" << type.module << "\" is not imported by this module" << fatal;
-    }
-    // look in the global scope of the other module
-    return lookupType(iter->second.scopes[0].get(), type);
-  }
-}
-
-ast::TypePtr NameLookup::lookupConcreteType(const ast::TypePtr &type) const {
-  if (auto named = dynamic_pointer_cast<ast::NamedType>(type)) {
-    ast::TypeAlias *alias = lookupType(*named);
-    return lookupConcreteType(alias->type);
-  } else {
-    return type;
-  }
-}
-
-ast::TypePtr NameLookup::validateType(const ast::TypePtr &type) const {
-  ast::TypePtr concrete = lookupConcreteType(type);
-  if (auto strut = dynamic_pointer_cast<ast::StructType>(type)) {
-    validateStruct(strut);
-  }
-  return concrete;
-}
-
-ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) const {
+ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type) {
   if (sym::Symbol *symbol = find(scope, sym::Name(type.name))) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
       type.definition = alias->node.get();
@@ -87,13 +50,13 @@ ast::TypeAlias *NameLookup::lookupType(sym::Scope *scope, ast::NamedType &type) 
     log.error(type.loc) << "The name \"" << type.name << "\" does not refer to a type" << fatal;
   }
   if (sym::Scope *parent = parentScope(scope)) {
-    return lookupType(parent, type);
+    return lookupTypeImpl(log, parent, type);
   } else {
     log.error(type.loc) << "Expected type name but found \"" << type.name << "\"" << fatal;
   }
 }
 
-void NameLookup::validateStruct(const retain_ptr<ast::StructType> &strut) const {
+void validateStruct(Log &log, const retain_ptr<ast::StructType> &strut) {
   std::vector<std::pair<std::string_view, Loc>> names;
   names.reserve(strut->fields.size());
   for (const ast::Field &field : strut->fields) {
@@ -110,8 +73,42 @@ void NameLookup::validateStruct(const retain_ptr<ast::StructType> &strut) const 
   }
 }
 
-ExprLookup::ExprLookup(sym::Modules &modules, ScopeMan &man, Log &log)
-  : modules{modules}, man{man}, log{log}, etype{sym::null_type} {}
+}
+
+ast::TypeAlias *stela::lookupType(sym::Ctx ctx, ast::NamedType &type) {
+  if (type.definition) {
+    return type.definition;
+  } else if (type.module.empty()) {
+    return lookupTypeImpl(ctx.log, ctx.man.cur(), type);
+  } else {
+    auto iter = ctx.mods.find(sym::Name{type.module});
+    if (iter == ctx.mods.end()) {
+      ctx.log.error(type.loc) << "Module \"" << type.module << "\" is not imported by this module" << fatal;
+    }
+    // look in the global scope of the other module
+    return lookupTypeImpl(ctx.log, iter->second.scopes[0].get(), type);
+  }
+}
+
+ast::TypePtr stela::lookupConcreteType(sym::Ctx ctx, const ast::TypePtr &type) {
+  if (auto named = dynamic_pointer_cast<ast::NamedType>(type)) {
+    ast::TypeAlias *alias = lookupType(ctx, *named);
+    return lookupConcreteType(ctx, alias->type);
+  } else {
+    return type;
+  }
+}
+
+ast::TypePtr stela::validateType(sym::Ctx ctx, const ast::TypePtr &type) {
+  ast::TypePtr concrete = lookupConcreteType(ctx, type);
+  if (auto strut = dynamic_pointer_cast<ast::StructType>(type)) {
+    validateStruct(ctx.log, strut);
+  }
+  return concrete;
+}
+
+ExprLookup::ExprLookup(sym::Ctx ctx)
+  : ctx{ctx}, etype{sym::null_type} {}
 
 void ExprLookup::call() {
   exprs.push_back({Expr::Type::call});
@@ -127,21 +124,21 @@ sym::Func *ExprLookup::lookupFun(
     if (sym::Scope *parent = parentScope(scope)) {
       return lookupFun(parent, key, loc);
     } else {
-      log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
+      ctx.log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
     }
   } else {
     for (auto s = begin; s != end; ++s) {
       sym::Symbol *const symbol = s->second.get();
       auto *func = dynamic_cast<sym::Func *>(symbol);
       if (func == nullptr) {
-        log.error(loc) << "Calling \"" << key.name
+        ctx.log.error(loc) << "Calling \"" << key.name
           << "\" but it is not a function. " << symbol->loc << fatal;
       }
-      if (compatParams(NameLookup{modules, man, log}, func->params, key.params)) {
+      if (compatParams(ctx, func->params, key.params)) {
         return referTo(func);
       }
     }
-    log.error(loc) << "No matching call to function \"" << key.name << '"' << fatal;
+    ctx.log.error(loc) << "No matching call to function \"" << key.name << '"' << fatal;
   }
 }
 
@@ -156,15 +153,15 @@ ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::Func
 
 ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
   if (memFunExpr(Expr::Type::expr)) {
-    return popCallPushRet(lookupFun(man.cur(), funKey(popExpr(), params), loc));
+    return popCallPushRet(lookupFun(ctx.man.cur(), funKey(popExpr(), params), loc));
   }
   if (call(Expr::Type::free_fun)) {
     return popCallPushRet(lookupFun(exprs.back().scope, funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
-    log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
+    ctx.log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
   }
-  log.error(loc) << "Function call operator applied to invalid subject" << fatal;
+  ctx.log.error(loc) << "Function call operator applied to invalid subject" << fatal;
 }
 
 void ExprLookup::member(const sym::Name &name) {
@@ -173,11 +170,10 @@ void ExprLookup::member(const sym::Name &name) {
 
 ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
-    NameLookup lkp{modules, man, log};
-    ast::TypePtr type = lkp.lookupConcreteType(popExpr().type);
+    ast::TypePtr type = lookupConcreteType(ctx, popExpr().type);
     const sym::Name name = popName();
     if (type == nullptr) {
-      log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
+      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(std::move(type))) {
       for (ast::Field &field : strut->fields) {
@@ -186,9 +182,9 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
           return &field;
         }
       }
-      log.error(loc) << "No field \"" << name << "\" found in struct" << fatal;
+      ctx.log.error(loc) << "No field \"" << name << "\" found in struct" << fatal;
     } else {
-      log.error(loc) << "Cannot access field \"" << name << "\" of non-struct expression" << fatal;
+      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of non-struct expression" << fatal;
     }
   }
   return nullptr;
@@ -206,25 +202,25 @@ sym::Symbol *ExprLookup::lookupIdent(
   if (sym::Scope *parent = parentScope(scope)) {
     return lookupIdent(parent, name, loc);
   } else {
-    log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
+    ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
   sym::Scope *scope;
   if (module.empty()) {
-    scope = man.cur();
+    scope = ctx.man.cur();
   } else {
-    auto iter = modules.find(module);
-    if (iter == modules.end()) {
-      log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
+    auto iter = ctx.mods.find(module);
+    if (iter == ctx.mods.end()) {
+      ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
     }
     scope = iter->second.scopes[0].get();
   }
   sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     if (exprs.back().type != Expr::Type::call) {
-      log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
+      ctx.log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
     }
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
@@ -232,7 +228,7 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
     return pushObj(referTo(object));
   }
-  log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
+  ctx.log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
 }
 
 void ExprLookup::setExpr(const sym::ExprType type) {

@@ -46,8 +46,8 @@ sym::ValueRef refToRef(const ast::ParamRef ref) {
   }
 }
 
-sym::ExprType convert(const NameLookup &tlk, const ast::TypePtr &type, const ast::ParamRef ref) {
-  tlk.validateType(type);
+sym::ExprType convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
+  validateType(ctx, type);
   return {
     type,
     refToMut(ref),
@@ -55,74 +55,74 @@ sym::ExprType convert(const NameLookup &tlk, const ast::TypePtr &type, const ast
   };
 }
 
-sym::ExprType convert(const NameLookup &tlk, const ast::FuncParam &param) {
-  return convert(tlk, param.type, param.ref);
+sym::ExprType convert(sym::Ctx ctx, const ast::FuncParam &param) {
+  return convert(ctx, param.type, param.ref);
 }
 
 sym::FuncParams convertParams(
-  const NameLookup &tlk,
+  sym::Ctx ctx,
   const ast::Receiver &receiver,
   const ast::FuncParams &params
 ) {
   sym::FuncParams symParams;
   if (receiver) {
-    symParams.push_back(convert(tlk, *receiver));
+    symParams.push_back(convert(ctx, *receiver));
   } else {
     symParams.push_back(sym::null_type);
   }
   for (const ast::FuncParam &param : params) {
-    symParams.push_back(convert(tlk, param));
+    symParams.push_back(convert(ctx, param));
   }
   return symParams;
 }
 
 }
 
-void InserterManager::insert(const sym::Name &name, sym::SymbolPtr symbol) {
-  const auto iter = man.cur()->table.find(name);
-  if (iter != man.cur()->table.end()) {
-    log.error(symbol->loc) << "Redefinition of symbol \"" << name
+void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
+  const auto iter = ctx.man.cur()->table.find(name);
+  if (iter != ctx.man.cur()->table.end()) {
+    ctx.log.error(symbol->loc) << "Redefinition of symbol \"" << name
       << "\" previously declared at " << iter->second->loc << fatal;
   } else {
-    man.cur()->table.insert({name, std::move(symbol)});
+    ctx.man.cur()->table.insert({name, std::move(symbol)});
   }
 }
 
-sym::Func *InserterManager::insert(ast::Func &func) {
+sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
   sym::FuncPtr funcSym = makeFunc(func.loc);
   if (func.receiver) {
-    if (auto strut = tlk.lookupConcrete<ast::StructType>(func.receiver->type)) {
+    if (auto strut = lookupConcrete<ast::StructType>(ctx, func.receiver->type)) {
       for (const ast::Field &field : strut->fields) {
         if (field.name == func.name) {
-          log.error(func.loc) << "Colliding function and field \"" << func.name << "\"" << fatal;
+          ctx.log.error(func.loc) << "Colliding function and field \"" << func.name << "\"" << fatal;
         }
       }
     }
   }
-  funcSym->params = convertParams(tlk, func.receiver, func.params);
-  funcSym->ret = convert(tlk, func.ret, ast::ParamRef::value);
+  funcSym->params = convertParams(ctx, func.receiver, func.params);
+  funcSym->ret = convert(ctx, func.ret, ast::ParamRef::value);
   funcSym->node = {retain, &func};
-  const auto [beg, end] = man.cur()->table.equal_range(sym::Name(func.name));
+  const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name(func.name));
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
     if (dupFunc) {
-      if (sameParams(tlk, dupFunc->params, funcSym->params)) {
-        log.error(funcSym->loc) << "Redefinition of function \"" << func.name
+      if (sameParams(ctx, dupFunc->params, funcSym->params)) {
+        ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
           << "\" previously declared at " << symbol->loc << fatal;
       }
     } else {
-      log.error(funcSym->loc) << "Redefinition of function \"" << func.name
+      ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
         << symbol->loc << fatal;
     }
   }
   sym::Func *const ret = funcSym.get();
-  man.cur()->table.insert({sym::Name(func.name), std::move(funcSym)});
+  ctx.man.cur()->table.insert({sym::Name(func.name), std::move(funcSym)});
   return ret;
 }
 
-void InserterManager::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
+void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
       sym::Name(func.params[i].name),
@@ -137,6 +137,3 @@ void InserterManager::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
     });
   }
 }
-
-InserterManager::InserterManager(sym::Modules &modules, ScopeMan &man, Log &log)
-  : log{log}, man{man}, tlk{modules, man, log} {}

@@ -10,13 +10,11 @@
 #define stela_infer_type_hpp
 
 #include "ast.hpp"
-#include "log output.hpp"
-#include "scope manager.hpp"
-#include "builtin symbols.hpp"
+#include "context.hpp"
 
 namespace stela {
 
-sym::ExprType getExprType(Symbols &, ScopeMan &, Log &, ast::Expression *);
+sym::ExprType getExprType(sym::Ctx, ast::Expression *);
 
 }
 

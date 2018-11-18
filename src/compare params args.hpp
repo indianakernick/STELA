@@ -9,17 +9,16 @@
 #ifndef stela_compare_params_args_hpp
 #define stela_compare_params_args_hpp
 
-#include "symbols.hpp"
-#include "scope lookup.hpp"
+#include "context.hpp"
 
 namespace stela {
 
 /// Argument types are compatible with parameter types (Checks ValueCat).
 /// Used for calling functions
-bool compatParams(const NameLookup &, const sym::FuncParams &, const sym::FuncParams &);
+bool compatParams(sym::Ctx, const sym::FuncParams &, const sym::FuncParams &);
 /// Argument types are the same as parameter types (ValueCat may be different).
 /// Used for inserting functions
-bool sameParams(const NameLookup &, const sym::FuncParams &, const sym::FuncParams &);
+bool sameParams(sym::Ctx, const sym::FuncParams &, const sym::FuncParams &);
 
 }
 

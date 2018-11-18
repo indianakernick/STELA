@@ -10,34 +10,19 @@
 #define stela_scope_lookup_hpp
 
 #include "ast.hpp"
-#include "symbols.hpp"
-#include "log output.hpp"
-#include "scope manager.hpp"
+#include "context.hpp"
 
 namespace stela {
 
-class NameLookup {
-public:
-  NameLookup(sym::Modules &, ScopeMan &, Log &);
+ast::TypeAlias *lookupType(sym::Ctx, ast::NamedType &);
   
-  ast::TypeAlias *lookupType(ast::NamedType &) const;
-  
-  ast::TypePtr lookupConcreteType(const ast::TypePtr &) const;
-  ast::TypePtr validateType(const ast::TypePtr &) const;
-  
-  template <typename Type>
-  retain_ptr<Type> lookupConcrete(const ast::TypePtr &type) const {
-    return dynamic_pointer_cast<Type>(lookupConcreteType(type));
-  }
+ast::TypePtr lookupConcreteType(sym::Ctx, const ast::TypePtr &);
+ast::TypePtr validateType(sym::Ctx, const ast::TypePtr &);
 
-private:
-  sym::Modules &modules;
-  ScopeMan &man;
-  Log &log;
-  
-  ast::TypeAlias *lookupType(sym::Scope *, ast::NamedType &) const;
-  void validateStruct(const retain_ptr<ast::StructType> &) const;
-};
+template <typename Type>
+retain_ptr<Type> lookupConcrete(const sym::Ctx ctx, const ast::TypePtr &type) {
+  return dynamic_pointer_cast<Type>(lookupConcreteType(ctx, type));
+}
 
 class ExprLookup {
 public:
@@ -87,7 +72,7 @@ public:
   getExprType()         returnedType = true;
   */
   
-  ExprLookup(sym::Modules &, ScopeMan &, Log &);
+  explicit ExprLookup(sym::Ctx);
   
   void call();
   ast::Func *lookupFunc(const sym::FuncParams &, Loc);
@@ -151,9 +136,7 @@ private:
     sym::FuncParams params;
   };
   
-  sym::Modules &modules;
-  ScopeMan &man;
-  Log &log;
+  sym::Ctx ctx;
   std::vector<Expr> exprs;
   sym::ExprType etype;
   

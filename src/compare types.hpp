@@ -10,11 +10,11 @@
 #define stela_compare_types_hpp
 
 #include "ast.hpp"
-#include "scope lookup.hpp"
+#include "context.hpp"
 
 namespace stela {
 
-bool compareTypes(const NameLookup &, const ast::TypePtr &, const ast::TypePtr &);
+bool compareTypes(sym::Ctx, const ast::TypePtr &, const ast::TypePtr &);
 
 }
 
