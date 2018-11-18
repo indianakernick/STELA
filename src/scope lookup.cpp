@@ -185,7 +185,8 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) 
     ctx.log.status() << "exprs.back().type " << static_cast<int>(exprs.back().type) << endlog;
     ctx.log.status() << "exprs.back().scope " << exprs.back().scope << endlog;
     ctx.log.status() << "exprs.back().name " << exprs.back().name << endlog;
-    return popCallPushRet(lookupFun(exprs.back().scope, funKey(sym::null_type, params), loc));
+    sym::Scope *scope = exprs.back().scope;
+    return popCallPushRet(lookupFun(scope, funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
     ctx.log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
