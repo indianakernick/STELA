@@ -31,17 +31,12 @@ stela::retain_ptr<ast::BtnType> pushType(
 }
 
 void insertTypes(sym::Table &table, sym::Builtins &t) {
-  #define INSERT(TYPE, NAME)                                                    \
-    t.TYPE = pushType(table, ast::BtnType::TYPE, NAME);
-  
-  INSERT(Bool, "bool");
-  INSERT(Byte, "byte");
-  INSERT(Char, "char");
-  INSERT(Real, "real");
-  INSERT(Sint, "sint");
-  INSERT(Uint, "uint");
-
-  #undef INSERT
+  t.Bool = pushType(table, ast::BtnType::Bool, "bool");
+  t.Byte = pushType(table, ast::BtnType::Byte, "byte");
+  t.Char = pushType(table, ast::BtnType::Char, "char");
+  t.Real = pushType(table, ast::BtnType::Real, "real");
+  t.Sint = pushType(table, ast::BtnType::Sint, "sint");
+  t.Uint = pushType(table, ast::BtnType::Uint, "uint");
   
   // A string literal has the type [char]
   auto charName = make_retain<ast::NamedType>();
