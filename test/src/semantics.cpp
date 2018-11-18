@@ -1130,4 +1130,37 @@ TEST_GROUP(Semantics, {
     )";
     createSym(source, log);
   });
+  
+  TEST(Expr - Subscript, {
+    const char *source = R"(
+      type real_array = [real];
+      let arr: real_array = [4.2, 11.9, 1.5];
+      let second: real = arr[1];
+      let third = arr[2];
+    
+      type index uint;
+      // don't have casting yet
+      // this is only way to initialize a strong type
+      // can also use a function because return types aren't checked (yet)
+      var i: index;
+      let first: real = arr[i];
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Invalid subscript index, {
+    const char *source = R"(
+      let arr: [bool] = [false, true];
+      let nope: bool = arr[1.0];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Subscript not array, {
+    const char *source = R"(
+      var not_array: struct{};
+      let nope = not_array[0];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
 });

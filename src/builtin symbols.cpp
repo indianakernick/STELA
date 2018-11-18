@@ -169,6 +169,10 @@ bool stela::validOp(
   }
 }
 
+bool stela::validSubscript(const ast::BuiltinTypePtr &index) {
+  return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
+}
+
 sym::Module stela::makeBuiltinModule(sym::Builtins &btn) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::Scope::Type::ns);
   sym::Module module;

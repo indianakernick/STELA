@@ -23,6 +23,7 @@ retain_ptr<ast::BuiltinType> validOp(
   const ast::BuiltinTypePtr &
 );
 bool validOp(ast::AssignOp, const ast::BuiltinTypePtr &, const ast::BuiltinTypePtr &);
+bool validSubscript(const ast::BuiltinTypePtr &);
 
 sym::Module makeBuiltinModule(sym::Builtins &);
 

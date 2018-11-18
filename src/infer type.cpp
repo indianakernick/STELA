@@ -57,6 +57,7 @@ public:
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
     for (const ast::ExprPtr &expr : args) {
+      // @TODO use visitValueExpr here
       params.push_back(getExprType(ctx, expr.get()));
     }
     return params;
@@ -70,6 +71,20 @@ public:
     lkp.member(sym::Name(mem.member));
     mem.object->accept(*this);
     mem.definition = lkp.lookupMember(mem.loc);
+  }
+  void visit(ast::Subscript &sub) override {
+    const sym::ExprType obj = visitValueExpr(sub.object.get());
+    const sym::ExprType idx = visitValueExpr(sub.index.get());
+    if (auto builtinIdx = lookupConcrete<ast::BuiltinType>(ctx, idx.type)) {
+      if (validSubscript(builtinIdx)) {
+        if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
+          lkp.setExpr(sym::memberType(obj, lookupStrongType(ctx, array->elem)));
+          return;
+        }
+        ctx.log.error(sub.object->loc) << "Subscripted value is not an array" << fatal;
+      }
+    }
+    ctx.log.error(sub.index->loc) << "Invalid subscript index" << fatal;
   }
   void visit(ast::Identifier &id) override {
     id.definition = lkp.lookupIdent(sym::Name(id.module), sym::Name(id.name), id.loc);
@@ -150,8 +165,9 @@ public:
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);
   }
+  void visit(ast::Lambda &) override {}
 
-  sym::ExprType visitValueExpr(ast::Node *const node) {
+  sym::ExprType visitValueExpr(ast::Expression *const node) {
     lkp.enterSubExpr();
     node->accept(*this);
     return lkp.leaveSubExpr();
