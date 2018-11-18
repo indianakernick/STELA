@@ -133,7 +133,9 @@ sym::Func *ExprLookup::lookupFun(
   const Loc loc
 ) {
   ctx.log.status() << "lookupFun impl" << endlog;
+  ctx.log.status() << scope << endlog;
   const auto [begin, end] = scope->table.equal_range(key.name);
+  ctx.log.status() << "after equal_range" << endlog;
   if (begin == end) {
     ctx.log.status() << "found no symbols" << endlog;
     if (sym::Scope *parent = parentScope(scope)) {
