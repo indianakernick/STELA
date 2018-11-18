@@ -132,14 +132,17 @@ sym::Func *ExprLookup::lookupFun(
   const FunKey &key,
   const Loc loc
 ) {
+  ctx.log.status() << "lookupFun impl" << endlog;
   const auto [begin, end] = scope->table.equal_range(key.name);
   if (begin == end) {
+    ctx.log.status() << "found no symbols" << endlog;
     if (sym::Scope *parent = parentScope(scope)) {
       return lookupFun(parent, key, loc);
     } else {
       ctx.log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
     }
   } else {
+    ctx.log.status() << "found 1 or more symbols" << endlog;
     for (auto s = begin; s != end; ++s) {
       sym::Symbol *const symbol = s->second.get();
       auto *func = dynamic_cast<sym::Func *>(symbol);
@@ -147,7 +150,9 @@ sym::Func *ExprLookup::lookupFun(
         ctx.log.error(loc) << "Calling \"" << key.name
           << "\" but it is not a function. " << symbol->loc << fatal;
       }
+      ctx.log.status() << "about to check compatParams" << endlog;
       if (compatParams(ctx, func->params, key.params)) {
+        ctx.log.status() << "returning function" << endlog;
         return referTo(func);
       }
     }
@@ -156,19 +161,24 @@ sym::Func *ExprLookup::lookupFun(
 }
 
 ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::FuncParams &params) {
+  ctx.log.status() << "funKey" << endlog;
   FunKey key;
   key.params.reserve(1 + params.size());
   key.params.push_back(etype);
   key.params.insert(++key.params.begin(), params.cbegin(), params.cend());
   key.name = popName();
+  ctx.log.status() << "done funKey" << endlog;
   return key;
 }
 
 ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
+  ctx.log.status() << "lookupFunc" << endlog;
   if (memFunExpr(Expr::Type::expr)) {
+    ctx.log.status() << "member function" << endlog;
     return popCallPushRet(lookupFun(ctx.man.cur(), funKey(popExpr(), params), loc));
   }
   if (call(Expr::Type::free_fun)) {
+    ctx.log.status() << "free function" << endlog;
     return popCallPushRet(lookupFun(exprs.back().scope, funKey(sym::null_type, params), loc));
   }
   if (call(Expr::Type::expr)) {
@@ -208,16 +218,11 @@ sym::Symbol *ExprLookup::lookupIdent(
   const sym::Name &name,
   const Loc loc
 ) {
-  ctx.log.status() << "LookupIndent impl " << name << endlog;
   sym::Symbol *const symbol = find(scope, name);
-  ctx.log.status() << "Done searching for symbol" << endlog;
   if (symbol) {
-    ctx.log.status() << "Found symbol" << endlog;
     return symbol;
   }
-  ctx.log.status() << "About to find parent scope" << endlog;
   if (sym::Scope *parent = parentScope(scope)) {
-    ctx.log.status() << "About to lookupIdent in parent scope" << endlog;
     return lookupIdent(parent, name, loc);
   } else {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
@@ -225,18 +230,15 @@ sym::Symbol *ExprLookup::lookupIdent(
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
-  ctx.log.status() << "lookupIdent" << endlog;
   sym::Scope *scope;
   if (module.empty()) {
     scope = ctx.man.cur();
   } else {
-    ctx.log.status() << "Finding module" << endlog;
     auto iter = ctx.mods.find(module);
     if (iter == ctx.mods.end()) {
       ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
     }
     scope = iter->second.scopes[0].get();
-    ctx.log.status() << "Found module" << endlog;
   }
   sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
@@ -327,24 +329,30 @@ bool ExprLookup::call(const Expr::Type type) const {
 }
 
 sym::Name ExprLookup::popName() {
+  ctx.log.status() << "popName" << endlog;
   const Expr &expr = exprs.back();
   assert(expr.type == Expr::Type::member || expr.type == Expr::Type::free_fun);
   sym::Name name = std::move(expr.name);
   exprs.pop_back();
+  ctx.log.status() << "done popName" << endlog;
   return name;
 }
 
 sym::ExprType ExprLookup::popExpr() {
+  ctx.log.status() << "popExpr" << endlog;
   assert(!exprs.empty());
   assert(exprs.back().type == Expr::Type::expr);
   exprs.pop_back();
+  ctx.log.status() << "done popExpr" << endlog;
   return etype;
 }
 
 ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
+  ctx.log.status() << "popCallPushRet" << endlog;
   assert(!exprs.empty());
   assert(exprs.back().type == Expr::Type::call);
   exprs.pop_back();
   pushExpr(func->ret.type ? func->ret : sym::void_type);
+  ctx.log.status() << "done popCallPushRet" << endlog;
   return func->node.get();
 }
