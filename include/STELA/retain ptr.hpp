@@ -245,14 +245,24 @@ retain_ptr<T> make_retain(Args &&... args) noexcept {
   return retain_ptr<T>{new T (std::forward<Args>(args)...)};
 }
 
-template <typename Derived, typename Base>
-retain_ptr<Derived> dynamic_pointer_cast(const retain_ptr<Base> &base) {
-  return retain_ptr<Derived>(retain, dynamic_cast<Derived *>(base.get()));
+template <typename Dst, typename Src>
+retain_ptr<Dst> static_pointer_cast(const retain_ptr<Src> &src) noexcept {
+  return retain_ptr{retain, static_cast<Dst *>(src.get())};
+}
+
+template <typename Dst, typename Src>
+retain_ptr<Dst> static_pointer_cast(retain_ptr<Src> &&src) noexcept {
+  return retain_ptr{static_cast<Dst *>(src.detach())};
 }
 
 template <typename Derived, typename Base>
-retain_ptr<Derived> dynamic_pointer_cast(retain_ptr<Base> &&base) {
-  return retain_ptr<Derived>(dynamic_cast<Derived *>(base.detach()));
+retain_ptr<Derived> dynamic_pointer_cast(const retain_ptr<Base> &base) noexcept {
+  return retain_ptr{retain, dynamic_cast<Derived *>(base.get())};
+}
+
+template <typename Derived, typename Base>
+retain_ptr<Derived> dynamic_pointer_cast(retain_ptr<Base> &&base) noexcept {
+  return retain_ptr{dynamic_cast<Derived *>(base.detach())};
 }
 
 }
