@@ -15,7 +15,7 @@
 
 /* LCOV_EXCL_START */
 
-ACCEPT(BuiltinType)
+ACCEPT(BtnType)
 ACCEPT(ArrayType)
 ACCEPT(FuncType)
 ACCEPT(NamedType)

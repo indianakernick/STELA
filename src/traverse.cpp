@@ -120,10 +120,10 @@ public:
       validateType(ctx, type);
     }
     sym::ExprType exprType = expr ? getExprType(ctx, expr, type) : sym::null_type;
-    if (expr && !exprType.type) {
+    if (exprType.type == sym::void_type.type) {
       ctx.log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
-    if (type && exprType.type && !compareTypes(ctx, type, exprType.type)) {
+    if (type && expr && !compareTypes(ctx, type, exprType.type)) {
       ctx.log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
     if (type) {
@@ -157,8 +157,8 @@ public:
   void visit(ast::CompAssign &as) override {
     const sym::ExprType left = getExprType(ctx, as.left, nullptr);
     const sym::ExprType right = getExprType(ctx, as.right, left.type);
-    if (auto builtinLeft = lookupConcrete<ast::BuiltinType>(ctx, left.type)) {
-      if (auto builtinRight = lookupConcrete<ast::BuiltinType>(ctx, right.type)) {
+    if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
+      if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (validOp(as.oper, builtinLeft, builtinRight)) {
           if (left.mut == sym::ValueMut::var) {
             return;
@@ -172,7 +172,7 @@ public:
   }
   void visit(ast::IncrDecr &as) override {
     const sym::ExprType etype = getExprType(ctx, as.expr, nullptr);
-    if (auto builtin = lookupConcrete<ast::BuiltinType>(ctx, etype.type)) {
+    if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validIncr(builtin)) {
         return;
       }

@@ -14,16 +14,16 @@
 
 namespace stela {
 
-bool validIncr(const ast::BuiltinTypePtr &);
-bool validOp(ast::UnOp, const ast::BuiltinTypePtr &);
-retain_ptr<ast::BuiltinType> validOp(
+bool validIncr(const ast::BtnTypePtr &);
+bool validOp(ast::UnOp, const ast::BtnTypePtr &);
+retain_ptr<ast::BtnType> validOp(
   const sym::Builtins &,
   ast::BinOp,
-  const ast::BuiltinTypePtr &,
-  const ast::BuiltinTypePtr &
+  const ast::BtnTypePtr &,
+  const ast::BtnTypePtr &
 );
-bool validOp(ast::AssignOp, const ast::BuiltinTypePtr &, const ast::BuiltinTypePtr &);
-bool validSubscript(const ast::BuiltinTypePtr &);
+bool validOp(ast::AssignOp, const ast::BtnTypePtr &, const ast::BtnTypePtr &);
+bool validSubscript(const ast::BtnTypePtr &);
 
 sym::Module makeBuiltinModule(sym::Builtins &);
 

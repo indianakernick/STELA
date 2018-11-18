@@ -14,13 +14,12 @@ using namespace stela;
 
 namespace {
 
-stela::retain_ptr<ast::BuiltinType> pushType(
+stela::retain_ptr<ast::BtnType> pushType(
   sym::Table &table,
-  const ast::BuiltinType::Enum e,
+  const ast::BtnType::Enum e,
   const ast::Name name
 ) {
-  auto type = stela::make_retain<ast::BuiltinType>();
-  type->value = e;
+  auto type = stela::make_retain<ast::BtnType>(e);
   auto alias = make_retain<ast::TypeAlias>();
   alias->name = name;
   alias->strong = false;
@@ -33,7 +32,7 @@ stela::retain_ptr<ast::BuiltinType> pushType(
 
 void insertTypes(sym::Table &table, sym::Builtins &t) {
   #define INSERT(TYPE, NAME)                                                    \
-    t.TYPE = pushType(table, ast::BuiltinType::TYPE, NAME);
+    t.TYPE = pushType(table, ast::BtnType::TYPE, NAME);
   
   INSERT(Bool, "bool");
   INSERT(Byte, "byte");
@@ -52,7 +51,7 @@ void insertTypes(sym::Table &table, sym::Builtins &t) {
   t.string = std::move(string);
 }
 
-using TypeEnum = ast::BuiltinType::Enum;
+using TypeEnum = ast::BtnType::Enum;
 
 bool isBoolType(const TypeEnum type) {
   return type == TypeEnum::Bool;
@@ -107,11 +106,11 @@ bool isArithOp(const ast::AssignOp op) {
 
 }
 
-bool stela::validIncr(const ast::BuiltinTypePtr &type) {
+bool stela::validIncr(const ast::BtnTypePtr &type) {
   return isArithType(type->value);
 }
 
-bool stela::validOp(const ast::UnOp op, const ast::BuiltinTypePtr &type) {
+bool stela::validOp(const ast::UnOp op, const ast::BtnTypePtr &type) {
   switch (op) {
     case ast::UnOp::neg:
       return isArithType(type->value);
@@ -122,15 +121,15 @@ bool stela::validOp(const ast::UnOp op, const ast::BuiltinTypePtr &type) {
   }
 }
 
-ast::BuiltinTypePtr checkType(bool(*category)(TypeEnum), const ast::BuiltinTypePtr &type) {
+ast::BtnTypePtr checkType(bool(*category)(TypeEnum), const ast::BtnTypePtr &type) {
   return category(type->value) ? type : nullptr;
 }
 
-ast::BuiltinTypePtr stela::validOp(
+ast::BtnTypePtr stela::validOp(
   const sym::Builtins &btn,
   const ast::BinOp op,
-  const ast::BuiltinTypePtr &left,
-  const ast::BuiltinTypePtr &right
+  const ast::BtnTypePtr &left,
+  const ast::BtnTypePtr &right
 ) {
   if (left != right) {
     return nullptr;
@@ -153,8 +152,8 @@ ast::BuiltinTypePtr stela::validOp(
 
 bool stela::validOp(
   const ast::AssignOp op,
-  const ast::BuiltinTypePtr &left,
-  const ast::BuiltinTypePtr &right
+  const ast::BtnTypePtr &left,
+  const ast::BtnTypePtr &right
 ) {
   if (left != right) {
     return false;
@@ -169,7 +168,7 @@ bool stela::validOp(
   }
 }
 
-bool stela::validSubscript(const ast::BuiltinTypePtr &index) {
+bool stela::validSubscript(const ast::BtnTypePtr &index) {
   return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
 }
 

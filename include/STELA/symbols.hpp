@@ -88,6 +88,9 @@ inline bool callMutRef(const ExprType &param, const ExprType &arg) {
 }
 
 inline const ExprType null_type {};
+inline const ExprType void_type {
+  make_retain<ast::BtnType>(ast::BtnType::Void), {}, {}
+};
 
 struct Object final : Symbol {
   ExprType etype;
@@ -114,12 +117,12 @@ using Modules = std::unordered_map<Name, Module>;
 
 struct Builtins {
   // Builtin types
-  ast::BuiltinTypePtr Bool;
-  ast::BuiltinTypePtr Byte;
-  ast::BuiltinTypePtr Char;
-  ast::BuiltinTypePtr Real;
-  ast::BuiltinTypePtr Sint;
-  ast::BuiltinTypePtr Uint;
+  ast::BtnTypePtr Bool;
+  ast::BtnTypePtr Byte;
+  ast::BtnTypePtr Char;
+  ast::BtnTypePtr Real;
+  ast::BtnTypePtr Sint;
+  ast::BtnTypePtr Uint;
   
   // Alias of [char] used as the type of string literals
   ast::TypePtr string;

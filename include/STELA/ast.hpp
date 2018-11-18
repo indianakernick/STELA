@@ -51,11 +51,12 @@ using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
 
-struct BuiltinType final : Type {
+struct BtnType final : Type {
   // not a strong enum
   // BuiltinType::Int instead of BuiltinType::Enum::Int
   enum Enum {
     // builtin symbols.cpp depends on the order
+    Void,
     Bool,
     Byte,
     Char,
@@ -63,10 +64,13 @@ struct BuiltinType final : Type {
     Sint,
     Uint
   } value;
+  
+  explicit BtnType(const Enum value)
+    : value{value} {}
 
   void accept(Visitor &) override;
 };
-using BuiltinTypePtr = retain_ptr<BuiltinType>;
+using BtnTypePtr = retain_ptr<BtnType>;
 
 struct ArrayType final : Type {
   TypePtr elem;
@@ -401,7 +405,7 @@ public:
   /* LCOV_EXCL_START */
   
   // types
-  virtual void visit(BuiltinType &) {}
+  virtual void visit(BtnType &) {}
   virtual void visit(ArrayType &) {}
   virtual void visit(FuncType &) {}
   virtual void visit(NamedType &) {}

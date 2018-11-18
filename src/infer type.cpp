@@ -26,8 +26,8 @@ public:
   void visit(ast::BinaryExpr &bin) override {
     const sym::ExprType left = visitValueExpr(bin.left);
     const sym::ExprType right = visitValueExpr(bin.right);
-    if (auto builtinLeft = lookupConcrete<ast::BuiltinType>(ctx, left.type)) {
-      if (auto builtinRight = lookupConcrete<ast::BuiltinType>(ctx, right.type)) {
+    if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
+      if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
           sym::ExprType retExpr;
           retExpr.type = retType;
@@ -42,7 +42,7 @@ public:
   }
   void visit(ast::UnaryExpr &un) override {
     const sym::ExprType etype = visitValueExpr(un.expr);
-    if (auto builtin = lookupConcrete<ast::BuiltinType>(ctx, etype.type)) {
+    if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
         sym::ExprType retExpr;
         retExpr.type = etype.type;
@@ -75,7 +75,7 @@ public:
   void visit(ast::Subscript &sub) override {
     const sym::ExprType obj = visitValueExpr(sub.object);
     const sym::ExprType idx = visitValueExpr(sub.index);
-    if (auto builtinIdx = lookupConcrete<ast::BuiltinType>(ctx, idx.type)) {
+    if (auto builtinIdx = lookupConcrete<ast::BtnType>(ctx, idx.type)) {
       if (validSubscript(builtinIdx)) {
         if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
           lkp.setExpr(sym::memberType(obj, lookupStrongType(ctx, array->elem)));

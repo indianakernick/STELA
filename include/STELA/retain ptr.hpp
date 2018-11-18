@@ -242,7 +242,7 @@ void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
 
 template <typename T, typename... Args>
 retain_ptr<T> make_retain(Args &&... args) noexcept {
-  return retain_ptr<T>{new T (std::forward<Args>(args)...)};
+  return retain_ptr<T>{new T {std::forward<Args>(args)...}};
 }
 
 template <typename Dst, typename Src>

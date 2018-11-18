@@ -21,7 +21,7 @@ public:
   RightVisitor(sym::Ctx ctx, Left &left)
     : ctx{ctx}, left{left} {}
 
-  void visit(ast::BuiltinType &right) override {
+  void visit(ast::BtnType &right) override {
     eq = compare(left, right);
   }
   void visit(ast::ArrayType &right) override {
@@ -48,7 +48,7 @@ private:
   sym::Ctx ctx;
   Left &left;
 
-  bool compare(ast::BuiltinType &left, ast::BuiltinType &right) {
+  bool compare(ast::BtnType &left, ast::BtnType &right) {
     return left.value == right.value;
   }
   bool compare(ast::ArrayType &left, ast::ArrayType &right) {
@@ -83,7 +83,7 @@ public:
   LeftVisitor(sym::Ctx ctx, ast::Type *right)
     : ctx{ctx}, right{right} {}
 
-  void visit(ast::BuiltinType &left) override {
+  void visit(ast::BtnType &left) override {
     visitImpl(left);
   }
   void visit(ast::ArrayType &left) override {

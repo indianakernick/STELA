@@ -185,7 +185,7 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (memVarExpr(Expr::Type::expr)) {
     ast::TypePtr type = lookupConcreteType(ctx, popExpr().type);
     const sym::Name name = popName();
-    if (type == nullptr) {
+    if (type == sym::void_type.type) {
       ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(std::move(type))) {
@@ -337,6 +337,6 @@ ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   assert(!exprs.empty());
   assert(exprs.back().type == Expr::Type::call);
   exprs.pop_back();
-  pushExpr(func->ret);
+  pushExpr(func->ret.type ? func->ret : sym::void_type);
   return func->node.get();
 }
