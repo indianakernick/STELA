@@ -395,6 +395,36 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
+  TEST(Func - Tag dispatch, {
+    const char *source = R"(
+      type first_t struct{};
+      type second_t struct{};
+      type all_t struct{};
+    
+      var first: first_t;
+      var second: second_t;
+      var all: all_t;
+    
+      func fun(tag: first_t, arr: inout [sint]) -> sint {
+        return arr[0];
+      }
+      func fun(tag: second_t, arr: inout [sint]) -> sint {
+        return arr[1];
+      }
+      func fun(tag: all_t, arr: inout [sint]) -> [sint] {
+        return arr;
+      }
+    
+      func test() {
+        var arr: [sint] = [5, 1, 6, 8, 1, 3];
+        let f: sint = fun(first, arr);
+        let s: sint = fun(second, arr);
+        let a: [sint] = fun(all, arr);
+      }
+    )";
+    createSym(source, log);
+  });
+  
   TEST(Func - Discarded return, {
     const char *source = R"(
       func myFunction() -> sint {
