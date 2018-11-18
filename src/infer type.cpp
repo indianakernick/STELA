@@ -143,7 +143,7 @@ public:
     }
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
-    array->elem = expr.type;
+    array->elem = lookupStrongType(ctx, expr.type);
     sym::ExprType etype;
     etype.type = std::move(array);
     etype.mut = sym::ValueMut::let;

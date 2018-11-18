@@ -31,7 +31,7 @@ public:
     eq = compare(left, right);
   }
   void visit(ast::NamedType &right) override {
-    ast::TypeAlias *def = lookupType(ctx, right);
+    ast::TypeAlias *def = lookupTypeName(ctx, right);
     if (def->strong) {
       eq = compare(left, right); // a strong type alias is its own type
     } else {
@@ -93,7 +93,7 @@ public:
     visitImpl(left);
   }
   void visit(ast::NamedType &left) override {
-    ast::TypeAlias *def = lookupType(ctx, left);
+    ast::TypeAlias *def = lookupTypeName(ctx, left);
     if (def->strong) {
       visitImpl(left);          // a strong type alias is its own type
     } else {

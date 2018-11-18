@@ -75,7 +75,7 @@ void validateStruct(Log &log, const retain_ptr<ast::StructType> &strut) {
 
 }
 
-ast::TypeAlias *stela::lookupType(sym::Ctx ctx, ast::NamedType &type) {
+ast::TypeAlias *stela::lookupTypeName(sym::Ctx ctx, ast::NamedType &type) {
   if (type.definition) {
     return type.definition;
   } else if (type.module.empty()) {
@@ -90,9 +90,22 @@ ast::TypeAlias *stela::lookupType(sym::Ctx ctx, ast::NamedType &type) {
   }
 }
 
+ast::TypePtr stela::lookupStrongType(sym::Ctx ctx, const ast::TypePtr &type) {
+  if (auto named = dynamic_pointer_cast<ast::NamedType>(type)) {
+    ast::TypeAlias *alias = lookupTypeName(ctx, *named);
+    if (alias->strong) {
+      return type;
+    } else {
+      return lookupStrongType(ctx, alias->type);
+    }
+  } else {
+    return type;
+  }
+}
+
 ast::TypePtr stela::lookupConcreteType(sym::Ctx ctx, const ast::TypePtr &type) {
   if (auto named = dynamic_pointer_cast<ast::NamedType>(type)) {
-    ast::TypeAlias *alias = lookupType(ctx, *named);
+    ast::TypeAlias *alias = lookupTypeName(ctx, *named);
     return lookupConcreteType(ctx, alias->type);
   } else {
     return type;

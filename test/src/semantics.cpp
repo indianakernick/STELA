@@ -1121,7 +1121,12 @@ TEST_GROUP(Semantics, {
       }
     
       let five: [sint] = [4, number, getNum()];
-      let six: [Number] = [number, getNum(), 4];
+      let six: [sint] = [number, getNum(), 4];
+      let seven: [sint] = [number, getNum()];
+    
+      let eight: [Number] = [4, number, getNum()];
+      let nine: [Number] = [number, getNum(), 4];
+      let ten: [Number] = [number, getNum()];
     )";
     createSym(source, log);
   });
