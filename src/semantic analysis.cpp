@@ -32,8 +32,11 @@ void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   module.decls = std::move(ast.global);
   ScopeMan man{module.scopes, syms.builtins.scope};
   man.enterScope(sym::Scope::Type::ns);
+  log.status() << "Entered scope" << endlog;
   traverse({syms.modules, syms.builtins, man, log}, module);
+  log.status() << "Done traversing" << endlog;
   syms.modules.emplace(ast.name, std::move(module));
+  log.status() << "Done compiling" << endlog;
 }
 
 void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {

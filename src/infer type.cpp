@@ -63,6 +63,7 @@ public:
     return params;
   }
   void visit(ast::FuncCall &call) override {
+    ctx.log.status(call.loc) << "Function call" << endlog;
     lkp.call();
     call.func->accept(*this);
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
@@ -87,6 +88,7 @@ public:
     ctx.log.error(sub.index->loc) << "Invalid subscript index" << fatal;
   }
   void visit(ast::Identifier &id) override {
+    ctx.log.status(id.loc) << "Identifier " << id.module << "::" << id.name << endlog;
     id.definition = lkp.lookupIdent(sym::Name(id.module), sym::Name(id.name), id.loc);
   }
   void visit(ast::Ternary &tern) override {
@@ -196,5 +198,6 @@ private:
 }
 
 sym::ExprType stela::getExprType(sym::Ctx ctx, const ast::ExprPtr &expr, const ast::TypePtr &type) {
+  ctx.log.status(expr->loc) << "Getting expression type" << endlog;
   return Visitor{ctx}.visitValueExpr(expr, type);
 }

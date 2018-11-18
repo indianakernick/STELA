@@ -103,6 +103,7 @@ public:
   }
 
   void visit(ast::Func &func) override {
+    ctx.log.status(func.loc) << "Parsing function " << func.name << endlog;
     sym::Func *const funcSym = insert(ctx, func);
     funcSym->scope = ctx.man.enterScope(sym::Scope::Type::func);
     enterFuncScope(funcSym, func);
@@ -141,6 +142,7 @@ public:
     varSym->etype = etype;
   }
   void visit(ast::Let &let) override {
+    ctx.log.status(let.loc) << "Parsing let" << endlog;
     sym::ExprType etype;
     etype.type = objectType(let.type, let.expr, let.loc);
     etype.mut = sym::ValueMut::let;
