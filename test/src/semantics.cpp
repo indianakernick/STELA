@@ -479,7 +479,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(global.size(), 1);
     const auto iter = global.find("num");
     ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
     ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_var);
     auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
     ASSERT_EQ(builtin->value, sym::BuiltinType::Int64);*/
@@ -496,7 +496,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(global.size(), 1);
     const auto iter = global.find("pi");
     ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
     ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
     auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
     ASSERT_EQ(builtin->value, sym::BuiltinType::Double);*/
@@ -513,7 +513,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(global.size(), 1);
     const auto iter = global.find("big");
     ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second.get());
+    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
     ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
     auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
     ASSERT_EQ(builtin->value, sym::BuiltinType::UInt64);*/
@@ -1178,7 +1178,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
-  TEST(Expr - Unmatching types in array, {
+  TEST(Expr - Diff types in array, {
     const char *source = R"(
       let arr = [1, 1.0, true];
     )";

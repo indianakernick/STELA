@@ -75,7 +75,7 @@
       ++failCount;                                                              \
       throw 1;                                                                  \
     }                                                                           \
-    TYPE *const newPtr = dynamic_cast<TYPE *>(PTR);                             \
+    TYPE *const newPtr = dynamic_cast<TYPE *>(PTR.get());                       \
     if (newPtr == nullptr) {                                                    \
       PRINT_ERROR "`" #PTR "` should have a dynamic type of `" #TYPE "`\n";     \
       ++failCount;                                                              \
