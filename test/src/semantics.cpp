@@ -1063,6 +1063,21 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
   
+  TEST(Expr - String literals, {
+    const char *source = R"(
+      let str: [char] = "This is a string";
+      let empty: [char] = "";
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Char literals, {
+    const char *source = R"(
+      let c: char = 'a';
+    )";
+    createSym(source, log);
+  });
+  
   TEST(Expr - Number literals, {
     const char *source = R"(
       let n02: sint = 2147483647;
@@ -1079,6 +1094,34 @@ TEST_GROUP(Semantics, {
       let n13: real = 27r;
       let n14: sint = 3e2s;
       let n15: uint = 4e4u;
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Bool literals, {
+    const char *source = R"(
+      let t: bool = true;
+      let f: bool = false;
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - Array literals, {
+    const char *source = R"(
+      //let empty: [sint] = [];
+      let one: [sint] = [1];
+      let two: [sint] = [1, 2];
+      let three: [sint] = [1, 2, 3];
+      let four: [sint] = [1 + 7, 2 * 3, 11 + (18 / 3)];
+    
+      type Number = sint;
+      let number: Number = 10;
+      func getNum() -> Number {
+        return 11;
+      }
+    
+      let five: [sint] = [4, number, getNum()];
+      let six: [Number] = [number, getNum(), 4];
     )";
     createSym(source, log);
   });
