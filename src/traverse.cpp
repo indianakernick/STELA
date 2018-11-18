@@ -22,12 +22,11 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(ScopeMan &man, sym::Module &module, Symbols &syms, Log &log)
+  Visitor(ScopeMan &man, Symbols &syms, Log &log)
     : man{man},
       log{log},
       ins{syms.modules, man, log},
       tlk{syms.modules, man, log},
-      module{module},
       syms{syms} {}
   
   void visitExpr(const ast::ExprPtr &expr) {
@@ -124,14 +123,14 @@ public:
     const ast::ExprPtr &expr,
     const Loc loc
   ) {
-    const sym::ExprType exprType = expr ? getExprType(syms, man, log, expr.get()) : sym::null_type;
+    sym::ExprType exprType = expr ? getExprType(syms, man, log, expr.get()) : sym::null_type;
     if (type) {
       tlk.validateType(type);
     }
-    if (expr && exprType.type == nullptr) {
+    if (expr && !exprType.type) {
       log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
-    if (type != nullptr && exprType.type != nullptr && !compareTypes(tlk, type, exprType.type)) {
+    if (type && exprType.type && !compareTypes(tlk, type, exprType.type)) {
       log.error(loc) << "Expression and declaration type do not match" << fatal;
     }
     if (type) {
@@ -217,14 +216,13 @@ private:
   Log &log;
   InserterManager ins;
   NameLookup tlk;
-  sym::Module &module;
   Symbols &syms;
 };
 
 }
 
 void stela::traverse(ScopeMan &man, sym::Module &module, Symbols &syms, Log &log) {
-  Visitor visitor{man, module, syms, log};
+  Visitor visitor{man, syms, log};
   for (const ast::DeclPtr &decl : module.decls) {
     decl->accept(visitor);
   }
