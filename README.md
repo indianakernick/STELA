@@ -13,18 +13,18 @@ __If a compilers expert is reading this, I would love some advice!__
    * check the type of variables
    * check types of assignments and expressions
    * lookup overloaded functions
-   * lookup constructors
    * lookup struct members and functions
-   * lookup nested types
    * deal with statements (if, while, for, ...)
+   * handle arrays (literals, subscripting)
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
-   * generics (required to implement arrays, maps and lambdas)
-   * arrays, maps, lambdas (their value expressions and type expressions)
+   * check that the return expression matches return type
+   * lambdas and function pointers (the type system treats them both the same)
    * standard math functions (`sin`, `log`, `sqrt`)
    * warnings about unused symbols (`unused variable "myVar"`)
-   * probably a lot of stuff that I can't think of right now!
+   * do we need generics?
+   * there's probably a lot of stuff that I can't think of right now!
 
 ## About
 
