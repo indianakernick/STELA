@@ -20,9 +20,15 @@ __If a compilers expert is reading this, I would love some advice!__
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * check that the return expression matches return type
+   * `expected bool expression but got byte expression`
+   * casting (requires new syntax)
+   * struct initialization (also requires new syntax)
    * lambdas and function pointers (the type system treats them both the same)
-   * standard math functions (`sin`, `log`, `sqrt`)
    * warnings about unused symbols (`unused variable "myVar"`)
+   * array operations (size, push_back, pop_back)
+   * standard math functions (`sin`, `log`, `sqrt`)
+   * do we need array slices?
+   * do we need interfaces?
    * do we need generics?
    * there's probably a lot of stuff that I can't think of right now!
 
