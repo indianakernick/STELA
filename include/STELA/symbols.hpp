@@ -10,6 +10,7 @@
 #define stela_symbols_hpp
 
 #include <string>
+#include <memory>
 #include "ast.hpp"
 #include <unordered_map>
 
