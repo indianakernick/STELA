@@ -208,11 +208,16 @@ sym::Symbol *ExprLookup::lookupIdent(
   const sym::Name &name,
   const Loc loc
 ) {
+  ctx.log.status() << "LookupIndent impl " << name << endlog;
   sym::Symbol *const symbol = find(scope, name);
+  ctx.log.status() << "Done searching for symbol" << endlog;
   if (symbol) {
+    ctx.log.status() << "Found symbol" << endlog;
     return symbol;
   }
+  ctx.log.status() << "About to find parent scope" << endlog;
   if (sym::Scope *parent = parentScope(scope)) {
+    ctx.log.status() << "About to lookupIdent in parent scope" << endlog;
     return lookupIdent(parent, name, loc);
   } else {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
@@ -220,15 +225,18 @@ sym::Symbol *ExprLookup::lookupIdent(
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
+  ctx.log.status() << "lookupIdent" << endlog;
   sym::Scope *scope;
   if (module.empty()) {
     scope = ctx.man.cur();
   } else {
+    ctx.log.status() << "Finding module" << endlog;
     auto iter = ctx.mods.find(module);
     if (iter == ctx.mods.end()) {
       ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
     }
     scope = iter->second.scopes[0].get();
+    ctx.log.status() << "Found module" << endlog;
   }
   sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
