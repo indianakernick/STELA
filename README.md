@@ -16,6 +16,7 @@ __If a compilers expert is reading this, I would love some advice!__
    * lookup struct members and functions
    * deal with statements (if, while, for, ...)
    * handle arrays (literals, subscripting)
+   * modules
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
