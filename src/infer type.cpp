@@ -65,9 +65,7 @@ public:
   void visit(ast::FuncCall &call) override {
     lkp.call();
     call.func->accept(*this);
-    ctx.log.status() << "About to resolve function call" << endlog;
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
-    ctx.log.status() << "Resolved function call" << endlog;
   }
   void visit(ast::MemberIdent &mem) override {
     lkp.member(sym::Name(mem.member));

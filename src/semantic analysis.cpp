@@ -33,9 +33,7 @@ void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   ScopeMan man{module.scopes, syms.builtins.scope};
   man.enterScope(sym::Scope::Type::ns);
   traverse({syms.modules, syms.builtins, man, log}, module);
-  log.status() << "Done traversing" << endlog;
   syms.modules.emplace(ast.name, std::move(module));
-  log.status() << "Done compiling" << endlog;
 }
 
 void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {
