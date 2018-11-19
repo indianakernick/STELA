@@ -143,9 +143,9 @@ public:
     letSym->etype = std::move(etype);
   }
   void visit(ast::TypeAlias &alias) override {
+    validateType(ctx, alias.type);
     auto *aliasSym = insert<sym::TypeAlias>(ctx, alias);
     aliasSym->node = {retain, &alias};
-    validateType(ctx, alias.type);
   }
   
   void visit(ast::CompAssign &as) override {

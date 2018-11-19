@@ -56,10 +56,11 @@ ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type
   }
 }
 
-void validateStruct(Log &log, const retain_ptr<ast::StructType> &strut) {
+void validateStruct(sym::Ctx ctx, const retain_ptr<ast::StructType> &strut) {
   std::vector<std::pair<std::string_view, Loc>> names;
   names.reserve(strut->fields.size());
   for (const ast::Field &field : strut->fields) {
+    validateType(ctx, field.type);
     names.push_back({field.name, field.loc});
   }
   Utils::sort(names, [] (auto a, auto b) {
@@ -69,7 +70,7 @@ void validateStruct(Log &log, const retain_ptr<ast::StructType> &strut) {
     return a.first == b.first;
   });
   if (dup != names.cend()) {
-    log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
+    ctx.log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
   }
 }
 
@@ -115,7 +116,7 @@ ast::TypePtr stela::lookupConcreteType(sym::Ctx ctx, const ast::TypePtr &type) {
 ast::TypePtr stela::validateType(sym::Ctx ctx, const ast::TypePtr &type) {
   ast::TypePtr concrete = lookupConcreteType(ctx, type);
   if (auto strut = dynamic_pointer_cast<ast::StructType>(type)) {
-    validateStruct(ctx.log, strut);
+    validateStruct(ctx, strut);
   }
   return concrete;
 }

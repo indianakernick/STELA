@@ -90,7 +90,7 @@ public:
     const sym::ExprType tru = visitValueExpr(tern.tru, resultType);
     const sym::ExprType fals = visitValueExpr(tern.fals, resultType);
     if (!compareTypes(ctx, tru.type, fals.type)) {
-      ctx.log.error(tern.loc) << "True and false branch of ternary condition must have same type" << fatal;
+      ctx.log.error(tern.loc) << "Branches of ternary have different types" << fatal;
     }
     sym::ExprType etype;
     etype.type = tru.type;
@@ -100,11 +100,16 @@ public:
   }
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
-    visitValueExpr(make.expr, make.type);
-    // casts between builtins are allowed
-    // casts between identical types are allowed
-    // nothing else is allowed
-    lkp.setExpr(sym::makeLetVal(make.type));
+    const sym::ExprType etype = visitValueExpr(make.expr, make.type);
+    if (lookupConcrete<ast::BtnType>(ctx, make.type)) {
+      if (lookupConcrete<ast::BtnType>(ctx, etype.type)) {
+        return lkp.setExpr(sym::makeLetVal(make.type));
+      }
+    }
+    if (compareTypes(ctx, lookupConcreteType(ctx, etype.type), lookupConcreteType(ctx, make.type))) {
+      return lkp.setExpr(sym::makeLetVal(make.type));
+    }
+    ctx.log.error(make.loc) << "Invalid make expression" << fatal;
   }
   
   void visit(ast::StringLiteral &) override {

@@ -501,6 +501,15 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS();
   });
   
+  TEST(Struct - Recursive, {
+    const char *source = R"(
+      type Struct struct {
+        x: Struct;
+      };
+    )";
+    ASSERT_FAILS();
+  });
+  
   TEST(Struct - Main, {
     const char *source = R"(
       type Vec struct {
@@ -1173,6 +1182,39 @@ TEST_GROUP(Semantics, {
       let also_empty = make [real] {};
     )";
     ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Invalid make expression, {
+    const char *source = R"(
+      let thing = make struct{} 5;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Cast between strong structs, {
+    const char *source = R"(
+      type ToughStruct struct {
+        value: sint;
+      };
+      type StrongBoi struct {
+        value: sint;
+      };
+      let strong = make StrongBoi make ToughStruct {};
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Cast between strong structs different names, {
+    const char *source = R"(
+      type ToughStruct struct {
+        val: sint;
+      };
+      type StrongBoi struct {
+        value: sint;
+      };
+      let strong = make StrongBoi make ToughStruct {};
+    )";
+    ASSERT_FAILS();
   });
   
   TEST(Expr - No infer init list, {

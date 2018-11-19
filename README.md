@@ -16,21 +16,21 @@ __If a compilers expert is reading this, I would love some advice!__
    * lookup struct members and functions
    * deal with statements (if, while, for, ...)
    * handle arrays (literals, subscripting)
-   * modules
-   * struct initialization
+   * handle modules
+   * initialize structs
+   * cast between compatible types
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * check that the return expression matches return type
    * `expected bool expression but got byte expression`
-   * check that a cast between types is possible
-   * lambdas and function pointers (the type system treats them both the same). Might need to use a make expression to resolve overloaded functions
-   * warnings about unused symbols (`unused variable "myVar"`)
-   * array operations (size, push_back, pop_back)
-   * standard math functions (`sin`, `log`, `sqrt`)
-   * do we need array slices?
-   * do we need interfaces?
-   * do we need generics?
+   * handle lambdas and function pointers. Might need to use a `make` expression to resolve overloaded functions
+   * raise warnings about unused symbols (`unused variable "myVar"`)
+   * provide array operations (`size`, `push_back`, `pop_back`)
+   * provide standard math functions (`sin`, `log`, `sqrt`)
+   * do we need array slices? String literal should be a slice
+   * do we need interfaces? A lambda is an anonymous interface wrapped in a function type
+   * do we need generics? Combined with function overloading could be really powerful
    * there's probably a lot of stuff that I can't think of right now!
 
 ## About
