@@ -19,10 +19,10 @@ __If a compilers expert is reading this, I would love some advice!__
    * handle modules
    * initialize structs
    * cast between compatible types
+   * check that the return expression matches return type
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
-   * check that the return expression matches return type
    * `expected bool expression but got byte expression`
    * handle lambdas and function pointers. Might need to use a `make` expression to resolve overloaded functions
    * raise warnings about unused symbols (`unused variable "myVar"`)

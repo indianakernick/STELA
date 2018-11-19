@@ -712,14 +712,37 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS();
   });
   
+  TEST(Type in function, {
+    const char *source = R"(
+      func fn() -> sint {
+        type MyStruct struct {
+          x: sint;
+        };
+        let nine = make MyStruct {9};
+        return nine.x;
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Access type in function, {
+    const char *source = R"(
+      func fn() {
+        type Thing sint;
+      }
+    
+      let thing = make Thing 1;
+    )";
+    ASSERT_FAILS();
+  });
+  
   TEST(Nested function, {
     const char *source = R"(
       type Struct struct {};
     
       func fn() -> Struct {
         func nested() -> Struct {
-          var s: Struct;
-          return s;
+          return make Struct {};
         }
         return nested();
       }
@@ -1262,6 +1285,89 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_FAILS();
   });
+  
+  TEST(Expr - Member function on void, {
+    const char *source = R"(
+      func getVoid() {}
+    
+      func memFun(a: sint) -> real {
+        return 5.0;
+      }
+    
+      func test() {
+        let five: real = getVoid().memFun(5);
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Return real as sint, {
+    const char *source = R"(
+      func getReal() -> real {
+        return 91;
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Return strong as concrete, {
+    const char *source = R"(
+      type StrongEmpty struct{};
+    
+      func getStrong() -> StrongEmpty {
+        return make struct{} {};
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Return void expression, {
+    const char *source = R"(
+      func getVoid() {}
+      func getVoidAgain() {
+        return getVoid();
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  /*
+  
+  Perhaps control flow analysis should be handled by code generation
+  
+  TEST(Expr - Missing return, {
+    const char *source = R"(
+      func getSomething() -> sint {}
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - May not return, {
+    const char *source = R"(
+      func maybe3(b: bool) -> sint {
+        if (b) {
+          return 3;
+        }
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - If will return, {
+    const char *source = R"(
+      func willReturn(b: bool) -> sint {
+        if (b) {
+          return 3;
+        } else {
+          return -1;
+        }
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  */
+
 });
 
 #undef ASSERT_SUCCEEDS

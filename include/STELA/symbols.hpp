@@ -39,11 +39,16 @@ struct Scope {
   };
 
   Scope(Scope *const parent, const Type type)
-    : parent{parent}, type{type} {}
+    : parent{parent}, type{type} {
+    assert(type != Type::func);
+  }
+  Scope(Scope *const parent, const ast::NodePtr &node)
+    : parent{parent}, type{Type::func}, node{node} {}
 
   Scope *const parent;
   const Type type;
   Table table;
+  ast::NodePtr node;
 };
 using ScopePtr = std::unique_ptr<Scope>;
 using Scopes = std::vector<ScopePtr>;

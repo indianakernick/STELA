@@ -83,8 +83,21 @@ public:
     checkFlowKeyword("continue", continu.loc);
   }
   void visit(ast::Return &ret) override {
-    if (ret.expr) {
-      getExprType(ctx, ret.expr, nullptr);
+    sym::Scope *funcScope = findNearest(sym::Scope::Type::func, ctx.man.cur());
+    assert(funcScope);
+    assert(funcScope->node);
+    ast::TypePtr retType;
+    if (auto func = dynamic_pointer_cast<ast::Func>(funcScope->node)) {
+      retType = func->ret;
+    } else if (auto lamb = dynamic_pointer_cast<ast::Lambda>(funcScope->node)) {
+      retType = lamb->ret;
+    } else {
+      assert(false);
+    }
+    retType = retType ? retType : sym::void_type.type;
+    sym::ExprType etype = ret.expr ? getExprType(ctx, ret.expr, retType) : sym::void_type;
+    if (!compareTypes(ctx, retType, etype.type)) {
+      ctx.log.error(ret.loc) << "Return expression does not match return type" << fatal;
     }
   }
   void visit(ast::While &wile) override {
@@ -104,7 +117,7 @@ public:
 
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = insert(ctx, func);
-    funcSym->scope = ctx.man.enterScope(sym::Scope::Type::func);
+    funcSym->scope = ctx.man.enterFuncScope(ast::NodePtr{retain, &func});
     enterFuncScope(funcSym, func);
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);
