@@ -30,6 +30,9 @@ AST makeModuleAST(const ast::Name name, std::vector<ast::Name> &&imports) {
   return ast;
 }
 
+#define ASSERT_SUCCEEDS() createSym(source, log)
+#define ASSERT_FAILS() ASSERT_THROWS(createSym(source, log), stela::FatalError)
+
 TEST_GROUP(Semantics, {
   StreamLog log;
   log.pri(LogPri::status);
@@ -309,7 +312,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Func - Redef with params, {
@@ -321,7 +324,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Func - Redef weak alias, {
@@ -334,7 +337,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Func - Redef multi weak alias, {
@@ -350,7 +353,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Func - Redef strong alias, {
@@ -366,7 +369,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Func - Overload strong alias, {
@@ -380,7 +383,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
 
   TEST(Func - Overloading, {
@@ -392,7 +395,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Func - Tag dispatch, {
@@ -422,7 +425,7 @@ TEST_GROUP(Semantics, {
         let a: [sint] = fun(all, arr);
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Func - Discarded return, {
@@ -435,7 +438,7 @@ TEST_GROUP(Semantics, {
         myFunction();
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Sym - Undefined, {
@@ -447,7 +450,7 @@ TEST_GROUP(Semantics, {
         
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Sym - Colliding type and func, {
@@ -455,7 +458,7 @@ TEST_GROUP(Semantics, {
       type fn func();
       func fn() {}
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Sym - Type in func, {
@@ -465,7 +468,7 @@ TEST_GROUP(Semantics, {
         let n: Number = 4.3;
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Var - Redefine var, {
@@ -473,7 +476,7 @@ TEST_GROUP(Semantics, {
       var x: sint;
       var x: real;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Var - Redefine let, {
@@ -481,21 +484,21 @@ TEST_GROUP(Semantics, {
       let x: sint = 0;
       let x: real = 0.0;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Var - Type mismatch, {
     const char *source = R"(
       let x: sint = 2.5;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Var - Var equals itself, {
     const char *source = R"(
       let x = x;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Struct - Main, {
@@ -537,7 +540,7 @@ TEST_GROUP(Semantics, {
         let four: real = two + middle.y;
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Struct - More, {
@@ -560,7 +563,7 @@ TEST_GROUP(Semantics, {
         change(thing);
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Struct - Dup member function, {
@@ -570,7 +573,7 @@ TEST_GROUP(Semantics, {
       func (self: MyStruct) fn() {}
       func (self: MyStruct) fn() {}
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Struct - Colliding func field, {
@@ -581,7 +584,7 @@ TEST_GROUP(Semantics, {
     
       func (self: MyStruct) fn() {}
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Struct - Dup member, {
@@ -591,7 +594,7 @@ TEST_GROUP(Semantics, {
         m: real;
       };
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Struct - Access undef field, {
@@ -605,7 +608,7 @@ TEST_GROUP(Semantics, {
         s.francis = 4;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Swap literals, {
@@ -620,7 +623,7 @@ TEST_GROUP(Semantics, {
         swap(4, 5);
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Assign to literal, {
@@ -629,7 +632,7 @@ TEST_GROUP(Semantics, {
         '4' = '5';
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Assign to ternary, {
@@ -644,7 +647,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Non-bool ternary condition, {
@@ -653,7 +656,7 @@ TEST_GROUP(Semantics, {
         let test = ("nope" ? 4 : 6);
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Ternary condition type mismatch, {
@@ -662,7 +665,7 @@ TEST_GROUP(Semantics, {
         let test = (true ? 4 : "nope");
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Assign regular type, {
@@ -673,7 +676,7 @@ TEST_GROUP(Semantics, {
         let t = Type;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Returning an object, {
@@ -697,7 +700,7 @@ TEST_GROUP(Semantics, {
         let x: sint = outer.getInner().deep.x;
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Nested function, {
@@ -719,7 +722,7 @@ TEST_GROUP(Semantics, {
         let s: Struct = nested();
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Nested function access, {
@@ -733,7 +736,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expected type, {
@@ -741,7 +744,7 @@ TEST_GROUP(Semantics, {
       let not_a_type = 4;
       var oops: not_a_type;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Must call free func, {
@@ -749,7 +752,7 @@ TEST_GROUP(Semantics, {
       func fn() {}
       let test = fn;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Must call mem func, {
@@ -761,7 +764,7 @@ TEST_GROUP(Semantics, {
       var s: Struct;
       let test = s.fn;
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(If - Standard, {
@@ -774,7 +777,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(If - Else, {
@@ -789,7 +792,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(If - Non-bool, {
@@ -801,7 +804,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(If - Scope, {
@@ -811,7 +814,7 @@ TEST_GROUP(Semantics, {
         i = 2;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Loops - All, {
@@ -827,7 +830,7 @@ TEST_GROUP(Semantics, {
         for (i := 0; i != 10; i++) {}
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Loops - For var scope, {
@@ -837,7 +840,7 @@ TEST_GROUP(Semantics, {
         i = 3;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Loops - Break outside loop, {
@@ -846,7 +849,7 @@ TEST_GROUP(Semantics, {
         break;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Switch - Standard, {
@@ -869,7 +872,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Switch - Multiple default, {
@@ -883,7 +886,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Switch - Type mismatch, {
@@ -896,7 +899,7 @@ TEST_GROUP(Semantics, {
         }
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - CompAssign to const, {
@@ -906,7 +909,7 @@ TEST_GROUP(Semantics, {
         constant += 4;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - CompAssign bitwise float, {
@@ -916,7 +919,7 @@ TEST_GROUP(Semantics, {
         float |= 4.0;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Increment struct, {
@@ -926,7 +929,7 @@ TEST_GROUP(Semantics, {
         strut++;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Assign diff types, {
@@ -937,7 +940,7 @@ TEST_GROUP(Semantics, {
         num = str;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Unary operators, {
@@ -950,7 +953,7 @@ TEST_GROUP(Semantics, {
         let test4 = !(false);
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Bitwise ops, {
@@ -964,7 +967,7 @@ TEST_GROUP(Semantics, {
         let false1 = t && false0;
       }
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Add float int, {
@@ -975,7 +978,7 @@ TEST_GROUP(Semantics, {
         let sum = f + i;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Bitwise not float, {
@@ -984,7 +987,7 @@ TEST_GROUP(Semantics, {
         let test = ~(3.0);
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Storing void, {
@@ -995,7 +998,7 @@ TEST_GROUP(Semantics, {
         let void = nothing();
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Access field on void, {
@@ -1006,7 +1009,7 @@ TEST_GROUP(Semantics, {
         let value = nothing().field;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Access field on int, {
@@ -1019,7 +1022,7 @@ TEST_GROUP(Semantics, {
         let value = integer().field;
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Call a float, {
@@ -1029,7 +1032,7 @@ TEST_GROUP(Semantics, {
         fl(5.0);
       }
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - String literals, {
@@ -1037,14 +1040,14 @@ TEST_GROUP(Semantics, {
       let str: [char] = "This is a string";
       let empty: [char] = "";
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Char literals, {
     const char *source = R"(
       let c: char = 'a';
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Number literals, {
@@ -1064,7 +1067,7 @@ TEST_GROUP(Semantics, {
       let n14: sint = 3e2s;
       let n15: uint = 4e4u;
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Bool literals, {
@@ -1072,7 +1075,7 @@ TEST_GROUP(Semantics, {
       let t: bool = true;
       let f: bool = false;
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Array literals, {
@@ -1100,28 +1103,28 @@ TEST_GROUP(Semantics, {
       let nine: [Number] = [number, getNum(), 4];
       let ten: [Number] = [number, getNum()];
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Array literal only init array, {
     const char *source = R"(
       let number: sint = [1, 2, 3];
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - No infer empty array, {
     const char *source = R"(
       let empty = [];
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Diff types in array, {
     const char *source = R"(
       let arr = [1, 1.0, true];
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Subscript, {
@@ -1134,7 +1137,7 @@ TEST_GROUP(Semantics, {
       type index uint;
       let first: real = arr[make index 0];
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - Invalid subscript index, {
@@ -1142,7 +1145,7 @@ TEST_GROUP(Semantics, {
       let arr: [bool] = [false, true];
       let nope: bool = arr[1.0];
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Subscript not array, {
@@ -1150,7 +1153,7 @@ TEST_GROUP(Semantics, {
       var not_array: struct{};
       let nope = not_array[0];
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Make init list, {
@@ -1169,21 +1172,21 @@ TEST_GROUP(Semantics, {
       let empty: [real] = {};
       let also_empty = make [real] {};
     )";
-    createSym(source, log);
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Expr - No infer init list, {
     const char *source = R"(
       let anything = {};
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Init list can only init structs, {
     const char *source = R"(
       let number: sint = {5};
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Too many expr in init list, {
@@ -1193,7 +1196,7 @@ TEST_GROUP(Semantics, {
       };
       let two: One = {1, 2};
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Too few expr in init list, {
@@ -1204,7 +1207,7 @@ TEST_GROUP(Semantics, {
       };
       let one: Two = {1};
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
   
   TEST(Expr - Init list type mismatch, {
@@ -1215,6 +1218,9 @@ TEST_GROUP(Semantics, {
       };
       let s: Struct = {5.0};
     )";
-    ASSERT_THROWS(createSym(source, log), FatalError);
+    ASSERT_FAILS();
   });
 });
+
+#undef ASSERT_SUCCEEDS
+#undef ASSERT_FAILS
