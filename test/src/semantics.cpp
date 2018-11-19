@@ -468,67 +468,6 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Var - Var type inference, {
-    const char *source = R"(
-      var integer = 5;
-      var alsoInteger: sint = 5;
-    )";
-    const auto [symbols, ast] = createSym(source, log);
-    /*ASSERT_EQ(symbols.scopes.size(), 2);
-    const sym::Table &global = symbols.scopes[1]->table;
-    ASSERT_EQ(global.size(), 1);
-    const auto iter = global.find("num");
-    ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
-    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_var);
-    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
-    ASSERT_EQ(builtin->value, sym::BuiltinType::Int64);*/
-  });
-  
-  TEST(Var - Let type inference, {
-    const char *source = R"(
-      let float = 3.14;
-      let alsoFloat: real = 3.14;
-    )";
-    const auto [symbols, ast] = createSym(source, log);
-    /*ASSERT_EQ(symbols.scopes.size(), 2);
-    const sym::Table &global = symbols.scopes[1]->table;
-    ASSERT_EQ(global.size(), 1);
-    const auto iter = global.find("pi");
-    ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
-    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
-    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
-    ASSERT_EQ(builtin->value, sym::BuiltinType::Double);*/
-  });
-  
-  TEST(Var - Big num type inference, {
-    const char *source = R"(
-      let big: uint = 4294967295;
-      let neg: sint = -2147483648;
-    )";
-    const auto [symbols, ast] = createSym(source, log);
-    /*ASSERT_EQ(symbols.scopes.size(), 2);
-    const sym::Table &global = symbols.scopes[1]->table;
-    ASSERT_EQ(global.size(), 1);
-    const auto iter = global.find("big");
-    ASSERT_NE(iter, global.end());
-    auto *obj = ASSERT_DOWN_CAST(const sym::Object, iter->second);
-    ASSERT_EQ(obj->etype.cat, sym::ValueCat::lvalue_let);
-    auto *builtin = ASSERT_DOWN_CAST(const sym::BuiltinType, obj->etype.type);
-    ASSERT_EQ(builtin->value, sym::BuiltinType::UInt64);*/
-  });
-  
-  TEST(Var - exprs, {
-    const char *source = R"(
-      let num: sint = 0;
-      //var f: (real, inout [char]) -> [real];
-      //var m: [{real: sint}];
-      //let a: [real] = [1.2, 3.4, 5.6];
-    )";
-    createSym(source, log);
-  });
-  
   TEST(Var - Redefine var, {
     const char *source = R"(
       var x: sint;
