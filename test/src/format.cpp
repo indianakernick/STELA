@@ -15,7 +15,7 @@
 
 TEST_GROUP(Format, {
   const char *source = R"(
-type Rational struct {
+type Rational = struct {
   n: Int64;
   d: Int64;
 };
@@ -27,6 +27,7 @@ type Vec3 struct {
 };
 
 let origin = make Vec3 {0.0, 0.0, 0.0};
+let nesting = make sint make real make uint {};
 
 type IntStack struct {
   data: [Int];

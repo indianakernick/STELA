@@ -24,7 +24,7 @@ __If a compilers expert is reading this, I would love some advice!__
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * `expected bool expression but got byte expression`
-   * handle lambdas and function pointers. Might need to use a `make` expression to resolve overloaded functions
+   * handle lambdas and function pointers to overloaded functions
    * raise warnings about unused symbols (`unused variable "myVar"`)
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)

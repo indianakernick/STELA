@@ -288,8 +288,10 @@ public:
   void visit(ast::TypeAlias &alias) override {
     pushKeyName("type", alias.name);
     pushSpace();
-    pushOp("=");
-    pushSpace();
+    if (!alias.strong) {
+      pushOp("=");
+      pushSpace();
+    }
     alias.type->accept(*this);
     pushOp(";");
   }
