@@ -133,20 +133,14 @@ public:
     }
   }
   void visit(ast::Var &var) override {
-    sym::ExprType etype;
-    etype.type = objectType(var.type, var.expr, var.loc);
-    etype.mut = sym::ValueMut::var;
-    etype.ref = sym::ValueRef::val;
+    sym::ExprType etype = sym::makeVarVal(objectType(var.type, var.expr, var.loc));
     auto *varSym = insert<sym::Object>(ctx, var);
-    varSym->etype = etype;
+    varSym->etype = std::move(etype);
   }
   void visit(ast::Let &let) override {
-    sym::ExprType etype;
-    etype.type = objectType(let.type, let.expr, let.loc);
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
+    sym::ExprType etype = sym::makeLetVal(objectType(let.type, let.expr, let.loc));
     auto *letSym = insert<sym::Object>(ctx, let);
-    letSym->etype = etype;
+    letSym->etype = std::move(etype);
   }
   void visit(ast::TypeAlias &alias) override {
     auto *aliasSym = insert<sym::TypeAlias>(ctx, alias);
@@ -190,10 +184,7 @@ public:
     }
   }
   void visit(ast::DeclAssign &as) override {
-    sym::ExprType etype;
-    etype.type = objectType(nullptr, as.expr, as.loc);
-    etype.mut = sym::ValueMut::var;
-    etype.ref = sym::ValueRef::val;
+    sym::ExprType etype = sym::makeVarVal(objectType(nullptr, as.expr, as.loc));
     auto *varSym = insert<sym::Object>(ctx, as);
     varSym->etype = etype;
   }

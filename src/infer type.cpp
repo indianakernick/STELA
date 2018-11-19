@@ -29,11 +29,7 @@ public:
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
-          sym::ExprType retExpr;
-          retExpr.type = retType;
-          retExpr.mut = sym::ValueMut::let;
-          retExpr.ref = sym::ValueRef::val;
-          lkp.setExpr(retExpr);
+          lkp.setExpr(sym::makeLetVal(std::move(retType)));
           return;
         }
       }
@@ -41,14 +37,10 @@ public:
     ctx.log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
-    const sym::ExprType etype = visitValueExpr(un.expr);
+    sym::ExprType etype = visitValueExpr(un.expr);
     if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
-        sym::ExprType retExpr;
-        retExpr.type = etype.type;
-        retExpr.mut = sym::ValueMut::let;
-        retExpr.ref = sym::ValueRef::val;
-        lkp.setExpr(retExpr);
+        lkp.setExpr(sym::makeLetVal(std::move(etype.type)));
         return;
       }
     }
@@ -109,52 +101,36 @@ public:
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
     visitValueExpr(make.expr, make.type);
-    // @TODO Check if cast is possible
-    sym::ExprType etype;
-    etype.type = make.type;
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    // casts between builtins are allowed
+    // casts between identical types are allowed
+    // nothing else is allowed
+    lkp.setExpr(sym::makeLetVal(make.type));
   }
   
   void visit(ast::StringLiteral &) override {
-    sym::ExprType etype;
-    etype.type = ctx.btn.string;
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
   void visit(ast::CharLiteral &) override {
-    sym::ExprType etype;
-    etype.type = ctx.btn.Char;
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }
   void visit(ast::NumberLiteral &n) override {
     const NumberVariant num = parseNumberLiteral(n.value, ctx.log);
-    sym::ExprType etype;
+    ast::TypePtr type;
     if (std::holds_alternative<Byte>(num)) {
-      etype.type = ctx.btn.Byte;
+      type = ctx.btn.Byte;
     } else if (std::holds_alternative<Char>(num)) {
-      etype.type = ctx.btn.Char;
+      type = ctx.btn.Char;
     } else if (std::holds_alternative<Real>(num)) {
-      etype.type = ctx.btn.Real;
+      type = ctx.btn.Real;
     } else if (std::holds_alternative<Sint>(num)) {
-      etype.type = ctx.btn.Sint;
+      type = ctx.btn.Sint;
     } else if (std::holds_alternative<Uint>(num)) {
-      etype.type = ctx.btn.Uint;
+      type = ctx.btn.Uint;
     }
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
   void visit(ast::BoolLiteral &) override {
-    sym::ExprType etype;
-    etype.type = ctx.btn.Bool;
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(ctx.btn.Bool));
   }
   void visit(ast::ArrayLiteral &arr) override {
     ast::TypePtr elem = nullptr;
@@ -182,11 +158,7 @@ public:
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
     array->elem = std::move(elem);
-    sym::ExprType etype;
-    etype.type = std::move(array);
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(std::move(array)));
   }
   void visit(ast::InitList &list) override {
     if (!type) {
@@ -211,11 +183,7 @@ public:
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
       }
     }
-    sym::ExprType etype;
-    etype.type = std::move(type);
-    etype.mut = sym::ValueMut::let;
-    etype.ref = sym::ValueRef::val;
-    lkp.setExpr(etype);
+    lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
   void visit(ast::Lambda &) override {}
 
