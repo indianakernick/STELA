@@ -108,7 +108,7 @@
     std::cerr << '\n';                                                          \
     int failures = 0;                                                           \
     for (const auto &pair : results) {                                          \
-      std::cerr << std::left << std::setw(32) << pair.first;                    \
+      std::cerr << std::left << std::setw(48) << pair.first;                    \
       if (pair.second) {                                                        \
         std::cerr << "PASSED\n";                                                \
       } else {                                                                  \

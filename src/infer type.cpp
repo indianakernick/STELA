@@ -106,6 +106,16 @@ public:
     etype.ref = sym::common(tru.ref, fals.ref);
     lkp.setExpr(etype);
   }
+  void visit(ast::Make &make) override {
+    validateType(ctx, make.type);
+    visitValueExpr(make.expr, make.type);
+    // @TODO Check if cast is possible
+    sym::ExprType etype;
+    etype.type = make.type;
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
+    lkp.setExpr(etype);
+  }
   
   void visit(ast::StringLiteral &) override {
     sym::ExprType etype;
@@ -149,10 +159,10 @@ public:
   void visit(ast::ArrayLiteral &arr) override {
     ast::TypePtr elem = nullptr;
     if (type) {
-      if (auto array = lookupConcrete<ast::ArrayType>(ctx, std::move(type))) {
+      if (auto array = lookupConcrete<ast::ArrayType>(ctx, type)) {
         elem = lookupStrongType(ctx, array->elem);
       } else {
-        ctx.log.error(arr.loc) << "Expected x but got array" << fatal;
+        ctx.log.error(arr.loc) << "Array literal can only initialize arrays" << fatal;
       }
     }
     if (arr.exprs.empty()) {
@@ -174,6 +184,35 @@ public:
     array->elem = std::move(elem);
     sym::ExprType etype;
     etype.type = std::move(array);
+    etype.mut = sym::ValueMut::let;
+    etype.ref = sym::ValueRef::val;
+    lkp.setExpr(etype);
+  }
+  void visit(ast::InitList &list) override {
+    if (!type) {
+      ctx.log.error(list.loc) << "Could not infer type of init list" << fatal;
+    }
+    if (!list.exprs.empty()) {
+      if (auto strut = lookupConcrete<ast::StructType>(ctx, type)) {
+        if (list.exprs.size() > strut->fields.size()) {
+          ctx.log.error(list.loc) << "Too many expressions in initializer list" << fatal;
+        } else if (list.exprs.size() < strut->fields.size()) {
+          ctx.log.error(list.loc) << "Too few expressions in initializer list" << fatal;
+        }
+        for (size_t i = 0; i != list.exprs.size(); ++i) {
+          const ast::ExprPtr &expr = list.exprs[i];
+          const ast::Field &field = strut->fields[i];
+          const sym::ExprType exprType = getExprType(ctx, expr, field.type);
+          if (!compareTypes(ctx, exprType.type, field.type)) {
+            ctx.log.error(expr->loc) << "Initializer list type doesn't match struct field type" << fatal;
+          }
+        }
+      } else {
+        ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
+      }
+    }
+    sym::ExprType etype;
+    etype.type = std::move(type);
     etype.mut = sym::ValueMut::let;
     etype.ref = sym::ValueRef::val;
     lkp.setExpr(etype);

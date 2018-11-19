@@ -17,14 +17,14 @@ __If a compilers expert is reading this, I would love some advice!__
    * deal with statements (if, while, for, ...)
    * handle arrays (literals, subscripting)
    * modules
+   * struct initialization
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * check that the return expression matches return type
    * `expected bool expression but got byte expression`
-   * casting
-   * struct initialization
-   * lambdas and function pointers (the type system treats them both the same)
+   * check that a cast between types is possible
+   * lambdas and function pointers (the type system treats them both the same). Might need to use a make expression to resolve overloaded functions
    * warnings about unused symbols (`unused variable "myVar"`)
    * array operations (size, push_back, pop_back)
    * standard math functions (`sin`, `log`, `sqrt`)

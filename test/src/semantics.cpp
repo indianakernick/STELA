@@ -1103,7 +1103,7 @@ TEST_GROUP(Semantics, {
     createSym(source, log);
   });
   
-  TEST(Expr - No expect array, {
+  TEST(Expr - Array literal only init array, {
     const char *source = R"(
       let number: sint = [1, 2, 3];
     )";
@@ -1132,11 +1132,7 @@ TEST_GROUP(Semantics, {
       let third = arr[2];
     
       type index uint;
-      // don't have casting yet
-      // this is only way to initialize a strong type
-      // can also use a function because return types aren't checked (yet)
-      var i: index;
-      let first: real = arr[i];
+      let first: real = arr[make index 0];
     )";
     createSym(source, log);
   });
@@ -1153,6 +1149,71 @@ TEST_GROUP(Semantics, {
     const char *source = R"(
       var not_array: struct{};
       let nope = not_array[0];
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Make init list, {
+    const char *source = R"(
+      type Vec2 struct {
+        x: sint;
+        y: sint;
+      };
+    
+      let zero_zero = make Vec2 {};
+      let zero_zero_again = make Vec2 {{}, {}};
+      let one_two = make Vec2 {1, 2};
+      let three_four: Vec2 = {3, 4};
+    
+      let zero: sint = {};
+      let empty: [real] = {};
+      let also_empty = make [real] {};
+    )";
+    createSym(source, log);
+  });
+  
+  TEST(Expr - No infer init list, {
+    const char *source = R"(
+      let anything = {};
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Init list can only init structs, {
+    const char *source = R"(
+      let number: sint = {5};
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Too many expr in init list, {
+    const char *source = R"(
+      type One struct {
+        val: sint;
+      };
+      let two: One = {1, 2};
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Too few expr in init list, {
+    const char *source = R"(
+      type Two struct {
+        a: sint;
+        b: sint;
+      };
+      let one: Two = {1};
+    )";
+    ASSERT_THROWS(createSym(source, log), FatalError);
+  });
+  
+  TEST(Expr - Init list type mismatch, {
+    const char *source = R"(
+      type Number real;
+      type Struct struct {
+        a: Number;
+      };
+      let s: Struct = {5.0};
     )";
     ASSERT_THROWS(createSym(source, log), FatalError);
   });
