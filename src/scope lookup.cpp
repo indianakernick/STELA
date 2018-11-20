@@ -141,7 +141,7 @@ sym::Func *ExprLookup::lookupFun(
 ) {
   const auto [begin, end] = scope->table.equal_range(key.name);
   if (begin == end) {
-    if (sym::Scope *parent = parentScope(scope)) {
+    if (sym::Scope *parent = scope->parent) {
       return lookupFun(parent, key, loc);
     } else {
       ctx.log.error(loc) << "Use of undefined symbol \"" << key.name << '"' << fatal;
@@ -211,32 +211,60 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
   return nullptr;
 }
 
-sym::Symbol *ExprLookup::lookupIdent(sym::Scope *scope, const sym::Name &name) {
+namespace {
+
+struct SymbolScope {
+  sym::Symbol *symbol;
+  sym::Scope *scope;
+};
+
+// find an identifier by traversing up the scopes
+SymbolScope findIdent(sym::Scope *scope, const sym::Name &name) {
   if (sym::Symbol *symbol = find(scope, name)) {
-    return symbol;
+    return {symbol, scope};
   }
-  if (sym::Scope *parent = parentScope(scope)) {
-    return lookupIdent(parent, name);
+  if (sym::Scope *parent = scope->parent) {
+    return findIdent(parent, name);
   } else {
-    return nullptr;
+    return {nullptr, nullptr};
   }
 }
 
+// determine whether a variable in the given scope is reachable from the
+// current scope
+bool reachableObject(sym::Scope *current, sym::Scope *scope) {
+  if (current == nullptr) {
+    return false;
+  }
+  if (current == scope) {
+    return true;
+  }
+  if (current->type == sym::Scope::Type::func) {
+    return reachableObject(findNearest(sym::Scope::Type::ns, current), scope);
+  }
+  return reachableObject(current->parent, scope);
+}
+
+}
+
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
-  sym::Scope *scope = getModuleScope(ctx, module, loc);
-  sym::Symbol *symbol = lookupIdent(scope, name);
+  sym::Scope *currentScope = getModuleScope(ctx, module, loc);
+  const auto [symbol, scope] = findIdent(currentScope, name);
   if (symbol == nullptr) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
-  if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
-    if (exprs.back().type != Expr::Type::call) {
-      return pushFunPtr(scope, name, loc);
+  if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
+    if (!reachableObject(currentScope, scope)) {
+      ctx.log.error(loc) << "Variable \"" << name << "\" at " << object->loc << " is unreachable" << fatal;
     }
+    return pushObj(referTo(object));
+  }
+  if (exprs.back().type == Expr::Type::call) {
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
   }
-  if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
-    return pushObj(referTo(object));
+  if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
+    return pushFunPtr(scope, name, loc);
   }
   ctx.log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
 }
@@ -370,14 +398,9 @@ stela::retain_ptr<ast::FuncType> getFuncType(Log &log, sym::Func *funcSym, Loc l
 
 ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
   const auto [begin, end] = scope->table.equal_range(name);
-  if (begin == end) {
-    sym::Scope *parent = parentScope(scope);
-    // lookupIdent already found this function somewhere
-    assert(parent);
-    return pushFunPtr(parent, name, loc);
-  } else if (std::next(begin) == end) {
+  assert(begin != end);
+  if (std::next(begin) == end) {
     auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
-    // lookupIdent found at least one function
     assert(funcSym);
     auto funcType = getFuncType(ctx.log, funcSym, loc);
     if (expType && !compareTypes(ctx, expType, funcType)) {

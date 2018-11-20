@@ -441,6 +441,15 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS();
   });
   
+  TEST(Func - Recursive, {
+    const char *source = R"(
+      func fac(n: uint) -> uint {
+        return n == 0u ? 1u : n * fac(n - 1u);
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
   TEST(Sym - Undefined, {
     const char *source = R"(
       func myFunction(i: Number) {
@@ -1469,6 +1478,171 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS();
   });
   
+  TEST(Func - Nested recursive, {
+    const char *source = R"(
+      func fn(a: sint) {
+        fn(3);
+        func fn(a: real) {
+          fn(3.0);
+          func fn(a: char) {
+            fn('3');
+          }
+        }
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Func address nested recursive, {
+    const char *source = R"(
+      func fn(a: sint) {
+        let ptr: func(sint) = fn;
+        func fn(a: real) {
+          let ptr: func(real) = fn;
+          func fn(a: char) {
+            let ptr: func(char) = fn;
+          }
+        }
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Func - Nested recursive no shadow, {
+    const char *source = R"(
+      func fn_sint(a: sint) {
+        fn_sint(3);
+        func fn_real(a: real) {
+          fn_sint(3);
+          fn_real(3.0);
+          func fn_char(a: char) {
+            fn_sint(3);
+            fn_real(3.0);
+            fn_char('3');
+          }
+          fn_sint(3);
+          fn_real(3.0);
+          fn_char('3');
+        }
+        fn_sint(3);
+        fn_real(3.0);
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Func address nested recursive no shadow, {
+    const char *source = R"(
+      func fn_sint(a: sint) {
+        let ptr0 = fn_sint;
+        func fn_real(a: real) {
+          let ptr0 = fn_sint;
+          let ptr1 = fn_real;
+          func fn_char(a: char) {
+            let ptr0 = fn_sint;
+            let ptr1 = fn_real;
+            let ptr2 = fn_char;
+          }
+          let ptr2 = fn_sint;
+          let ptr3 = fn_real;
+          let ptr4 = fn_char;
+        }
+        let ptr1 = fn_sint;
+        let ptr2 = fn_real;
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Func - Cannot call shadowed function, {
+    const char *source = R"(
+      func fn(a: sint) {
+        func fn(a: real) {
+          func fn(a: char) {
+            fn(3.0);
+          }
+        }
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Cannot address shadowed function, {
+    const char *source = R"(
+      func fn(a: sint) {
+        func fn(a: real) {
+          func fn(a: char) {
+            let ptr: func(real) = fn;
+          }
+        }
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Func - Cannot call shadowed parent, {
+    const char *source = R"(
+      func fn(a: sint) {
+        func fn(a: real) {}
+        fn(3);
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Cannot address shadowed parent, {
+    const char *source = R"(
+      func fn(a: sint) {
+        func fn(a: real) {}
+        let ptr: func(sint) = fn;
+      }
+    )";
+    ASSERT_FAILS();
+  });
+
+  TEST(Func - Undefined member function, {
+    const char *source = R"(
+      func test() {
+        let x = 10;
+        x.undefined();
+      }
+    )";
+    ASSERT_FAILS();
+  });
+
+  TEST(Undefined symbol, {
+    const char *source = R"(
+      func test() {
+        let x = 10;
+        x = undefined;
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Unreachable variable, {
+    const char *source = R"(
+      func test(unreachable: sint) {
+        func inner() {
+          unreachable = 1;
+        }
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Calling type, {
+    const char *source = R"(
+      type MyStruct struct {};
+      func test() {
+        // this looks like a function call
+        // that's why I chose the make syntax
+        let instance = MyStruct();
+      }
+    )";
+    ASSERT_FAILS();
+  });
+
   /*
   
   Perhaps control flow analysis should be handled by code generation
