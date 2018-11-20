@@ -25,6 +25,11 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
       return stream << "Semantic";
     case LogCat::generate:
       return stream << "Generative";
+    /* LCOV_EXCL_START */
+    default:
+      assert(false);
+      return stream;
+    /* LCOV_EXCL_END */
   }
 }
 
@@ -43,6 +48,7 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
       return stream << "error";
     /* LCOV_EXCL_START */
     case LogPri::nothing:
+    default:
       assert(false);
       return stream;
     /* LCOV_EXCL_END */

@@ -113,6 +113,11 @@ bool stela::validOp(const ast::UnOp op, const ast::BtnTypePtr &type) {
       return isBoolType(type->value);
     case ast::UnOp::bit_not:
       return isBitwiseType(type->value);
+    /* LCOV_EXCL_START */
+    default:
+      assert(false);
+      return false;
+    /* LCOV_EXCL_END */
   }
 }
 
