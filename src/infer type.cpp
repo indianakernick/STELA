@@ -79,7 +79,6 @@ public:
     ctx.log.error(sub.index->loc) << "Invalid subscript index" << fatal;
   }
   void visit(ast::Identifier &id) override {
-    ctx.log.status() << "visit identifier" << endlog;
     lkp.expected(type);
     id.definition = lkp.lookupIdent(sym::Name{id.module}, sym::Name{id.name}, id.loc);
   }
@@ -195,7 +194,6 @@ public:
   void visit(ast::Lambda &) override {}
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
-    ctx.log.status() << "visitValueExpr" << endlog;
     this->type = type;
     // @TODO lkp state here should be same as...
     lkp.enterSubExpr();

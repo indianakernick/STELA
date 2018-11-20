@@ -34,8 +34,6 @@ matrix:
         sources: ["ubuntu-toolchain-r-test"]
         packages: ["g++-8"]
     env: COMPILER=g++-8
-    after_script:
-    - gdb test/suite
   - os: linux
     compiler: gcc
     addons:
@@ -57,6 +55,4 @@ script:
 - cd build
 - cmake -DCMAKE_BUILD_TYPE=Debug ..
 - make
-
-after_script:
 - test/suite
