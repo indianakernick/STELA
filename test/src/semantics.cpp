@@ -510,6 +510,17 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS();
   });
   
+  TEST(Struct - Enum, {
+    const char *source = R"(
+      type Dir sint;
+      let Dir_up    = make Dir 0;
+      let Dir_right = make Dir 1;
+      let Dir_down  = make Dir 2;
+      let Dir_left  = make Dir 3;
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
   TEST(Struct - Main, {
     const char *source = R"(
       type Vec struct {
@@ -583,6 +594,20 @@ TEST_GROUP(Semantics, {
       func (self: MyStruct) fn() {}
     )";
     ASSERT_FAILS();
+  });
+  
+  TEST(Struct - Member function sint, {
+    const char *source = R"(
+      func (self: inout sint) zero() {
+        self = 0;
+      }
+    
+      func test() {
+        var n = 5;
+        n.zero();
+      }
+    )";
+    ASSERT_SUCCEEDS();
   });
   
   TEST(Struct - Colliding func field, {
@@ -775,14 +800,6 @@ TEST_GROUP(Semantics, {
     const char *source = R"(
       let not_a_type = 4;
       var oops: not_a_type;
-    )";
-    ASSERT_FAILS();
-  });
-  
-  TEST(Must call free func, {
-    const char *source = R"(
-      func fn() {}
-      let test = fn;
     )";
     ASSERT_FAILS();
   });
@@ -1227,7 +1244,7 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS();
   });
   
-  TEST(Expr - Cast between strong structs different names, {
+  TEST(Expr - Cast between strong structs diff names, {
     const char *source = R"(
       type ToughStruct struct {
         val: sint;
@@ -1327,6 +1344,127 @@ TEST_GROUP(Semantics, {
       func getVoidAgain() {
         return getVoid();
       }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Address of single function, {
+    const char *source = R"(
+      type Vec2 struct {
+        x: real;
+        y: real;
+      };
+      type Vector = Vec2;
+    
+      func one(a: real, b: inout real, c: Vector) -> Vec2 {
+        b = a;
+        return make Vector {c.x * a, c.y + a};
+      }
+    
+      let ptr0 = one;
+      let ptr1: func(real, inout real, Vector) -> Vec2 = one;
+      let ptr2: func(real, inout real, Vec2) -> Vector = one;
+      let ptr3 = make func(real, inout real, Vector) -> Vec2 one;
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Address of overloaded function, {
+    const char *source = R"(
+      func add(a: sint, b: sint) -> sint {
+        return a + b;
+      }
+      func add(a: uint, b: uint) -> uint {
+        return a + b;
+      }
+      func add(a: real, b: real) -> real {
+        return a + b;
+      }
+    
+      let ptr0: func(real, real) -> real = add;
+      let ptr1 = make func(sint, sint) -> sint add;
+    )";
+    ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Expr - Address of single member function, {
+    const char *source = R"(
+      func (self: sint) memfun(param: real) -> real {
+        return make real self * param;
+      }
+    
+      let ptr = memfun;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Address of overloaded member function, {
+    const char *source = R"(
+      func (self: sint) memfun(param: real) -> real {
+        return make real self * param;
+      }
+      func (self: sint) memfun(param: uint) -> uint {
+        return make uint self * param;
+      }
+      func (self: real) memfun(param: sint) -> real {
+        return self * make real param;
+      }
+    
+      let ptr: func(uint) -> uint = memfun;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Ambiguous overloaded function, {
+    const char *source = R"(
+      func add(a: sint, b: sint) -> sint {
+        return a + b;
+      }
+      func add(a: uint, b: uint) -> uint {
+        return a + b;
+      }
+      func add(a: real, b: real) -> real {
+        return a + b;
+      }
+    
+      let ptr = add;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Single function no match signature, {
+    const char *source = R"(
+      func add(a: sint, b: sint) -> sint {
+        return a + b;
+      }
+    
+      let ptr: func(real, sint) -> sint = add;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Overloaded function no match signature, {
+    const char *source = R"(
+      func add(a: sint, b: sint) -> sint {
+        return a + b;
+      }
+      func add(a: uint, b: uint) -> uint {
+        return a + b;
+      }
+      func add(a: real, b: real) -> real {
+        return a + b;
+      }
+    
+      let ptr: func(real, sint) -> sint = add;
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Expr - Address function void return, {
+    const char *source = R"(
+      func getVoid(a: sint) {}
+    
+      let ptr: func(sint) = getVoid;
     )";
     ASSERT_SUCCEEDS();
   });

@@ -26,7 +26,7 @@ stela::retain_ptr<ast::BtnType> pushType(
   alias->type = type;
   auto symbol = std::make_unique<sym::TypeAlias>();
   symbol->node = std::move(alias);
-  table.insert({sym::Name(name), std::move(symbol)});
+  table.insert({sym::Name{name}, std::move(symbol)});
   return type;
 }
 

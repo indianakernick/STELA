@@ -112,6 +112,8 @@ public:
   void enterSubExpr();
   sym::ExprType leaveSubExpr();
   
+  void expected(const ast::TypePtr &);
+  
 private:
   struct Expr {
     enum class Type {
@@ -139,6 +141,7 @@ private:
   sym::Ctx ctx;
   std::vector<Expr> exprs;
   sym::ExprType etype;
+  ast::TypePtr expType;
   
   void pushExpr(const sym::ExprType &);
   ast::Statement *pushObj(sym::Object *);
@@ -153,9 +156,11 @@ private:
   sym::ExprType popExpr();
   ast::Func *popCallPushRet(sym::Func *);
   
-  sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &, Loc);
+  sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &);
   sym::Func *lookupFun(sym::Scope *, const FunKey &, Loc);
   FunKey funKey(sym::ExprType, const sym::FuncParams &);
+  
+  ast::Func *pushFunPtr(sym::Scope *, const sym::Name &, Loc);
 };
 
 }

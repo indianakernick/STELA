@@ -13,10 +13,10 @@
 
 namespace stela {
 
-/// Argument types are compatible with parameter types (Checks ValueCat).
+/// Arguments are compatible with parameters (Checks ValueMut and ValueRef).
 /// Used for calling functions
 bool compatParams(sym::Ctx, const sym::FuncParams &, const sym::FuncParams &);
-/// Argument types are the same as parameter types (ValueCat may be different).
+/// Arguments are the same as parameters (ValueRef and ValueMut may be different).
 /// Used for inserting functions
 bool sameParams(sym::Ctx, const sym::FuncParams &, const sym::FuncParams &);
 

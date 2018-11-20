@@ -60,7 +60,7 @@ public:
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
   }
   void visit(ast::MemberIdent &mem) override {
-    lkp.member(sym::Name(mem.member));
+    lkp.member(sym::Name{mem.member});
     mem.object->accept(*this);
     mem.definition = lkp.lookupMember(mem.loc);
   }
@@ -79,7 +79,8 @@ public:
     ctx.log.error(sub.index->loc) << "Invalid subscript index" << fatal;
   }
   void visit(ast::Identifier &id) override {
-    id.definition = lkp.lookupIdent(sym::Name(id.module), sym::Name(id.name), id.loc);
+    lkp.expected(type);
+    id.definition = lkp.lookupIdent(sym::Name{id.module}, sym::Name{id.name}, id.loc);
   }
   void visit(ast::Ternary &tern) override {
     ast::TypePtr resultType = type;
@@ -194,9 +195,11 @@ public:
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
     this->type = type;
+    // @TODO lkp state here should be same as...
     lkp.enterSubExpr();
     expr->accept(*this);
     return lkp.leaveSubExpr();
+    // state here
   }
 
 private:

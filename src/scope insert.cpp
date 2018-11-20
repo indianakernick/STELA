@@ -11,6 +11,7 @@
 #include <cassert>
 #include "scope lookup.hpp"
 #include "compare params args.hpp"
+#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
@@ -102,7 +103,7 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
   funcSym->params = convertParams(ctx, func.receiver, func.params);
   funcSym->ret = convert(ctx, func.ret, ast::ParamRef::value);
   funcSym->node = {retain, &func};
-  const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name(func.name));
+  const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name{func.name});
   for (auto s = beg; s != end; ++s) {
     sym::Symbol *const symbol = s->second.get();
     sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
@@ -118,21 +119,21 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
     }
   }
   sym::Func *const ret = funcSym.get();
-  ctx.man.cur()->table.insert({sym::Name(func.name), std::move(funcSym)});
+  ctx.man.cur()->table.insert({sym::Name{func.name}, std::move(funcSym)});
   return ret;
 }
 
 void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
   for (size_t i = 0; i != func.params.size(); ++i) {
     funcSym->scope->table.insert({
-      sym::Name(func.params[i].name),
+      sym::Name{func.params[i].name},
       makeParam(funcSym->params[i + 1], func.params[i])
     });
   }
   if (func.receiver) {
     ast::FuncParam &param = *func.receiver;
     funcSym->scope->table.insert({
-      sym::Name(param.name),
+      sym::Name{param.name},
       makeParam(funcSym->params[0], param)
     });
   }

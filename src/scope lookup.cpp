@@ -9,6 +9,7 @@
 #include "scope lookup.hpp"
 
 #include <cassert>
+#include "compare types.hpp"
 #include "scope traverse.hpp"
 #include "compare params args.hpp"
 #include <Simpleton/Utils/algorithm.hpp>
@@ -23,8 +24,8 @@ Symbol *referTo(Symbol *const symbol) {
   return symbol;
 }
 
-sym::Symbol *find(sym::Scope *scope, const sym::Name name) {
-  const auto iter = scope->table.find(name);
+sym::Symbol *find(sym::Scope *scope, const ast::Name name) {
+  const auto iter = scope->table.find(sym::Name{name});
   if (iter == scope->table.end()) {
     return nullptr;
   } else {
@@ -41,7 +42,7 @@ sym::Scope *parentScope(sym::Scope *const scope) {
 }
 
 ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type) {
-  if (sym::Symbol *symbol = find(scope, sym::Name(type.name))) {
+  if (sym::Symbol *symbol = find(scope, type.name)) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
       type.definition = alias->node.get();
       alias->referenced = true;
@@ -74,20 +75,25 @@ void validateStruct(sym::Ctx ctx, const retain_ptr<ast::StructType> &strut) {
   }
 }
 
+sym::Scope *getModuleScope(sym::Ctx ctx, const ast::Name module, const Loc loc) {
+  if (module.empty()) {
+    return ctx.man.cur();
+  }
+  auto iter = ctx.mods.find(sym::Name{module});
+  if (iter == ctx.mods.end()) {
+    ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
+  }
+  return iter->second.scopes[0].get();
+}
+
 }
 
 ast::TypeAlias *stela::lookupTypeName(sym::Ctx ctx, ast::NamedType &type) {
   if (type.definition) {
     return type.definition;
-  } else if (type.module.empty()) {
-    return lookupTypeImpl(ctx.log, ctx.man.cur(), type);
   } else {
-    auto iter = ctx.mods.find(sym::Name{type.module});
-    if (iter == ctx.mods.end()) {
-      ctx.log.error(type.loc) << "Module \"" << type.module << "\" is not imported by this module" << fatal;
-    }
-    // look in the global scope of the other module
-    return lookupTypeImpl(ctx.log, iter->second.scopes[0].get(), type);
+    sym::Scope *scope = getModuleScope(ctx, type.module, type.loc);
+    return lookupTypeImpl(ctx.log, scope, type);
   }
 }
 
@@ -160,7 +166,7 @@ ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::Func
   FunKey key;
   key.params.reserve(1 + params.size());
   key.params.push_back(etype);
-  key.params.insert(++key.params.begin(), params.cbegin(), params.cend());
+  key.params.insert(key.params.end(), params.cbegin(), params.cend());
   key.name = popName();
   return key;
 }
@@ -205,37 +211,26 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
   return nullptr;
 }
 
-sym::Symbol *ExprLookup::lookupIdent(
-  sym::Scope *scope,
-  const sym::Name &name,
-  const Loc loc
-) {
-  sym::Symbol *const symbol = find(scope, name);
-  if (symbol) {
+sym::Symbol *ExprLookup::lookupIdent(sym::Scope *scope, const sym::Name &name) {
+  if (sym::Symbol *symbol = find(scope, name)) {
     return symbol;
   }
   if (sym::Scope *parent = parentScope(scope)) {
-    return lookupIdent(parent, name, loc);
+    return lookupIdent(parent, name);
   } else {
-    ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
+    return nullptr;
   }
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
-  sym::Scope *scope;
-  if (module.empty()) {
-    scope = ctx.man.cur();
-  } else {
-    auto iter = ctx.mods.find(module);
-    if (iter == ctx.mods.end()) {
-      ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
-    }
-    scope = iter->second.scopes[0].get();
+  sym::Scope *scope = getModuleScope(ctx, module, loc);
+  sym::Symbol *symbol = lookupIdent(scope, name);
+  if (symbol == nullptr) {
+    ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
-  sym::Symbol *symbol = lookupIdent(scope, name, loc);
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
     if (exprs.back().type != Expr::Type::call) {
-      ctx.log.error(loc) << "Reference to function \"" << name << "\" must be called" << fatal;
+      return pushFunPtr(scope, name, loc);
     }
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
@@ -263,6 +258,10 @@ sym::ExprType ExprLookup::leaveSubExpr() {
   exprs.pop_back();
   exprs.pop_back();
   return etype;
+}
+
+void ExprLookup::expected(const ast::TypePtr &type) {
+  expType = type;
 }
 
 ExprLookup::Expr::Expr(const Type type)
@@ -341,4 +340,64 @@ ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   exprs.pop_back();
   pushExpr(func->ret.type ? func->ret : sym::void_type);
   return func->node.get();
+}
+
+namespace {
+
+stela::retain_ptr<ast::FuncType> getFuncType(Log &log, sym::Func *funcSym, Loc loc) {
+  if (funcSym->params[0].type) {
+    log.error(loc) << "Cannot take address of member function" << fatal;
+  }
+  auto funcType = make_retain<ast::FuncType>();
+  funcType->params.reserve(funcSym->params.size() - 1);
+  for (auto p = funcSym->params.cbegin() + 1; p != funcSym->params.cend(); ++p) {
+    ast::ParamType param;
+    param.type = p->type;
+    param.ref = p->ref == sym::ValueRef::ref
+              ? ast::ParamRef::inout
+              : ast::ParamRef::value;
+    funcType->params.push_back(std::move(param));
+  }
+  if (funcSym->ret.type == sym::void_type.type) {
+    funcType->ret = nullptr;
+  } else {
+    funcType->ret = funcSym->ret.type;
+  }
+  return funcType;
+}
+
+}
+
+ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
+  const auto [begin, end] = scope->table.equal_range(name);
+  if (begin == end) {
+    sym::Scope *parent = parentScope(scope);
+    // lookupIdent already found this function somewhere
+    assert(parent);
+    return pushFunPtr(parent, name, loc);
+  } else if (std::next(begin) == end) {
+    auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
+    // lookupIdent found at least one function
+    assert(funcSym);
+    auto funcType = getFuncType(ctx.log, funcSym, loc);
+    if (expType && !compareTypes(ctx, expType, funcType)) {
+      ctx.log.error(loc) << "Function \"" << name << "\" does not match signature" << fatal;
+    }
+    pushExpr(sym::makeLetVal(std::move(funcType)));
+    return funcSym->node.get();
+  } else {
+    if (!expType) {
+      ctx.log.error(loc) << "Ambiguous reference to overloaded function \"" << name << '"' << fatal;
+    }
+    for (auto f = begin; f != end; ++f) {
+      auto *funcSym = dynamic_cast<sym::Func *>(f->second.get());
+      assert(funcSym);
+      auto funcType = getFuncType(ctx.log, funcSym, loc);
+      if (compareTypes(ctx, expType, funcType)) {
+        pushExpr(sym::makeLetVal(std::move(funcType)));
+        return funcSym->node.get();
+      }
+    }
+    ctx.log.error(loc) << "No overload of function \"" << name << "\" matches signature" << fatal;
+  }
 }

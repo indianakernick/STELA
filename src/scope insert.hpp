@@ -24,7 +24,7 @@ Symbol *insert(sym::Ctx ctx, AST_Node &node) {
   Symbol *const ret = symbol.get();
   symbol->loc = node.loc;
   symbol->node = {retain, &node};
-  insert(ctx, sym::Name(node.name), std::move(symbol));
+  insert(ctx, sym::Name{node.name}, std::move(symbol));
   return ret;
 }
 
