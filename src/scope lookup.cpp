@@ -240,22 +240,28 @@ bool reachableObject(sym::Scope *current, sym::Scope *scope) {
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
+  ctx.log.status() << "lookupIdent" << endlog;
   sym::Scope *currentScope = getModuleScope(ctx, module, loc);
+  ctx.log.status() << currentScope << endlog;
   const auto [symbol, scope] = findIdent(currentScope, name);
+  ctx.log.status() << symbol << "  " << scope << endlog;
   if (symbol == nullptr) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
+    ctx.log.status() << "object" << endlog;
     if (!reachableObject(currentScope, scope)) {
       ctx.log.error(loc) << "Variable \"" << name << "\" at " << object->loc << " is unreachable" << fatal;
     }
     return pushObj(referTo(object));
   }
   if (exprs.back().type == Expr::Type::call) {
+    ctx.log.status() << "call" << endlog;
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
   }
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
+    ctx.log.status() << "function" << endlog;
     return pushFunPtr(scope, name, loc);
   }
   ctx.log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
@@ -389,9 +395,12 @@ stela::retain_ptr<ast::FuncType> getFuncType(Log &log, sym::Func *funcSym, Loc l
 }
 
 ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
+  ctx.log.status() << "pushFunPtr" << endlog;
+  ctx.log.status() << scope << endlog;
   const auto [begin, end] = scope->table.equal_range(name);
   assert(begin != end);
   if (std::next(begin) == end) {
+    ctx.log.status() << "single" << endlog;
     auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
     assert(funcSym);
     auto funcType = getFuncType(ctx.log, funcSym, loc);
@@ -401,6 +410,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
     pushExpr(sym::makeLetVal(std::move(funcType)));
     return funcSym->node.get();
   } else {
+    ctx.log.status() << "overloaded" << endlog;
     if (!expType) {
       ctx.log.error(loc) << "Ambiguous reference to overloaded function \"" << name << '"' << fatal;
     }
