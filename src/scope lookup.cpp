@@ -389,9 +389,12 @@ stela::retain_ptr<ast::FuncType> getFuncType(Log &log, sym::Func *funcSym, Loc l
 }
 
 ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
+  ctx.log.status() << "pushFunPtr" << endlog;
+  ctx.log.status() << scope << endlog;
   const auto [begin, end] = scope->table.equal_range(name);
   assert(begin != end);
   if (std::next(begin) == end) {
+    ctx.log.status() << "single" << endlog;
     auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
     assert(funcSym);
     auto funcType = getFuncType(ctx.log, funcSym, loc);
@@ -401,6 +404,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
     pushExpr(sym::makeLetVal(std::move(funcType)));
     return funcSym->node.get();
   } else {
+    ctx.log.status() << "overloaded" << endlog;
     if (!expType) {
       ctx.log.error(loc) << "Ambiguous reference to overloaded function \"" << name << '"' << fatal;
     }
