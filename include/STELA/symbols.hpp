@@ -131,8 +131,8 @@ struct Func final : Symbol {
 using FuncPtr = std::unique_ptr<Func>;
 
 struct Module {
-  Scopes scopes;
   ast::Decls decls;
+  Scopes scopes;
 };
 
 using Modules = std::unordered_map<Name, Module>;

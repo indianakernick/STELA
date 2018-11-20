@@ -1,1 +1,10 @@
+What would you use the blank identifier _ for?
 
+Unused function parameters. Maybe you're conforming to an interface and
+you need a parameter to satisfy the interface but you don't need to use it.
+
+An interface defines the interface of a generic type. A generic function says
+"I accept types that implement this interface" so whenever you try to call a
+function with a type, the compiler will check if the type satisfies the
+interface. The compiler will also check if the function uses the interface
+correctly. This might be easier to implement than C++ style generics.
