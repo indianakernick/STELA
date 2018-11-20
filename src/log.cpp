@@ -23,6 +23,8 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
       return stream << "Syntactic";
     case LogCat::semantic:
       return stream << "Semantic";
+    case LogCat::generate:
+      return stream << "Generative";
   }
 }
 

@@ -19,7 +19,8 @@ namespace stela {
 enum class LogCat : uint8_t {
   lexical,
   syntax,
-  semantic
+  semantic,
+  generate
 };
 
 /// Logging priority
