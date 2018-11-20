@@ -35,7 +35,7 @@ matrix:
         packages: ["g++-8", "gdb"]
     env: COMPILER=g++-8
     after_script:
-    - gdb test/suite
+    - "gdb -ex run test/suite"
   - os: linux
     compiler: gcc
     addons:
