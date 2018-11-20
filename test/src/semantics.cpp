@@ -1642,6 +1642,20 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_FAILS();
   });
+  
+  TEST(Access type in nested function, {
+    const char *source = R"(
+      type GlobalType struct{};
+      func outer() {
+        type OuterType struct{};
+        func inner(a: GlobalType, b: OuterType) {
+          let c = make GlobalType {};
+          let d = make OuterType {};
+        }
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
 
   /*
   

@@ -33,14 +33,6 @@ sym::Symbol *find(sym::Scope *scope, const ast::Name name) {
   }
 }
 
-sym::Scope *parentScope(sym::Scope *const scope) {
-  if (scope->type == sym::Scope::Type::func) {
-    return findNearest(sym::Scope::Type::ns, scope->parent);
-  } else {
-    return scope->parent;
-  }
-}
-
 ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type) {
   if (sym::Symbol *symbol = find(scope, type.name)) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
@@ -50,7 +42,7 @@ ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type
     }
     log.error(type.loc) << "The name \"" << type.name << "\" does not refer to a type" << fatal;
   }
-  if (sym::Scope *parent = parentScope(scope)) {
+  if (sym::Scope *parent = scope->parent) {
     return lookupTypeImpl(log, parent, type);
   } else {
     log.error(type.loc) << "Expected type name but found \"" << type.name << "\"" << fatal;
