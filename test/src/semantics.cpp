@@ -301,7 +301,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(compileModules(syms, order, asts, log), FatalError);
   });
   
-  log.pri(LogPri::warning);
+  // log.pri(LogPri::warning);
   
   TEST(Func - Redef, {
     const char *source = R"(
