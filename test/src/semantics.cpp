@@ -301,7 +301,7 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(compileModules(syms, order, asts, log), FatalError);
   });
   
-  // log.pri(LogPri::warning);
+  log.pri(LogPri::warning);
   
   TEST(Func - Redef, {
     const char *source = R"(
@@ -404,17 +404,17 @@ TEST_GROUP(Semantics, {
       type second_t struct{};
       type all_t struct{};
     
-      var first: first_t;
-      var second: second_t;
-      var all: all_t;
+      let first = make first_t {};
+      let second = make second_t {};
+      let all = make all_t {};
     
-      func fun(tag: first_t, arr: inout [sint]) -> sint {
+      func fun(tag: first_t, arr: [sint]) -> sint {
         return arr[0];
       }
-      func fun(tag: second_t, arr: inout [sint]) -> sint {
+      func fun(tag: second_t, arr: [sint]) -> sint {
         return arr[1];
       }
-      func fun(tag: all_t, arr: inout [sint]) -> [sint] {
+      func fun(tag: all_t, arr: [sint]) -> [sint] {
         return arr;
       }
     

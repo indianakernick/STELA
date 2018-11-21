@@ -60,7 +60,7 @@ obvious that you are using a macro and not a function or a constant.
 If we do decide to use the preprocessor for generics, it won't make an sense to
 implement static interfaces but dynamic interfaces might make sense. Since
 closures are reference types, it makes sense for interfaces to be reference
-types as well. Intefaces hold a reference counted smart pointer to an object.
+types as well. Interfaces hold a reference counted smart pointer to an object.
 
 --------------------------------------------------------------------------------
 
