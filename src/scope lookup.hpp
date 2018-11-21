@@ -128,7 +128,7 @@ private:
     sym::Name name;
     sym::Scope *scope;
     
-    Expr(Type);
+    explicit Expr(Type);
     Expr(Type, const sym::Name &);
     Expr(Type, const sym::Name &, sym::Scope *);
   };

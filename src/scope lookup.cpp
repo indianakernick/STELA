@@ -123,7 +123,7 @@ ExprLookup::ExprLookup(sym::Ctx ctx)
   : ctx{ctx}, etype{sym::null_type} {}
 
 void ExprLookup::call() {
-  exprs.push_back({Expr::Type::call});
+  exprs.push_back(Expr{Expr::Type::call});
 }
 
 sym::Func *ExprLookup::lookupFun(
@@ -240,28 +240,22 @@ bool reachableObject(sym::Scope *current, sym::Scope *scope) {
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
-  ctx.log.status() << "lookupIdent" << endlog;
   sym::Scope *currentScope = getModuleScope(ctx, module, loc);
-  ctx.log.status() << currentScope << endlog;
   const auto [symbol, scope] = findIdent(currentScope, name);
-  ctx.log.status() << symbol << "  " << scope << endlog;
   if (symbol == nullptr) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
-    ctx.log.status() << "object" << endlog;
     if (!reachableObject(currentScope, scope)) {
       ctx.log.error(loc) << "Variable \"" << name << "\" at " << object->loc << " is unreachable" << fatal;
     }
     return pushObj(referTo(object));
   }
   if (exprs.back().type == Expr::Type::call) {
-    ctx.log.status() << "call" << endlog;
     exprs.push_back({Expr::Type::free_fun, name, scope});
     return nullptr;
   }
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
-    ctx.log.status() << "function" << endlog;
     return pushFunPtr(scope, name, loc);
   }
   ctx.log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
@@ -273,7 +267,7 @@ void ExprLookup::setExpr(const sym::ExprType type) {
 }
 
 void ExprLookup::enterSubExpr() {
-  exprs.push_back({Expr::Type::subexpr});
+  exprs.push_back(Expr{Expr::Type::subexpr});
 }
 
 sym::ExprType ExprLookup::leaveSubExpr() {
@@ -310,7 +304,7 @@ ExprLookup::Expr::Expr(const Type type, const sym::Name &name, sym::Scope *scope
 }
 
 void ExprLookup::pushExpr(const sym::ExprType &type) {
-  exprs.push_back({Expr::Type::expr});
+  exprs.push_back(Expr{Expr::Type::expr});
   etype = type;
 }
 

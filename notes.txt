@@ -52,7 +52,7 @@ C-preprocessor, this is pretty similar to C++ templates without automatic
 instantiation.
 
 That fact that macros in C should be all caps to prevent collisions bugs me.
-If you want to use a macro, you need to put an @ before its name so that it is
+If you want to use a macro, you need to put an $ before its name so that it is
 obvious that you are using a macro and not a function or a constant.
 
 --------------------------------------------------------------------------------
@@ -68,3 +68,25 @@ Everything is zero initialized by default. A reference type should be
 initialized to null. Builtin types and references types can be contextually
 converted to bool. If there are used in a context that expects a bool, they will
 return a bool that denotes whether the object is alive or null.
+
+--------------------------------------------------------------------------------
+
+struct Slice {
+  retain_ptr<Array> backing_array; // Reference counted pointer to array
+  size_t capacity; // Size of the backing array
+  size_t begin; // Beginning of the region on the backing array
+  size_t end;   // End of the region on the backing array
+};
+
+Arrays are value types. Assigning an array makes a copy of the array.
+
+Slices are reference types. Assigning a slice assigns a reference to an array.
+This is because the slice stores a reference counted pointer to the backing
+array. Creating a reference counted pointer to an array might be dangerous if
+the array is stack allocated so arrays must be heap allocated. This means that
+an array is just a pointer and the size of the array would be known in the type.
+
+Need to extend subscript syntax to support slices. array[5:9]
+
+I'd like to remove the `inout` keyword so instead of references, we should use
+reference types. Slices are reference types. Arrays are value types.
