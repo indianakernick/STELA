@@ -192,7 +192,9 @@ public:
     }
     lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
-  void visit(ast::Lambda &) override {}
+  void visit(ast::Lambda &lam) override {
+    
+  }
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
     ctx.log.status() << "visitValueExpr" << endlog;

@@ -35,7 +35,8 @@ struct Scope {
     block,
     func,
     // break and continue are valid within flow scopes (while, for, switch)
-    flow
+    flow,
+    closure
   };
 
   Scope(Scope *const parent, const Type type)

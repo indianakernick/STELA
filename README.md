@@ -29,8 +29,9 @@ __If a compilers expert is reading this, I would love some advice!__
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)
    * do we need array slices? String literal should be a slice
-   * do we need interfaces? A lambda is an anonymous interface wrapped in a function type
-   * do we need generics? Combined with function overloading could be really powerful. If we do decide to implement generics then interfaces should probably act like Swift prototypes
+   * read notes.txt about interfaces and generics
+   * do we need interfaces? A lambda is an interface with a single function.
+   * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift prototypes
    * there's probably a lot of stuff that I can't think of right now!
 
 ## About

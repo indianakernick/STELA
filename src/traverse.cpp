@@ -214,9 +214,16 @@ private:
 
 }
 
-void stela::traverse(sym::Ctx ctx, sym::Module &module) {
+void stela::traverse(sym::Ctx ctx, const sym::Module &module) {
   Visitor visitor{ctx};
   for (const ast::DeclPtr &decl : module.decls) {
     decl->accept(visitor);
+  }
+}
+
+void stela::traverse(sym::Ctx ctx, const ast::Block &block) {
+  Visitor visitor{ctx};
+  for (const ast::StatPtr &stat : block.nodes) {
+    stat->accept(visitor);
   }
 }

@@ -3,8 +3,68 @@ What would you use the blank identifier _ for?
 Unused function parameters. Maybe you're conforming to an interface and
 you need a parameter to satisfy the interface but you don't need to use it.
 
+--------------------------------------------------------------------------------
+
 An interface defines the interface of a generic type. A generic function says
 "I accept types that implement this interface" so whenever you try to call a
 function with a type, the compiler will check if the type satisfies the
 interface. The compiler will also check if the function uses the interface
 correctly. This might be easier to implement than C++ style generics.
+
+--------------------------------------------------------------------------------
+
+A closure is a pointer to a function and a reference counted pointer to captured
+variables.
+
+struct Closure {
+  Function *func;
+  retain_ptr<Data> data;
+};
+
+The reference counted pointer makes the closure a reference type.
+
+A closure behaves very similarly to an entt::delegate except that the a pointer
+to captured variables is stored instead of an instance pointer.
+
+A different wrapper function is used depending on whether data needs to be
+captured. A non-capturing lambda yields the same closure as a regular function.
+
+entt::delegate required wrapper functions but this implementation will not
+require them.
+
+Every function is actually a member function. So called "non-member functions"
+accept a "this pointer" but simply ignore it. This means that a regular function
+can be stored in a closure and it will ignore the nullptr to the captured data.
+A capturing lambda function will accept the pointer to the captured data and
+use it.
+
+A closure is implemented in the same way that dynamic go-style interfaces
+would be implemented except that the closure holds a single function pointer
+where an interface would store a pointer to a table of function pointers that
+make up the implementation of the interface. If we have one, do we really need
+the other?
+
+--------------------------------------------------------------------------------
+
+A preprocessor similar to the C preprocessor would be cool. Since we have
+function overloading, we could copy-paste functions for each type. With a
+C-preprocessor, this is pretty similar to C++ templates without automatic
+instantiation.
+
+That fact that macros in C should be all caps to prevent collisions bugs me.
+If you want to use a macro, you need to put an @ before its name so that it is
+obvious that you are using a macro and not a function or a constant.
+
+--------------------------------------------------------------------------------
+
+If we do decide to use the preprocessor for generics, it won't make an sense to
+implement static interfaces but dynamic interfaces might make sense. Since
+closures are reference types, it makes sense for interfaces to be reference
+types as well. Intefaces hold a reference counted smart pointer to an object.
+
+--------------------------------------------------------------------------------
+
+Everything is zero initialized by default. A reference type should be
+initialized to null. Builtin types and references types can be contextually
+converted to bool. If there are used in a context that expects a bool, they will
+return a bool that denotes whether the object is alive or null.
