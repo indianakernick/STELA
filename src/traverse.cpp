@@ -34,14 +34,14 @@ public:
   }
   
   void visit(ast::Block &block) override {
-    ctx.man.enterScope(sym::Scope::Type::block);
+    ctx.man.enterScope(sym::ScopeType::block);
     for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
     ctx.man.leaveScope();
   }
   void visit(ast::If &fi) override {
-    ctx.man.enterScope(sym::Scope::Type::block);
+    ctx.man.enterScope(sym::ScopeType::block);
     visitCond(fi.cond);
     fi.body->accept(*this);
     if (fi.elseBody) {
@@ -64,14 +64,14 @@ public:
         }
         foundDef = true;
       }
-      ctx.man.enterScope(sym::Scope::Type::flow);
+      ctx.man.enterScope(sym::ScopeType::flow);
       cs.body->accept(*this);
       ctx.man.leaveScope();
     }
   }
   void checkFlowKeyword(const std::string_view keyword, const Loc loc) {
-    sym::Scope *const flow = findNearestNot(sym::Scope::Type::block, ctx.man.cur());
-    if (flow->type != sym::Scope::Type::flow) {
+    sym::Scope *const flow = findNearestNot(sym::ScopeType::block, ctx.man.cur());
+    if (flow->type != sym::ScopeType::flow) {
       ctx.log.error(loc) << "Invalid usage of keyword \"" << keyword
         << "\" outside of loop or switch" << fatal;
     }
@@ -83,7 +83,11 @@ public:
     checkFlowKeyword("continue", continu.loc);
   }
   void visit(ast::Return &ret) override {
-    sym::Scope *funcScope = findNearest(sym::Scope::Type::func, ctx.man.cur());
+    sym::Scope *funcScope = findNearestEither(
+      sym::ScopeType::func,
+      sym::ScopeType::closure,
+      ctx.man.cur()
+    );
     assert(funcScope);
     assert(funcScope->node);
     ast::TypePtr retType;
@@ -101,13 +105,13 @@ public:
     }
   }
   void visit(ast::While &wile) override {
-    ctx.man.enterScope(sym::Scope::Type::flow);
+    ctx.man.enterScope(sym::ScopeType::flow);
     visitCond(wile.cond);
     wile.body->accept(*this);
     ctx.man.leaveScope();
   }
   void visit(ast::For &four) override {
-    ctx.man.enterScope(sym::Scope::Type::flow);
+    ctx.man.enterScope(sym::ScopeType::flow);
     four.init->accept(*this);
     visitCond(four.cond);
     four.incr->accept(*this);
@@ -117,7 +121,7 @@ public:
 
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = insert(ctx, func);
-    funcSym->scope = ctx.man.enterFuncScope(ast::NodePtr{retain, &func});
+    funcSym->scope = ctx.man.enterScope(sym::ScopeType::func, {retain, &func});
     enterFuncScope(funcSym, func);
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);

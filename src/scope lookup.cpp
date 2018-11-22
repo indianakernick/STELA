@@ -119,6 +119,40 @@ ast::TypePtr stela::validateType(sym::Ctx ctx, const ast::TypePtr &type) {
   return concrete;
 }
 
+namespace {
+
+template <typename Func>
+void writeFuncType(ast::FuncType &funcType, const Func &func) {
+  funcType.params.reserve(func.params.size());
+  for (auto p = func.params.cbegin(); p != func.params.cend(); ++p) {
+    funcType.params.push_back(ast::ParamType{p->ref, p->type});
+  }
+  funcType.ret = func.ret;
+}
+
+}
+
+ast::TypePtr stela::getFuncType(Log &log, ast::Func &func, Loc loc) {
+  if (func.receiver) {
+    log.error(loc) << "Cannot take address of member function" << fatal;
+  }
+  auto funcType = make_retain<ast::FuncType>();
+  writeFuncType(*funcType, func);
+  return funcType;
+}
+
+ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
+  if (lam.ret) {
+    validateType(ctx, lam.ret);
+  }
+  for (auto p = lam.params.cbegin(); p != lam.params.cend(); ++p) {
+    validateType(ctx, p->type);
+  }
+  auto funcType = make_retain<ast::FuncType>();
+  writeFuncType(*funcType, lam);
+  return funcType;
+}
+
 ExprLookup::ExprLookup(sym::Ctx ctx)
   : ctx{ctx}, etype{sym::null_type} {}
 
@@ -231,8 +265,8 @@ bool reachableObject(sym::Scope *current, sym::Scope *scope) {
   if (current == scope) {
     return true;
   }
-  if (current->type == sym::Scope::Type::func) {
-    return reachableObject(findNearest(sym::Scope::Type::ns, current), scope);
+  if (current->type == sym::ScopeType::func) {
+    return reachableObject(findNearest(sym::ScopeType::ns, current), scope);
   }
   return reachableObject(current->parent, scope);
 }
@@ -362,39 +396,13 @@ ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   return func->node.get();
 }
 
-namespace {
-
-stela::retain_ptr<ast::FuncType> getFuncType(Log &log, sym::Func *funcSym, Loc loc) {
-  if (funcSym->params[0].type) {
-    log.error(loc) << "Cannot take address of member function" << fatal;
-  }
-  auto funcType = make_retain<ast::FuncType>();
-  funcType->params.reserve(funcSym->params.size() - 1);
-  for (auto p = funcSym->params.cbegin() + 1; p != funcSym->params.cend(); ++p) {
-    ast::ParamType param;
-    param.type = p->type;
-    param.ref = p->ref == sym::ValueRef::ref
-              ? ast::ParamRef::inout
-              : ast::ParamRef::value;
-    funcType->params.push_back(std::move(param));
-  }
-  if (funcSym->ret.type == sym::void_type.type) {
-    funcType->ret = nullptr;
-  } else {
-    funcType->ret = funcSym->ret.type;
-  }
-  return funcType;
-}
-
-}
-
 ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
   const auto [begin, end] = scope->table.equal_range(name);
   assert(begin != end);
   if (std::next(begin) == end) {
     auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
     assert(funcSym);
-    auto funcType = getFuncType(ctx.log, funcSym, loc);
+    auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
     if (expType && !compareTypes(ctx, expType, funcType)) {
       ctx.log.error(loc) << "Function \"" << name << "\" does not match signature" << fatal;
     }
@@ -407,7 +415,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
     for (auto f = begin; f != end; ++f) {
       auto *funcSym = dynamic_cast<sym::Func *>(f->second.get());
       assert(funcSym);
-      auto funcType = getFuncType(ctx.log, funcSym, loc);
+      auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
       if (compareTypes(ctx, expType, funcType)) {
         pushExpr(sym::makeLetVal(std::move(funcType)));
         return funcSym->node.get();

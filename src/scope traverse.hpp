@@ -13,7 +13,7 @@
 
 namespace stela {
 
-inline sym::Scope *findNearest(const sym::Scope::Type type, sym::Scope *const scope) {
+inline sym::Scope *findNearest(sym::ScopeType type, sym::Scope *scope) {
   if (scope == nullptr) {
     return nullptr;
   } else if (scope->type == type) {
@@ -23,7 +23,17 @@ inline sym::Scope *findNearest(const sym::Scope::Type type, sym::Scope *const sc
   }
 }
 
-inline sym::Scope *findNearestNot(const sym::Scope::Type type, sym::Scope *const scope) {
+inline sym::Scope *findNearestEither(sym::ScopeType a, sym::ScopeType b, sym::Scope *scope) {
+  if (scope == nullptr) {
+    return nullptr;
+  } else if (sym::ScopeType type = scope->type; type == a || type == b) {
+    return scope;
+  } else {
+    return findNearestEither(a, b, scope->parent);
+  }
+}
+
+inline sym::Scope *findNearestNot(sym::ScopeType type, sym::Scope *scope) {
   if (scope == nullptr) {
     return nullptr;
   } else if (scope->type == type) {

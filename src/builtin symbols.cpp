@@ -173,7 +173,7 @@ bool stela::validSubscript(const ast::BtnTypePtr &index) {
 }
 
 sym::Module stela::makeBuiltinModule(sym::Builtins &btn) {
-  auto scope = std::make_unique<sym::Scope>(nullptr, sym::Scope::Type::ns);
+  auto scope = std::make_unique<sym::Scope>(nullptr, sym::ScopeType::ns);
   sym::Module module;
   insertTypes(scope->table, btn);
   btn.scope = scope.get();

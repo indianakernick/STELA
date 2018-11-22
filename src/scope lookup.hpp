@@ -24,6 +24,9 @@ retain_ptr<Type> lookupConcrete(const sym::Ctx ctx, const ast::TypePtr &type) {
   return dynamic_pointer_cast<Type>(lookupConcreteType(ctx, type));
 }
 
+ast::TypePtr getFuncType(Log &, ast::Func &, Loc);
+ast::TypePtr getLambdaType(sym::Ctx, ast::Lambda &);
+
 class ExprLookup {
 public:
   

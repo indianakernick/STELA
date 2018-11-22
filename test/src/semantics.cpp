@@ -1667,6 +1667,25 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS();
   });
 
+  TEST(Lambda, {
+    const char *source = R"(
+      func giveMeFunction(fn: func()->sint) {
+        
+      }
+    
+      func test() {
+        giveMeFunction(func() -> sint {
+          return 1;
+        });
+        func notLambda() -> sint {
+          return 1;
+        }
+        giveMeFunction(notLambda);
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
+
   /*
   
   Perhaps control flow analysis should be handled by code generation

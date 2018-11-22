@@ -20,8 +20,8 @@ public:
   
   ScopeMan(sym::Scopes &, sym::Scope *);
   
-  sym::Scope *enterScope(sym::Scope::Type);
-  sym::Scope *enterFuncScope(const ast::NodePtr &);
+  sym::Scope *enterScope(sym::ScopeType);
+  sym::Scope *enterScope(sym::ScopeType, const ast::NodePtr &);
   void leaveScope();
   sym::Scope *cur() const;
   sym::Scope *builtin() const;

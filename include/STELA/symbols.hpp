@@ -28,26 +28,28 @@ using SymbolPtr = std::unique_ptr<Symbol>;
 using Name = std::string;
 using Table = std::unordered_multimap<Name, SymbolPtr>;
 
-struct Scope {
-  enum class Type {
-    // global namespace scope
-    ns,
-    block,
-    func,
-    // break and continue are valid within flow scopes (while, for, switch)
-    flow,
-    closure
-  };
+enum class ScopeType {
+  // global namespace scope
+  ns,
+  block,
+  func,
+  // break and continue are valid within flow scopes (while, for, switch)
+  flow,
+  closure
+};
 
-  Scope(Scope *const parent, const Type type)
+struct Scope {
+  Scope(Scope *const parent, const ScopeType type)
     : parent{parent}, type{type} {
-    assert(type != Type::func);
+    assert(type != ScopeType::func && type != ScopeType::closure);
   }
-  Scope(Scope *const parent, const ast::NodePtr &node)
-    : parent{parent}, type{Type::func}, node{node} {}
+  Scope(Scope *const parent, const ScopeType type, const ast::NodePtr &node)
+    : parent{parent}, type{type}, node{node} {
+    assert(type == ScopeType::func || type == ScopeType::closure);
+  }
 
   Scope *const parent;
-  const Type type;
+  const ScopeType type;
   Table table;
   ast::NodePtr node;
 };

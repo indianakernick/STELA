@@ -17,12 +17,12 @@ ScopeMan::ScopeMan(sym::Scopes &scopes, sym::Scope *scope)
   assert(scope);
 }
 
-sym::Scope *ScopeMan::enterScope(const sym::Scope::Type type) {
+sym::Scope *ScopeMan::enterScope(sym::ScopeType type) {
   return pushScope(std::make_unique<sym::Scope>(scope, type));
 }
 
-sym::Scope *ScopeMan::enterFuncScope(const ast::NodePtr &node) {
-  return pushScope(std::make_unique<sym::Scope>(scope, node));
+sym::Scope *ScopeMan::enterScope(sym::ScopeType type, const ast::NodePtr &node) {
+  return pushScope(std::make_unique<sym::Scope>(scope, type, node));
 }
 
 void ScopeMan::leaveScope() {
@@ -36,13 +36,13 @@ sym::Scope *ScopeMan::cur() const {
 
 sym::Scope *ScopeMan::builtin() const {
   assert(global()->parent);
-  assert(global()->parent->type == sym::Scope::Type::ns);
+  assert(global()->parent->type == sym::ScopeType::ns);
   return global()->parent;
 }
 
 sym::Scope *ScopeMan::global() const {
   assert(!scopes.empty());
-  assert(scopes[0]->type == sym::Scope::Type::ns);
+  assert(scopes[0]->type == sym::ScopeType::ns);
   return scopes[0].get();
 }
 

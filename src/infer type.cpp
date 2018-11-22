@@ -8,6 +8,7 @@
 
 #include "infer type.hpp"
 
+#include "traverse.hpp"
 #include "scope lookup.hpp"
 #include "operator name.hpp"
 #include "compare types.hpp"
@@ -192,7 +193,10 @@ public:
     lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
   void visit(ast::Lambda &lam) override {
-    
+    ctx.man.enterScope(sym::ScopeType::closure, {retain, &lam});
+    traverse(ctx, lam.body);
+    ctx.man.leaveScope();
+    lkp.setExpr(sym::makeLetVal(getLambdaType(ctx, lam)));
   }
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
