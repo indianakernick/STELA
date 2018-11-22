@@ -31,15 +31,7 @@ auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
   return paramSym;
 }
 
-sym::ValueMut refToMut(const ast::ParamRef ref) {
-  if (ref == ast::ParamRef::inout) {
-    return sym::ValueMut::var;
-  } else {
-    return sym::ValueMut::let;
-  }
-}
-
-sym::ValueRef refToRef(const ast::ParamRef ref) {
+sym::ValueRef convertRef(const ast::ParamRef ref) {
   if (ref == ast::ParamRef::inout) {
     return sym::ValueRef::ref;
   } else {
@@ -51,8 +43,8 @@ sym::ExprType convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRe
   validateType(ctx, type);
   return {
     type,
-    refToMut(ref),
-    refToRef(ref)
+    sym::ValueMut::var,
+    convertRef(ref)
   };
 }
 

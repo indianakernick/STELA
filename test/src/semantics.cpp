@@ -1656,6 +1656,16 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_SUCCEEDS();
   });
+  
+  TEST(Assign to function paramenter, {
+    const char *source = R"(
+      func fn(a: sint, b: inout sint) {
+        a = 1;
+        b = 2;
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
 
   /*
   

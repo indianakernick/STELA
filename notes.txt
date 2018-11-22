@@ -46,21 +46,9 @@ the other?
 
 --------------------------------------------------------------------------------
 
-A preprocessor similar to the C preprocessor would be cool. Since we have
-function overloading, we could copy-paste functions for each type. With a
-C-preprocessor, this is pretty similar to C++ templates without automatic
-instantiation.
-
-That fact that macros in C should be all caps to prevent collisions bugs me.
-If you want to use a macro, you need to put an $ before its name so that it is
-obvious that you are using a macro and not a function or a constant.
-
---------------------------------------------------------------------------------
-
-If we do decide to use the preprocessor for generics, it won't make an sense to
-implement static interfaces but dynamic interfaces might make sense. Since
-closures are reference types, it makes sense for interfaces to be reference
-types as well. Interfaces hold a reference counted smart pointer to an object.
+Since closures are reference types, it makes sense for interfaces to be
+reference types as well. Interfaces hold a reference counted smart pointer to an
+object.
 
 --------------------------------------------------------------------------------
 
@@ -72,10 +60,10 @@ return a bool that denotes whether the object is alive or null.
 --------------------------------------------------------------------------------
 
 struct Slice {
-  retain_ptr<Array> backing_array; // Reference counted pointer to array
-  size_t capacity; // Size of the backing array
-  size_t begin; // Beginning of the region on the backing array
-  size_t end;   // End of the region on the backing array
+  Array backing_array; // Reference counted pointer to array
+  size_t capacity;     // Size of the backing array
+  size_t begin;        // Beginning of the region on the backing array
+  size_t end;          // End of the region on the backing array
 };
 
 Arrays are value types. Assigning an array makes a copy of the array.
