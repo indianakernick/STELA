@@ -22,7 +22,7 @@ A scripting language built for speed in world where JavaScript runs on web serve
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * `expected bool expression but got byte expression`
-   * handle lambdas and function pointers to overloaded functions
+   * handle lambdas and calling function pointers
    * raise warnings about unused symbols (`unused variable "myVar"`)
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)
@@ -30,7 +30,8 @@ A scripting language built for speed in world where JavaScript runs on web serve
    * read notes.txt about interfaces and generics
    * do we need interfaces? A lambda is an interface with a single function.
    * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift prototypes
-   * there's probably a lot of stuff that I can't think of right now!
+
+It might be possible to compile to C before the end of the year. After that I'll work on compiling to LLVM IR.
 
 ## About
 
@@ -67,7 +68,7 @@ let sub_ptr = sub;
 
 #### Tag dispatch
 
-This is example shows strong type aliases and overloading again.
+This example shows strong type aliases and function overloading.
 
 ```
 type first_t struct{};
