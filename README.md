@@ -4,8 +4,6 @@
 
 A scripting language built for speed in world where JavaScript runs on web servers.
 
-__If a compilers expert is reading this, I would love some advice!__
-
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
@@ -36,7 +34,140 @@ __If a compilers expert is reading this, I would love some advice!__
 
 ## About
 
-### Goals
+### Examples
+
+The semantic analyser is nearing completion as I write this. These are a few examples taken from the [semantic tests](test/src/semantics.cpp) that illistrate (with code) the semantics of the language. You can't actually run any of these examples but you can put them through the semantic analyser and not get any errors.
+
+#### Get a pointer to function
+
+Just like in C++, if you want a pointer to an overloaded function, you need to select which overload you want.
+
+```
+func add(a: sint, b: sint) -> sint {
+  return a + b;
+}
+func add(a: uint, b: uint) -> uint {
+  return a + b;
+}
+func add(a: real, b: real) -> real {
+  return a + b;
+}
+
+func sub(a: sint, b: sint) -> sint {
+  return a - b;
+}
+
+// Need to provide signature to select overloaded function
+let add_ptr0: func(real, real) -> real = add;
+let add_ptr1 = make func(sint, sint) -> sint add;
+
+// Signature is optional for non-overloaded functions
+let sub_ptr = sub;
+```
+
+#### Tag dispatch
+
+This is example shows strong type aliases and overloading again.
+
+```
+type first_t struct{};
+type second_t struct{};
+type third_t struct{};
+
+let first: first_t = {};
+let second: second_t = {};
+let third: third_t = {};
+
+// This is a little bit silly but you get the idea
+func get(t: first_t, arr: [sint]) -> sint {
+  return arr[0];
+}
+func get(t: second_t, arr: [sint]) -> sint {
+  return arr[1];
+}
+func get(t: third_t, arr: [sint]) -> sint {
+  return arr[2];
+}
+
+func test() {
+  let arr = [5, 2, 6];
+  let two = get(second, arr);
+  let five = get(first, arr);
+  let six = get(third, arr);
+}
+```
+
+#### Member functions
+
+Member functions can be created for any type, including builtin types!
+
+```
+// Just to demonstrate weak type aliases too
+type Integer = sint;
+
+func (self: Integer) half() -> Integer {
+  return self / 2;
+}
+
+func test() {
+  let fourteen = 14;
+  let seven = fourteen.half();
+}
+```
+
+#### Enums
+
+Enums aren't supported natively simply because I don't find the following example too inconvienient.
+
+```
+type Dir sint;
+// Dir is a strong alias of sint
+// You need to explicitly cast the sint literal to a Dir
+let Dir_up    = make Dir 0;
+let Dir_right = make Dir 1;
+let Dir_down  = make Dir 2;
+let Dir_left  = make Dir 3;
+```
+
+#### Modules
+
+Modules are pretty cool. So are 2D vectors.
+
+```
+module glm;
+
+type vec2 struct {
+  x: real;
+  y: real;
+};
+
+func plus(a: vec2, b: vec2) -> vec2 {
+  return make vec2 {a.x + b.x, a.y + b.y};
+}
+
+// We don't have a builtin sqrt function yet so this will have to do
+func magnitude2(v: vec2) -> real {
+  return v.x * v.x + v.y * v.y;
+}
+```
+
+Other module...
+
+```
+// Optional
+// module main;
+
+import glm;
+
+func main() {
+  let one_two = make glm::vec2 {1.0, 2.0};
+  let three_four = make glm::vec2 {3.0, 4.0};
+  let four_six = add(one_two, three_four);
+  let five = magnitude2(one_two);
+}
+```
+
+### Goals (Wrote this months ago!)
  * __Statically typed__
    * Type inference is used as much as possible. If the type can be infered unambiguously, then the type will be infered. That's the type inference promise!
    * Naturally makes the language a little faster. 
@@ -49,11 +180,8 @@ __If a compilers expert is reading this, I would love some advice!__
    * All steps of the compilation are exposed (lexer tokens, AST, symbol table, bytecode) but if you just want to `compile(source)` and `run(bytecode)` then that's all you have to do.
    * Reflection facilities are built-in so binding your C++ classes to STELA couldn't be easier.
  * __Minimal__
-   * I see something quite wrong with the standard library being part of the language. The standard library should be implemented in the language itself with a few compiler hooks where necessary. For example, `std::initilizer_list` can't quite be implemented in pure C++. It needs a little help from the compiler.
+   * I see something quite wrong with the standard library being part of the language. The standard library should be implemented in the language itself.
    * All of the necessary tools for implementing the standard library are provided without exposing dangerous things like pointers or manual memory management.
-   * A simple language that isn't interwoven with a standard library is a bit easier to parse.
-
-This language is sounding quite ambitious! There probably won't be a working prototype until the end of the year.
 
 ### File Extension
 `.stela` or `.ste` (if the filesystem limits extensions to three characters).

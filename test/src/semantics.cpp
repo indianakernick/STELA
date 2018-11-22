@@ -402,27 +402,27 @@ TEST_GROUP(Semantics, {
     const char *source = R"(
       type first_t struct{};
       type second_t struct{};
-      type all_t struct{};
-    
-      let first = make first_t {};
-      let second = make second_t {};
-      let all = make all_t {};
-    
-      func fun(tag: first_t, arr: [sint]) -> sint {
+      type third_t struct{};
+
+      let first: first_t = {};
+      let second: second_t = {};
+      let third: third_t = {};
+
+      func get(t: first_t, arr: [sint]) -> sint {
         return arr[0];
       }
-      func fun(tag: second_t, arr: [sint]) -> sint {
+      func get(t: second_t, arr: [sint]) -> sint {
         return arr[1];
       }
-      func fun(tag: all_t, arr: [sint]) -> [sint] {
-        return arr;
+      func get(t: third_t, arr: [sint]) -> sint {
+        return arr[2];
       }
-    
+
       func test() {
-        var arr: [sint] = [5, 1, 6, 8, 1, 3];
-        let f: sint = fun(first, arr);
-        let s: sint = fun(second, arr);
-        let a: [sint] = fun(all, arr);
+        let arr = [5, 2, 6];
+        let two = get(second, arr);
+        let five = get(first, arr);
+        let six = get(third, arr);
       }
     )";
     ASSERT_SUCCEEDS();
