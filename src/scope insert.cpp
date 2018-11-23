@@ -17,12 +17,6 @@ using namespace stela;
 
 namespace {
 
-sym::FuncPtr makeFunc(const Loc loc) {
-  auto funcSym = std::make_unique<sym::Func>();
-  funcSym->loc = loc;
-  return funcSym;
-}
-
 auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
   auto paramSym = std::make_unique<sym::Object>();
   paramSym->loc = param.loc;
@@ -52,6 +46,18 @@ sym::ExprType convert(sym::Ctx ctx, const ast::FuncParam &param) {
   return convert(ctx, param.type, param.ref);
 }
 
+void convertParams(sym::FuncParams &symParams, sym::Ctx ctx, const ast::FuncParams &params) {
+  for (const ast::FuncParam &param : params) {
+    symParams.push_back(convert(ctx, param));
+  }
+}
+
+sym::FuncParams convertParams(sym::Ctx ctx, const ast::FuncParams &params) {
+  sym::FuncParams symParams;
+  convertParams(symParams, ctx, params);
+  return symParams;
+}
+
 sym::FuncParams convertParams(
   sym::Ctx ctx,
   const ast::Receiver &receiver,
@@ -63,10 +69,16 @@ sym::FuncParams convertParams(
   } else {
     symParams.push_back(sym::null_type);
   }
-  for (const ast::FuncParam &param : params) {
-    symParams.push_back(convert(ctx, param));
-  }
+  convertParams(symParams, ctx, params);
   return symParams;
+}
+
+sym::Name lambdaName(const ast::Lambda &lambda) {
+  sym::Name name = "$lambda_";
+  name += std::to_string(lambda.loc.l);
+  name += ' ';
+  name += std::to_string(lambda.loc.c);
+  return name;
 }
 
 }
@@ -82,7 +94,8 @@ void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
 }
 
 sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
-  sym::FuncPtr funcSym = makeFunc(func.loc);
+  auto funcSym = std::make_unique<sym::Func>();
+  funcSym->loc = func.loc;
   if (func.receiver) {
     if (auto strut = lookupConcrete<ast::StructType>(ctx, func.receiver->type)) {
       for (const ast::Field &field : strut->fields) {
@@ -127,6 +140,26 @@ void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
     funcSym->scope->table.insert({
       sym::Name{param.name},
       makeParam(funcSym->params[0], param)
+    });
+  }
+}
+
+sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
+  auto lamSym = std::make_unique<sym::Lambda>();
+  lamSym->loc = lam.loc;
+  lamSym->params = convertParams(ctx, lam.params);
+  lamSym->ret = convert(ctx, lam.ret, ast::ParamRef::value);
+  lamSym->node = {retain, &lam};
+  sym::Lambda *const ret = lamSym.get();
+  ctx.man.cur()->table.insert({lambdaName(lam), std::move(lamSym)});
+  return ret;
+}
+
+void stela::enterLambdaScope(sym::Lambda *lamSym, ast::Lambda &lam) {
+  for (size_t i = 0; i != lam.params.size(); ++i) {
+    lamSym->scope->table.insert({
+      sym::Name{lam.params[i].name},
+      makeParam(lamSym->params[i], lam.params[i])
     });
   }
 }

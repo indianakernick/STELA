@@ -133,6 +133,14 @@ struct Func final : Symbol {
 };
 using FuncPtr = std::unique_ptr<Func>;
 
+struct Lambda final : Symbol {
+  ExprType ret;
+  FuncParams params;
+  Scope *scope;
+  retain_ptr<ast::Lambda> node;
+  std::vector<Object *> captures;
+};
+
 struct Module {
   ast::Decls decls;
   Scopes scopes;

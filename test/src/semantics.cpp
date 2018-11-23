@@ -1669,16 +1669,16 @@ TEST_GROUP(Semantics, {
 
   TEST(Lambda, {
     const char *source = R"(
-      func giveMeFunction(fn: func()->sint) {
+      func giveMeFunction(fn: func(real)->sint) {
         
       }
     
       func test() {
-        giveMeFunction(func() -> sint {
-          return 1;
+        giveMeFunction(func(a: real) -> sint {
+          return 11 * make sint a;
         });
-        func notLambda() -> sint {
-          return 1;
+        func notLambda(a: real) -> sint {
+          return 11 * make sint a;
         }
         giveMeFunction(notLambda);
       }
