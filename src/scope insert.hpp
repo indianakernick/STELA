@@ -14,6 +14,7 @@
 
 namespace stela {
  
+sym::ExprType convert(sym::Ctx, const ast::TypePtr &, ast::ParamRef);
 void insert(sym::Ctx, const sym::Name &, sym::SymbolPtr);
 sym::Func *insert(sym::Ctx, ast::Func &);
 void enterFuncScope(sym::Func *, ast::Func &);

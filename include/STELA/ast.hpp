@@ -156,6 +156,7 @@ struct Func;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
+  // null if calling a function pointer
   Func *definition = nullptr;
   
   void accept(Visitor &) override;

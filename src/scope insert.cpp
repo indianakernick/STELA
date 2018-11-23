@@ -33,15 +33,6 @@ sym::ValueRef convertRef(const ast::ParamRef ref) {
   }
 }
 
-sym::ExprType convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
-  validateType(ctx, type);
-  return {
-    type,
-    sym::ValueMut::var,
-    convertRef(ref)
-  };
-}
-
 sym::ExprType convert(sym::Ctx ctx, const ast::FuncParam &param) {
   return convert(ctx, param.type, param.ref);
 }
@@ -81,6 +72,15 @@ sym::Name lambdaName(const ast::Lambda &lambda) {
   return name;
 }
 
+}
+
+sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
+  validateType(ctx, type);
+  return {
+    type,
+    sym::ValueMut::var,
+    convertRef(ref)
+  };
 }
 
 void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {

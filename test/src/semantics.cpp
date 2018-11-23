@@ -1670,7 +1670,7 @@ TEST_GROUP(Semantics, {
   TEST(Lambda, {
     const char *source = R"(
       func giveMeFunction(fn: func(real)->sint) {
-        
+        let result: sint = fn(2.0);
       }
     
       func test() {
@@ -1684,6 +1684,30 @@ TEST_GROUP(Semantics, {
       }
     )";
     ASSERT_SUCCEEDS();
+  });
+  
+  TEST(Lambda wrong args, {
+    const char *source = R"(
+      func test() {
+        let lam = func(a: sint) -> sint {
+          return a * 2;
+        };
+        let double = lam(16.3);
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Unused lambda return, {
+    const char *source = R"(
+      func test() {
+        let identity = func(a: sint) -> sint {
+          return a;
+        };
+        identity(11);
+      }
+    )";
+    ASSERT_FAILS();
   });
 
   /*

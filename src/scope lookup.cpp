@@ -9,6 +9,7 @@
 #include "scope lookup.hpp"
 
 #include <cassert>
+#include "scope insert.hpp"
 #include "compare types.hpp"
 #include "scope traverse.hpp"
 #include "compare params args.hpp"
@@ -197,16 +198,32 @@ ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::Func
   return key;
 }
 
-ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &params, const Loc loc) {
+ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc loc) {
   if (memFunExpr(Expr::Type::expr)) {
-    return popCallPushRet(lookupFun(ctx.man.cur(), funKey(popExpr(), params), loc));
+    return popCallPushRet(lookupFun(ctx.man.cur(), funKey(popExpr(), args), loc));
   }
   if (call(Expr::Type::free_fun)) {
     sym::Scope *const scope = exprs.back().scope;
-    return popCallPushRet(lookupFun(scope, funKey(sym::null_type, params), loc));
+    return popCallPushRet(lookupFun(scope, funKey(sym::null_type, args), loc));
   }
   if (call(Expr::Type::expr)) {
-    ctx.log.error(loc) << "Calling an object. Might be a function pointer. Who knows!" << fatal;
+    sym::ExprType expr = popExpr();
+    assert(!exprs.empty());
+    assert(exprs.back().type == Expr::Type::call);
+    exprs.pop_back();
+    auto func = dynamic_pointer_cast<ast::FuncType>(std::move(expr.type));
+    if (!func) {
+      ctx.log.error(loc) << "Calling an expression but it is not a function object" << fatal;
+    }
+    sym::FuncParams params;
+    for (const ast::ParamType &param : func->params) {
+      params.push_back(convert(ctx, param.type, param.ref));
+    }
+    if (!compatParams(ctx, params, args)) {
+      ctx.log.error(loc) << "No matching call to function object" << fatal;
+    }
+    pushExpr(func->ret ? convert(ctx, func->ret, ast::ParamRef::value) : sym::void_type);
+    return nullptr;
   }
   ctx.log.error(loc) << "Function call operator applied to invalid subject" << fatal;
 }
