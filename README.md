@@ -47,6 +47,24 @@ func main() {
 }
 ```
 
+### Lambdas
+
+Lambdas make partial application pretty easy.
+
+```go
+func makeAdder(left: sint) -> func(sint) -> sint {
+  return func(right: sint) -> sint {
+    return left + right;
+  };
+}
+
+func test() {
+  let add3 = makeAdder(3);
+  let nine = add3(6);
+  let eight = makeAdder(6)(2);
+}
+```
+
 ### Get a pointer to function
 
 Just like in C++, if you want a pointer to an overloaded function, you need to select which overload you want.
@@ -158,11 +176,12 @@ let Choice_yes = 1;
    * initialize structs
    * cast between compatible types
    * check that the return expression matches return type
+   * handle lambdas and function pointers
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * `expected bool expression but got byte expression`
-   * handle lambdas and calling function pointers
+   * keep track of lambda captures
    * raise warnings about unused symbols (`unused variable "myVar"`)
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)

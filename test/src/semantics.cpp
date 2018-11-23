@@ -1709,6 +1709,23 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_FAILS();
   });
+  
+  TEST(Partial application, {
+    const char *source = R"(
+      func makeAdder(left: sint) -> func(sint) -> sint {
+        return func(right: sint) -> sint {
+          return left + right;
+        };
+      }
+    
+      func test() {
+        let add3 = makeAdder(3);
+        let nine = add3(6);
+        let eight = makeAdder(6)(2);
+      }
+    )";
+    ASSERT_SUCCEEDS();
+  });
 
   /*
   
