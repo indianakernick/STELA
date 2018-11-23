@@ -84,3 +84,11 @@ reference types. Slices are reference types. Arrays are value types.
 There are a lot of similarities between lambdas and functions. Try to minimize
 the duplication of code. Maybe implement one in terms of the other or something
 like that. Or implement them both in terms of a more low level concept.
+
+--------------------------------------------------------------------------------
+
+Do we really need to allow functions to be nested. Is it really necessary?
+All you're doing is hiding the function. The nested function doesn't gain the
+scope of the outer function. It's not a closure. It's just an anonymous
+funciton. Disallowing nested functions will simplify a lot of the ExprLookup
+code.

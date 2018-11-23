@@ -40,18 +40,18 @@ enum class ScopeType {
 
 struct Scope {
   Scope(Scope *const parent, const ScopeType type)
-    : parent{parent}, type{type} {
+    : parent{parent}, type{type}, symbol{nullptr} {
     assert(type != ScopeType::func && type != ScopeType::closure);
   }
-  Scope(Scope *const parent, const ScopeType type, const ast::NodePtr &node)
-    : parent{parent}, type{type}, node{node} {
+  Scope(Scope *const parent, const ScopeType type, sym::Symbol *const symbol)
+    : parent{parent}, type{type}, symbol{symbol} {
     assert(type == ScopeType::func || type == ScopeType::closure);
   }
 
   Scope *const parent;
   const ScopeType type;
+  sym::Symbol *const symbol;
   Table table;
-  ast::NodePtr node;
 };
 using ScopePtr = std::unique_ptr<Scope>;
 using Scopes = std::vector<ScopePtr>;

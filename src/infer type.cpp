@@ -195,7 +195,7 @@ public:
   }
   void visit(ast::Lambda &lam) override {
     sym::Lambda *const lamSym = insert(ctx, lam);
-    lamSym->scope = ctx.man.enterScope(sym::ScopeType::closure, {retain, &lam});
+    lamSym->scope = ctx.man.enterScope(sym::ScopeType::closure, lamSym);
     enterLambdaScope(lamSym, lam);
     traverse(ctx, lam.body);
     ctx.man.leaveScope();

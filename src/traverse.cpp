@@ -89,12 +89,12 @@ public:
       ctx.man.cur()
     );
     assert(funcScope);
-    assert(funcScope->node);
+    assert(funcScope->symbol);
     ast::TypePtr retType;
-    if (auto func = dynamic_pointer_cast<ast::Func>(funcScope->node)) {
-      retType = func->ret;
-    } else if (auto lamb = dynamic_pointer_cast<ast::Lambda>(funcScope->node)) {
-      retType = lamb->ret;
+    if (auto func = dynamic_cast<sym::Func *>(funcScope->symbol)) {
+      retType = func->ret.type;
+    } else if (auto lamb = dynamic_cast<sym::Lambda *>(funcScope->symbol)) {
+      retType = lamb->ret.type;
     } else {
       assert(false);
     }
@@ -121,7 +121,7 @@ public:
 
   void visit(ast::Func &func) override {
     sym::Func *const funcSym = insert(ctx, func);
-    funcSym->scope = ctx.man.enterScope(sym::ScopeType::func, {retain, &func});
+    funcSym->scope = ctx.man.enterScope(sym::ScopeType::func, funcSym);
     enterFuncScope(funcSym, func);
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);

@@ -300,6 +300,19 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
     if (!reachableObject(currentScope, scope)) {
       ctx.log.error(loc) << "Variable \"" << name << "\" at " << object->loc << " is unreachable" << fatal;
     }
+    // dont capture globals
+    if (scope->type != sym::ScopeType::ns) {
+      // make sure we're inside a closure
+      if (sym::Scope *closureScope = findNearest(sym::ScopeType::closure, currentScope)) {
+        assert(closureScope->symbol);
+        auto lamSym = dynamic_cast<sym::Lambda *>(closureScope->symbol);
+        assert(lamSym);
+        // don't capture locals
+        if (!reachableObject(scope, lamSym->scope)) {
+          lamSym->captures.push_back(object);
+        }
+      }
+    }
     return pushObj(referTo(object));
   }
   if (exprs.back().type == Expr::Type::call) {

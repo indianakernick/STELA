@@ -21,8 +21,8 @@ sym::Scope *ScopeMan::enterScope(sym::ScopeType type) {
   return pushScope(std::make_unique<sym::Scope>(scope, type));
 }
 
-sym::Scope *ScopeMan::enterScope(sym::ScopeType type, const ast::NodePtr &node) {
-  return pushScope(std::make_unique<sym::Scope>(scope, type, node));
+sym::Scope *ScopeMan::enterScope(sym::ScopeType type, sym::Symbol *symbol) {
+  return pushScope(std::make_unique<sym::Scope>(scope, type, symbol));
 }
 
 void ScopeMan::leaveScope() {
