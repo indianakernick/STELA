@@ -27,7 +27,8 @@ template <typename Number>
 from_chars_result from_chars(const char *first, const char *last, Number &number) {
   char *end;
   errno = 0;
-  std::string nullTerm(first, std::min(32l, last - first));
+  assert(first <= last);
+  std::string nullTerm(first, static_cast<size_t>(std::min(32l, last - first)));
   if constexpr (std::is_floating_point_v<Number>) {
     const long double ld = std::strtold(nullTerm.c_str(), &end);
     if (errno != 0 || (end == nullTerm.c_str() && ld == 0.0l)) {
@@ -132,7 +133,8 @@ size_t stela::validNumberLiteral(const std::string_view str, const Loc loc, Log 
   Real real;
   res = from_chars(str.cbegin(), str.cend(), real);
   if (!res.err) {
-    const size_t size = res.ptr - str.cbegin();
+    assert(str.cbegin() <= res.ptr);
+    const size_t size = static_cast<size_t>(res.ptr - str.cbegin());
     if (hasValidSuffix(*res.ptr, real, loc, log)) {
       return size + 1;
     }
@@ -142,7 +144,8 @@ size_t stela::validNumberLiteral(const std::string_view str, const Loc loc, Log 
   Uint uint;
   res = from_chars(str.cbegin(), str.cend(), uint);
   if (!res.err) {
-    const size_t size = res.ptr - str.cbegin();
+    assert(str.cbegin() <= res.ptr);
+    const size_t size = static_cast<size_t>(res.ptr - str.cbegin());
     if (hasValidSuffix(*res.ptr, uint, loc, log)) {
       return size + 1;
     }
@@ -152,7 +155,8 @@ size_t stela::validNumberLiteral(const std::string_view str, const Loc loc, Log 
   Sint sint;
   res = from_chars(str.cbegin(), str.cend(), sint);
   if (!res.err) {
-    const size_t size = res.ptr - str.cbegin();
+    assert(str.cbegin() <= res.ptr);
+    const size_t size = static_cast<size_t>(res.ptr - str.cbegin());
     if (hasValidSuffix(*res.ptr, sint, loc, log)) {
       return size + 1;
     }

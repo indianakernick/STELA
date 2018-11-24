@@ -189,10 +189,10 @@ sym::Func *ExprLookup::lookupFun(
   }
 }
 
-ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType etype, const sym::FuncParams &params) {
+ExprLookup::FunKey ExprLookup::funKey(const sym::ExprType receiver, const sym::FuncParams &params) {
   FunKey key;
   key.params.reserve(1 + params.size());
-  key.params.push_back(etype);
+  key.params.push_back(receiver);
   key.params.insert(key.params.end(), params.cbegin(), params.cend());
   key.name = popName();
   return key;

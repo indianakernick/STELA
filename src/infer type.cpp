@@ -81,11 +81,11 @@ public:
     ctx.log.error(sub.index->loc) << "Invalid subscript index" << fatal;
   }
   void visit(ast::Identifier &id) override {
-    lkp.expected(type);
+    lkp.expected(expected);
     id.definition = lkp.lookupIdent(sym::Name{id.module}, sym::Name{id.name}, id.loc);
   }
   void visit(ast::Ternary &tern) override {
-    ast::TypePtr resultType = type;
+    ast::TypePtr resultType = expected;
     const sym::ExprType cond = visitValueExpr(tern.cond, ctx.btn.Bool);
     if (!compareTypes(ctx, cond.type, ctx.btn.Bool)) {
       ctx.log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
@@ -142,8 +142,8 @@ public:
   }
   void visit(ast::ArrayLiteral &arr) override {
     ast::TypePtr elem = nullptr;
-    if (type) {
-      if (auto array = lookupConcrete<ast::ArrayType>(ctx, type)) {
+    if (expected) {
+      if (auto array = lookupConcrete<ast::ArrayType>(ctx, expected)) {
         elem = lookupStrongType(ctx, array->elem);
       } else {
         ctx.log.error(arr.loc) << "Array literal can only initialize arrays" << fatal;
@@ -169,11 +169,11 @@ public:
     lkp.setExpr(sym::makeLetVal(std::move(array)));
   }
   void visit(ast::InitList &list) override {
-    if (!type) {
+    if (!expected) {
       ctx.log.error(list.loc) << "Could not infer type of init list" << fatal;
     }
     if (!list.exprs.empty()) {
-      if (auto strut = lookupConcrete<ast::StructType>(ctx, type)) {
+      if (auto strut = lookupConcrete<ast::StructType>(ctx, expected)) {
         if (list.exprs.size() > strut->fields.size()) {
           ctx.log.error(list.loc) << "Too many expressions in initializer list" << fatal;
         } else if (list.exprs.size() < strut->fields.size()) {
@@ -191,7 +191,7 @@ public:
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
       }
     }
-    lkp.setExpr(sym::makeLetVal(std::move(type)));
+    lkp.setExpr(sym::makeLetVal(std::move(expected)));
   }
   void visit(ast::Lambda &lam) override {
     sym::Lambda *const lamSym = insert(ctx, lam);
@@ -203,7 +203,7 @@ public:
   }
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
-    this->type = type;
+    expected = type;
     // @TODO lkp state here should be same as...
     lkp.enterSubExpr();
     expr->accept(*this);
@@ -214,7 +214,7 @@ public:
 private:
   ExprLookup lkp;
   sym::Ctx ctx;
-  ast::TypePtr type;
+  ast::TypePtr expected;
 };
 
 }

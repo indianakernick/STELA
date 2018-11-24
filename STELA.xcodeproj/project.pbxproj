@@ -768,8 +768,13 @@
 					"-Wextra",
 					"-Weffc++",
 					"-Wpedantic",
+					"-Wshadow",
 					"-Wno-documentation",
 					"-fvisibility=default",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -805,8 +810,13 @@
 					"-Wextra",
 					"-Weffc++",
 					"-Wpedantic",
+					"-Wshadow",
 					"-Wno-documentation",
 					"-fvisibility=default",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

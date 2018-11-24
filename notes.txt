@@ -92,3 +92,8 @@ All you're doing is hiding the function. The nested function doesn't gain the
 scope of the outer function. It's not a closure. It's just an anonymous
 funciton. Disallowing nested functions will simplify a lot of the ExprLookup
 code.
+
+--------------------------------------------------------------------------------
+
+Arrays should be reference counted reference types. They can be explicitly
+duplicated if need be.

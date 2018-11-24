@@ -22,24 +22,24 @@ public:
     : ctx{ctx}, left{left} {}
 
   void visit(ast::BtnType &right) override {
-    eq = compare(left, right);
+    eq = compare(ctx, left, right);
   }
   void visit(ast::ArrayType &right) override {
-    eq = compare(left, right);
+    eq = compare(ctx, left, right);
   }
   void visit(ast::FuncType &right) override {
-    eq = compare(left, right);
+    eq = compare(ctx, left, right);
   }
   void visit(ast::NamedType &right) override {
     ast::TypeAlias *def = lookupTypeName(ctx, right);
     if (def->strong) {
-      eq = compare(left, right); // a strong type alias is its own type
+      eq = compare(ctx, left, right); // a strong type alias is its own type
     } else {
       def->type->accept(*this);  // a weak type alias is an existing type
     }
   }
   void visit(ast::StructType &right) override {
-    eq = compare(left, right);
+    eq = compare(ctx, left, right);
   }
 
   bool eq = false;
@@ -48,14 +48,14 @@ private:
   sym::Ctx ctx;
   Left &left;
 
-  bool compare(ast::BtnType &left, ast::BtnType &right) {
+  static bool compare(const sym::Ctx &, ast::BtnType &left, ast::BtnType &right) {
     return left.value == right.value;
   }
-  bool compare(ast::ArrayType &left, ast::ArrayType &right) {
+  static bool compare(const sym::Ctx &ctx, ast::ArrayType &left, ast::ArrayType &right) {
     return compareTypes(ctx, left.elem, right.elem);
   }
-  bool compare(ast::FuncType &left, ast::FuncType &right) {
-    const auto compareParams = [this] (const ast::ParamType &a, const ast::ParamType &b) {
+  static bool compare(const sym::Ctx &ctx, ast::FuncType &left, ast::FuncType &right) {
+    const auto compareParams = [&ctx] (const ast::ParamType &a, const ast::ParamType &b) {
       return a.ref == b.ref && compareTypes(ctx, a.type, b.type);
     };
     if (!compareTypes(ctx, left.ret, right.ret)) {
@@ -63,17 +63,17 @@ private:
     }
     return Utils::equal_size(left.params, right.params, compareParams);
   }
-  bool compare(ast::NamedType &left, ast::NamedType &right) {
+  static bool compare(const sym::Ctx &, ast::NamedType &left, ast::NamedType &right) {
     return left.name == right.name;
   }
-  bool compare(ast::StructType &left, ast::StructType &right) {
-    const auto compareFields = [this] (const ast::Field &a, const ast::Field &b) {
+  static bool compare(const sym::Ctx &ctx, ast::StructType &left, ast::StructType &right) {
+    const auto compareFields = [&ctx] (const ast::Field &a, const ast::Field &b) {
       return a.name == b.name && compareTypes(ctx, a.type, b.type);
     };
     return Utils::equal_size(left.fields, right.fields, compareFields);
   }
   template <typename Right>
-  bool compare(Left &, Right &) {
+  static bool compare(const sym::Ctx &, Left &, Right &) {
     return false;
   }
 };
