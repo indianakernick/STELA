@@ -239,6 +239,38 @@ TEST_GROUP(Semantics, {
     compileModules(syms, order, asts, log);
   });
   
+  /*
+  @TODO I completely overlooked this
+  
+  TEST(Modules - Import member function, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      func (self: real) half() -> real {
+        return self / 2.0;
+      }
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      func main() {
+        var n = 17.0;
+        n.half();
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+  });
+  */
+  
   TEST(Modules - Import struct, {
     const char *sourceA = R"(
       module ModA;

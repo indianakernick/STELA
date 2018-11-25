@@ -225,7 +225,10 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc loc) {
     pushExpr(func->ret ? convert(ctx, func->ret, ast::ParamRef::value) : sym::void_type);
     return nullptr;
   }
-  ctx.log.error(loc) << "Function call operator applied to invalid subject" << fatal;
+  /* LCOV_EXCL_START */
+  assert(false);
+  return nullptr;
+  /* LCOV_EXCL_END */
 }
 
 void ExprLookup::member(const sym::Name &name) {
@@ -273,21 +276,6 @@ SymbolScope findIdent(sym::Scope *scope, const sym::Name &name) {
   }
 }
 
-// determine whether a variable in the given scope is reachable from the
-// current scope
-bool reachableObject(sym::Scope *current, sym::Scope *scope) {
-  if (current == nullptr) {
-    return false;
-  }
-  if (current == scope) {
-    return true;
-  }
-  if (current->type == sym::ScopeType::func) {
-    return reachableObject(findNearest(sym::ScopeType::ns, current), scope);
-  }
-  return reachableObject(current->parent, scope);
-}
-
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
@@ -297,9 +285,6 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
-    if (!reachableObject(currentScope, scope)) {
-      ctx.log.error(loc) << "Variable \"" << name << "\" at " << object->loc << " is unreachable" << fatal;
-    }
     // dont capture globals
     if (scope->type != sym::ScopeType::ns) {
       // make sure we're inside a closure
@@ -307,10 +292,7 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
         assert(closureScope->symbol);
         auto lamSym = dynamic_cast<sym::Lambda *>(closureScope->symbol);
         assert(lamSym);
-        // don't capture locals
-        if (!reachableObject(scope, lamSym->scope)) {
-          lamSym->captures.push_back(object);
-        }
+        lamSym->captures.push_back(object);
       }
     }
     return pushObj(referTo(object));
