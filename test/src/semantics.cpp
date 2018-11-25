@@ -770,41 +770,6 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS();
   });
   
-  TEST(Nested function, {
-    const char *source = R"(
-      type Struct struct {};
-    
-      func fn() -> Struct {
-        func nested() -> Struct {
-          return make Struct {};
-        }
-        return nested();
-      }
-    
-      func main() {
-        func nested() -> Struct {
-          return fn();
-        }
-        let s: Struct = nested();
-      }
-    )";
-    ASSERT_SUCCEEDS();
-  });
-  
-  TEST(Nested function access, {
-    const char *source = R"(
-      func main() {
-        var nope = 5;
-        {
-          func nested() {
-            nope = 7;
-          }
-        }
-      }
-    )";
-    ASSERT_FAILS();
-  });
-  
   TEST(Expected type, {
     const char *source = R"(
       let not_a_type = 4;
@@ -1478,128 +1443,6 @@ TEST_GROUP(Semantics, {
     )";
     ASSERT_SUCCEEDS();
   });
-  
-  TEST(Func - Nested recursive, {
-    const char *source = R"(
-      func fn(a: sint) {
-        fn(3);
-        func fn(a: real) {
-          fn(3.0);
-          func fn(a: char) {
-            fn('3');
-          }
-        }
-      }
-    )";
-    ASSERT_SUCCEEDS();
-  });
-  
-  TEST(Expr - Func address nested recursive, {
-    const char *source = R"(
-      func fn(a: sint) {
-        let ptr: func(sint) = fn;
-        func fn(a: real) {
-          let ptr: func(real) = fn;
-          func fn(a: char) {
-            let ptr: func(char) = fn;
-          }
-        }
-      }
-    )";
-    ASSERT_SUCCEEDS();
-  });
-  
-  TEST(Func - Nested recursive no shadow, {
-    const char *source = R"(
-      func fn_sint(a: sint) {
-        fn_sint(3);
-        func fn_real(a: real) {
-          fn_sint(3);
-          fn_real(3.0);
-          func fn_char(a: char) {
-            fn_sint(3);
-            fn_real(3.0);
-            fn_char('3');
-          }
-          fn_sint(3);
-          fn_real(3.0);
-          fn_char('3');
-        }
-        fn_sint(3);
-        fn_real(3.0);
-      }
-    )";
-    ASSERT_SUCCEEDS();
-  });
-  
-  TEST(Expr - Func address nested recursive no shadow, {
-    const char *source = R"(
-      func fn_sint(a: sint) {
-        let ptr0 = fn_sint;
-        func fn_real(a: real) {
-          let ptr0 = fn_sint;
-          let ptr1 = fn_real;
-          func fn_char(a: char) {
-            let ptr0 = fn_sint;
-            let ptr1 = fn_real;
-            let ptr2 = fn_char;
-          }
-          let ptr2 = fn_sint;
-          let ptr3 = fn_real;
-          let ptr4 = fn_char;
-        }
-        let ptr1 = fn_sint;
-        let ptr2 = fn_real;
-      }
-    )";
-    ASSERT_SUCCEEDS();
-  });
-  
-  TEST(Func - Cannot call shadowed function, {
-    const char *source = R"(
-      func fn(a: sint) {
-        func fn(a: real) {
-          func fn(a: char) {
-            fn(3.0);
-          }
-        }
-      }
-    )";
-    ASSERT_FAILS();
-  });
-  
-  TEST(Expr - Cannot address shadowed function, {
-    const char *source = R"(
-      func fn(a: sint) {
-        func fn(a: real) {
-          func fn(a: char) {
-            let ptr: func(real) = fn;
-          }
-        }
-      }
-    )";
-    ASSERT_FAILS();
-  });
-  
-  TEST(Func - Cannot call shadowed parent, {
-    const char *source = R"(
-      func fn(a: sint) {
-        func fn(a: real) {}
-        fn(3);
-      }
-    )";
-    ASSERT_FAILS();
-  });
-  
-  TEST(Expr - Cannot address shadowed parent, {
-    const char *source = R"(
-      func fn(a: sint) {
-        func fn(a: real) {}
-        let ptr: func(sint) = fn;
-      }
-    )";
-    ASSERT_FAILS();
-  });
 
   TEST(Func - Undefined member function, {
     const char *source = R"(
@@ -1621,17 +1464,6 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS();
   });
   
-  TEST(Unreachable variable, {
-    const char *source = R"(
-      func test(unreachable: sint) {
-        func inner() {
-          unreachable = 1;
-        }
-      }
-    )";
-    ASSERT_FAILS();
-  });
-  
   TEST(Calling type, {
     const char *source = R"(
       type MyStruct struct {};
@@ -1642,20 +1474,6 @@ TEST_GROUP(Semantics, {
       }
     )";
     ASSERT_FAILS();
-  });
-  
-  TEST(Access type in nested function, {
-    const char *source = R"(
-      type GlobalType struct{};
-      func outer() {
-        type OuterType struct{};
-        func inner(a: GlobalType, b: OuterType) {
-          let c = make GlobalType {};
-          let d = make OuterType {};
-        }
-      }
-    )";
-    ASSERT_SUCCEEDS();
   });
   
   TEST(Assign to function paramenter, {
@@ -1674,13 +1492,14 @@ TEST_GROUP(Semantics, {
         let result: sint = fn(2.0);
       }
     
+      func notLambda(a: real) -> sint {
+        return 11 * make sint a;
+      }
+    
       func test() {
         giveMeFunction(func(a: real) -> sint {
           return 11 * make sint a;
         });
-        func notLambda(a: real) -> sint {
-          return 11 * make sint a;
-        }
         giveMeFunction(notLambda);
       }
     )";
@@ -1733,6 +1552,15 @@ TEST_GROUP(Semantics, {
       func test() {
         var dst = 8;
         dst *= 2.0;
+      }
+    )";
+    ASSERT_FAILS();
+  });
+  
+  TEST(Nested function, {
+    const char *source = R"(
+      func outer() {
+        func inner() {}
       }
     )";
     ASSERT_FAILS();

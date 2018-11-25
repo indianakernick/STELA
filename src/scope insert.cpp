@@ -94,6 +94,9 @@ void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
 }
 
 sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
+  if (ctx.man.cur()->type != sym::ScopeType::ns) {
+    ctx.log.error(func.loc) << "Functions must appear at global scope" << fatal;
+  }
   auto funcSym = std::make_unique<sym::Func>();
   funcSym->loc = func.loc;
   if (func.receiver) {
