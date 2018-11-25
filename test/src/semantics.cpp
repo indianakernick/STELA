@@ -1503,6 +1503,38 @@ TEST_GROUP(Semantics, {
       }
     )");
   });
+  
+  TEST(Invalid array elem, {
+    ASSERT_FAILS(R"(
+      var yeah: [[not_a_type]];
+    )");
+  });
+  
+  TEST(Validate huge type, {
+    ASSERT_SUCCEEDS(R"(
+      type Number real;
+      type Type func();
+    
+      type LargeType [struct {
+        field: real;
+        fn: func(sint, Number) -> Type;
+      }];
+      type AnotherType = LargeType;
+    )");
+  });
+  
+  TEST(Invalid return type deep, {
+    ASSERT_FAILS(R"(
+      type Number real;
+      type Type func();
+    
+      type LargeType [struct {
+        field: real;
+        fn: func(sint, Number) -> MyType;
+      }];
+      type AnotherType = LargeType;
+    )");
+  });
 
   /*
   

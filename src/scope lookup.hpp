@@ -17,7 +17,6 @@ namespace stela {
 ast::TypeAlias *lookupTypeName(sym::Ctx, ast::NamedType &);
 ast::TypePtr lookupStrongType(sym::Ctx, const ast::TypePtr &);
 ast::TypePtr lookupConcreteType(sym::Ctx, const ast::TypePtr &);
-ast::TypePtr validateType(sym::Ctx, const ast::TypePtr &);
 
 template <typename Type>
 retain_ptr<Type> lookupConcrete(const sym::Ctx ctx, const ast::TypePtr &type) {

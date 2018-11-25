@@ -15,6 +15,7 @@
 namespace stela {
 
 bool compareTypes(sym::Ctx, const ast::TypePtr &, const ast::TypePtr &);
+void validateType(sym::Ctx, const ast::TypePtr &);
 
 }
 

@@ -131,3 +131,58 @@ bool stela::compareTypes(sym::Ctx ctx, const ast::TypePtr &a, const ast::TypePtr
   a->accept(left);
   return left.eq;
 }
+
+namespace {
+
+class ValidVisitor final : public ast::Visitor {
+public:
+  explicit ValidVisitor(sym::Ctx ctx)
+    : ctx{ctx} {}
+
+  void visit(ast::BtnType &) override {}
+  void visit(ast::ArrayType &type) override {
+    type.elem->accept(*this);
+  }
+  void visit(ast::FuncType &type) override {
+    if (type.ret) {
+      type.ret->accept(*this);
+    }
+    for (const ast::ParamType &param : type.params) {
+      param.type->accept(*this);
+    }
+  }
+  void visit(ast::NamedType &type) override {
+    ast::TypeAlias *const alias = lookupTypeName(ctx, type);
+    assert(alias);
+    alias->type->accept(*this);
+  }
+  void visit(ast::StructType &type) override {
+    std::vector<std::pair<std::string_view, Loc>> names;
+    names.reserve(type.fields.size());
+    for (const ast::Field &field : type.fields) {
+      field.type->accept(*this);
+      names.push_back({field.name, field.loc});
+    }
+    Utils::sort(names, [] (auto a, auto b) {
+      return a.first < b.first;
+    });
+    const auto dup = Utils::adjacent_find(names, [] (auto a, auto b) {
+      return a.first == b.first;
+    });
+    if (dup != names.cend()) {
+      ctx.log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
+    }
+  }
+
+private:
+  sym::Ctx ctx;
+};
+
+}
+
+void stela::validateType(sym::Ctx ctx, const ast::TypePtr &type) {
+  if (type) {
+    ValidVisitor visitor{ctx};
+    type->accept(visitor);
+  }
+}
