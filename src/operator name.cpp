@@ -12,6 +12,7 @@
 
 std::string_view stela::opName(const ast::AssignOp op) {
   switch (op) {
+    /* LCOV_EXCL_START */
     case ast::AssignOp::add:
       return "+=";
     case ast::AssignOp::sub:
@@ -34,7 +35,6 @@ std::string_view stela::opName(const ast::AssignOp op) {
       return "<<=";
     case ast::AssignOp::bit_shr:
       return ">>=";
-    /* LCOV_EXCL_START */
     default:
       assert(false);
       return "";
@@ -44,6 +44,7 @@ std::string_view stela::opName(const ast::AssignOp op) {
 
 std::string_view stela::opName(const ast::BinOp op) {
   switch (op) {
+    /* LCOV_EXCL_START */
     case ast::BinOp::bool_or:
       return "||";
     case ast::BinOp::bool_and:
@@ -82,7 +83,6 @@ std::string_view stela::opName(const ast::BinOp op) {
       return "%";
     case ast::BinOp::pow:
       return "**";
-    /* LCOV_EXCL_START */
     default:
       assert(false);
       return "";
@@ -92,13 +92,13 @@ std::string_view stela::opName(const ast::BinOp op) {
 
 std::string_view stela::opName(const ast::UnOp op) {
   switch (op) {
+    /* LCOV_EXCL_START */
     case ast::UnOp::neg:
       return "-";
     case ast::UnOp::bool_not:
       return "!";
     case ast::UnOp::bit_not:
       return "~";
-    /* LCOV_EXCL_START */
     default:
       assert(false);
       return "";

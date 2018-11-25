@@ -10,6 +10,7 @@
 
 std::ostream &stela::operator<<(std::ostream &stream, const Token::Type type) {
   switch (type) {
+    /* LCOV_EXCL_START */
     case Token::Type::keyword:
       return stream << "keyword";
     case Token::Type::identifier:
@@ -22,6 +23,10 @@ std::ostream &stela::operator<<(std::ostream &stream, const Token::Type type) {
       return stream << "character";
     case Token::Type::oper:
       return stream << "operator";
+    default:
+      assert(false);
+      return stream;
+    /* LCOV_EXCL_END */
   }
 }
 
@@ -122,24 +127,12 @@ std::string_view stela::ParseTokens::expectEitherOp(const std::string_view a, co
   return expectEither(Token::Type::oper, a, b);
 }
 
-void stela::ParseTokens::expectKeyword(const std::string_view view) {
-  expect(Token::Type::keyword, view);
-}
-
 bool stela::ParseTokens::peekType(const Token::Type type) const {
   return !empty() && front().type == type;
 }
 
-bool stela::ParseTokens::peekOpType() const {
-  return peekType(Token::Type::oper);
-}
-
 bool stela::ParseTokens::peekIdentType() const {
   return peekType(Token::Type::identifier);
-}
-
-bool stela::ParseTokens::peekOp(const std::string_view view) const {
-  return peekOpType() && front().view == view;
 }
 
 void stela::ParseTokens::extraSemi() {

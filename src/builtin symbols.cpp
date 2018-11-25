@@ -145,8 +145,10 @@ ast::BtnTypePtr stela::validOp(
   } else if (isArithOp(op)) {
     return checkType(isArithType, left);
   } else {
+    /* LCOV_EXCL_START */
     assert(false);
     return nullptr;
+    /* LCOV_EXCL_END */
   }
 }
 
@@ -163,8 +165,10 @@ bool stela::validOp(
   } else if (isBitwiseOp(op)) {
     return isBitwiseType(left->value);
   } else {
+    /* LCOV_EXCL_START */
     assert(false);
     return false;
+    /* LCOV_EXCL_END */
   }
 }
 

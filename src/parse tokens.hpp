@@ -51,13 +51,9 @@ public:
   std::string_view expectID();
   void expectOp(std::string_view);
   std::string_view expectEitherOp(std::string_view, std::string_view);
-  void expectKeyword(std::string_view);
   
   bool peekType(Token::Type) const;
-  bool peekOpType() const;
   bool peekIdentType() const;
-  
-  bool peekOp(std::string_view) const;
   
   void extraSemi();
 

@@ -1180,7 +1180,8 @@ TEST_GROUP(Semantics, {
   
   TEST(Expr - Diff types in array, {
     const char *source = R"(
-      let arr = [1, 1.0, true];
+      type StrongSint sint;
+      let arr: [StrongSint] = [1, make StrongSint 2];
     )";
     ASSERT_FAILS();
   });
@@ -1725,6 +1726,16 @@ TEST_GROUP(Semantics, {
       }
     )";
     ASSERT_SUCCEEDS();
+  });
+
+  TEST(Compound assign different types, {
+    const char *source = R"(
+      func test() {
+        var dst = 8;
+        dst *= 2.0;
+      }
+    )";
+    ASSERT_FAILS();
   });
 
   /*
