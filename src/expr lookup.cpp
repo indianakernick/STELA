@@ -126,30 +126,9 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
   return nullptr;
 }
 
-namespace {
-
-struct SymbolScope {
-  sym::Symbol *symbol;
-  sym::Scope *scope;
-};
-
-// find an identifier by traversing up the scopes
-SymbolScope findIdent(sym::Scope *scope, const sym::Name &name) {
-  if (sym::Symbol *symbol = find(scope, name)) {
-    return {symbol, scope};
-  }
-  if (sym::Scope *parent = scope->parent) {
-    return findIdent(parent, name);
-  } else {
-    return {nullptr, nullptr};
-  }
-}
-
-}
-
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
   sym::Scope *currentScope = ctx.man.cur();
-  const auto [symbol, scope] = findIdent(currentScope, name);
+  const auto [symbol, scope] = findScope(currentScope, name);
   if (symbol == nullptr) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }

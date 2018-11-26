@@ -330,7 +330,6 @@ TEST_GROUP(Semantics, {
   });
   
   TEST(Modules - Shadowing, {
-    // @TODO Should probably emit a warning or something
     const char *sourceA = R"(
       module ModA;
     
@@ -1566,6 +1565,27 @@ TEST_GROUP(Semantics, {
         fn: func(sint, Number) -> MyType;
       }];
       type AnotherType = LargeType;
+    )");
+  });
+  
+  TEST(Variable shadow with global, {
+    ASSERT_SUCCEEDS(R"(
+      let zero = 0;
+      
+      func fn() {
+        let zero = 11;
+      }
+    )");
+  });
+  
+  TEST(Type shadow within function, {
+    ASSERT_SUCCEEDS(R"(
+      func fn() {
+        type t sint;
+        {
+          type t real;
+        }
+      }
     )");
   });
 

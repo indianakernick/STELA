@@ -27,7 +27,7 @@ void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   log.status() << "Analysing module \"" << ast.name << "\"" << endlog;
   ScopeMan man{syms.scopes, syms.global};
-  man.enterScope(sym::ScopeType::ns);
+  man.enterScope(ast.name);
   syms.global = man.cur();
   traverse({syms.builtins, man, log}, ast.global);
   std::move(ast.global.begin(), ast.global.end(), std::back_inserter(syms.decls));

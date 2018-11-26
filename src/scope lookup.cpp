@@ -9,13 +9,14 @@
 #include "scope lookup.hpp"
 
 #include "compare types.hpp"
+#include "scope traverse.hpp"
 
 using namespace stela;
 
 namespace {
 
 ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type) {
-  if (sym::Symbol *symbol = find(scope, type.name)) {
+  if (sym::Symbol *symbol = find(scope, sym::Name{type.name})) {
     if (auto *alias = dynamic_cast<sym::TypeAlias *>(symbol)) {
       type.definition = alias->node.get();
       alias->referenced = true;
@@ -32,12 +33,23 @@ ast::TypeAlias *lookupTypeImpl(Log &log, sym::Scope *scope, ast::NamedType &type
 
 }
 
-sym::Symbol *stela::find(sym::Scope *scope, const ast::Name name) {
-  const auto iter = scope->table.find(sym::Name{name});
+sym::Symbol *stela::find(sym::Scope *scope, const sym::Name &name) {
+  const auto iter = scope->table.find(name);
   if (iter == scope->table.end()) {
     return nullptr;
   } else {
     return iter->second.get();
+  }
+}
+
+SymbolScope stela::findScope(sym::Scope *scope, const sym::Name &name) {
+  if (sym::Symbol *symbol = find(scope, name)) {
+    return {symbol, scope};
+  }
+  if (sym::Scope *parent = scope->parent) {
+    return findScope(parent, name);
+  } else {
+    return {nullptr, nullptr};
   }
 }
 
@@ -103,4 +115,19 @@ ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
   auto funcType = make_retain<ast::FuncType>();
   writeFuncType(*funcType, lam);
   return funcType;
+}
+
+void stela::checkIdentShadow(sym::Ctx ctx, const sym::Name &name, const Loc loc) {
+  const auto [symbol, scope] = findScope(ctx.man.cur()->parent, name);
+  if (symbol) {
+    if (scope->type == sym::ScopeType::ns) {
+      ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
+        << scope->module << ':' << symbol->loc << endlog;
+    } else {
+      sym::Scope *global = findNearest(sym::ScopeType::ns, ctx.man.cur());
+      assert(global);
+      ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
+        << global->module << ':' << symbol->loc << endlog;
+    }
+  }
 }

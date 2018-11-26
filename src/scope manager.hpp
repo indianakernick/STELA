@@ -20,8 +20,11 @@ public:
   
   ScopeMan(sym::Scopes &, sym::Scope *);
   
-  sym::Scope *enterScope(sym::ScopeType);
-  sym::Scope *enterScope(sym::ScopeType, sym::Symbol *);
+  template <typename... Args>
+  sym::Scope *enterScope(Args &&... args) {
+    return pushScope(std::make_unique<sym::Scope>(scope, std::forward<Args>(args)...));
+  }
+  
   void leaveScope();
   sym::Scope *cur() const;
 

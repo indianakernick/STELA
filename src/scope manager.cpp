@@ -17,14 +17,6 @@ ScopeMan::ScopeMan(sym::Scopes &scopes, sym::Scope *scope)
   assert(scope);
 }
 
-sym::Scope *ScopeMan::enterScope(sym::ScopeType type) {
-  return pushScope(std::make_unique<sym::Scope>(scope, type));
-}
-
-sym::Scope *ScopeMan::enterScope(sym::ScopeType type, sym::Symbol *symbol) {
-  return pushScope(std::make_unique<sym::Scope>(scope, type, symbol));
-}
-
 void ScopeMan::leaveScope() {
   assert(scope);
   scope = scope->parent;

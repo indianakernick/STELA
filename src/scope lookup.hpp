@@ -14,7 +14,13 @@
 
 namespace stela {
 
-sym::Symbol *find(sym::Scope *, ast::Name);
+struct SymbolScope {
+  sym::Symbol *symbol;
+  sym::Scope *scope;
+};
+
+sym::Symbol *find(sym::Scope *, const sym::Name &);
+SymbolScope findScope(sym::Scope *, const sym::Name &);
 
 ast::TypeAlias *lookupTypeName(sym::Ctx, ast::NamedType &);
 ast::TypePtr lookupStrongType(sym::Ctx, const ast::TypePtr &);
@@ -27,6 +33,8 @@ retain_ptr<Type> lookupConcrete(const sym::Ctx ctx, const ast::TypePtr &type) {
 
 ast::TypePtr getFuncType(Log &, ast::Func &, Loc);
 ast::TypePtr getLambdaType(sym::Ctx, ast::Lambda &);
+
+void checkIdentShadow(sym::Ctx, const sym::Name &, Loc);
 
 }
 

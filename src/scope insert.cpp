@@ -90,6 +90,7 @@ void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
     ctx.log.error(symbol->loc) << "Redefinition of symbol \"" << name
       << "\" previously declared at " << iter->second->loc << fatal;
   } else {
+    checkIdentShadow(ctx, name, symbol->loc);
     ctx.man.cur()->table.insert({name, std::move(symbol)});
   }
 }
@@ -127,6 +128,7 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
         << symbol->loc << fatal;
     }
   }
+  checkIdentShadow(ctx, sym::Name{func.name}, func.loc);
   sym::Func *const ret = funcSym.get();
   ctx.man.cur()->table.insert({sym::Name{func.name}, std::move(funcSym)});
   return ret;
