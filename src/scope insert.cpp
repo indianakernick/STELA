@@ -155,6 +155,7 @@ void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
 sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
   auto lamSym = std::make_unique<sym::Lambda>();
   lamSym->loc = lam.loc;
+  lamSym->referenced = true;
   lamSym->params = convertParams(ctx, lam.params);
   lamSym->ret = convert(ctx, lam.ret, ast::ParamRef::value);
   lamSym->node = {retain, &lam};
