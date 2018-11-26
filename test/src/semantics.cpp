@@ -23,7 +23,7 @@ Symbols createSym(const std::string_view source, LogBuf &log) {
   return syms;
 }
 
-AST makeModuleAST(const ast::Name name, std::vector<ast::Name> &&imports) {
+AST makeModuleAST(const ast::Name name, ast::Names &&imports) {
   AST ast;
   ast.name = name;
   ast.imports = std::move(imports);

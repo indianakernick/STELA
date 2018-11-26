@@ -79,6 +79,8 @@ add_library(STELA STATIC
         "src/plain format.cpp"
         "src/symbol desc.cpp"
         "src/symbol desc.hpp"
+        "src/check scopes.cpp"
+        "src/check scopes.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

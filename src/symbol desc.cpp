@@ -10,18 +10,18 @@
 
 #include <cassert>
 
-std::string_view stela::symbolDesc(sym::Symbol *const symbol) {
+std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
   assert(symbol);
-  if (auto *type = dynamic_cast<sym::TypeAlias *>(symbol)) {
+  if (auto *type = dynamic_cast<const sym::TypeAlias *>(symbol)) {
     return "type";
   }
-  if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
+  if (auto *object = dynamic_cast<const sym::Object *>(symbol)) {
     return "variable";
   }
-  if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
+  if (auto *func = dynamic_cast<const sym::Func *>(symbol)) {
     return "function";
   }
-  if (auto *lambda = dynamic_cast<sym::Lambda *>(symbol)) {
+  if (auto *lambda = dynamic_cast<const sym::Lambda *>(symbol)) {
     return "lambda";
   }
   /* LCOV_EXCL_START */

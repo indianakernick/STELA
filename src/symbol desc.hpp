@@ -13,7 +13,7 @@
 
 namespace stela {
 
-std::string_view symbolDesc(sym::Symbol *);
+std::string_view symbolDesc(const sym::Symbol *);
 
 }
 

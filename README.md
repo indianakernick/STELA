@@ -181,7 +181,6 @@ let Choice_yes = 1;
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
    * `expected bool expression but got byte expression`
-   * raise warnings about unused symbols (`unused variable "myVar"`)
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)
    * do we need array slices? String literal should be a slice

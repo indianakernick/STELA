@@ -10,6 +10,7 @@
 
 #include "traverse.hpp"
 #include "log output.hpp"
+#include "check scopes.hpp"
 #include "scope manager.hpp"
 #include "builtin symbols.hpp"
 #include "syntax analysis.hpp"
@@ -23,8 +24,10 @@ Symbols stela::initModules(LogBuf &) {
   return syms;
 }
 
-void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
-  Log log{buf, LogCat::semantic};
+namespace {
+
+void compileModuleImpl(Symbols &syms, AST &ast, Log &log) {
+  log.module({});
   log.status() << "Analysing module \"" << ast.name << "\"" << endlog;
   log.module(ast.name);
   ScopeMan man{syms.scopes, syms.global};
@@ -35,8 +38,18 @@ void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   ast.global.clear();
 }
 
+}
+
+void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
+  Log log{buf, LogCat::semantic};
+  compileModuleImpl(syms, ast, log);
+  checkScopes(log, syms);
+}
+
 void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {
+  Log log{buf, LogCat::semantic};
   for (const size_t index : order) {
-    compileModule(syms, asts[index], buf);
+    compileModuleImpl(syms, asts[index], log);
   }
+  checkScopes(log, syms);
 }
