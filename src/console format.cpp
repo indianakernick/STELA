@@ -71,7 +71,7 @@ void write(const stela::ConStyle &style, const std::string_view text) {
 
 void repeat(const char c, uint32_t count) {
   while (count--) {
-    std::cout << c;
+    std::cout.put(c);
   }
 }
 

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 # need 3.8 for cxx_std_17
 # need 3.9 for IPO
-# I commented cxx_std_17 and tested successfully with cmake 3.2
 project(STELA)
 
 find_package(Git REQUIRED)
@@ -21,6 +20,7 @@ add_library(STELA STATIC
         "include/STELA/html format.hpp"
         "include/STELA/modules.hpp"
         "include/STELA/retain ptr.hpp"
+        "include/STELA/plain format.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -76,6 +76,7 @@ add_library(STELA STATIC
         "src/expr lookup.hpp"
         "src/expr stack.cpp"
         "src/expr stack.hpp"
+        "src/plain format.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

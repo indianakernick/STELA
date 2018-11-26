@@ -11,6 +11,7 @@
 #include <fstream>
 #include "macros.hpp"
 #include <STELA/html format.hpp>
+#include <STELA/plain format.hpp>
 #include <STELA/console format.hpp>
 
 TEST_GROUP(Format, {
@@ -158,6 +159,16 @@ func anotherDummy(dir: Dir) {
   TEST(Get tokens, {
     tokens = stela::format(source, log);
     ASSERT_FALSE(tokens.empty());
+  });
+  
+  TEST(Plain string, {
+    std::string str = stela::plainFormat(tokens);
+    ASSERT_FALSE(str.empty());
+    std::cout << str;
+  });
+  
+  TEST(Plain stream, {
+    stela::plainFormat(std::cout, tokens);
   });
   
   TEST(Console, {
