@@ -13,7 +13,7 @@
 
 namespace stela {
 
-void traverse(sym::Ctx, const sym::Module &);
+void traverse(sym::Ctx, const ast::Decls &);
 void traverse(sym::Ctx, const ast::Block &);
 
 }

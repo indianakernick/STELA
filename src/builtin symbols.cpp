@@ -176,11 +176,8 @@ bool stela::validSubscript(const ast::BtnTypePtr &index) {
   return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
 }
 
-sym::Module stela::makeBuiltinModule(sym::Builtins &btn) {
+sym::ScopePtr stela::makeBuiltinModule(sym::Builtins &btn) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::ScopeType::ns);
-  sym::Module module;
   insertTypes(scope->table, btn);
-  btn.scope = scope.get();
-  module.scopes.push_back(std::move(scope));
-  return module;
+  return scope;
 }

@@ -18,29 +18,24 @@ using namespace stela;
 
 Symbols stela::initModules(LogBuf &) {
   Symbols syms;
-  syms.modules.insert({"$builtin", makeBuiltinModule(syms.builtins)});
+  syms.scopes.push_back(makeBuiltinModule(syms.builtins));
+  syms.global = syms.scopes.back().get();
   return syms;
 }
 
 void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
-  if (syms.modules.find(sym::Name{ast.name}) != syms.modules.cend()) {
-    log.error() << "Module \"" << ast.name << "\" has already been compiled" << fatal;
-  }
   log.status() << "Analysing module \"" << ast.name << "\"" << endlog;
-  sym::Module module;
-  module.decls = std::move(ast.global);
-  ScopeMan man{module.scopes, syms.builtins.scope};
+  ScopeMan man{syms.scopes, syms.global};
   man.enterScope(sym::ScopeType::ns);
-  traverse({syms.modules, syms.builtins, man, log}, module);
-  syms.modules.emplace(ast.name, std::move(module));
+  syms.global = man.cur();
+  traverse({syms.builtins, man, log}, ast.global);
+  std::move(ast.global.begin(), ast.global.end(), std::back_inserter(syms.decls));
+  ast.global.clear();
 }
 
 void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {
-  syms.modules.reserve(1 + asts.size());
   for (const size_t index : order) {
     compileModule(syms, asts[index], buf);
   }
 }
-
-#include "retain ptr.hpp"

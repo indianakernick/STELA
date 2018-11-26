@@ -15,7 +15,6 @@
 namespace stela {
 
 sym::Symbol *find(sym::Scope *, ast::Name);
-sym::Scope *getModuleScope(sym::Ctx, ast::Name, Loc);
 
 ast::TypeAlias *lookupTypeName(sym::Ctx, ast::NamedType &);
 ast::TypePtr lookupStrongType(sym::Ctx, const ast::TypePtr &);

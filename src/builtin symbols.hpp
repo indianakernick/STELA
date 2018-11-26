@@ -25,7 +25,7 @@ retain_ptr<ast::BtnType> validOp(
 bool validOp(ast::AssignOp, const ast::BtnTypePtr &, const ast::BtnTypePtr &);
 bool validSubscript(const ast::BtnTypePtr &);
 
-sym::Module makeBuiltinModule(sym::Builtins &);
+sym::ScopePtr makeBuiltinModule(sym::Builtins &);
 
 }
 

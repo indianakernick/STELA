@@ -218,9 +218,9 @@ private:
 
 }
 
-void stela::traverse(sym::Ctx ctx, const sym::Module &module) {
+void stela::traverse(sym::Ctx ctx, const ast::Decls &decls) {
   Visitor visitor{ctx};
-  for (const ast::DeclPtr &decl : module.decls) {
+  for (const ast::DeclPtr &decl : decls) {
     decl->accept(visitor);
   }
 }

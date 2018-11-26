@@ -39,19 +39,34 @@ TEST_GROUP(Semantics, {
   
   TEST(Empty source, {
     const Symbols syms = createSym("", log);
-    ASSERT_EQ(syms.modules.size(), 2);
+    ASSERT_TRUE(syms.decls.empty());
+    ASSERT_EQ(syms.scopes.size(), 2);
+    ASSERT_EQ(syms.global, syms.scopes[1].get());
+    ASSERT_EQ(syms.global->parent, syms.scopes[0].get());
+    ASSERT_FALSE(syms.global->parent->parent);
     
-    auto btn = syms.modules.find("$builtin");
-    ASSERT_NE(btn, syms.modules.end());
-    const sym::Module &builtin = btn->second;
-    ASSERT_EQ(builtin.scopes.size(), 1);
-    ASSERT_EQ(builtin.decls.size(), 0);
+    ASSERT_EQ(syms.scopes[0]->table.size(), 6);
+    ASSERT_TRUE(syms.scopes[1]->table.empty());
+  });
+  
+  TEST(Modules - Scope graph, {
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(makeModuleAST("a", {}));
+    asts.push_back(makeModuleAST("b", {"a"}));
+    ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
     
-    auto mayn = syms.modules.find("main");
-    ASSERT_NE(mayn, syms.modules.end());
-    const sym::Module &main = mayn->second;
-    ASSERT_EQ(main.scopes.size(), 1);
-    ASSERT_EQ(main.decls.size(), 0);
+    ASSERT_TRUE(syms.decls.empty());
+    ASSERT_EQ(syms.scopes.size(), 3);
+    ASSERT_EQ(syms.global, syms.scopes[2].get());
+    ASSERT_EQ(syms.global->parent, syms.scopes[1].get());
+    ASSERT_EQ(syms.global->parent->parent, syms.scopes[0].get());
+    ASSERT_FALSE(syms.global->parent->parent->parent);
+    
+    ASSERT_EQ(syms.scopes[0]->table.size(), 6);
+    ASSERT_TRUE(syms.scopes[1]->table.empty());
+    ASSERT_TRUE(syms.scopes[2]->table.empty());
   });
   
   TEST(Modules - Regular, {
@@ -138,21 +153,6 @@ TEST_GROUP(Semantics, {
     ASSERT_THROWS(findModuleOrder(asts, external, log), FatalError);
   });
   
-  TEST(Modules - Already compiled, {
-    const char *source = R"(
-      module a;
-    )";
-    Symbols syms = initModules(log);
-    {
-      AST ast = createAST(source, log);
-      compileModule(syms, ast, log);
-    }
-    {
-      AST ast = createAST(source, log);
-      ASSERT_THROWS(compileModule(syms, ast, log), FatalError);
-    }
-  });
-  
   TEST(Modules - Import type, {
     const char *sourceA = R"(
       module ModA;
@@ -166,11 +166,11 @@ TEST_GROUP(Semantics, {
     
       import ModA;
     
-      type CoolNumber = ModA::SpecialNumber;
-      type Number = CoolNumber;
+      type CoolNumber = SpecialNumber;
+      type GreatNumber = CoolNumber;
     
       func main() {
-        let n: Number = 5.0;
+        let n: GreatNumber = 5.0;
         let r: real = n;
       }
     )";
@@ -198,7 +198,7 @@ TEST_GROUP(Semantics, {
       import ModA;
     
       func main() {
-        let n: real = ModA::five;
+        let n: real = five;
       }
     )";
     
@@ -227,7 +227,7 @@ TEST_GROUP(Semantics, {
       import ModA;
     
       func main() {
-        let n: real = ModA::getFive();
+        let n: real = getFive();
       }
     )";
     
@@ -238,10 +238,6 @@ TEST_GROUP(Semantics, {
     const ModuleOrder order = findModuleOrder(asts, log);
     compileModules(syms, order, asts, log);
   });
-  
-  /*
-  @TODO I completely overlooked this!
-  ADL?
   
   TEST(Modules - Import member function, {
     const char *sourceA = R"(
@@ -258,8 +254,8 @@ TEST_GROUP(Semantics, {
       import ModA;
     
       func main() {
-        var n = 17.0;
-        n.half();
+        let fourteen = 14.0;
+        let seven = fourteen.half();
       }
     )";
     
@@ -270,7 +266,6 @@ TEST_GROUP(Semantics, {
     const ModuleOrder order = findModuleOrder(asts, log);
     compileModules(syms, order, asts, log);
   });
-  */
   
   TEST(Modules - Import struct, {
     const char *sourceA = R"(
@@ -297,8 +292,8 @@ TEST_GROUP(Semantics, {
       import ModA;
     
       func main() {
-        let vec: ModA::Vec2 = ModA::getVec2();
-        let x: ModA::Number = vec.x;
+        let vec: Vec2 = getVec2();
+        let x: Number = vec.x;
         let y: real = vec.y;
       }
     )";
@@ -315,7 +310,7 @@ TEST_GROUP(Semantics, {
     const char *sourceA = R"(
       module ModA;
     
-      type Number = ModB::Number;
+      type Number = Number;
     )";
     
     const char *sourceB = R"(
@@ -332,6 +327,43 @@ TEST_GROUP(Semantics, {
     asts.push_back(createAST(sourceA, log));
     const ModuleOrder order = findModuleOrder(asts, log);
     ASSERT_THROWS(compileModules(syms, order, asts, log), FatalError);
+  });
+  
+  TEST(Modules - Shadowing, {
+    const char *sourceA = R"(
+      module ModA;
+    
+      type Number = real;
+      func fn() -> real {
+        return 0.0;
+      }
+      let const = 0.0;
+    )";
+    
+    const char *sourceB = R"(
+      module ModB;
+    
+      import ModA;
+    
+      type Number = sint;
+      func fn() -> sint {
+        return 0;
+      }
+      let const = 0;
+    
+      func test() {
+        let a: sint = make Number {};
+        let b: sint = fn();
+        let c: sint = const;
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
   });
   
   log.pri(LogPri::warning);

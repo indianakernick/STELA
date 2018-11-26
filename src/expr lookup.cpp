@@ -148,7 +148,7 @@ SymbolScope findIdent(sym::Scope *scope, const sym::Name &name) {
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
-  sym::Scope *currentScope = getModuleScope(ctx, module, loc);
+  sym::Scope *currentScope = ctx.man.cur();
   const auto [symbol, scope] = findIdent(currentScope, name);
   if (symbol == nullptr) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;

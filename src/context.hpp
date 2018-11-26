@@ -16,7 +16,6 @@
 namespace stela::sym {
 
 struct Ctx {
-  sym::Modules &mods;
   const sym::Builtins &btn;
   ScopeMan &man;
   Log &log;

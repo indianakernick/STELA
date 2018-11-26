@@ -141,13 +141,6 @@ struct Lambda final : Symbol {
   std::vector<Object *> captures;
 };
 
-struct Module {
-  ast::Decls decls;
-  Scopes scopes;
-};
-
-using Modules = std::unordered_map<Name, Module>;
-
 struct Builtins {
   // Builtin types
   ast::BtnTypePtr Bool;
@@ -159,9 +152,6 @@ struct Builtins {
   
   // Alias of [char] used as the type of string literals
   ast::TypePtr string;
-  
-  // Global scope of the builtin module
-  sym::Scope *scope;
 };
 
 }
@@ -169,8 +159,10 @@ struct Builtins {
 namespace stela {
 
 struct Symbols {
-  sym::Modules modules;
+  ast::Decls decls;
+  sym::Scopes scopes;
   sym::Builtins builtins;
+  sym::Scope *global;
 };
 
 }

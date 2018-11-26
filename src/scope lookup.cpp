@@ -41,23 +41,11 @@ sym::Symbol *stela::find(sym::Scope *scope, const ast::Name name) {
   }
 }
 
-sym::Scope *stela::getModuleScope(sym::Ctx ctx, const ast::Name module, const Loc loc) {
-  if (module.empty()) {
-    return ctx.man.cur();
-  }
-  auto iter = ctx.mods.find(sym::Name{module});
-  if (iter == ctx.mods.end()) {
-    ctx.log.error(loc) << "Module \"" << module << "\" is not imported by this module" << fatal;
-  }
-  return iter->second.scopes[0].get();
-}
-
 ast::TypeAlias *stela::lookupTypeName(sym::Ctx ctx, ast::NamedType &type) {
   if (type.definition) {
     return type.definition;
   } else {
-    sym::Scope *scope = getModuleScope(ctx, type.module, type.loc);
-    return lookupTypeImpl(ctx.log, scope, type);
+    return lookupTypeImpl(ctx.log, ctx.man.cur(), type);
   }
 }
 
