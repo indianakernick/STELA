@@ -58,12 +58,12 @@ TEST_GROUP(Lexer, {
   StreamLog log;
 
   TEST(Empty source, {
-    const Tokens tokens = lex("", log);
+    const Tokens tokens = tokenize("", log);
     ASSERT_TRUE(tokens.empty());
   });
 
   TEST(Hello world, {
-    const Tokens tokens = lex(R"(func main(argc: Int) {
+    const Tokens tokens = tokenize(R"(func main(argc: Int) {
       print("Hello world!");
       return 0;
     })", log);
@@ -108,7 +108,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Simple strings, {
-    const Tokens tokens = lex(
+    const Tokens tokens = tokenize(
       R"( "string" "string \" with ' quotes" )",
       log
     );
@@ -123,11 +123,11 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated string, {
-    ASSERT_THROWS(lex("\"unterminated", log), FatalError);
+    ASSERT_THROWS(tokenize("\"unterminated", log), FatalError);
   });
   
   TEST(Simple characters, {
-    const Tokens tokens = lex(R"( 'c' '\'' )", log);
+    const Tokens tokens = tokenize(R"( 'c' '\'' )", log);
     
     ASSERT_EQ(tokens.size(), 2);
     
@@ -139,11 +139,11 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated character, {
-    ASSERT_THROWS(lex("'u", log), FatalError);
+    ASSERT_THROWS(tokenize("'u", log), FatalError);
   });
   
   TEST(Single line comment, {
-    const Tokens tokens = lex(R"(
+    const Tokens tokens = tokenize(R"(
     // this is a comment
     
     // another comment // with // more // slashes //
@@ -152,7 +152,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Multi line comment, {
-    const Tokens tokens = lex(R"(
+    const Tokens tokens = tokenize(R"(
     /**/
     
     /* cool comment */
@@ -169,7 +169,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Nested multi line comment, {
-    const Tokens tokens = lex(R"(
+    const Tokens tokens = tokenize(R"(
     
     /*
     
@@ -194,13 +194,13 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Unterminated multi line comment, {
-    ASSERT_THROWS(lex("/*", log), FatalError);
-    ASSERT_THROWS(lex("/* /*", log), FatalError);
-    ASSERT_THROWS(lex("/* /* */", log), FatalError);
+    ASSERT_THROWS(tokenize("/*", log), FatalError);
+    ASSERT_THROWS(tokenize("/* /*", log), FatalError);
+    ASSERT_THROWS(tokenize("/* /* */", log), FatalError);
   });
   
   TEST(Keywords in identifiers, {
-    const Tokens tokens = lex(
+    const Tokens tokens = tokenize(
       "staticIdent iforeturn in_that_case continue_to_break let15 vars",
       log
     );
@@ -214,7 +214,7 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Number literals, {
-    const Tokens tokens = lex(
+    const Tokens tokens = tokenize(
       // ints
       "0 1 2 -0 -1 -2 00 01 02 -00 -01 -02 0x0 0x1 0x2 -0x0 -0x1 -0x2\n"
       // uint64 max
@@ -236,27 +236,27 @@ TEST_GROUP(Lexer, {
   });
   
   TEST(Byte out of range, {
-    ASSERT_THROWS(lex("256b", log), FatalError);
+    ASSERT_THROWS(tokenize("256b", log), FatalError);
   });
   
   TEST(Char out of range, {
-    ASSERT_THROWS(lex("128c", log), FatalError);
+    ASSERT_THROWS(tokenize("128c", log), FatalError);
   });
   
   /*TEST(Real out of range, {
-    ASSERT_THROWS(lex("4.40282e+38r", log), FatalError);
+    ASSERT_THROWS(tokenize("4.40282e+38r", log), FatalError);
   });*/
   
   TEST(Sint out of range, {
-    ASSERT_THROWS(lex("2147483648s", log), FatalError);
+    ASSERT_THROWS(tokenize("2147483648s", log), FatalError);
   });
   
   TEST(Uint out of range, {
-    ASSERT_THROWS(lex("4294967296u", log), FatalError);
+    ASSERT_THROWS(tokenize("4294967296u", log), FatalError);
   });
   
   TEST(Invalid token, {
-    ASSERT_THROWS(lex("@", log), FatalError);
+    ASSERT_THROWS(tokenize("@", log), FatalError);
   });
 })
 

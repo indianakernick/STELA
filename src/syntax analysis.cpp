@@ -53,5 +53,5 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
 }
 
 AST stela::createAST(const std::string_view source, LogBuf &buf) {
-  return createAST(lex(source, buf), buf);
+  return createAST(tokenize(source, buf), buf);
 }
