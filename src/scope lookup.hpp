@@ -21,6 +21,7 @@ struct SymbolScope {
 
 sym::Symbol *find(sym::Scope *, const sym::Name &);
 SymbolScope findScope(sym::Scope *, const sym::Name &);
+ast::Name moduleName(sym::Scope *);
 
 ast::TypeAlias *lookupTypeName(sym::Ctx, ast::NamedType &);
 ast::TypePtr lookupStrongType(sym::Ctx, const ast::TypePtr &);

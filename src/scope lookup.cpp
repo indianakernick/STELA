@@ -53,6 +53,12 @@ SymbolScope stela::findScope(sym::Scope *scope, const sym::Name &name) {
   }
 }
 
+ast::Name stela::moduleName(sym::Scope *scope) {
+  sym::Scope *const global = findNearest(sym::ScopeType::ns, scope);
+  assert(global);
+  return global->module;
+}
+
 ast::TypeAlias *stela::lookupTypeName(sym::Ctx ctx, ast::NamedType &type) {
   if (type.definition) {
     return type.definition;
@@ -117,17 +123,12 @@ ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
   return funcType;
 }
 
+
+
 void stela::checkIdentShadow(sym::Ctx ctx, const sym::Name &name, const Loc loc) {
   const auto [symbol, scope] = findScope(ctx.man.cur()->parent, name);
   if (symbol) {
-    if (scope->type == sym::ScopeType::ns) {
-      ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
-        << scope->module << ':' << symbol->loc << endlog;
-    } else {
-      sym::Scope *global = findNearest(sym::ScopeType::ns, ctx.man.cur());
-      assert(global);
-      ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
-        << global->module << ':' << symbol->loc << endlog;
-    }
+    ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
+      << moduleName(scope) << ':' << symbol->loc << endlog;
   }
 }

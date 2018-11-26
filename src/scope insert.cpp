@@ -88,7 +88,8 @@ void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
   const auto iter = ctx.man.cur()->table.find(name);
   if (iter != ctx.man.cur()->table.end()) {
     ctx.log.error(symbol->loc) << "Redefinition of symbol \"" << name
-      << "\" previously declared at " << iter->second->loc << fatal;
+      << "\" previously declared at " << moduleName(ctx.man.cur()) << ':'
+      << iter->second->loc << fatal;
   } else {
     checkIdentShadow(ctx, name, symbol->loc);
     ctx.man.cur()->table.insert({name, std::move(symbol)});
@@ -120,12 +121,13 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
     if (dupFunc) {
       if (sameParams(ctx, dupFunc->params, funcSym->params)) {
         ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
-          << "\" previously declared at " << symbol->loc << fatal;
+          << "\" previously declared at " << moduleName(ctx.man.cur()) << ':'
+          << symbol->loc << fatal;
       }
     } else {
       ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
         << "\" previously declared (as a different kind of symbol) at "
-        << symbol->loc << fatal;
+        << moduleName(ctx.man.cur()) << ':' << symbol->loc << fatal;
     }
   }
   checkIdentShadow(ctx, sym::Name{func.name}, func.loc);

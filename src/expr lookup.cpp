@@ -42,7 +42,8 @@ sym::Func *ExprLookup::lookupFun(
       auto *func = dynamic_cast<sym::Func *>(symbol);
       if (func == nullptr) {
         ctx.log.error(loc) << "Calling \"" << key.name
-          << "\" but it is not a function. " << symbol->loc << fatal;
+          << "\" declarared at " << moduleName(ctx.man.cur()) << ':'
+          << symbol->loc << " but it is not a function" << fatal;
       }
       if (compatParams(ctx, func->params, key.args)) {
         func->referenced = true;
