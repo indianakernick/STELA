@@ -9,6 +9,7 @@
 #include "infer type.hpp"
 
 #include "traverse.hpp"
+#include "expr lookup.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
 #include "operator name.hpp"

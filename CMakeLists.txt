@@ -72,6 +72,10 @@ add_library(STELA STATIC
         "src/compare types.cpp"
         "src/compare types.hpp"
         "src/modules.cpp"
+        "src/expr lookup.cpp"
+        "src/expr lookup.hpp"
+        "src/expr stack.cpp"
+        "src/expr stack.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
