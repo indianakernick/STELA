@@ -66,10 +66,6 @@ let equal = isEqual;
 
 let ray = ['r', 'a', 'y'];
 
-let pi = MyConstants::pi;
-
-type Matrix = MyTypes::Matrix;
-
 func sort(array: [Int], pred: func(Int, Int)->Bool) {
   // sorting...
 }

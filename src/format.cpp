@@ -45,13 +45,7 @@ public:
     }
   }
   void visit(ast::NamedType &type) override {
-    if (type.module.empty()) {
-      push(Tag::type_name, type.name);
-    } else {
-      push(Tag::plain, type.module);
-      pushOp("::");
-      push(Tag::type_name, type.name);
-    }
+    push(Tag::type_name, type.name);
   }
   void visit(ast::StructType &strt) override {
     pushKey("struct");
@@ -105,13 +99,7 @@ public:
     pushOp("]");
   }
   void visit(ast::Identifier &id) override {
-    if (id.module.empty()) {
-      push(Tag::plain, id.name);
-    } else {
-      push(Tag::plain, id.module);
-      pushOp("::");
-      push(Tag::plain, id.name);
-    }
+    push(Tag::plain, id.name);
   }
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);

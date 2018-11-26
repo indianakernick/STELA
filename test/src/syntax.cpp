@@ -172,29 +172,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(alias->name, "dummy");
     
     auto *named = ASSERT_DOWN_CAST(const NamedType, alias->type);
-    ASSERT_TRUE(named->module.empty());
     ASSERT_EQ(named->name, "name");
-  });
-  
-  TEST(Type - Name with module, {
-    const char *source = R"(
-      type dummy = mod::name;
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    auto *alias = ASSERT_DOWN_CAST(const TypeAlias, ast.global[0]);
-    ASSERT_EQ(alias->name, "dummy");
-    
-    auto *named = ASSERT_DOWN_CAST(const NamedType, alias->type);
-    ASSERT_EQ(named->module, "mod");
-    ASSERT_EQ(named->name, "name");
-  });
-  
-  TEST(Type - Module without name, {
-    const char *source = R"(
-      type dummy = mod::;
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Type - Array of functions, {
@@ -835,7 +813,6 @@ TEST_GROUP(Syntax, {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1]);
       ASSERT_EQ(let->name, "alsoFive");
       auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr);
-      ASSERT_TRUE(ident->module.empty());
       ASSERT_EQ(ident->name, "five");
     }
   });
@@ -892,27 +869,6 @@ TEST_GROUP(Syntax, {
           IS_NUM(make_real->expr, "6");
         IS_NUM(div->right, "3.0");
     }
-  });
-  
-  TEST(Expr - Module identifier, {
-    const char *source = R"(
-      let constant = mod::name;
-    )";
-    const AST ast = createAST(source, log);
-    ASSERT_EQ(ast.global.size(), 1);
-    
-    auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0]);
-    ASSERT_EQ(let->name, "constant");
-    auto *ident = ASSERT_DOWN_CAST(const Identifier, let->expr);
-    ASSERT_EQ(ident->module, "mod");
-    ASSERT_EQ(ident->name, "name");
-  });
-  
-  TEST(Expr - Module no identifier, {
-    const char *source = R"(
-      let constant = mod::;
-    )";
-    ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
   TEST(Expr - math, {

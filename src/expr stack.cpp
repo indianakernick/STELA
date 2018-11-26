@@ -29,8 +29,8 @@ void ExprStack::pushMemberExpr(const ast::TypePtr &type) {
   pushExpr(memberType(exprType, type));
 }
 
-void ExprStack::pushFunc(const sym::Name &name, sym::Scope *scope) {
-  exprs.push_back(Expr{ExprKind::free_fun, name, scope});
+void ExprStack::pushFunc(const sym::Name &name) {
+  exprs.push_back(Expr{ExprKind::free_fun, name});
 }
 
 ExprKind ExprStack::top() const {
@@ -80,15 +80,15 @@ sym::ExprType ExprStack::popExpr() {
   return exprType;
 }
 
-ExprStack::NameScope ExprStack::popFunc() {
+sym::Name ExprStack::popFunc() {
   assert(top() == ExprKind::free_fun);
-  NameScope nameScope{std::move(exprs.back().name), exprs.back().scope};
+  sym::Name name = std::move(exprs.back().name);
   exprs.pop_back();
-  return nameScope;
+  return name;
 }
 
 ExprStack::Expr::Expr(const ExprKind kind)
-  : kind{kind}, name{}, scope{nullptr} {
+  : kind{kind}, name{} {
   assert(
     kind == ExprKind::call ||
     kind == ExprKind::expr ||
@@ -97,13 +97,8 @@ ExprStack::Expr::Expr(const ExprKind kind)
 }
 
 ExprStack::Expr::Expr(const ExprKind kind, const sym::Name &name)
-  : kind{kind}, name{name}, scope{nullptr} {
-  assert(kind == ExprKind::member);
-}
-
-ExprStack::Expr::Expr(const ExprKind kind, const sym::Name &name, sym::Scope *scope)
-  : kind{kind}, name{name}, scope{scope} {
-  assert(kind == ExprKind::free_fun);
+  : kind{kind}, name{name} {
+  assert(kind == ExprKind::member || kind == ExprKind::free_fun);
 }
 
 void ExprStack::setExpr(const sym::ExprType type) {

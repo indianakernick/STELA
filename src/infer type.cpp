@@ -85,7 +85,7 @@ public:
   }
   void visit(ast::Identifier &id) override {
     lkp.expected(expected);
-    id.definition = lkp.lookupIdent(sym::Name{id.module}, sym::Name{id.name}, id.loc);
+    id.definition = lkp.lookupIdent(sym::Name{id.name}, id.loc);
   }
   void visit(ast::Ternary &tern) override {
     ast::TypePtr resultType = expected;

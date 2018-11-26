@@ -99,7 +99,6 @@ struct FuncType final : Type {
 struct TypeAlias;
 
 struct NamedType final : Type {
-  Name module;
   Name name;
   TypeAlias *definition = nullptr;
   
@@ -178,7 +177,6 @@ struct Subscript final : Expression {
 };
 
 struct Identifier final : Expression {
-  Name module;
   Name name;
   // either DeclAssign, Var or Let
   // lowest common base is Statement

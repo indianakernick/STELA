@@ -28,14 +28,7 @@ ast::ExprPtr parseIdent(ParseTokens &tok) {
   }
   auto ident = make_retain<ast::Identifier>();
   ident->loc = tok.loc();
-  const ast::Name name = tok.expectID();
-  if (tok.checkOp("::")) {
-    ident->module = name;
-    Context ctx = tok.context("after scope operator");
-    ident->name = tok.expectID();
-  } else {
-    ident->name = name;
-  }
+  ident->name = tok.expectID();
   return ident;
 }
 

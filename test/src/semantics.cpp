@@ -330,6 +330,7 @@ TEST_GROUP(Semantics, {
   });
   
   TEST(Modules - Shadowing, {
+    // @TODO Should probably emit a warning or something
     const char *sourceA = R"(
       module ModA;
     

@@ -27,7 +27,7 @@ public:
   void pushExpr(const sym::ExprType &);
   void pushMember(const sym::Name &);
   void pushMemberExpr(const ast::TypePtr &);
-  void pushFunc(const sym::Name &, sym::Scope *);
+  void pushFunc(const sym::Name &);
   
   ExprKind top() const;
   /// top == kind && below top == member && below below top != call
@@ -37,14 +37,10 @@ public:
   /// top == kind && below top == call
   bool call(ExprKind) const;
   
-  struct NameScope {
-    sym::Name name;
-    sym::Scope *scope;
-  };
   void popCall();
   sym::Name popMember();
   sym::ExprType popExpr();
-  NameScope popFunc();
+  sym::Name popFunc();
   
   void setExpr(sym::ExprType);
   void enterSubExpr();
@@ -54,11 +50,9 @@ private:
   struct Expr {
     ExprKind kind;
     sym::Name name;
-    sym::Scope *scope;
     
     explicit Expr(ExprKind);
     Expr(ExprKind, const sym::Name &);
-    Expr(ExprKind, const sym::Name &, sym::Scope *);
   };
   
   std::vector<Expr> exprs;

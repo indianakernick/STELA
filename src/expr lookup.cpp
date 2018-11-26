@@ -73,9 +73,9 @@ ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc loc) {
     return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
   }
   if (stack.call(ExprKind::free_fun)) {
-    const auto [name, scope] = stack.popFunc();
+    sym::Name name = stack.popFunc();
     const FunKey key {name, pushReceiver(sym::null_type, args)};
-    return popCallPushRet(lookupFun(scope, key, loc));
+    return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
   }
   if (stack.call(ExprKind::expr)) {
     sym::ExprType expr = stack.popExpr();
@@ -147,7 +147,7 @@ SymbolScope findIdent(sym::Scope *scope, const sym::Name &name) {
 
 }
 
-ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name &name, const Loc loc) {
+ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
   sym::Scope *currentScope = ctx.man.cur();
   const auto [symbol, scope] = findIdent(currentScope, name);
   if (symbol == nullptr) {
@@ -169,7 +169,7 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &module, const sym::Name
     return object->node.get();
   }
   if (stack.top() == ExprKind::call) {
-    stack.pushFunc(name, scope);
+    stack.pushFunc(name);
     return nullptr;
   }
   if (auto *func = dynamic_cast<sym::Func *>(symbol)) {

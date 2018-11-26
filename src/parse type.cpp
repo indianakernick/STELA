@@ -52,14 +52,7 @@ ast::TypePtr parseNamedType(ParseTokens &tok) {
   }
   auto namedType = make_retain<ast::NamedType>();
   namedType->loc = tok.loc();
-  const ast::Name name = tok.expectID();
-  if (tok.checkOp("::")) {
-    namedType->module = name;
-    Context ctx = tok.context("after scope operator");
-    namedType->name = tok.expectID();
-  } else {
-    namedType->name = name;
-  }
+  namedType->name = tok.expectID();
   return namedType;
 }
 
