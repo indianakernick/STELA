@@ -34,18 +34,6 @@ sym::Scope *ScopeMan::cur() const {
   return scope;
 }
 
-sym::Scope *ScopeMan::builtin() const {
-  assert(global()->parent);
-  assert(global()->parent->type == sym::ScopeType::ns);
-  return global()->parent;
-}
-
-sym::Scope *ScopeMan::global() const {
-  assert(!scopes.empty());
-  assert(scopes[0]->type == sym::ScopeType::ns);
-  return scopes[0].get();
-}
-
 sym::Scope *ScopeMan::pushScope(std::unique_ptr<sym::Scope> newScope) {
   scope = newScope.get();
   scopes.push_back(std::move(newScope));

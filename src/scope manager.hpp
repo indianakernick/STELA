@@ -24,8 +24,6 @@ public:
   sym::Scope *enterScope(sym::ScopeType, sym::Symbol *);
   void leaveScope();
   sym::Scope *cur() const;
-  sym::Scope *builtin() const;
-  sym::Scope *global() const;
 
 private:
   sym::Scopes &scopes;
