@@ -51,8 +51,10 @@ public:
   }
   sym::FuncParams argTypes(const ast::FuncArgs &args) {
     sym::FuncParams params;
+    params.reserve(args.size());
     for (const ast::ExprPtr &expr : args) {
-      // @TODO use visitValueExpr here
+      // Can't call visitValueExpr because we'll lose the receiver type from the
+      // expression stack
       params.push_back(getExprType(ctx, expr, nullptr));
     }
     return params;
@@ -205,11 +207,9 @@ public:
 
   sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
     expected = type;
-    // @TODO lkp state here should be same as...
     lkp.enterSubExpr();
     expr->accept(*this);
     return lkp.leaveSubExpr();
-    // lkp state here
   }
 
 private:

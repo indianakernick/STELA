@@ -118,7 +118,7 @@ void ExprStack::enterSubExpr() {
 sym::ExprType ExprStack::leaveSubExpr() {
   pop(ExprKind::expr);
   pop(ExprKind::subexpr);
-  return exprType;
+  return std::exchange(exprType, sym::null_type);
 }
 
 void ExprStack::pop(const ExprKind kind) {
