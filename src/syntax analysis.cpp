@@ -30,6 +30,7 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
   }
   
   log.status() << "Parsing module \"" << ast.name << "\"" << endlog;
+  log.module(ast.name);
   
   while (!tok.empty()) {
     if (tok.checkKeyword("import")) {

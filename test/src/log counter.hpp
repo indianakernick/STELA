@@ -28,8 +28,8 @@ private:
   uint32_t errorCount = 0;
   
   std::streambuf *getBuf(stela::LogCat, stela::LogPri) override;
-  void begin(stela::LogCat, stela::LogPri, stela::Loc) override;
-  void begin(stela::LogCat, stela::LogPri) override;
+  void begin(stela::LogCat, stela::LogPri, stela::LogMod, stela::Loc) override;
+  void begin(stela::LogCat, stela::LogPri, stela::LogMod) override;
   void end(stela::LogCat, stela::LogPri) override;
 };
 

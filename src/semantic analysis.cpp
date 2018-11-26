@@ -26,6 +26,7 @@ Symbols stela::initModules(LogBuf &) {
 void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
   Log log{buf, LogCat::semantic};
   log.status() << "Analysing module \"" << ast.name << "\"" << endlog;
+  log.module(ast.name);
   ScopeMan man{syms.scopes, syms.global};
   man.enterScope(ast.name);
   syms.global = man.cur();

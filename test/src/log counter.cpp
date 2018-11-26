@@ -10,6 +10,8 @@
 
 #include <cassert>
 
+using namespace stela;
+
 uint32_t CountLogs::verbose() const {
   return verboseCount;
 }
@@ -30,26 +32,26 @@ void CountLogs::reset() {
   verboseCount = infoCount = warnCount = errorCount = 0;
 }
 
-std::streambuf *CountLogs::getBuf(stela::LogCat, stela::LogPri) {
-  return stela::silentBuf();
+std::streambuf *CountLogs::getBuf(LogCat, LogPri) {
+  return silentBuf();
 }
 
-void CountLogs::begin(const stela::LogCat cat, const stela::LogPri pri, stela::Loc) {
-  begin(cat, pri);
+void CountLogs::begin(const LogCat cat, const LogPri pri, const LogMod mod, Loc) {
+  begin(cat, pri, mod);
 }
 
-void CountLogs::begin(stela::LogCat, const stela::LogPri pri) {
+void CountLogs::begin(LogCat, const LogPri pri, LogMod) {
   switch (pri) {
-    case stela::LogPri::verbose:
+    case LogPri::verbose:
       ++verboseCount;
       break;
-    case stela::LogPri::info:
+    case LogPri::info:
       ++infoCount;
       break;
-    case stela::LogPri::warning:
+    case LogPri::warning:
       ++warnCount;
       break;
-    case stela::LogPri::error:
+    case LogPri::error:
       ++errorCount;
       break;
     default:
@@ -57,4 +59,4 @@ void CountLogs::begin(stela::LogCat, const stela::LogPri pri) {
   }
 }
 
-void CountLogs::end(stela::LogCat, stela::LogPri) {}
+void CountLogs::end(LogCat, LogPri) {}

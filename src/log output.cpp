@@ -24,7 +24,11 @@ void stela::LogStream::operator<<(fatal_t) {
 }
 
 stela::Log::Log(LogBuf &buf, const LogCat cat)
-  : buf{buf}, category{cat} {}
+  : buf{buf}, cat{cat} {}
+
+void stela::Log::module(const LogMod module) {
+  mod = module;
+}
 
 stela::LogStream stela::Log::verbose(const Loc loc) {
   return log(LogPri::verbose, loc);
@@ -47,8 +51,8 @@ stela::LogStream stela::Log::error(const Loc loc) {
 }
 
 stela::LogStream stela::Log::log(const LogPri pri, const Loc loc) {
-  buf.beginLog(category, pri, loc);
-  return {buf, category, pri};
+  buf.beginLog(cat, pri, mod, loc);
+  return {buf, cat, pri};
 }
 
 stela::LogStream stela::Log::verbose() {
@@ -72,6 +76,6 @@ stela::LogStream stela::Log::error() {
 }
 
 stela::LogStream stela::Log::log(const LogPri pri) {
-  buf.beginLog(category, pri);
-  return {buf, category, pri};
+  buf.beginLog(cat, pri, mod);
+  return {buf, cat, pri};
 }

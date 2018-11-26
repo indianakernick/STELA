@@ -45,6 +45,8 @@ class Log {
 public:
   Log(LogBuf &, LogCat);
   
+  void module(LogMod);
+  
   LogStream verbose(Loc);
   LogStream status(Loc);
   LogStream info(Loc);
@@ -61,7 +63,8 @@ public:
   
 private:
   LogBuf &buf;
-  LogCat category;
+  LogCat cat;
+  LogMod mod;
 };
 
 }

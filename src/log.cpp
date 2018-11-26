@@ -14,6 +14,8 @@
 #include <iostream>
 #include <Simpleton/Utils/console color.hpp>
 
+using namespace stela;
+
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
   // Categories are adjectives
   switch (cat) {
@@ -83,15 +85,15 @@ void stela::LogBuf::pri(const LogPri newPri) {
   priority = newPri;
 }
 
-void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const Loc loc) {
+void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
   if (canLog(pri)) {
-    begin(cat, pri, loc);
+    begin(cat, pri, mod, loc);
   }
 }
 
-void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri) {
+void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const LogMod mod) {
   if (canLog(pri)) {
-    begin(cat, pri);
+    begin(cat, pri, mod);
   }
 }
 
@@ -123,16 +125,61 @@ std::streambuf *stela::StreamLog::getBuf(LogCat, LogPri) {
   return buf;
 }
 
-void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
-  std::ostringstream str;
-  str << loc;
-  std::ostream stream{buf};
-  stream << std::left << std::setw(8) << str.str();
-  begin(cat, pri);
+namespace {
+
+int ceilToMultiple(const int factor, const int num) {
+  assert(factor > 0);
+  return (num + factor - 1) / factor * factor;
 }
 
-void stela::StreamLog::begin(const LogCat cat, const LogPri pri) {
+int locationWidth(const size_t modWidth) {
+  return ceilToMultiple(8, static_cast<int>(modWidth) + 6);
+}
+
+void writeMod(std::ostream &stream, const LogMod mod) {
+  if (!mod.empty()) {
+    stream << std::left << std::setw(locationWidth(mod.size())) << mod;
+  }
+}
+
+void writeModLoc(std::ostream &stream, const LogMod mod, const Loc loc) {
+  std::ostringstream str;
+  if (!mod.empty()) {
+    str << mod << ':';
+  }
+  str << loc;
+  stream << std::left << std::setw(locationWidth(mod.size())) << str.str();
+}
+
+void priorityColor(const LogPri pri) {
+  if (pri == LogPri::verbose) {
+    std::cerr << con::text_magenta;
+  } else if (pri == LogPri::status) {
+    std::cerr << con::text_green;
+  } else if (pri == LogPri::info) {
+    std::cerr << con::text_blue;
+  } else if (pri == LogPri::warning) {
+    std::cerr << con::text_yellow;
+  } else if (pri == LogPri::error) {
+    std::cerr << con::text_red;
+  } else {
+    /* LCOV_EXCL_START */
+    assert(false);
+    /* LCOV_EXCL_END */
+  }
+}
+
+}
+
+void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
   std::ostream stream{buf};
+  writeModLoc(stream, mod, loc);
+  stream << cat << ' ' << pri << ": ";
+}
+
+void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const LogMod mod) {
+  std::ostream stream{buf};
+  writeMod(stream, mod);
   stream << cat << ' ' << pri << ": ";
 }
 
@@ -145,25 +192,20 @@ std::streambuf *stela::ColorLog::getBuf(LogCat, LogPri) {
   return std::cerr.rdbuf();
 }
 
-void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const Loc loc) {
-  std::ostringstream str;
-  str << loc;
-  std::cerr << con::bold << std::left << std::setw(8) << str.str() << con::no_bold_faint;
-  begin(cat, pri);
+void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
+  std::cerr << con::bold;
+  writeModLoc(std::cerr, mod, loc);
+  std::cerr << con::no_bold_faint;
+  priorityColor(pri);
+  std::cerr << cat << ' ' << pri;
+  std::cerr << con::text_default << ": " << con::italic;
 }
 
-void stela::ColorLog::begin(const LogCat cat, const LogPri pri) {
-  if (pri == LogPri::verbose) {
-    std::cerr << con::text_magenta;
-  } else if (pri == LogPri::status) {
-    std::cerr << con::text_green;
-  } else if (pri == LogPri::info) {
-    std::cerr << con::text_blue;
-  } else if (pri == LogPri::warning) {
-    std::cerr << con::text_yellow;
-  } else if (pri == LogPri::error) {
-    std::cerr << con::text_red;
-  }
+void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const LogMod mod) {
+  std::cerr << con::bold;
+  writeMod(std::cerr, mod);
+  std::cerr << con::no_bold_faint;
+  priorityColor(pri);
   std::cerr << cat << ' ' << pri;
   std::cerr << con::text_default << ": " << con::italic;
 }
@@ -175,6 +217,6 @@ void stela::ColorLog::end(LogCat, LogPri) {
 std::streambuf *stela::NoLog::getBuf(LogCat, LogPri) {
   return silentBuf();
 }
-void stela::NoLog::begin(LogCat, LogPri, Loc) {}
-void stela::NoLog::begin(LogCat, LogPri) {}
+void stela::NoLog::begin(LogCat, LogPri, LogMod, Loc) {}
+void stela::NoLog::begin(LogCat, LogPri, LogMod) {}
 void stela::NoLog::end(LogCat, LogPri) {}

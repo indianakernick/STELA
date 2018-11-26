@@ -11,6 +11,7 @@
 
 #include <iosfwd>
 #include <exception>
+#include <string_view>
 #include "location.hpp"
 
 namespace stela {
@@ -33,6 +34,9 @@ enum class LogPri : uint8_t {
   nothing
 };
 
+/// Logging module
+using LogMod = std::string_view;
+
 std::ostream &operator<<(std::ostream &, LogCat);
 std::ostream &operator<<(std::ostream &, LogPri);
 std::ostream &operator<<(std::ostream &, Loc);
@@ -53,14 +57,14 @@ public:
   
   void pri(LogPri);
   
-  void beginLog(LogCat, LogPri, Loc);
-  void beginLog(LogCat, LogPri);
+  void beginLog(LogCat, LogPri, LogMod, Loc);
+  void beginLog(LogCat, LogPri, LogMod);
   void endLog(LogCat, LogPri);
   std::streambuf *getStreambuf(LogCat, LogPri);
   
 private:
-  virtual void begin(LogCat, LogPri, Loc) = 0;
-  virtual void begin(LogCat, LogPri) = 0;
+  virtual void begin(LogCat, LogPri, LogMod, Loc) = 0;
+  virtual void begin(LogCat, LogPri, LogMod) = 0;
   virtual void end(LogCat, LogPri) = 0;
   virtual std::streambuf *getBuf(LogCat, LogPri) = 0;
   
@@ -81,24 +85,24 @@ private:
   std::streambuf *buf;
   
   std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, Loc) override;
-  void begin(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, LogMod, Loc) override;
+  void begin(LogCat, LogPri, LogMod) override;
   void end(LogCat, LogPri) override;
 };
 
 /// Write colored text to stderr
 class ColorLog final : public LogBuf {
   std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, Loc) override;
-  void begin(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, LogMod, Loc) override;
+  void begin(LogCat, LogPri, LogMod) override;
   void end(LogCat, LogPri) override;
 };
 
 /// Do nothing
 class NoLog final : public LogBuf {
   std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, Loc) override;
-  void begin(LogCat, LogPri) override;
+  void begin(LogCat, LogPri, LogMod, Loc) override;
+  void begin(LogCat, LogPri, LogMod) override;
   void end(LogCat, LogPri) override;
 };
 
