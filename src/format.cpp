@@ -453,8 +453,13 @@ private:
 
 }
 
-stela::fmt::Tokens stela::format(const std::string_view source, LogBuf &buf) {
-  AST ast = createAST(source, buf);
+stela::fmt::Tokens stela::format(ast::Node *node) {
+  Visitor visitor;
+  node->accept(visitor);
+  return visitor.tokens;
+}
+
+stela::fmt::Tokens stela::format(const AST &ast) {
   Visitor visitor;
   for (const ast::DeclPtr &node : ast.global) {
     node->accept(visitor);
@@ -465,4 +470,8 @@ stela::fmt::Tokens stela::format(const std::string_view source, LogBuf &buf) {
     visitor.tokens.pop_back();
   }
   return visitor.tokens;
+}
+
+stela::fmt::Tokens stela::format(const std::string_view source, LogBuf &buf) {
+  return format(createAST(source, buf));
 }

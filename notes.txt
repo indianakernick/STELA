@@ -46,9 +46,7 @@ object.
 --------------------------------------------------------------------------------
 
 Everything is zero initialized by default. A reference type should be
-initialized to null. Builtin types and references types can be contextually
-converted to bool. If there are used in a context that expects a bool, they will
-return a bool that denotes whether the object is alive or null.
+initialized to null.
 
 --------------------------------------------------------------------------------
 

@@ -9,9 +9,8 @@
 #ifndef stela_format_hpp
 #define stela_format_hpp
 
-#include <vector>
 #include "log.hpp"
-#include <string_view>
+#include "ast.hpp"
 
 namespace stela::fmt {
 
@@ -89,6 +88,8 @@ struct Styles {
 
 namespace stela {
 
+fmt::Tokens format(ast::Node *);
+fmt::Tokens format(const AST &);
 fmt::Tokens format(std::string_view, LogBuf &);
 
 }

@@ -13,6 +13,7 @@
 #include <STELA/html format.hpp>
 #include <STELA/plain format.hpp>
 #include <STELA/console format.hpp>
+#include <STELA/syntax analysis.hpp>
 
 TEST_GROUP(Format, {
   const char *source = R"(
@@ -162,13 +163,16 @@ func anotherDummy(dir: Dir) {
   });
   
   TEST(Plain string, {
-    std::string str = stela::plainFormat(tokens);
+    std::string str = stela::plainFormat(tokens, 4);
     ASSERT_FALSE(str.empty());
     std::cout << str;
   });
   
-  TEST(Plain stream, {
-    stela::plainFormat(std::cout, tokens);
+  TEST(Plain stream first node, {
+    const stela::AST ast = stela::createAST(source, log);
+    stela::fmt::Tokens nodeTokens = stela::format(ast.global.front().get());
+    stela::plainFormat(std::cout, nodeTokens, 4);
+    std::cout << '\n';
   });
   
   TEST(Console, {
