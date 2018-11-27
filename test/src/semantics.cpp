@@ -532,6 +532,12 @@ TEST_GROUP(Semantics, {
     )");
   });
   
+  TEST(Var - Var without type or value, {
+    ASSERT_FAILS(R"(
+      var a;
+    )");
+  });
+  
   TEST(Var - Redefine var, {
     ASSERT_FAILS(R"(
       var x: sint;
@@ -1148,10 +1154,17 @@ TEST_GROUP(Semantics, {
     )");
   });
   
-  TEST(Expr - Diff types in array, {
+  TEST(Expr - Elem diff to array type, {
     ASSERT_FAILS(R"(
       type StrongSint sint;
       let arr: [StrongSint] = [1, make StrongSint 2];
+    )");
+  });
+  
+  TEST(Expr - Diff types in array, {
+    ASSERT_FAILS(R"(
+      type StrongSint sint;
+      let arr = [1, make StrongSint 2];
     )");
   });
   
@@ -1585,6 +1598,68 @@ TEST_GROUP(Semantics, {
         {
           type t real;
         }
+      }
+    )");
+  });
+  
+  TEST(Cannot cast struct{} to [sint], {
+    ASSERT_FAILS(R"(
+      let test = make [sint] make struct{} {};
+    )");
+  });
+  
+  TEST(Expected [sint] but got struct{}, {
+    ASSERT_FAILS(R"(
+      let test: [sint] = make struct{} {};
+    )");
+  });
+  
+  TEST(Cannot cast Vec2 to Numbers, {
+    ASSERT_FAILS(R"(
+      type Vec2 struct {
+        x: real;
+        y: real;
+      };
+      type Numbers [sint];
+      let test = make Numbers make Vec2 {};
+    )");
+  });
+  
+  TEST(Expected Numbers but got Vec2, {
+    ASSERT_FAILS(R"(
+      type Vec2 struct {
+        x: real;
+        y: real;
+      };
+      type Numbers [sint];
+      let test: Numbers = make Vec2 {};
+    )");
+  });
+
+  TEST(Return from void function, {
+    ASSERT_SUCCEEDS(R"(
+      func getVoid() {
+        return;
+      }
+      
+      func getVoidAgain() {
+        return getVoid();
+      }
+    )");
+  });
+  
+  TEST(Return sint from void function, {
+    ASSERT_FAILS(R"(
+      func getVoid() {
+        return 0;
+      }
+    )");
+  });
+  
+  TEST(Return void from sint function, {
+    ASSERT_FAILS(R"(
+      func getSint() -> sint {
+        return;
       }
     )");
   });

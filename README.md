@@ -177,13 +177,12 @@ let Choice_yes = 1;
    * cast between compatible types
    * check that the return expression matches return type
    * handle lambdas and function pointers
+   * produce unused symbol warnings
     
    Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
     
-   * `expected bool expression but got byte expression`
    * provide array operations (`size`, `push_back`, `pop_back`)
    * provide standard math functions (`sin`, `log`, `sqrt`)
-   * do we need array slices? String literal should be a slice
    * read notes.txt about interfaces and generics
    * do we need interfaces? A lambda is an interface with a single function.
    * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift prototypes

@@ -14,6 +14,7 @@
 namespace stela {
 
 std::string_view symbolDesc(const sym::Symbol *);
+std::string typeDesc(const ast::TypePtr &);
 
 }
 

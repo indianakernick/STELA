@@ -9,6 +9,7 @@
 #include "symbol desc.hpp"
 
 #include <cassert>
+#include "plain format.hpp"
 
 std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
   assert(symbol);
@@ -28,4 +29,8 @@ std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
   assert(false);
   return "";
   /* LCOV_EXCL_END */
+}
+
+std::string stela::typeDesc(const ast::TypePtr &type) {
+  return plainFormat(format(type.get()));
 }

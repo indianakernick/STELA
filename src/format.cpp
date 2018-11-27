@@ -18,6 +18,9 @@ namespace {
 
 class Visitor final : public stela::ast::Visitor {
 public:
+  void visit(ast::BtnType &type) override {
+    push(Tag::type_name, typeName(type.value));
+  }
   void visit(ast::ArrayType &type) override {
     pushOp("[");
     type.elem->accept(*this);
@@ -454,6 +457,7 @@ private:
 }
 
 stela::fmt::Tokens stela::format(ast::Node *node) {
+  assert(node);
   Visitor visitor;
   node->accept(visitor);
   return visitor.tokens;

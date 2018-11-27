@@ -105,3 +105,27 @@ std::string_view stela::opName(const ast::UnOp op) {
     /* LCOV_EXCL_END */
   }
 }
+
+std::string_view stela::typeName(const ast::BtnType::Enum type) {
+  switch (type) {
+    /* LCOV_EXCL_START */
+    case ast::BtnType::Void:
+      return "void";
+    case ast::BtnType::Bool:
+      return "bool";
+    case ast::BtnType::Byte:
+      return "byte";
+    case ast::BtnType::Char:
+      return "char";
+    case ast::BtnType::Real:
+      return "real";
+    case ast::BtnType::Sint:
+      return "sint";
+    case ast::BtnType::Uint:
+      return "uint";
+    default:
+      assert(false);
+      return "";
+    /* LCOV_EXCL_END */
+  }
+}

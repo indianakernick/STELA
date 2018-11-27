@@ -9,6 +9,7 @@
 #include "traverse.hpp"
 
 #include "infer type.hpp"
+#include "symbol desc.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
 #include "operator name.hpp"
@@ -27,10 +28,7 @@ public:
   
   void visitCond(const ast::ExprPtr &expr) {
     assert(expr);
-    const sym::ExprType etype = getExprType(ctx, expr, ctx.btn.Bool);
-    if (!compareTypes(ctx, etype.type, ctx.btn.Bool)) {
-      ctx.log.error(expr->loc) << "Condition expression must be of type Bool" << fatal;
-    }
+    getExprType(ctx, expr, ctx.btn.Bool);
   }
   
   void visit(ast::Block &block) override {
@@ -54,10 +52,7 @@ public:
     bool foundDef = false;
     for (const ast::SwitchCase &cs : swich.cases) {
       if (cs.expr) {
-        const sym::ExprType caseType = getExprType(ctx, cs.expr, etype.type);
-        if (!compareTypes(ctx, caseType.type, etype.type)) {
-          ctx.log.error(cs.loc) << "Case expression type doesn't match type of switch expression" << fatal;
-        }
+        getExprType(ctx, cs.expr, etype.type);
       } else {
         if (foundDef) {
           ctx.log.error(cs.loc) << "Multiple default cases found in switch" << fatal;
@@ -99,9 +94,12 @@ public:
       assert(false);
     }
     retType = retType ? retType : sym::void_type.type;
-    sym::ExprType etype = ret.expr ? getExprType(ctx, ret.expr, retType) : sym::void_type;
-    if (!compareTypes(ctx, retType, etype.type)) {
-      ctx.log.error(ret.loc) << "Return expression does not match return type" << fatal;
+    if (ret.expr) {
+      getExprType(ctx, ret.expr, retType);
+    } else {
+      if (!compareTypes(ctx, retType, sym::void_type.type)) {
+        ctx.log.error(ret.loc) << "Expected " << typeDesc(retType) << " but got void" << fatal;
+      }
     }
   }
   void visit(ast::While &wile) override {
@@ -140,8 +138,8 @@ public:
     if (exprType.type == sym::void_type.type) {
       ctx.log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
-    if (type && expr && !compareTypes(ctx, type, exprType.type)) {
-      ctx.log.error(loc) << "Expression and declaration type do not match" << fatal;
+    if (!type && !expr) {
+      ctx.log.error(loc) << "Cannot infer type of variable" << fatal;
     }
     if (type) {
       return type;

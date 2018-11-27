@@ -9,6 +9,7 @@
 #include "infer type.hpp"
 
 #include "traverse.hpp"
+#include "symbol desc.hpp"
 #include "expr lookup.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
@@ -27,8 +28,8 @@ public:
     : lkp{ctx}, ctx{ctx} {}
 
   void visit(ast::BinaryExpr &bin) override {
-    const sym::ExprType left = visitValueExpr(bin.left);
-    const sym::ExprType right = visitValueExpr(bin.right);
+    const sym::ExprType left = visitExprCheck(bin.left);
+    const sym::ExprType right = visitExprCheck(bin.right);
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
@@ -40,7 +41,7 @@ public:
     ctx.log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
-    sym::ExprType etype = visitValueExpr(un.expr);
+    sym::ExprType etype = visitExprCheck(un.expr);
     if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
         lkp.setExpr(sym::makeLetVal(std::move(etype.type)));
@@ -70,8 +71,8 @@ public:
     mem.definition = lkp.lookupMember(mem.loc);
   }
   void visit(ast::Subscript &sub) override {
-    const sym::ExprType obj = visitValueExpr(sub.object);
-    const sym::ExprType idx = visitValueExpr(sub.index);
+    const sym::ExprType obj = visitExprCheck(sub.object);
+    const sym::ExprType idx = visitExprCheck(sub.index);
     if (auto builtinIdx = lookupConcrete<ast::BtnType>(ctx, idx.type)) {
       if (validSubscript(builtinIdx)) {
         if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
@@ -88,13 +89,9 @@ public:
     id.definition = lkp.lookupIdent(sym::Name{id.name}, id.loc);
   }
   void visit(ast::Ternary &tern) override {
-    ast::TypePtr resultType = expected;
-    const sym::ExprType cond = visitValueExpr(tern.cond, ctx.btn.Bool);
-    if (!compareTypes(ctx, cond.type, ctx.btn.Bool)) {
-      ctx.log.error(tern.loc) << "Condition expression must be of type Bool" << fatal;
-    }
-    const sym::ExprType tru = visitValueExpr(tern.tru, resultType);
-    const sym::ExprType fals = visitValueExpr(tern.fals, resultType);
+    visitExprCheck(tern.cond, ctx.btn.Bool);
+    const sym::ExprType tru = visitExprCheck(tern.tru, expected);
+    const sym::ExprType fals = visitExprCheck(tern.fals, expected);
     if (!compareTypes(ctx, tru.type, fals.type)) {
       ctx.log.error(tern.loc) << "Branches of ternary have different types" << fatal;
     }
@@ -106,7 +103,7 @@ public:
   }
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
-    const sym::ExprType etype = visitValueExpr(make.expr, make.type);
+    const sym::ExprType etype = visitExprNoCheck(make.expr, make.type);
     if (lookupConcrete<ast::BtnType>(ctx, make.type)) {
       if (lookupConcrete<ast::BtnType>(ctx, etype.type)) {
         return lkp.setExpr(sym::makeLetVal(make.type));
@@ -115,7 +112,8 @@ public:
     if (compareTypes(ctx, lookupConcreteType(ctx, etype.type), lookupConcreteType(ctx, make.type))) {
       return lkp.setExpr(sym::makeLetVal(make.type));
     }
-    ctx.log.error(make.loc) << "Invalid make expression" << fatal;
+    ctx.log.error(make.loc) << "Cannot make " << typeDesc(make.type)
+      << " from " << typeDesc(etype.type) << fatal;
   }
   
   void visit(ast::StringLiteral &) override {
@@ -157,9 +155,9 @@ public:
         ctx.log.error(arr.loc) << "Could not infer type of empty array" << fatal;
       }
     } else {
-      sym::ExprType expr = getExprType(ctx, arr.exprs.front(), elem);
+      sym::ExprType expr = visitExprCheck(arr.exprs.front(), elem);
       for (auto e = arr.exprs.cbegin() + 1; e != arr.exprs.cend(); ++e) {
-        const sym::ExprType currExpr = getExprType(ctx, *e, elem);
+        const sym::ExprType currExpr = visitExprNoCheck(*e, elem);
         if (!compareTypes(ctx, expr.type, currExpr.type)) {
           ctx.log.error(e->get()->loc) << "Unmatching types in array literal" << fatal;
         }
@@ -185,10 +183,7 @@ public:
         for (size_t i = 0; i != list.exprs.size(); ++i) {
           const ast::ExprPtr &expr = list.exprs[i];
           const ast::Field &field = strut->fields[i];
-          const sym::ExprType exprType = getExprType(ctx, expr, field.type);
-          if (!compareTypes(ctx, exprType.type, field.type)) {
-            ctx.log.error(expr->loc) << "Initializer list type doesn't match struct field type" << fatal;
-          }
+          visitExprCheck(expr, field.type);
         }
       } else {
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
@@ -205,10 +200,21 @@ public:
     lkp.setExpr(sym::makeLetVal(getLambdaType(ctx, lam)));
   }
 
-  sym::ExprType visitValueExpr(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
-    expected = type;
+  sym::ExprType visitExprCheck(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
+    sym::ExprType etype = visitExprNoCheck(expr, type);
+    if (type && !compareTypes(ctx, type, etype.type)) {
+      ctx.log.error(expr->loc) << "Expected " << typeDesc(type) << " but got "
+        << typeDesc(etype.type) << fatal;
+    }
+    return etype;
+  }
+  
+  sym::ExprType visitExprNoCheck(const ast::ExprPtr &expr, const ast::TypePtr &type) {
     lkp.enterSubExpr();
+    ast::TypePtr oldExpected = std::move(expected);
+    expected = type;
     expr->accept(*this);
+    expected = std::move(oldExpected);
     return lkp.leaveSubExpr();
   }
 
@@ -221,5 +227,5 @@ private:
 }
 
 sym::ExprType stela::getExprType(sym::Ctx ctx, const ast::ExprPtr &expr, const ast::TypePtr &type) {
-  return Visitor{ctx}.visitValueExpr(expr, type);
+  return Visitor{ctx}.visitExprCheck(expr, type);
 }
