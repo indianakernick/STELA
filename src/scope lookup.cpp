@@ -8,6 +8,7 @@
 
 #include "scope lookup.hpp"
 
+#include "symbol desc.hpp"
 #include "compare types.hpp"
 #include "scope traverse.hpp"
 
@@ -123,12 +124,10 @@ ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
   return funcType;
 }
 
-
-
 void stela::checkIdentShadow(sym::Ctx ctx, const sym::Name &name, const Loc loc) {
   const auto [symbol, scope] = findScope(ctx.man.cur()->parent, name);
   if (symbol) {
-    ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows another declaration at "
-      << moduleName(scope) << ':' << symbol->loc << endlog;
+    ctx.log.warn(loc) << "Declaration of \"" << name << "\" shadows a "
+      << symbolDesc(symbol) << " at " << moduleName(scope) << ':' << symbol->loc << endlog;
   }
 }
