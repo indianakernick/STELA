@@ -8,8 +8,15 @@
 
 #include "symbols.hpp"
 
-stela::sym::Symbol::~Symbol() = default;
-stela::sym::TypeAlias::~TypeAlias() = default;
-stela::sym::Object::~Object() = default;
-stela::sym::Func::~Func() = default;
-stela::sym::Lambda::~Lambda() = default;
+using namespace stela;
+
+sym::Symbol::~Symbol() = default;
+sym::TypeAlias::~TypeAlias() = default;
+sym::Object::~Object() = default;
+sym::Func::~Func() = default;
+sym::Lambda::~Lambda() = default;
+
+const sym::ExprType sym::null_type {};
+const sym::ExprType sym::void_type {
+  make_retain<ast::BtnType>(ast::BtnType::Void), {}, {}
+};

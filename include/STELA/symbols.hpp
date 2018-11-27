@@ -111,10 +111,8 @@ inline bool callMutRef(const ExprType &param, const ExprType &arg) {
   return param.ref == sym::ValueRef::val || callMut(param.mut, arg.mut);
 }
 
-inline const ExprType null_type {};
-inline const ExprType void_type {
-  make_retain<ast::BtnType>(ast::BtnType::Void), {}, {}
-};
+extern const ExprType null_type;
+extern const ExprType void_type;
 
 struct TypeAlias final : Symbol {
   ~TypeAlias();
