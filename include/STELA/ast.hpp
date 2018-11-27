@@ -22,29 +22,41 @@ class Visitor;
 //---------------------------------- Base --------------------------------------
 
 struct Node : ref_count {
-  virtual ~Node() = default;
+  virtual ~Node();
   virtual void accept(Visitor &) = 0;
   
   Loc loc;
 };
 using NodePtr = retain_ptr<Node>;
 
-struct Type : Node {};
+struct Type : Node {
+  ~Type();
+};
 using TypePtr = retain_ptr<Type>;
 
-struct Expression : Node {};
+struct Expression : Node {
+  ~Expression();
+};
 using ExprPtr = retain_ptr<Expression>;
 
-struct Statement : Node {};
+struct Statement : Node {
+  ~Statement();
+};
 using StatPtr = retain_ptr<Statement>;
 
-struct Declaration : Statement {};
+struct Declaration : Statement {
+  ~Declaration();
+};
 using DeclPtr = retain_ptr<Declaration>;
 
-struct Assignment : Statement {};
+struct Assignment : Statement {
+  ~Assignment();
+};
 using AsgnPtr = retain_ptr<Assignment>;
 
-struct Literal : Expression {};
+struct Literal : Expression {
+  ~Literal();
+};
 using LitrPtr = retain_ptr<Literal>;
 
 using Name = std::string_view;
@@ -268,12 +280,7 @@ struct FuncParam final : Declaration {
   ParamRef ref;
   TypePtr type;
   
-  // visitor disabled for FuncParam
-  /* LCOV_EXCL_START */
-  void accept(Visitor &) override {
-    assert(false);
-  }
-  /* LCOV_EXCL_END */
+  void accept(Visitor &) override;
 };
 using FuncParams = std::vector<FuncParam>;
 using Receiver = std::optional<FuncParam>;
@@ -412,7 +419,7 @@ struct Lambda final : Literal {
 
 class Visitor {
 public:
-  virtual ~Visitor() = default;
+  virtual ~Visitor();
   
   /* LCOV_EXCL_START */
   

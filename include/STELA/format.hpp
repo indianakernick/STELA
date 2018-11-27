@@ -39,6 +39,8 @@ inline const char *tagName(const Tag tag) {
     #define TAG(NAME) case Tag::NAME: return #NAME;
     TAGS
     #undef TAG
+    case Tag::newline:
+    case Tag::indent:
     default:
       return nullptr;
   }
@@ -68,6 +70,8 @@ struct Styles {
       #define TAG(NAME) case Tag::NAME: return &NAME;
       TAGS
       #undef TAG
+      case Tag::newline:
+      case Tag::indent:
       default:
         return nullptr;
     }

@@ -53,7 +53,7 @@ std::streambuf *silentBuf();
 /// Controls the output of the logger
 class LogBuf {
 public:
-  virtual ~LogBuf() = default;
+  virtual ~LogBuf();
   
   void pri(LogPri);
   

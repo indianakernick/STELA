@@ -65,12 +65,6 @@ auto operator+(const Enum e) -> std::underlying_type_t<Enum> {
   return static_cast<std::underlying_type_t<Enum>>(e);
 }
 
-template <typename Enum>
-bool incRange(const Enum e, const Enum min, const Enum max) {
-  assert(min <= max);
-  return +min <= e && e <= +max;
-}
-
 bool isBoolOp(const ast::BinOp op) {
   return op == ast::BinOp::bool_or || op == ast::BinOp::bool_and;
 }

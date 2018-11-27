@@ -16,6 +16,8 @@
 
 using namespace stela;
 
+stela::LogBuf::~LogBuf() = default;
+
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
   // Categories are adjectives
   switch (cat) {

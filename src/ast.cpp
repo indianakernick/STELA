@@ -8,12 +8,29 @@
 
 #include "ast.hpp"
 
+#include <cassert>
+
+/* LCOV_EXCL_START */
+
+stela::ast::Node::~Node() = default;
+stela::ast::Type::~Type() = default;
+stela::ast::Expression::~Expression() = default;
+stela::ast::Statement::~Statement() = default;
+stela::ast::Declaration::~Declaration() = default;
+stela::ast::Assignment::~Assignment() = default;
+stela::ast::Literal::~Literal() = default;
+
+stela::ast::Visitor::~Visitor() = default;
+
+// visitor disabled for FuncParam
+void stela::ast::FuncParam::accept(Visitor &) {
+  assert(false);
+}
+
 #define ACCEPT(TYPE)                                                            \
   void stela::ast::TYPE::accept(Visitor &visitor) {                             \
     visitor.visit(*this);                                                       \
   }
-
-/* LCOV_EXCL_START */
 
 ACCEPT(BtnType)
 ACCEPT(ArrayType)
@@ -58,6 +75,6 @@ ACCEPT(ArrayLiteral)
 ACCEPT(InitList)
 ACCEPT(Lambda)
 
-/* LCOV_EXCL_END */
-
 #undef ACCEPT
+
+/* LCOV_EXCL_END */

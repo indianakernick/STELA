@@ -576,7 +576,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "cp \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" /usr/local/bin/stela";
+			shellScript = "cp \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" /usr/local/bin/stela\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -782,10 +782,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					$PROJECT_DIR/include/STELA,
-				);
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -800,11 +797,12 @@
 					"-Wpedantic",
 					"-Wshadow",
 					"-Wno-documentation",
-					"-fvisibility=default",
 					"-Wnull-dereference",
 					"-Woverloaded-virtual",
 					"-Wconversion",
 					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-isystem/usr/local/include",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -823,10 +821,7 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = (
-					/usr/local/include,
-					$PROJECT_DIR/include/STELA,
-				);
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -842,11 +837,12 @@
 					"-Wpedantic",
 					"-Wshadow",
 					"-Wno-documentation",
-					"-fvisibility=default",
 					"-Wnull-dereference",
 					"-Woverloaded-virtual",
 					"-Wconversion",
 					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-isystem/usr/local/include",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

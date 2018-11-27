@@ -17,7 +17,7 @@
 namespace stela::sym {
 
 struct Symbol {
-  virtual ~Symbol() = default;
+  virtual ~Symbol();
 
   Loc loc;
   // for detecting things like: unused variable, unused function, etc
@@ -58,10 +58,6 @@ struct Scope {
 };
 using ScopePtr = std::unique_ptr<Scope>;
 using Scopes = std::vector<ScopePtr>;
-
-struct TypeAlias final : Symbol {
-  retain_ptr<ast::TypeAlias> node;
-};
 
 enum class ValueMut : uint8_t {
   let,
@@ -120,7 +116,15 @@ inline const ExprType void_type {
   make_retain<ast::BtnType>(ast::BtnType::Void), {}, {}
 };
 
+struct TypeAlias final : Symbol {
+  ~TypeAlias();
+  
+  retain_ptr<ast::TypeAlias> node;
+};
+
 struct Object final : Symbol {
+  ~Object();
+  
   ExprType etype;
   ast::StatPtr node;
 };
@@ -129,6 +133,8 @@ struct Object final : Symbol {
 // if params.front().type == nullptr then there is no receiver
 using FuncParams = std::vector<ExprType>;
 struct Func final : Symbol {
+  ~Func();
+  
   ExprType ret;
   FuncParams params;
   Scope *scope;
@@ -137,6 +143,8 @@ struct Func final : Symbol {
 using FuncPtr = std::unique_ptr<Func>;
 
 struct Lambda final : Symbol {
+  ~Lambda();
+  
   ExprType ret;
   FuncParams params;
   Scope *scope;
