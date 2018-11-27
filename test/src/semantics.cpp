@@ -1672,6 +1672,7 @@ TEST_GROUP(Semantics, {
         for (;nullFn;) {}
         while (nullFn) {}
         let two = nullFn ? 6 : 2;
+        let troo = !make bool nullFn;
         let tru = !nullFn;
         let fls = true && nullFn;
         let folse = false || nullFn;

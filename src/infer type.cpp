@@ -105,7 +105,7 @@ public:
   }
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
-    const sym::ExprType etype = visitExprNoCheck(make.expr, make.type);
+    const sym::ExprType etype = visitExprNoCheckBool(make.expr, make.type);
     if (lookupConcrete<ast::BtnType>(ctx, make.type)) {
       if (lookupConcrete<ast::BtnType>(ctx, etype.type)) {
         return lkp.setExpr(sym::makeLetVal(make.type));
@@ -149,7 +149,7 @@ public:
       if (auto array = lookupConcrete<ast::ArrayType>(ctx, expected)) {
         elem = lookupStrongType(ctx, array->elem);
       } else {
-        ctx.log.error(arr.loc) << "Array literal can only initialize arrays" << fatal;
+        ctx.log.error(arr.loc) << "Array literal cannot initialize " << typeDesc(expected) << fatal;
       }
     }
     if (arr.exprs.empty()) {
@@ -213,6 +213,16 @@ public:
 
   bool convertibleToBool(const ast::TypePtr &type) {
     return dynamic_cast<ast::FuncType *>(type.get());
+  }
+
+  sym::ExprType visitExprNoCheckBool(const ast::ExprPtr &expr, const ast::TypePtr &type) {
+    sym::ExprType etype = visitExprNoCheck(expr, type);
+    if (type && !compareTypes(ctx, type, etype.type)) {
+      if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
+        return sym::makeLetVal(ctx.btn.Bool);
+      }
+    }
+    return etype;
   }
 
   sym::ExprType visitExprCheck(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
