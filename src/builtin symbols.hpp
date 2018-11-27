@@ -14,6 +14,9 @@
 
 namespace stela {
 
+bool boolOp(ast::BinOp);
+bool boolOp(ast::UnOp);
+
 bool validIncr(const ast::BtnTypePtr &);
 bool validOp(ast::UnOp, const ast::BtnTypePtr &);
 retain_ptr<ast::BtnType> validOp(

@@ -28,8 +28,9 @@ public:
     : lkp{ctx}, ctx{ctx} {}
 
   void visit(ast::BinaryExpr &bin) override {
-    const sym::ExprType left = visitExprCheck(bin.left);
-    const sym::ExprType right = visitExprCheck(bin.right);
+    ast::TypePtr expType = boolOp(bin.oper) ? ctx.btn.Bool : nullptr;
+    const sym::ExprType left = visitExprCheck(bin.left, expType);
+    const sym::ExprType right = visitExprCheck(bin.right, expType);
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
@@ -41,7 +42,8 @@ public:
     ctx.log.error(bin.loc) << "Invalid operands to binary expression " << opName(bin.oper) << fatal;
   }
   void visit(ast::UnaryExpr &un) override {
-    sym::ExprType etype = visitExprCheck(un.expr);
+    ast::TypePtr expType = boolOp(un.oper) ? ctx.btn.Bool : nullptr;
+    sym::ExprType etype = visitExprCheck(un.expr, expType);
     if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
         lkp.setExpr(sym::makeLetVal(std::move(etype.type)));
@@ -200,15 +202,6 @@ public:
     lkp.setExpr(sym::makeLetVal(getLambdaType(ctx, lam)));
   }
 
-  sym::ExprType visitExprCheck(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
-    sym::ExprType etype = visitExprNoCheck(expr, type);
-    if (type && !compareTypes(ctx, type, etype.type)) {
-      ctx.log.error(expr->loc) << "Expected " << typeDesc(type) << " but got "
-        << typeDesc(etype.type) << fatal;
-    }
-    return etype;
-  }
-  
   sym::ExprType visitExprNoCheck(const ast::ExprPtr &expr, const ast::TypePtr &type) {
     lkp.enterSubExpr();
     ast::TypePtr oldExpected = std::move(expected);
@@ -216,6 +209,23 @@ public:
     expr->accept(*this);
     expected = std::move(oldExpected);
     return lkp.leaveSubExpr();
+  }
+
+  bool convertibleToBool(const ast::TypePtr &type) {
+    return dynamic_cast<ast::FuncType *>(type.get());
+  }
+
+  sym::ExprType visitExprCheck(const ast::ExprPtr &expr, const ast::TypePtr &type = nullptr) {
+    sym::ExprType etype = visitExprNoCheck(expr, type);
+    if (type && !compareTypes(ctx, type, etype.type)) {
+      if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
+        return sym::makeLetVal(ctx.btn.Bool);
+      } else {
+        ctx.log.error(expr->loc) << "Expected " << typeDesc(type) << " but got "
+          << typeDesc(etype.type) << fatal;
+      }
+    }
+    return etype;
   }
 
 private:

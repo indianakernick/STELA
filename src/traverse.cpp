@@ -110,9 +110,13 @@ public:
   }
   void visit(ast::For &four) override {
     ctx.man.enterScope(sym::ScopeType::flow);
-    four.init->accept(*this);
+    if (four.init) {
+      four.init->accept(*this);
+    }
     visitCond(four.cond);
-    four.incr->accept(*this);
+    if (four.incr) {
+      four.incr->accept(*this);
+    }
     four.body->accept(*this);
     ctx.man.leaveScope();
   }

@@ -1663,6 +1663,21 @@ TEST_GROUP(Semantics, {
       }
     )");
   });
+  
+  TEST(Function pointer conversion to bool, {
+    ASSERT_SUCCEEDS(R"(
+      func test() {
+        var nullFn: func();
+        if (nullFn) {}
+        for (;nullFn;) {}
+        while (nullFn) {}
+        let two = nullFn ? 6 : 2;
+        let tru = !nullFn;
+        let fls = true && nullFn;
+        let folse = false || nullFn;
+      }
+    )");
+  });
 
   /*
   

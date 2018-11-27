@@ -45,16 +45,5 @@ object.
 
 --------------------------------------------------------------------------------
 
-Everything is zero initialized by default. A reference type should be
-initialized to null.
-
---------------------------------------------------------------------------------
-
-There are a lot of similarities between lambdas and functions. Try to minimize
-the duplication of code. Maybe implement one in terms of the other or something
-like that. Or implement them both in terms of a more low level concept.
-
---------------------------------------------------------------------------------
-
 Arrays should be reference counted reference types. They can be explicitly
 duplicated if need be.

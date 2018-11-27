@@ -95,6 +95,14 @@ bool isArithOp(const ast::AssignOp op) {
 
 }
 
+bool stela::boolOp(const ast::BinOp op) {
+  return isBoolOp(op);
+}
+
+bool stela::boolOp(const ast::UnOp op) {
+  return op == ast::UnOp::bool_not;
+}
+
 bool stela::validIncr(const ast::BtnTypePtr &type) {
   return isArithType(type->value);
 }
