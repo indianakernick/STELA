@@ -65,6 +65,29 @@ func test() {
 }
 ```
 
+### Arrays
+
+What can you do without arrays?
+
+```go
+func squares(count: uint) -> [uint] {
+  var array: [uint] = [];
+  if (count == 0u) {
+    return array;
+  }
+  reserve(array, count);
+  for (i := 1u; i <= count; i++) {
+    push_back(array, i * i);
+  }
+  return array;
+}
+
+func test() {
+  let empty = squares(0u);
+  let one_four_nine = squares(3u);
+}
+```
+
 ### Get a pointer to function
 
 Just like in C++, if you want a pointer to an overloaded function, you need to select which overload you want.
@@ -165,7 +188,7 @@ let Choice_yes = 1;
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * The semantic analyser can:
+ * The semantic analyser is pretty much done. See [semantic tests](test/src/semantics.cpp). It can:
    * check the type of variables
    * check types of assignments and expressions
    * lookup overloaded functions
@@ -178,12 +201,7 @@ let Choice_yes = 1;
    * check that the return expression matches return type
    * handle lambdas and function pointers
    * produce unused symbol warnings
-    
-   Check out the [semantic tests](test/src/semantics.cpp). There's still a lot more to do:
-    
-   * read `notes.txt` about interfaces and generics
-   * do we need interfaces? A lambda is an interface with a single function.
-   * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift protocols
+   * lookup builtin types and builtin functions
 
 ## Plans
 

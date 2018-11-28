@@ -1748,6 +1748,27 @@ TEST_GROUP(Semantics, {
       }
     )");
   });
+  
+  TEST(Squares array, {
+    ASSERT_SUCCEEDS(R"(
+      func squares(count: uint) -> [uint] {
+        var array: [uint] = [];
+        if (count == 0u) {
+          return array;
+        }
+        reserve(array, count);
+        for (i := 1u; i <= count; i++) {
+          push_back(array, i * i);
+        }
+        return array;
+      }
+
+      func test() {
+        let empty = squares(0u);
+        let one_four_nine = squares(3u);
+      }
+    )");
+  });
 
   /*
   

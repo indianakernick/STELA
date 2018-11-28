@@ -87,13 +87,3 @@ where an interface would store a pointer to a table of function pointers that
 make up the implementation of the interface. If we have one, do we really need
 the other?
 
---------------------------------------------------------------------------------
-
-Since closures are reference types, it makes sense for interfaces to be
-reference types as well. Interfaces hold a reference counted smart pointer to an
-object.
-
---------------------------------------------------------------------------------
-
-Arrays should be reference counted reference types. They can be explicitly
-duplicated if need be.
