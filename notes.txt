@@ -4,6 +4,56 @@ function with a type, the compiler will check if the type satisfies the
 interface. The compiler will also check if the function uses the interface
 correctly. This might be easier to implement than C++ style generics.
 
+interface Ordered {
+  func lt(Self) -> bool;
+};
+
+func min<T: Ordered>(vals: [T]) -> T {
+  if (size(vals) == 0u) {
+    return make T {};
+  }
+  var elem = vals[0];
+  for (i := 1u; i != size(vals); i++) {
+    if (val[i].lt(elem)) {
+      elem = val[i];
+    }
+  }
+  return elem;
+}
+
+func swap<T>(a: inout T, b inout T) {
+  let temp = a;
+  a = b;
+  b = temp;
+}
+
+In provide functions for working with arrays, we're going to need some kind
+of generics.
+
+func duplicate<T>(arr: [T]) -> [T];
+func capacity<T>(arr: [T]) -> uint;
+func size<T>(arr: [T]) -> uint;
+func push_back<T>(arr: inout [T], elem: T);
+func push_back<T>(arr: inout [T], other: [T]);
+func pop_back<T>(arr: inout [T]);
+func resize<T>(arr: inout [T], size: uint);
+func reserve<T>(arr: inout [T], size: uint);
+
+The alternative is something like this:
+
+if (funcName == "duplicate") {
+  checkArgs(dupParams, args);
+  return dupRet;
+} else if ...
+
+Is an if-else somewhere really that bad? Just for a few builtin functions.
+It's a hell of a lot easier than implementing generics.
+
+If I go to all the trouble of implementing generics then I might as well expose
+some syntax for users.
+
+We don't need generic types (only generic functions) to deal with arrays.
+
 --------------------------------------------------------------------------------
 
 A closure is a pointer to a function and a reference counted pointer to captured

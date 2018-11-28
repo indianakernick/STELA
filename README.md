@@ -184,7 +184,7 @@ let Choice_yes = 1;
    * provide array operations (`size`, `push_back`, `pop_back`)
    * read `notes.txt` about interfaces and generics
    * do we need interfaces? A lambda is an interface with a single function.
-   * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift prototypes
+   * do we need generics? If we do decide to implement generics then interfaces should probably act like Swift protocols
 
 ## Plans
 

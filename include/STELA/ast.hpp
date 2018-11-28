@@ -65,7 +65,7 @@ using Name = std::string_view;
 
 struct BtnType final : Type {
   // not a strong enum
-  // BuiltinType::Int instead of BuiltinType::Enum::Int
+  // BtnType::Int instead of BtnType::Enum::Int
   enum Enum {
     // builtin symbols.cpp depends on the order
     Void,
