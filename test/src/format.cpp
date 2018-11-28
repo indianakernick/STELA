@@ -18,36 +18,37 @@
 TEST_GROUP(Format, {
   const char *source = R"(
 type Rational = struct {
-  n: Int64;
-  d: Int64;
+  n: sint;
+  d: sint;
 };
 
 type Vec3 struct {
-  x: Float;
-  y: Float;
-  z: Float;
+  x: real;
+  y: real;
+  z: real;
 };
 
 let origin = make Vec3 {0.0, 0.0, 0.0};
 let nesting = make sint make real make uint {};
 
-type IntStack struct {
-  data: [Int];
-};
+type IntStack [sint];
 
-func (self: inout IntStack) push(value: Int) {
-  self.data.push_back(value);
+func (self: inout IntStack) push(value: sint) {
+  push_back(self, value);
 }
 func (self: inout IntStack) pop() {
-  let top = data.back();
-  data.pop_back();
+  pop_back(self);
+}
+func (self: inout IntStack) pop_top() -> sint {
+  let top = self[size(self) - 1u];
+  pop_back(self);
   return top;
 }
-func (self: IntStack) top() {
-  return data.back();
+func (self: IntStack) top() -> sint {
+  return self[size(self) - 1u];
 }
-func (self: IntStack) empty() {
-  return data.empty();
+func (self: IntStack) empty() -> bool {
+  return size(self) == 0u;
 }
 func justPop(stack: inout IntStack) {
   while (!stack.empty()) {
@@ -56,11 +57,11 @@ func justPop(stack: inout IntStack) {
   }
 }
 
-let less = func(a: Int, b: Int) -> Bool {
+let less = func(a: sint, b: sint) -> bool {
   return a < b;
 };
 
-func isEqual(a: Int, b: Int) -> Bool {
+func isEqual(a: sint, b: sint) -> bool {
   return a == b;
 }
 
@@ -68,11 +69,11 @@ let equal = isEqual;
 
 let ray = ['r', 'a', 'y'];
 
-func sort(array: [Int], pred: func(Int, Int)->Bool) {
+func sort(array: [sint], pred: func(sint, sint)->bool) {
   // sorting...
 }
 
-func customSwap(a: [Int], b: [Int], swap: func(inout Int, inout Int)) {
+func customSwap(a: [sint], b: [sint], swap: func(inout sint, inout sint)) {
   // yeah...
 }
 
@@ -81,22 +82,22 @@ type EmptyStruct struct {};
 func ifs() {
   switch (1) {}
 
-  if (expr) {
-    var dummy: Char = (5 ? 'e' : 'f');
+  if (false) {
+    var dummy: char = (true ? 'e' : 'f');
   }
 
-  if (expr) {
-    var dummy = expr;
+  if (true) {
+    var dummy = 0;
   } else {
-    var dummy = expr;
+    var dummy = 1;
   }
 
-  if (expr) {
-    var dummy = expr;
-  } else if (expr) {
-    var dummy = expr;
+  if (false) {
+    var dummy = 2;
+  } else if (true) {
+    var dummy = 3;
   } else {
-    var dummy = expr;
+    var dummy = 4;
   }
   
   {
@@ -104,18 +105,18 @@ func ifs() {
     let just_like_C = "yeah"[1];
   }
   
-  type StrInt = func(String) -> Int;
+  type StrInt = func([char]) -> sint;
   
-  while (expr) {
+  var thing = 0u;
+  let yeah = 99u;
+  while (false) {
     thing++;
     thing += ~yeah;
   }
+  
+  thing = 11u;
 
   for (i := 0; i != 10; i++) {
-    thing++;
-    thing += ~yeah;
-  }
-  for (i = 0; i != 10; i++) {
     thing++;
     thing += ~yeah;
   }
@@ -125,33 +126,32 @@ func ifs() {
   }
 }
 
-type Dir Int;
-let Dir_up: Dir = 0;
-let Dir_right: Dir = 1;
-let Dir_down: Dir = 2;
-let Dir_left: Dir = 3;
+type Dir sint;
+let Dir_up    = make Dir 0;
+let Dir_right = make Dir 1;
+let Dir_down  = make Dir 2;
+let Dir_left  = make Dir 3;
 
-func anotherDummy(dir: Dir) {
-  value := 5;
+func anotherDummy(dir: Dir) -> uint {
+  value := 5u;
   switch (dir) {
     case (Dir_up) {
-      value += 2;
+      value += 2u;
       continue;
     }
     case (Dir_right) {
-      value <<= 2;
+      value <<= 2u;
       break;
     }
     case (Dir_down) {
       value--;
-      return value & 3;
+      return value & 3u;
     }
-    case (Dir_left) return 5;
-    default value -= 1;
+    case (Dir_left) return 5u;
+    default value -= 1u;
   }
   return value;
 }
-
 )";
 
   stela::StreamLog log;

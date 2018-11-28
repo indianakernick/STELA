@@ -1180,6 +1180,14 @@ TEST_GROUP(Semantics, {
     )");
   });
   
+  TEST(Expr - Subscript strong array, {
+    ASSERT_SUCCEEDS(R"(
+      type strong_array [sint];
+      let arr = make strong_array [8, 2, 3];
+      let two = arr[1];
+    )");
+  });
+  
   TEST(Expr - Invalid subscript index, {
     ASSERT_FAILS(R"(
       let arr: [bool] = [false, true];
@@ -1775,6 +1783,30 @@ TEST_GROUP(Semantics, {
       func test() {
         let empty = squares(0u);
         let one_four_nine = squares(3u);
+      }
+    )");
+  });
+  
+  TEST(Int stack, {
+    ASSERT_SUCCEEDS(R"(
+      type IntStack [sint];
+
+      func (self: inout IntStack) push(value: sint) {
+        push_back(self, value);
+      }
+      func (self: inout IntStack) pop() {
+        pop_back(self);
+      }
+      func (self: inout IntStack) pop_top() -> sint {
+        let top = self[size(self) - 1u];
+        pop_back(self);
+        return top;
+      }
+      func (self: IntStack) top() -> sint {
+        return self[size(self) - 1u];
+      }
+      func (self: IntStack) empty() -> bool {
+        return size(self) == 0u;
       }
     )");
   });
