@@ -81,6 +81,13 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.imports[1], "CoolModule");
   });
   
+  TEST(Module string name, {
+    const char *source = R"(
+      module "MyModule";
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(EOF, {
     ASSERT_THROWS(createAST("type", log), FatalError);
   });

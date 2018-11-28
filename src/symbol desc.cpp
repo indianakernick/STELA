@@ -24,9 +24,11 @@ std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
   if (auto *func = dynamic_cast<const sym::Func *>(symbol)) {
     return "function";
   }
+  /* LCOV_EXCL_START */
   if (auto *lambda = dynamic_cast<const sym::Lambda *>(symbol)) {
     return "lambda";
   }
+  /* LCOV_EXCL_END */
   if (auto *btnFunc = dynamic_cast<const sym::BtnFunc *>(symbol)) {
     // If we say "builtin function" here, we'll still be saying "type" when
     // talking about bool so we'll have to find a way to say "builtin type" when

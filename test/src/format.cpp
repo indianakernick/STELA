@@ -170,8 +170,15 @@ func anotherDummy(dir: Dir) -> uint {
   
   TEST(Plain stream first node, {
     const stela::AST ast = stela::createAST(source, log);
-    stela::fmt::Tokens nodeTokens = stela::format(ast.global.front().get());
+    stela::fmt::Tokens nodeTokens = stela::format(ast.global[0].get());
     stela::plainFormat(std::cout, nodeTokens, 4);
+    std::cout << '\n';
+  });
+  
+  TEST(Plain stream inline second node, {
+    const stela::AST ast = stela::createAST(source, log);
+    stela::fmt::Tokens nodeTokens = stela::format(ast.global[1].get());
+    stela::plainFormatInline(std::cout, nodeTokens);
     std::cout << '\n';
   });
   

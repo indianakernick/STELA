@@ -9,6 +9,7 @@
 #ifndef stela_scope_traverse_hpp
 #define stela_scope_traverse_hpp
 
+#include <cassert>
 #include "symbols.hpp"
 
 namespace stela {
@@ -25,7 +26,7 @@ inline sym::Scope *findNearest(sym::ScopeType type, sym::Scope *scope) {
 
 inline sym::Scope *findNearestEither(sym::ScopeType a, sym::ScopeType b, sym::Scope *scope) {
   if (scope == nullptr) {
-    return nullptr;
+    assert(false);
   } else if (sym::ScopeType type = scope->type; type == a || type == b) {
     return scope;
   } else {
@@ -35,7 +36,7 @@ inline sym::Scope *findNearestEither(sym::ScopeType a, sym::ScopeType b, sym::Sc
 
 inline sym::Scope *findNearestNot(sym::ScopeType type, sym::Scope *scope) {
   if (scope == nullptr) {
-    return nullptr;
+    assert(false);
   } else if (scope->type == type) {
     return findNearestNot(type, scope->parent);
   } else {

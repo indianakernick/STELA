@@ -180,9 +180,7 @@ bool stela::validOp(
   const ast::BtnTypePtr &left,
   const ast::BtnTypePtr &right
 ) {
-  if (left != right) {
-    return false;
-  }
+  assert(left == right);
   if (isArithOp(op)) {
     return isArithType(left->value);
   } else if (isBitwiseOp(op)) {
@@ -326,16 +324,16 @@ ast::TypePtr stela::callBtnFunc(
       return resizeFn(ctx, args, loc);
     case ast::BtnFuncEnum::reserve:
       return reserveFn(ctx, args, loc);
+    /* LCOV_EXCL_START */
     default:
-      /* LCOV_EXCL_START */
       assert(false);
       return nullptr;
-      /* LCOV_EXCL_END */
+    /* LCOV_EXCL_END */
   }
 }
 
 sym::ScopePtr stela::makeBuiltinModule(sym::Builtins &btn) {
-  auto scope = std::make_unique<sym::Scope>(nullptr, sym::ScopeType::ns);
+  auto scope = std::make_unique<sym::Scope>(nullptr, "$builtin");
   insertTypes(scope->table, btn);
   insertFuncs(scope->table);
   return scope;

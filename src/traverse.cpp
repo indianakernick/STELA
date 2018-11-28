@@ -83,7 +83,6 @@ public:
       sym::ScopeType::closure,
       ctx.man.cur()
     );
-    assert(funcScope);
     assert(funcScope->symbol);
     ast::TypePtr retType;
     if (auto func = dynamic_cast<sym::Func *>(funcScope->symbol)) {
@@ -195,9 +194,6 @@ public:
   void visit(ast::Assign &as) override {
     const sym::ExprType left = getExprType(ctx, as.left, nullptr);
     const sym::ExprType right = getExprType(ctx, as.right, left.type);
-    if (!compareTypes(ctx, left.type, right.type)) {
-      ctx.log.error(as.loc) << "Assignment types do not match" << fatal;
-    }
     if (left.mut == sym::ValueMut::let) {
       ctx.log.error(as.loc) << "Left side of assignment must be mutable" << fatal;
     }

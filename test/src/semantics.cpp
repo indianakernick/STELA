@@ -1618,6 +1618,12 @@ TEST_GROUP(Semantics, {
     )");
   });
   
+  TEST(Variable shadow with builtin function, {
+    ASSERT_SUCCEEDS(R"(
+      let size = 4;
+    )");
+  });
+  
   TEST(Cannot cast struct{} to [sint], {
     ASSERT_FAILS(R"(
       let test = make [sint] make struct{} {};
@@ -1808,6 +1814,14 @@ TEST_GROUP(Semantics, {
       func (self: IntStack) empty() -> bool {
         return size(self) == 0u;
       }
+    )");
+  });
+  
+  TEST(Bad call to member function, {
+    ASSERT_FAILS(R"(
+      let thing = 11;
+      let val = make struct{} {};
+      let result = val.thing();
     )");
   });
 
