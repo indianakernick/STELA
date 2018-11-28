@@ -16,7 +16,8 @@ namespace stela {
 enum class ExprKind {
   call,
   member,
-  free_fun,
+  func,
+  btn_func,
   expr,
   subexpr
 };
@@ -28,6 +29,7 @@ public:
   void pushMember(const sym::Name &);
   void pushMemberExpr(const ast::TypePtr &);
   void pushFunc(const sym::Name &);
+  void pushBtnFunc(const sym::Name &);
   
   ExprKind top() const;
   /// top == kind && below top == member && below below top != call
@@ -38,9 +40,10 @@ public:
   bool call(ExprKind) const;
   
   void popCall();
-  sym::Name popMember();
   sym::ExprType popExpr();
+  sym::Name popMember();
   sym::Name popFunc();
+  sym::Name popBtnFunc();
   
   void setExpr(sym::ExprType);
   void enterSubExpr();
@@ -59,6 +62,7 @@ private:
   sym::ExprType exprType = sym::null_type;
   
   void pop(ExprKind);
+  sym::Name popName(ExprKind);
 };
 
 }

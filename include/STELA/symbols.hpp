@@ -150,6 +150,12 @@ struct Lambda final : Symbol {
   std::vector<Object *> captures;
 };
 
+struct BtnFunc final : Symbol {
+  ~BtnFunc();
+  
+  retain_ptr<ast::BtnFunc> node;
+};
+
 struct Builtins {
   // Builtin types
   ast::BtnTypePtr Bool;

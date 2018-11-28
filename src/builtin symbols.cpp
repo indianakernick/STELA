@@ -14,9 +14,9 @@ using namespace stela;
 
 namespace {
 
-stela::retain_ptr<ast::BtnType> pushType(
+stela::ast::BtnTypePtr insertType(
   sym::Table &table,
-  const ast::BtnType::Enum e,
+  const ast::BtnTypeEnum e,
   const ast::Name name
 ) {
   auto type = stela::make_retain<ast::BtnType>(e);
@@ -30,23 +30,39 @@ stela::retain_ptr<ast::BtnType> pushType(
   return type;
 }
 
-void insertTypes(sym::Table &table, sym::Builtins &t) {
-  t.Bool = pushType(table, ast::BtnType::Bool, "bool");
-  t.Byte = pushType(table, ast::BtnType::Byte, "byte");
-  t.Char = pushType(table, ast::BtnType::Char, "char");
-  t.Real = pushType(table, ast::BtnType::Real, "real");
-  t.Sint = pushType(table, ast::BtnType::Sint, "sint");
-  t.Uint = pushType(table, ast::BtnType::Uint, "uint");
+void insertTypes(sym::Table &table, sym::Builtins &btn) {
+  btn.Bool = insertType(table, ast::BtnTypeEnum::Bool, "bool");
+  btn.Byte = insertType(table, ast::BtnTypeEnum::Byte, "byte");
+  btn.Char = insertType(table, ast::BtnTypeEnum::Char, "char");
+  btn.Real = insertType(table, ast::BtnTypeEnum::Real, "real");
+  btn.Sint = insertType(table, ast::BtnTypeEnum::Sint, "sint");
+  btn.Uint = insertType(table, ast::BtnTypeEnum::Uint, "uint");
   
   // A string literal has the type [char]
   auto charName = make_retain<ast::NamedType>();
   charName->name = "char";
   auto string = make_retain<ast::ArrayType>();
   string->elem = std::move(charName);
-  t.string = std::move(string);
+  btn.string = std::move(string);
 }
 
-using TypeEnum = ast::BtnType::Enum;
+void insertFunc(sym::Table &table, const ast::BtnFuncEnum e, const ast::Name name) {
+  auto symbol = std::make_unique<sym::BtnFunc>();
+  symbol->node = make_retain<ast::BtnFunc>(e);
+  table.insert({sym::Name{name}, std::move(symbol)});
+}
+
+void insertFuncs(sym::Table &table) {
+  insertFunc(table, ast::BtnFuncEnum::duplicate, "duplicate");
+  insertFunc(table, ast::BtnFuncEnum::capacity,  "capacity");
+  insertFunc(table, ast::BtnFuncEnum::size,      "size");
+  insertFunc(table, ast::BtnFuncEnum::push_back, "push_back");
+  insertFunc(table, ast::BtnFuncEnum::pop_back,  "pop_back");
+  insertFunc(table, ast::BtnFuncEnum::resize,    "resize");
+  insertFunc(table, ast::BtnFuncEnum::reserve,   "reserve");
+}
+
+using TypeEnum = ast::BtnTypeEnum;
 
 bool isBoolType(const TypeEnum type) {
   return type == TypeEnum::Bool;
@@ -178,8 +194,18 @@ bool stela::validSubscript(const ast::BtnTypePtr &index) {
   return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
 }
 
+ast::TypePtr stela::callBtnFunc(
+  sym::Ctx ctx,
+  const ast::BtnFuncEnum e,
+  const sym::FuncParams &args,
+  const Loc loc
+) {
+  return ctx.btn.Uint;
+}
+
 sym::ScopePtr stela::makeBuiltinModule(sym::Builtins &btn) {
   auto scope = std::make_unique<sym::Scope>(nullptr, sym::ScopeType::ns);
   insertTypes(scope->table, btn);
+  insertFuncs(scope->table);
   return scope;
 }

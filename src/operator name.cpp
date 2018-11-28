@@ -106,22 +106,22 @@ std::string_view stela::opName(const ast::UnOp op) {
   }
 }
 
-std::string_view stela::typeName(const ast::BtnType::Enum type) {
+std::string_view stela::typeName(const ast::BtnTypeEnum type) {
   switch (type) {
     /* LCOV_EXCL_START */
-    case ast::BtnType::Void:
+    case ast::BtnTypeEnum::Void:
       return "void";
-    case ast::BtnType::Bool:
+    case ast::BtnTypeEnum::Bool:
       return "bool";
-    case ast::BtnType::Byte:
+    case ast::BtnTypeEnum::Byte:
       return "byte";
-    case ast::BtnType::Char:
+    case ast::BtnTypeEnum::Char:
       return "char";
-    case ast::BtnType::Real:
+    case ast::BtnTypeEnum::Real:
       return "real";
-    case ast::BtnType::Sint:
+    case ast::BtnTypeEnum::Sint:
       return "sint";
-    case ast::BtnType::Uint:
+    case ast::BtnTypeEnum::Uint:
       return "uint";
     default:
       assert(false);

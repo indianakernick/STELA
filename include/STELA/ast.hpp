@@ -63,24 +63,24 @@ using Name = std::string_view;
 
 //--------------------------------- Types --------------------------------------
 
+enum class BtnTypeEnum {
+  // builtin symbols.cpp depends on the order
+  Void,
+  Bool,
+  Byte,
+  Char,
+  Real,
+  Sint,
+  Uint
+};
+
 struct BtnType final : Type {
-  // not a strong enum
-  // BtnType::Int instead of BtnType::Enum::Int
-  enum Enum {
-    // builtin symbols.cpp depends on the order
-    Void,
-    Bool,
-    Byte,
-    Char,
-    Real,
-    Sint,
-    Uint
-  } value;
-  
-  explicit BtnType(const Enum value)
+  explicit BtnType(const BtnTypeEnum value)
     : value{value} {}
 
   void accept(Visitor &) override;
+  
+  const BtnTypeEnum value;
 };
 using BtnTypePtr = retain_ptr<BtnType>;
 
@@ -167,8 +167,9 @@ struct Func;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
+  // could be a Func or a BtnFunc
   // null if calling a function pointer
-  Func *definition = nullptr;
+  Declaration *definition = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -293,6 +294,25 @@ struct Func final : Declaration {
   Block body;
   
   void accept(Visitor &) override;
+};
+
+enum class BtnFuncEnum {
+  duplicate,
+  capacity,
+  size,
+  push_back,
+  pop_back,
+  resize,
+  reserve
+};
+
+struct BtnFunc final : Declaration {
+  explicit BtnFunc(const BtnFuncEnum value)
+    : value{value} {}
+  
+  void accept(Visitor &) override;
+  
+  const BtnFuncEnum value;
 };
 
 struct Var final : Declaration {
@@ -452,6 +472,7 @@ public:
   
   // declarations
   virtual void visit(Func &) {}
+  virtual void visit(BtnFunc &) {}
   virtual void visit(Var &) {}
   virtual void visit(Let &) {}
   virtual void visit(TypeAlias &) {}

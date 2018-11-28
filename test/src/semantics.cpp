@@ -45,7 +45,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(syms.global->parent, syms.scopes[0].get());
     ASSERT_FALSE(syms.global->parent->parent);
     
-    ASSERT_EQ(syms.scopes[0]->table.size(), 6);
+    ASSERT_FALSE(syms.scopes[0]->table.empty());
     ASSERT_TRUE(syms.scopes[1]->table.empty());
   });
   
@@ -64,7 +64,7 @@ TEST_GROUP(Semantics, {
     ASSERT_EQ(syms.global->parent->parent, syms.scopes[0].get());
     ASSERT_FALSE(syms.global->parent->parent->parent);
     
-    ASSERT_EQ(syms.scopes[0]->table.size(), 6);
+    ASSERT_FALSE(syms.scopes[0]->table.empty());
     ASSERT_TRUE(syms.scopes[1]->table.empty());
     ASSERT_TRUE(syms.scopes[2]->table.empty());
   });
@@ -1494,6 +1494,14 @@ TEST_GROUP(Semantics, {
     )");
   });
   
+  TEST(Immediately invoked lambda, {
+    ASSERT_SUCCEEDS(R"(
+      let nine = func() -> sint {
+        return 4 + 5;
+      }();
+    )");
+  });
+  
   TEST(Lambda wrong args, {
     ASSERT_FAILS(R"(
       func test() {
@@ -1677,6 +1685,19 @@ TEST_GROUP(Semantics, {
         let fls = true && nullFn;
         let folse = false || nullFn;
       }
+    )");
+  });
+  
+  TEST(Address of builtin function, {
+    ASSERT_FAILS(R"(
+      let ptr = push_back;
+    )");
+  });
+  
+  TEST(Builtin functions, {
+    ASSERT_SUCCEEDS(R"(
+      let array = [1, 4, 9, 16, 25, 36];
+      let six: uint = size(array);
     )");
   });
 

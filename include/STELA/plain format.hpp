@@ -18,6 +18,9 @@ namespace stela {
 std::string plainFormat(const fmt::Tokens &, uint32_t = 2);
 void plainFormat(std::ostream &, const fmt::Tokens &, uint32_t = 2);
 
+std::string plainFormatInline(const fmt::Tokens &);
+void plainFormatInline(std::ostream &, const fmt::Tokens &);
+
 }
 
 #endif

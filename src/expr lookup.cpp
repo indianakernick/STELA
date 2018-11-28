@@ -9,10 +9,12 @@
 #include "expr lookup.hpp"
 
 #include <cassert>
+#include "symbol desc.hpp"
 #include "scope lookup.hpp"
 #include "scope insert.hpp"
 #include "compare types.hpp"
 #include "scope traverse.hpp"
+#include "builtin symbols.hpp"
 #include "compare params args.hpp"
 
 using namespace stela;
@@ -54,6 +56,16 @@ sym::Func *ExprLookup::lookupFun(
   }
 }
 
+sym::BtnFunc *ExprLookup::lookupBtnFun(
+  sym::Scope *scope,
+  const sym::Name &name
+) {
+  const auto [symbol, s] = findScope(scope, name);
+  auto *func = dynamic_cast<sym::BtnFunc *>(symbol);
+  assert(func);
+  return func;
+}
+
 namespace {
 
 sym::FuncParams pushReceiver(const sym::ExprType &receiver, const sym::FuncParams &args) {
@@ -66,17 +78,29 @@ sym::FuncParams pushReceiver(const sym::ExprType &receiver, const sym::FuncParam
 
 }
 
-ast::Func *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc loc) {
+ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc loc) {
   if (stack.memFunExpr(ExprKind::expr)) {
     sym::ExprType receiver = stack.popExpr();
     sym::Name name = stack.popMember();
     const FunKey key {name, pushReceiver(receiver, args)};
     return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
   }
-  if (stack.call(ExprKind::free_fun)) {
+  if (stack.call(ExprKind::func)) {
     sym::Name name = stack.popFunc();
     const FunKey key {name, pushReceiver(sym::null_type, args)};
     return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
+  }
+  if (stack.call(ExprKind::btn_func)) {
+    sym::Name name = stack.popBtnFunc();
+    sym::Symbol *symbol = findScope(ctx.man.cur(), name).symbol;
+    assert(symbol);
+    sym::BtnFunc *func = dynamic_cast<sym::BtnFunc *>(symbol);
+    assert(func);
+    stack.popCall();
+    assert(func->node);
+    ast::TypePtr retType = callBtnFunc(ctx, func->node->value, args, loc);
+    stack.pushExpr(sym::makeLetVal(std::move(retType)));
+    return func->node.get();
   }
   if (stack.call(ExprKind::expr)) {
     sym::ExprType expr = stack.popExpr();
@@ -107,21 +131,22 @@ void ExprLookup::member(const sym::Name &name) {
 
 ast::Field *ExprLookup::lookupMember(const Loc loc) {
   if (stack.memVarExpr(ExprKind::expr)) {
-    ast::TypePtr type = lookupConcreteType(ctx, stack.popExpr().type);
+    ast::TypePtr type = stack.popExpr().type;
+    ast::TypePtr concType = lookupConcreteType(ctx, type);
     const sym::Name name = stack.popMember();
-    if (type == sym::void_type.type) {
+    if (concType == sym::void_type.type) {
       ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
-    if (auto strut = dynamic_pointer_cast<ast::StructType>(std::move(type))) {
+    if (auto strut = dynamic_pointer_cast<ast::StructType>(concType)) {
       for (ast::Field &field : strut->fields) {
         if (field.name == name) {
           stack.pushMemberExpr(field.type);
           return &field;
         }
       }
-      ctx.log.error(loc) << "No field \"" << name << "\" found in struct" << fatal;
+      ctx.log.error(loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
     } else {
-      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of non-struct expression" << fatal;
+      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of " << typeDesc(type) << fatal;
     }
   }
   return nullptr;
@@ -148,14 +173,23 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
     stack.pushExpr(object->etype);
     return object->node.get();
   }
-  if (stack.top() == ExprKind::call) {
-    stack.pushFunc(name);
+  if (dynamic_cast<sym::Func *>(symbol)) {
+    if (stack.top() == ExprKind::call) {
+      stack.pushFunc(name);
+      return nullptr;
+    } else {
+      return pushFunPtr(scope, name, loc);
+    }
+  }
+  if (dynamic_cast<sym::BtnFunc *>(symbol)) {
+    if (stack.top() != ExprKind::call) {
+      ctx.log.error(loc) << "Reference to builtin function \"" << name << "\" must be called" << fatal;
+    }
+    stack.pushBtnFunc(name);
     return nullptr;
   }
-  if (auto *func = dynamic_cast<sym::Func *>(symbol)) {
-    return pushFunPtr(scope, name, loc);
-  }
-  ctx.log.error(loc) << "Expected variable or function name but found \"" << name << "\"" << fatal;
+  ctx.log.error(loc) << "Expected variable or function but found "
+    << symbolDesc(symbol) << " \"" << name << "\"" << fatal;
 }
 
 void ExprLookup::setExpr(sym::ExprType type) {
@@ -177,6 +211,7 @@ void ExprLookup::expected(const ast::TypePtr &type) {
 ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   stack.popCall();
   stack.pushExpr(func->ret.type ? func->ret : sym::void_type);
+  assert(func->node);
   return func->node.get();
 }
 

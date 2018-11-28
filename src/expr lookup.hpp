@@ -66,7 +66,7 @@ public:
   explicit ExprLookup(sym::Ctx);
   
   void call();
-  ast::Func *lookupFunc(const sym::FuncParams &, Loc);
+  ast::Declaration *lookupFunc(const sym::FuncParams &, Loc);
     // memFunExpr(expr)
     //   pop expr
     //   pop member
@@ -119,6 +119,7 @@ private:
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &);
   sym::Func *lookupFun(sym::Scope *, const FunKey &, Loc);
+  sym::BtnFunc *lookupBtnFun(sym::Scope *, const sym::Name &);
   
   ast::Func *pushFunPtr(sym::Scope *, const sym::Name &, Loc);
 };

@@ -11,6 +11,7 @@
 
 #include "ast.hpp"
 #include "symbols.hpp"
+#include "context.hpp"
 
 namespace stela {
 
@@ -27,6 +28,8 @@ retain_ptr<ast::BtnType> validOp(
 );
 bool validOp(ast::AssignOp, const ast::BtnTypePtr &, const ast::BtnTypePtr &);
 bool validSubscript(const ast::BtnTypePtr &);
+
+ast::TypePtr callBtnFunc(sym::Ctx, ast::BtnFuncEnum, const sym::FuncParams &, Loc);
 
 sym::ScopePtr makeBuiltinModule(sym::Builtins &);
 

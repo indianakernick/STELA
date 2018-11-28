@@ -30,7 +30,11 @@ void ExprStack::pushMemberExpr(const ast::TypePtr &type) {
 }
 
 void ExprStack::pushFunc(const sym::Name &name) {
-  exprs.push_back(Expr{ExprKind::free_fun, name});
+  exprs.push_back(Expr{ExprKind::func, name});
+}
+
+void ExprStack::pushBtnFunc(const sym::Name &name) {
+  exprs.push_back(Expr{ExprKind::btn_func, name});
 }
 
 ExprKind ExprStack::top() const {
@@ -69,22 +73,20 @@ void ExprStack::popCall() {
 }
 
 sym::Name ExprStack::popMember() {
-  assert(top() == ExprKind::member);
-  sym::Name name = std::move(exprs.back().name);
-  exprs.pop_back();
-  return name;
+  return popName(ExprKind::member);
+}
+
+sym::Name ExprStack::popFunc() {
+  return popName(ExprKind::func);
+}
+
+sym::Name ExprStack::popBtnFunc() {
+  return popName(ExprKind::btn_func);
 }
 
 sym::ExprType ExprStack::popExpr() {
   pop(ExprKind::expr);
   return exprType;
-}
-
-sym::Name ExprStack::popFunc() {
-  assert(top() == ExprKind::free_fun);
-  sym::Name name = std::move(exprs.back().name);
-  exprs.pop_back();
-  return name;
 }
 
 ExprStack::Expr::Expr(const ExprKind kind)
@@ -98,7 +100,11 @@ ExprStack::Expr::Expr(const ExprKind kind)
 
 ExprStack::Expr::Expr(const ExprKind kind, const sym::Name &name)
   : kind{kind}, name{name} {
-  assert(kind == ExprKind::member || kind == ExprKind::free_fun);
+  assert(
+    kind == ExprKind::member ||
+    kind == ExprKind::func   ||
+    kind == ExprKind::btn_func
+  );
 }
 
 void ExprStack::setExpr(const sym::ExprType type) {
@@ -119,4 +125,11 @@ sym::ExprType ExprStack::leaveSubExpr() {
 void ExprStack::pop(const ExprKind kind) {
   assert(top() == kind);
   exprs.pop_back();
+}
+
+sym::Name ExprStack::popName(const ExprKind kind) {
+  assert(top() == kind);
+  sym::Name name = std::move(exprs.back().name);
+  exprs.pop_back();
+  return name;
 }

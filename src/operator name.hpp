@@ -16,7 +16,7 @@ namespace stela {
 std::string_view opName(ast::AssignOp);
 std::string_view opName(ast::BinOp);
 std::string_view opName(ast::UnOp);
-std::string_view typeName(ast::BtnType::Enum);
+std::string_view typeName(ast::BtnTypeEnum);
 
 }
 

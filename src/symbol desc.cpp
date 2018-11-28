@@ -12,8 +12,10 @@
 #include "plain format.hpp"
 
 std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
+  // @TODO visitor maybe?
   assert(symbol);
   if (auto *type = dynamic_cast<const sym::TypeAlias *>(symbol)) {
+    // @TODO say "builtin type" for builtin types
     return "type";
   }
   if (auto *object = dynamic_cast<const sym::Object *>(symbol)) {
@@ -25,6 +27,12 @@ std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
   if (auto *lambda = dynamic_cast<const sym::Lambda *>(symbol)) {
     return "lambda";
   }
+  if (auto *btnFunc = dynamic_cast<const sym::BtnFunc *>(symbol)) {
+    // If we say "builtin function" here, we'll still be saying "type" when
+    // talking about bool so we'll have to find a way to say "builtin type" when
+    // dealing with sint
+    return "function";
+  }
   /* LCOV_EXCL_START */
   assert(false);
   return "";
@@ -32,5 +40,5 @@ std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
 }
 
 std::string stela::typeDesc(const ast::TypePtr &type) {
-  return plainFormat(format(type.get()));
+  return plainFormatInline(format(type.get()));
 }

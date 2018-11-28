@@ -46,3 +46,26 @@ void stela::plainFormat(std::ostream &stream, const fmt::Tokens &tokens, const u
     }
   }
 }
+
+std::string stela::plainFormatInline(const fmt::Tokens &tokens) {
+  std::string out;
+  out.reserve(tokens.size() * 8);
+  for (const fmt::Token &token : tokens) {
+    if (token.tag == fmt::Tag::newline) {
+      out.push_back(' ');
+    } else if (token.tag != fmt::Tag::indent) {
+      out.append(token.text.data(), token.text.size());
+    }
+  }
+  return out;
+}
+
+void stela::plainFormatInline(std::ostream &stream, const fmt::Tokens &tokens) {
+  for (const fmt::Token &token : tokens) {
+    if (token.tag == fmt::Tag::newline) {
+      stream.put(' ');
+    } else if (token.tag != fmt::Tag::indent) {
+      stream.write(token.text.data(), static_cast<std::streamsize>(token.text.size()));
+    }
+  }
+}
