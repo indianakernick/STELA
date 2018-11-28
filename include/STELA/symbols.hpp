@@ -111,8 +111,7 @@ inline bool callMutRef(const ExprType &param, const ExprType &arg) {
   return param.ref == sym::ValueRef::val || callMut(param.mut, arg.mut);
 }
 
-extern const ExprType null_type;
-extern const ExprType void_type;
+const ExprType null_type {};
 
 struct TypeAlias final : Symbol {
   ~TypeAlias();
@@ -158,6 +157,7 @@ struct BtnFunc final : Symbol {
 
 struct Builtins {
   // Builtin types
+  ast::BtnTypePtr Void;
   ast::BtnTypePtr Bool;
   ast::BtnTypePtr Byte;
   ast::BtnTypePtr Char;

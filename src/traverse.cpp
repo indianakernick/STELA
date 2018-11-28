@@ -93,11 +93,11 @@ public:
     } else {
       assert(false);
     }
-    retType = retType ? retType : sym::void_type.type;
+    retType = retType ? retType : ast::TypePtr{ctx.btn.Void};
     if (ret.expr) {
       getExprType(ctx, ret.expr, retType);
     } else {
-      if (!compareTypes(ctx, retType, sym::void_type.type)) {
+      if (!compareTypes(ctx, retType, ctx.btn.Void)) {
         ctx.log.error(ret.loc) << "Expected " << typeDesc(retType) << " but got void" << fatal;
       }
     }
@@ -139,7 +139,7 @@ public:
       validateType(ctx, type);
     }
     sym::ExprType exprType = expr ? getExprType(ctx, expr, type) : sym::null_type;
-    if (exprType.type == sym::void_type.type) {
+    if (compareTypes(ctx, exprType.type, ctx.btn.Void)) {
       ctx.log.error(loc) << "Cannot initialize variable with void expression" << fatal;
     }
     if (!type && !expr) {
@@ -209,7 +209,7 @@ public:
   }
   void visit(ast::CallAssign &as) override {
     const sym::ExprType etype = getExprType(ctx, {retain, &as.call}, nullptr);
-    if (etype.type != sym::void_type.type) {
+    if (!compareTypes(ctx, etype.type, ctx.btn.Void)) {
       ctx.log.error(as.loc) << "Discarded return value" << fatal;
     }
   }

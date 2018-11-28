@@ -16,8 +16,3 @@ sym::Object::~Object() = default;
 sym::Func::~Func() = default;
 sym::Lambda::~Lambda() = default;
 sym::BtnFunc::~BtnFunc() = default;
-
-const sym::ExprType sym::null_type {};
-const sym::ExprType sym::void_type {
-  make_retain<ast::BtnType>(ast::BtnTypeEnum::Void), {}, {}
-};

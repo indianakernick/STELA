@@ -34,6 +34,7 @@ stela::ast::BtnTypePtr insertType(
 }
 
 void insertTypes(sym::Table &table, sym::Builtins &btn) {
+  btn.Void = stela::make_retain<ast::BtnType>(ast::BtnTypeEnum::Void);
   btn.Bool = insertType(table, ast::BtnTypeEnum::Bool, "bool");
   btn.Byte = insertType(table, ast::BtnTypeEnum::Byte, "byte");
   btn.Char = insertType(table, ast::BtnTypeEnum::Char, "char");
@@ -260,7 +261,7 @@ ast::TypePtr pushBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc
     ctx.log.error(loc) << "Expected T or [T] for second argument to builtin function"
       << " \"push_back\" but got " << typeDesc(args[1].type) << fatal;
   }
-  return sym::void_type.type;
+  return ctx.btn.Void;
 }
 
 // func pop_back<T>(arr: inout [T]);
@@ -268,7 +269,7 @@ ast::TypePtr popBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc)
   checkArgs(ctx.log, "pop_back", loc, args.size() == 1);
   checkArray(ctx, "pop_back", loc, args[0].type);
   checkMutRef(ctx.log, "pop_back", loc, args[0]);
-  return sym::void_type.type;
+  return ctx.btn.Void;
 }
 
 // func resize<T>(arr: inout [T], size: uint);
@@ -277,7 +278,7 @@ ast::TypePtr resizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) 
   checkArray(ctx, "resize", loc, args[0].type);
   checkMutRef(ctx.log, "resize", loc, args[0]);
   checkUint(ctx, "resize", loc, args[1].type);
-  return sym::void_type.type;
+  return ctx.btn.Void;
 }
 
 // func reserve<T>(arr: inout [T], size: uint);
@@ -286,7 +287,7 @@ ast::TypePtr reserveFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc)
   checkArray(ctx, "reserve", loc, args[0].type);
   checkMutRef(ctx.log, "reserve", loc, args[0]);
   checkUint(ctx, "reserve", loc, args[1].type);
-  return sym::void_type.type;
+  return ctx.btn.Void;
 }
 
 }

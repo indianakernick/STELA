@@ -116,7 +116,11 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
     if (!compatParams(ctx, params, args)) {
       ctx.log.error(loc) << "No matching call to function object" << fatal;
     }
-    stack.pushExpr(func->ret ? convert(ctx, func->ret, ast::ParamRef::value) : sym::void_type);
+    if (func->ret) {
+      stack.pushExpr(convert(ctx, func->ret, ast::ParamRef::value));
+    } else {
+      stack.pushExpr(sym::makeLetVal(ctx.btn.Void));
+    }
     return nullptr;
   }
   /* LCOV_EXCL_START */
@@ -134,7 +138,7 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
     ast::TypePtr type = stack.popExpr().type;
     ast::TypePtr concType = lookupConcreteType(ctx, type);
     const sym::Name name = stack.popMember();
-    if (concType == sym::void_type.type) {
+    if (compareTypes(ctx, concType, ctx.btn.Void)) {
       ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(concType)) {
@@ -210,7 +214,7 @@ void ExprLookup::expected(const ast::TypePtr &type) {
 
 ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   stack.popCall();
-  stack.pushExpr(func->ret.type ? func->ret : sym::void_type);
+  stack.pushExpr(func->ret.type ? func->ret : sym::makeLetVal(ctx.btn.Void));
   assert(func->node);
   return func->node.get();
 }
