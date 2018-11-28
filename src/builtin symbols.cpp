@@ -8,7 +8,10 @@
 
 #include "builtin symbols.hpp"
 
+#include "symbol desc.hpp"
+#include "scope lookup.hpp"
 #include "operator name.hpp"
+#include "compare types.hpp"
 
 using namespace stela;
 
@@ -194,13 +197,127 @@ bool stela::validSubscript(const ast::BtnTypePtr &index) {
   return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
 }
 
+namespace {
+
+void checkArgs(Log &log, const ast::Name name, const Loc loc, const bool correct) {
+  if (!correct) {
+    log.error(loc) << "No matching call to builtin function \"" << name << '"' << fatal;
+  }
+}
+
+stela::retain_ptr<ast::ArrayType> checkArray(sym::Ctx ctx, const ast::Name name, const Loc loc, const ast::TypePtr &type) {
+  auto array = lookupConcrete<ast::ArrayType>(ctx, type);
+  if (!array) {
+    ctx.log.error(loc) << "Expected [T] in call to builtin function \"" << name
+      << "\" but got " << typeDesc(type) << fatal;
+  }
+  return array;
+}
+
+void checkUint(sym::Ctx ctx, const ast::Name name, const Loc loc, const ast::TypePtr &type) {
+  if (!compareTypes(ctx, ctx.btn.Uint, type)) {
+    ctx.log.error(loc) << "Expected uint in call to builtin function \"" << name
+      << "\" but got " << typeDesc(type) << fatal;
+  }
+}
+
+void checkMutRef(Log &log, const ast::Name name, const Loc loc, const sym::ExprType &etype) {
+  const sym::ExprType varRef = {nullptr, sym::ValueMut::var, sym::ValueRef::ref};
+  if (!sym::callMutRef(varRef, etype)) {
+    log.error(loc) << "No matching call to builtin function \"" << name << '"' << fatal;
+  }
+}
+
+// func duplicate<T>(arr: [T]) -> [T];
+ast::TypePtr duplicateFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "duplicate", loc, args.size() == 1);
+  checkArray(ctx, "duplicate", loc, args[0].type);
+  return args[0].type;
+}
+
+// func capacity<T>(arr: [T]) -> uint;
+ast::TypePtr capacityFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "capacity", loc, args.size() == 1);
+  checkArray(ctx, "capacity", loc, args[0].type);
+  return ctx.btn.Uint;
+}
+
+// func size<T>(arr: [T]) -> uint;
+ast::TypePtr sizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "size", loc, args.size() == 1);
+  checkArray(ctx, "size", loc, args[0].type);
+  return ctx.btn.Uint;
+}
+
+// func push_back<T>(arr: inout [T], elem: T);
+// func push_back<T>(arr: inout [T], other: [T]);
+ast::TypePtr pushBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "push_back", loc, args.size() == 2);
+  auto array = checkArray(ctx, "push_back", loc, args[0].type);
+  checkMutRef(ctx.log, "push_back", loc, args[0]);
+  auto arg = args[1].type;
+  if (!compareTypes(ctx, arg, array->elem) && !compareTypes(ctx, arg, array)) {
+    ctx.log.error(loc) << "Expected T or [T] for second argument to builtin function"
+      << " \"push_back\" but got " << typeDesc(args[1].type) << fatal;
+  }
+  return sym::void_type.type;
+}
+
+// func pop_back<T>(arr: inout [T]);
+ast::TypePtr popBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "pop_back", loc, args.size() == 1);
+  checkArray(ctx, "pop_back", loc, args[0].type);
+  checkMutRef(ctx.log, "pop_back", loc, args[0]);
+  return sym::void_type.type;
+}
+
+// func resize<T>(arr: inout [T], size: uint);
+ast::TypePtr resizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "resize", loc, args.size() == 2);
+  checkArray(ctx, "resize", loc, args[0].type);
+  checkMutRef(ctx.log, "resize", loc, args[0]);
+  checkUint(ctx, "resize", loc, args[1].type);
+  return sym::void_type.type;
+}
+
+// func reserve<T>(arr: inout [T], size: uint);
+ast::TypePtr reserveFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "reserve", loc, args.size() == 2);
+  checkArray(ctx, "reserve", loc, args[0].type);
+  checkMutRef(ctx.log, "reserve", loc, args[0]);
+  checkUint(ctx, "reserve", loc, args[1].type);
+  return sym::void_type.type;
+}
+
+}
+
 ast::TypePtr stela::callBtnFunc(
   sym::Ctx ctx,
   const ast::BtnFuncEnum e,
   const sym::FuncParams &args,
   const Loc loc
 ) {
-  return ctx.btn.Uint;
+  switch (e) {
+    case ast::BtnFuncEnum::duplicate:
+      return duplicateFn(ctx, args, loc);
+    case ast::BtnFuncEnum::capacity:
+      return capacityFn(ctx, args, loc);
+    case ast::BtnFuncEnum::size:
+      return sizeFn(ctx, args, loc);
+    case ast::BtnFuncEnum::push_back:
+      return pushBackFn(ctx, args, loc);
+    case ast::BtnFuncEnum::pop_back:
+      return popBackFn(ctx, args, loc);
+    case ast::BtnFuncEnum::resize:
+      return resizeFn(ctx, args, loc);
+    case ast::BtnFuncEnum::reserve:
+      return reserveFn(ctx, args, loc);
+    default:
+      /* LCOV_EXCL_START */
+      assert(false);
+      return nullptr;
+      /* LCOV_EXCL_END */
+  }
 }
 
 sym::ScopePtr stela::makeBuiltinModule(sym::Builtins &btn) {

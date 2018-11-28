@@ -1696,8 +1696,56 @@ TEST_GROUP(Semantics, {
   
   TEST(Builtin functions, {
     ASSERT_SUCCEEDS(R"(
-      let array = [1, 4, 9, 16, 25, 36];
-      let six: uint = size(array);
+      func test() {
+        var array: [sint] = [1, 4, 9, 16, 25, 36];
+        var otherArray: [sint] = duplicate(array);
+        let six: uint = capacity(array);
+        let alsoSix: uint = size(otherArray);
+        push_back(array, make sint six);
+        push_back(array, [49, 64, 81, 100]);
+        pop_back(otherArray);
+        resize(otherArray, size(array));
+        reserve(otherArray, capacity(otherArray) * 5u);
+      }
+    )");
+  });
+  
+  TEST(Too many args to builtin function, {
+    ASSERT_FAILS(R"(
+      let test = size(4, 5, 1, 6, 2);
+    )");
+  });
+  
+  TEST(Expected array in builtin function, {
+    ASSERT_FAILS(R"(
+      let test = size(0);
+    )");
+  });
+  
+  TEST(Expected uint in builtin function, {
+    ASSERT_FAILS(R"(
+      func test() {
+        var array: [sint] = [];
+        resize(array, 55);
+      }
+    )");
+  });
+  
+  TEST(Constant array to builtin function, {
+    ASSERT_FAILS(R"(
+      func test() {
+        let array: [sint] = [];
+        resize(array, 55u);
+      }
+    )");
+  });
+  
+  TEST(Bad argument to push_back, {
+    ASSERT_FAILS(R"(
+      func test() {
+        var array: [sint] = [];
+        push_back(array, make struct{too: real;} {});
+      }
     )");
   });
 
