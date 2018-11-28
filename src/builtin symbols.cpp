@@ -61,6 +61,7 @@ void insertFuncs(sym::Table &table) {
   insertFunc(table, ast::BtnFuncEnum::capacity,  "capacity");
   insertFunc(table, ast::BtnFuncEnum::size,      "size");
   insertFunc(table, ast::BtnFuncEnum::push_back, "push_back");
+  insertFunc(table, ast::BtnFuncEnum::append,    "append");
   insertFunc(table, ast::BtnFuncEnum::pop_back,  "pop_back");
   insertFunc(table, ast::BtnFuncEnum::resize,    "resize");
   insertFunc(table, ast::BtnFuncEnum::reserve,   "reserve");
@@ -251,15 +252,25 @@ ast::TypePtr sizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
 }
 
 // func push_back<T>(arr: inout [T], elem: T);
-// func push_back<T>(arr: inout [T], other: [T]);
 ast::TypePtr pushBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "push_back", loc, args.size() == 2);
   auto array = checkArray(ctx, "push_back", loc, args[0].type);
   checkMutRef(ctx.log, "push_back", loc, args[0]);
-  auto arg = args[1].type;
-  if (!compareTypes(ctx, arg, array->elem) && !compareTypes(ctx, arg, array)) {
-    ctx.log.error(loc) << "Expected T or [T] for second argument to builtin function"
+  if (!compareTypes(ctx, args[1].type, array->elem)) {
+    ctx.log.error(loc) << "Expected T for second argument to builtin function"
       << " \"push_back\" but got " << typeDesc(args[1].type) << fatal;
+  }
+  return ctx.btn.Void;
+}
+
+// func append<T>(arr: inout [T], other: [T]);
+ast::TypePtr appendFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "append", loc, args.size() == 2);
+  auto array = checkArray(ctx, "append", loc, args[0].type);
+  checkMutRef(ctx.log, "append", loc, args[0]);
+  if (!compareTypes(ctx, args[1].type, array)) {
+    ctx.log.error(loc) << "Expected [T] for second argument to builtin function"
+      << " \"append\" but got " << typeDesc(args[1].type) << fatal;
   }
   return ctx.btn.Void;
 }
@@ -307,6 +318,8 @@ ast::TypePtr stela::callBtnFunc(
       return sizeFn(ctx, args, loc);
     case ast::BtnFuncEnum::push_back:
       return pushBackFn(ctx, args, loc);
+    case ast::BtnFuncEnum::append:
+      return appendFn(ctx, args, loc);
     case ast::BtnFuncEnum::pop_back:
       return popBackFn(ctx, args, loc);
     case ast::BtnFuncEnum::resize:

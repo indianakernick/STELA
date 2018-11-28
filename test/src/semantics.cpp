@@ -1702,7 +1702,7 @@ TEST_GROUP(Semantics, {
         let six: uint = capacity(array);
         let alsoSix: uint = size(otherArray);
         push_back(array, make sint six);
-        push_back(array, [49, 64, 81, 100]);
+        append(array, [49, 64, 81, 100]);
         pop_back(otherArray);
         resize(otherArray, size(array));
         reserve(otherArray, capacity(otherArray) * 5u);
@@ -1745,6 +1745,15 @@ TEST_GROUP(Semantics, {
       func test() {
         var array: [sint] = [];
         push_back(array, make struct{too: real;} {});
+      }
+    )");
+  });
+  
+  TEST(Bad argument to append, {
+    ASSERT_FAILS(R"(
+      func test() {
+        var array: [sint] = [];
+        append(array, 5);
       }
     )");
   });

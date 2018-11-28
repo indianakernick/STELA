@@ -301,6 +301,7 @@ enum class BtnFuncEnum {
   capacity,
   size,
   push_back,
+  append,
   pop_back,
   resize,
   reserve

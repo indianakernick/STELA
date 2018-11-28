@@ -34,7 +34,7 @@ func duplicate<T>(arr: [T]) -> [T];
 func capacity<T>(arr: [T]) -> uint;
 func size<T>(arr: [T]) -> uint;
 func push_back<T>(arr: inout [T], elem: T);
-func push_back<T>(arr: inout [T], other: [T]);
+func append<T>(arr: inout [T], other: [T]);
 func pop_back<T>(arr: inout [T]);
 func resize<T>(arr: inout [T], size: uint);
 func reserve<T>(arr: inout [T], size: uint);
