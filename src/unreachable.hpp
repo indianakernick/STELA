@@ -9,21 +9,16 @@
 #ifndef engine_unreachable_hpp
 #define engine_unreachable_hpp
 
-#if defined(TEST_COVERAGE)
-
-#pragma message "Doing nothing in unreachable contexts"
-#define UNREACHABLE() void("LCOV_EXCL_LINE")
-
-#elif defined(NDEBUG) && (defined(__GNUC__) || defined(__clang__))
+#if defined(NDEBUG) && (defined(__GNUC__) || defined(__clang__))
 
 #pragma message "Calling __builtin_unreachable in unreachable contexts"
-#define UNREACHABLE() __builtin_unreachable()
+#define UNREACHABLE() void("LCOV_EXCL_LINE");__builtin_unreachable()
 
 #else
 
 #pragma message "Calling std::terminate in unreachable contexts"
 #include <exception>
-#define UNREACHABLE() std::terminate()
+#define UNREACHABLE() void("LCOV_EXCL_LINE");std::terminate()
 
 #endif
 

@@ -47,9 +47,8 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
       return stream << "warning";
     case LogPri::error:
       return stream << "error";
-    case LogPri::nothing: ;
+    default: UNREACHABLE();
   }
-  UNREACHABLE();
 }
 
 std::ostream &stela::operator<<(std::ostream &stream, const Loc loc) {
