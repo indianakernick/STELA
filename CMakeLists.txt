@@ -21,6 +21,7 @@ add_library(STELA STATIC
         "include/STELA/modules.hpp"
         "include/STELA/retain ptr.hpp"
         "include/STELA/plain format.hpp"
+        "include/STELA/code generation.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -81,6 +82,7 @@ add_library(STELA STATIC
         "src/symbol desc.hpp"
         "src/check scopes.cpp"
         "src/check scopes.hpp"
+        "src/code generation.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

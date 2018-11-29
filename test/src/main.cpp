@@ -12,6 +12,7 @@
 #include "syntax.hpp"
 #include "format.hpp"
 #include "semantics.hpp"
+#include "generation.hpp"
 
 int main() {
   int failures = 0;
@@ -19,6 +20,7 @@ int main() {
   failures += testLexer();
   failures += testSyntax();
   failures += testSemantics();
+  failures += testGeneration();
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
   } else if (failures == 1) {

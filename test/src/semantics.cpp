@@ -16,6 +16,8 @@
 using namespace stela;
 using namespace stela::ast;
 
+namespace {
+
 Symbols createSym(const std::string_view source, LogBuf &log) {
   AST ast = createAST(source, log);
   Symbols syms = initModules(log);
@@ -28,6 +30,8 @@ AST makeModuleAST(const ast::Name name, ast::Names &&imports) {
   ast.name = name;
   ast.imports = std::move(imports);
   return ast;
+}
+
 }
 
 #define ASSERT_SUCCEEDS(SOURCE) createSym(SOURCE, log)
