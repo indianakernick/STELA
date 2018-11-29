@@ -79,6 +79,7 @@ bool generate(const std::string_view source, LogBuf &log) {
 
 TEST_GROUP(Generation, {
   stela::StreamLog log;
+  log.pri(LogPri::status);
   
   TEST(Empty source, {
     ASSERT_COMPILES("");

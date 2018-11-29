@@ -133,14 +133,15 @@ let Dir_down  = make Dir 2;
 let Dir_left  = make Dir 3;
 
 func anotherDummy(dir: Dir) -> uint {
+  let two: uint = 2u;
   value := 5u;
   switch (dir) {
     case (Dir_up) {
-      value += 2u;
+      value += two;
       continue;
     }
     case (Dir_right) {
-      value <<= 2u;
+      value <<= two;
       break;
     }
     case (Dir_down) {

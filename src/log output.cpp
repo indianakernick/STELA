@@ -30,6 +30,7 @@ void stela::Log::module(const LogMod module) {
   mod = module;
 }
 
+/* LCOV_EXCL_START */
 stela::LogStream stela::Log::verbose(const Loc loc) {
   return log(LogPri::verbose, loc);
 }
@@ -49,12 +50,14 @@ stela::LogStream stela::Log::warn(const Loc loc) {
 stela::LogStream stela::Log::error(const Loc loc) {
   return log(LogPri::error, loc);
 }
+/* LCOV_EXCL_END */
 
 stela::LogStream stela::Log::log(const LogPri pri, const Loc loc) {
   buf.beginLog(cat, pri, mod, loc);
   return {buf, cat, pri};
 }
 
+/* LCOV_EXCL_START */
 stela::LogStream stela::Log::verbose() {
   return log(LogPri::verbose);
 }
@@ -74,6 +77,7 @@ stela::LogStream stela::Log::warn() {
 stela::LogStream stela::Log::error() {
   return log(LogPri::error);
 }
+/* LCOV_EXCL_END */
 
 stela::LogStream stela::Log::log(const LogPri pri) {
   buf.beginLog(cat, pri, mod);

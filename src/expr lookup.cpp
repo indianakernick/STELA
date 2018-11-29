@@ -56,16 +56,6 @@ sym::Func *ExprLookup::lookupFun(
   }
 }
 
-sym::BtnFunc *ExprLookup::lookupBtnFun(
-  sym::Scope *scope,
-  const sym::Name &name
-) {
-  const auto [symbol, s] = findScope(scope, name);
-  auto *func = dynamic_cast<sym::BtnFunc *>(symbol);
-  assert(func);
-  return func;
-}
-
 namespace {
 
 sym::FuncParams pushReceiver(const sym::ExprType &receiver, const sym::FuncParams &args) {

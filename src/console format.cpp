@@ -12,6 +12,7 @@
 
 namespace {
 
+/* LCOV_EXCL_START */
 void write(const stela::ConStyle &style, const std::string_view text) {
   if (style.bold) {
     std::cout << con::bold;
@@ -68,6 +69,7 @@ void write(const stela::ConStyle &style, const std::string_view text) {
   }
   std::cout << text << con::reset;
 }
+/* LCOV_EXCL_END */
 
 void repeat(const char c, uint32_t count) {
   while (count--) {
