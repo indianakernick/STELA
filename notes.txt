@@ -87,3 +87,11 @@ where an interface would store a pointer to a table of function pointers that
 make up the implementation of the interface. If we have one, do we really need
 the other?
 
+--------------------------------------------------------------------------------
+
+prefix variables with v_, functions with f_ and types with t_
+think about the rules for function overloading and shadowing
+might need to rename builtin functions to make them less ambiguous
+manually manage reference count
+use macros instead of templates
+create anonymous typedefs for type expressions

@@ -277,7 +277,7 @@ ast::TypePtr resizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) 
   return ctx.btn.Void;
 }
 
-// func reserve<T>(arr: inout [T], size: uint);
+// func reserve<T>(arr: inout [T], cap: uint);
 ast::TypePtr reserveFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "reserve", loc, args.size() == 2);
   checkArray(ctx, "reserve", loc, args[0].type);

@@ -9,9 +9,14 @@
 #include "code generation.hpp"
 
 #include "log output.hpp"
+#include "builtin code.hpp"
 
 std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
   Log log{buf, LogCat::generate};
   log.status() << "Generating code" << endlog;
-  return "int main() {}\n";
+  std::string out;
+  out.reserve(syms.decls.size() * 1000);
+  appendBuiltinCode(out);
+  out.append("int main() {}");
+  return out;
 }

@@ -41,7 +41,7 @@ bool validCode(const std::string &cpp) {
   }
   cppFile << cpp;
   cppFile.close();
-  std::string command = "$CXX -Wall -Wextra -Wpedantic ";
+  std::string command = "$CXX -Wall -Wextra -Wno-unneeded-internal-declaration -Wno-unused-function -std=c++17 ";
   command.append(cppFileName);
   command.append(" -o ");
   command.append(exeFileName);

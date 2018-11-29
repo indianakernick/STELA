@@ -206,14 +206,13 @@ let Choice_yes = 1;
 ## Plans
 
 It might be possible to compile to C before the end of the year.
-
- * Compile to C. C isn't far from LLVM IR. To do this, I'll need to do name mangling and work out how to implement closures and slices.
- * Compile to LLVM IR. This is going to be really difficult. LLVM is a big, compilcated library.
- * Interop between C++ and Stela. I need to work out how to call Stela from C++ and call C++ from Stela. Maybe need to work out how to registry C++ classes with Stela. Should be easy to use with EnTT.
- * Work on the command-line interface. The CLI is for doing things like pretty-printing, syntax hightlighting and compiling to LLVM IR ahead-of-time.
- * Spread the word! I'll make a website and a logo. I'll make some posts on the programming subreddit and various other places. 
- * I might make a programming game revolved around this language. That should be a lot of fun to make!
-
+ 
+ - [ ] Compile to C++17
+ - [ ] Compile to C++14
+ - [ ] Compile to C++11
+ - [ ] Compile to C99
+ - [ ] Compile to LLVM IR
+ 
 ## Building
 
 This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. CMake will automatically download Simpleton so you don't have to worry about it.

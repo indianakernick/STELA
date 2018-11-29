@@ -1717,13 +1717,13 @@ TEST_GROUP(Semantics, {
       func test() {
         var array: [sint] = [1, 4, 9, 16, 25, 36];
         var otherArray: [sint] = duplicate(array);
-        let six: uint = capacity(array);
-        let alsoSix: uint = size(otherArray);
-        push_back(array, make sint six);
+        let eight: uint = capacity(array);
+        let six: uint = size(otherArray);
+        push_back(otherArray, make sint eight);
         append(array, [49, 64, 81, 100]);
         pop_back(otherArray);
         resize(otherArray, size(array));
-        reserve(otherArray, capacity(otherArray) * 5u);
+        reserve(otherArray, capacity(otherArray) * six);
       }
     )");
   });
