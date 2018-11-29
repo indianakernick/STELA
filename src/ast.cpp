@@ -8,7 +8,7 @@
 
 #include "ast.hpp"
 
-#include <cassert>
+#include "unreachable.hpp"
 
 using namespace stela;
 
@@ -26,7 +26,7 @@ ast::Visitor::~Visitor() = default;
 
 // visitor disabled for FuncParam
 void ast::FuncParam::accept(Visitor &) {
-  assert(false);
+  UNREACHABLE();
 }
 
 #define ACCEPT(TYPE)                                                            \

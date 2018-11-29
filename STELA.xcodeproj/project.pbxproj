@@ -160,6 +160,7 @@
 		45816F3E21AF637400712CA3 /* generation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = generation.hpp; sourceTree = "<group>"; };
 		45816F4021AF645200712CA3 /* code generation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "code generation.hpp"; sourceTree = "<group>"; };
 		45816F4121AF64F100712CA3 /* code generation.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "code generation.cpp"; sourceTree = "<group>"; };
+		45816F4521AF857500712CA3 /* unreachable.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = unreachable.hpp; sourceTree = "<group>"; };
 		45A723372129525700BFE7FB /* scope traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope traverse.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -283,6 +284,14 @@
 			name = "Code Generation";
 			sourceTree = "<group>";
 		};
+		45816F4421AF856000712CA3 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				45816F4521AF857500712CA3 /* unreachable.hpp */,
+			);
+			name = Utilities;
+			sourceTree = "<group>";
+		};
 		45BBA3E320D63E3D006108C1 = {
 			isa = PBXGroup;
 			children = (
@@ -312,6 +321,7 @@
 		45BBA3F320D63E7B006108C1 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				45816F4421AF856000712CA3 /* Utilities */,
 				4572CA7E20F9985D00EA1A56 /* Formatting */,
 				45816F3C21AF631E00712CA3 /* Code Generation */,
 				4572CA6120F32C8000EA1A56 /* Semantic Analysis */,

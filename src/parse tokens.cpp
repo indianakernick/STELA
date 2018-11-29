@@ -8,6 +8,8 @@
 
 #include "parse tokens.hpp"
 
+#include "unreachable.hpp"
+
 std::ostream &stela::operator<<(std::ostream &stream, const Token::Type type) {
   switch (type) {
     /* LCOV_EXCL_START */
@@ -23,11 +25,9 @@ std::ostream &stela::operator<<(std::ostream &stream, const Token::Type type) {
       return stream << "character";
     case Token::Type::oper:
       return stream << "operator";
-    default:
-      assert(false);
-      return stream;
     /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 std::ostream &stela::operator<<(std::ostream &stream, const Token &tok) {

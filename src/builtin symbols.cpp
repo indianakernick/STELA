@@ -8,6 +8,7 @@
 
 #include "builtin symbols.hpp"
 
+#include "unreachable.hpp"
 #include "symbol desc.hpp"
 #include "scope lookup.hpp"
 #include "operator name.hpp"
@@ -136,12 +137,8 @@ bool stela::validOp(const ast::UnOp op, const ast::BtnTypePtr &type) {
       return isBoolType(type->value);
     case ast::UnOp::bit_not:
       return isBitwiseType(type->value);
-    /* LCOV_EXCL_START */
-    default:
-      assert(false);
-      return false;
-    /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 ast::BtnTypePtr checkType(bool(*category)(TypeEnum), const ast::BtnTypePtr &type) {
@@ -167,30 +164,20 @@ ast::BtnTypePtr stela::validOp(
     return isArithType(left->value) ? btn.Bool : nullptr;
   } else if (isArithOp(op)) {
     return checkType(isArithType, left);
-  } else {
-    /* LCOV_EXCL_START */
-    assert(false);
-    return nullptr;
-    /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 bool stela::validOp(
   const ast::AssignOp op,
-  const ast::BtnTypePtr &left,
-  const ast::BtnTypePtr &right
+  const ast::BtnTypePtr &type
 ) {
-  assert(left == right);
   if (isArithOp(op)) {
-    return isArithType(left->value);
+    return isArithType(type->value);
   } else if (isBitwiseOp(op)) {
-    return isBitwiseType(left->value);
-  } else {
-    /* LCOV_EXCL_START */
-    assert(false);
-    return false;
-    /* LCOV_EXCL_END */
+    return isBitwiseType(type->value);
   }
+  UNREACHABLE();
 }
 
 bool stela::validSubscript(const ast::BtnTypePtr &index) {
@@ -324,12 +311,8 @@ ast::TypePtr stela::callBtnFunc(
       return resizeFn(ctx, args, loc);
     case ast::BtnFuncEnum::reserve:
       return reserveFn(ctx, args, loc);
-    /* LCOV_EXCL_START */
-    default:
-      assert(false);
-      return nullptr;
-    /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 sym::ScopePtr stela::makeBuiltinModule(sym::Builtins &btn) {

@@ -9,6 +9,7 @@
 #include "expr lookup.hpp"
 
 #include <cassert>
+#include "unreachable.hpp"
 #include "symbol desc.hpp"
 #include "scope lookup.hpp"
 #include "scope insert.hpp"
@@ -113,10 +114,7 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
     }
     return nullptr;
   }
-  /* LCOV_EXCL_START */
-  assert(false);
-  return nullptr;
-  /* LCOV_EXCL_END */
+  UNREACHABLE();
 }
 
 void ExprLookup::member(const sym::Name &name) {

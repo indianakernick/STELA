@@ -1829,6 +1829,27 @@ TEST_GROUP(Semantics, {
     )");
   });
 
+  TEST(Call void lambda, {
+    ASSERT_SUCCEEDS(R"(
+      func test() {
+        let lam = func(a: inout sint) {
+          a += 4;
+        };
+        var yeah = 7;
+        lam(yeah);
+      }
+    )");
+  });
+  
+  TEST(Compound assign different types, {
+    ASSERT_FAILS(R"(
+      func test() {
+        var yeah = 1;
+        yeah *= 2.0;
+      }
+    )");
+  });
+
   /*
   
   Perhaps control flow analysis should be handled by code generation

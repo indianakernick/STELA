@@ -8,8 +8,6 @@
 
 #include "log counter.hpp"
 
-#include <cassert>
-
 using namespace stela;
 
 uint32_t CountLogs::verbose() const {
@@ -54,8 +52,7 @@ void CountLogs::begin(LogCat, const LogPri pri, LogMod) {
     case LogPri::error:
       ++errorCount;
       break;
-    default:
-      assert(false);
+    default: ;
   }
 }
 

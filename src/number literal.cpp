@@ -10,6 +10,7 @@
 
 #include <limits>
 #include <cassert>
+#include "unreachable.hpp"
 
 using namespace stela;
 
@@ -220,8 +221,5 @@ stela::NumberVariant stela::parseNumberLiteral(const std::string_view str, Log &
     return real;
   }
   
-  /* LCOV_EXCL_START */
-  assert(false);
-  return NumberVariant{};
-  /* LCOV_EXCL_END */
+  UNREACHABLE();
 }

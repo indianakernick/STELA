@@ -9,6 +9,7 @@
 #include "symbol desc.hpp"
 
 #include <cassert>
+#include "unreachable.hpp"
 #include "plain format.hpp"
 
 std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
@@ -35,10 +36,7 @@ std::string_view stela::symbolDesc(const sym::Symbol *symbol) {
     // dealing with sint
     return "function";
   }
-  /* LCOV_EXCL_START */
-  assert(false);
-  return "";
-  /* LCOV_EXCL_END */
+  UNREACHABLE();
 }
 
 std::string stela::typeDesc(const ast::TypePtr &type) {

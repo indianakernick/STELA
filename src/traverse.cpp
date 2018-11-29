@@ -10,6 +10,7 @@
 
 #include "infer type.hpp"
 #include "symbol desc.hpp"
+#include "unreachable.hpp"
 #include "scope insert.hpp"
 #include "scope lookup.hpp"
 #include "operator name.hpp"
@@ -90,7 +91,7 @@ public:
     } else if (auto lamb = dynamic_cast<sym::Lambda *>(funcScope->symbol)) {
       retType = lamb->ret.type;
     } else {
-      assert(false);
+      UNREACHABLE();
     }
     retType = retType ? retType : ast::TypePtr{ctx.btn.Void};
     if (ret.expr) {
@@ -171,7 +172,8 @@ public:
     const sym::ExprType right = getExprType(ctx, as.right, left.type);
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
-        if (validOp(as.oper, builtinLeft, builtinRight)) {
+        assert(builtinLeft == builtinRight);
+        if (validOp(as.oper, builtinLeft)) {
           if (left.mut == sym::ValueMut::var) {
             return;
           } else {

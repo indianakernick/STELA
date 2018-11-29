@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <sstream>
 #include <iostream>
+#include "unreachable.hpp"
 #include <Simpleton/Utils/console color.hpp>
 
 using namespace stela;
@@ -29,12 +30,8 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
       return stream << "Semantic";
     case LogCat::generate:
       return stream << "Generative";
-    /* LCOV_EXCL_START */
-    default:
-      assert(false);
-      return stream;
-    /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
@@ -50,13 +47,9 @@ std::ostream &stela::operator<<(std::ostream &stream, const LogPri pri) {
       return stream << "warning";
     case LogPri::error:
       return stream << "error";
-    /* LCOV_EXCL_START */
-    case LogPri::nothing:
-    default:
-      assert(false);
-      return stream;
-    /* LCOV_EXCL_END */
+    case LogPri::nothing: ;
   }
+  UNREACHABLE();
 }
 
 std::ostream &stela::operator<<(std::ostream &stream, const Loc loc) {
@@ -165,9 +158,7 @@ void priorityColor(const LogPri pri) {
   } else if (pri == LogPri::error) {
     std::cerr << con::text_red;
   } else {
-    /* LCOV_EXCL_START */
-    assert(false);
-    /* LCOV_EXCL_END */
+    UNREACHABLE();
   }
 }
 

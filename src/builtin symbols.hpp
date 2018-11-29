@@ -26,7 +26,7 @@ retain_ptr<ast::BtnType> validOp(
   const ast::BtnTypePtr &,
   const ast::BtnTypePtr &
 );
-bool validOp(ast::AssignOp, const ast::BtnTypePtr &, const ast::BtnTypePtr &);
+bool validOp(ast::AssignOp, const ast::BtnTypePtr &);
 bool validSubscript(const ast::BtnTypePtr &);
 
 ast::TypePtr callBtnFunc(sym::Ctx, ast::BtnFuncEnum, const sym::FuncParams &, Loc);

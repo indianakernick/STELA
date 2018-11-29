@@ -122,12 +122,12 @@ sym::ExprType ExprStack::leaveSubExpr() {
   return std::exchange(exprType, sym::null_type);
 }
 
-void ExprStack::pop(const ExprKind kind) {
+void ExprStack::pop([[maybe_unused]] const ExprKind kind) {
   assert(top() == kind);
   exprs.pop_back();
 }
 
-sym::Name ExprStack::popName(const ExprKind kind) {
+sym::Name ExprStack::popName([[maybe_unused]] const ExprKind kind) {
   assert(top() == kind);
   sym::Name name = std::move(exprs.back().name);
   exprs.pop_back();

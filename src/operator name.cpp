@@ -8,7 +8,7 @@
 
 #include "operator name.hpp"
 
-#include <cassert>
+#include "unreachable.hpp"
 
 std::string_view stela::opName(const ast::AssignOp op) {
   switch (op) {
@@ -35,11 +35,9 @@ std::string_view stela::opName(const ast::AssignOp op) {
       return "<<=";
     case ast::AssignOp::bit_shr:
       return ">>=";
-    default:
-      assert(false);
-      return "";
     /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 std::string_view stela::opName(const ast::BinOp op) {
@@ -83,11 +81,9 @@ std::string_view stela::opName(const ast::BinOp op) {
       return "%";
     case ast::BinOp::pow:
       return "**";
-    default:
-      assert(false);
-      return "";
     /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 std::string_view stela::opName(const ast::UnOp op) {
@@ -99,11 +95,9 @@ std::string_view stela::opName(const ast::UnOp op) {
       return "!";
     case ast::UnOp::bit_not:
       return "~";
-    default:
-      assert(false);
-      return "";
     /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
 
 std::string_view stela::typeName(const ast::BtnTypeEnum type) {
@@ -123,9 +117,7 @@ std::string_view stela::typeName(const ast::BtnTypeEnum type) {
       return "sint";
     case ast::BtnTypeEnum::Uint:
       return "uint";
-    default:
-      assert(false);
-      return "";
     /* LCOV_EXCL_END */
   }
+  UNREACHABLE();
 }
