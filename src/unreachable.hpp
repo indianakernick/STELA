@@ -14,6 +14,11 @@
 #pragma message "Calling __builtin_unreachable in unreachable contexts"
 #define UNREACHABLE() __builtin_unreachable()
 
+#elif defined(TEST_COVERAGE)
+
+#pragma message "Doing nothing in unreachable contexts"
+#define UNREACHABLE() ((void)0)
+
 #else
 
 #pragma message "Calling std::terminate in unreachable contexts"
