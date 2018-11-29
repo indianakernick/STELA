@@ -31,8 +31,9 @@ std::string generateCpp(const std::string_view source, LogBuf &log) {
 }
 
 bool validCode(const std::string &cpp) {
-  const std::string cppFileName = "temporary_source_file.cpp";
-  const std::string errFileName = "temporary_error_file.txt";
+  const std::string cppFileName = "temporary_source.cpp";
+  const std::string errFileName = "temporary_error.txt";
+  const std::string exeFileName = "temporary_executable";
   std::ofstream cppFile(cppFileName);
   if (!cppFile.is_open()) {
     std::cout << "Could not open temporary source file\n";
@@ -42,6 +43,8 @@ bool validCode(const std::string &cpp) {
   cppFile.close();
   std::string command = "$CXX -Wall -Wextra -Wpedantic ";
   command.append(cppFileName);
+  command.append(" -o ");
+  command.append(exeFileName);
   command.append(" 2> ");
   command.append(errFileName);
   system(command.c_str());
