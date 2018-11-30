@@ -45,10 +45,9 @@ public:
   
   void visit(ast::Func &func) override {
     sym::Func *symbol = func.symbol;
-    func.index = static_cast<uint32_t>(ctx.fun.size());
     ctx.fun += exprType(symbol->ret);
     ctx.fun += "f_";
-    ctx.fun += func.index;
+    ctx.fun += func.id;
     ctx.fun += '(';
     ctx.fun += exprType(symbol->params.front());
     ctx.fun += "p_0";
@@ -62,17 +61,17 @@ public:
     func.body.accept(*this);
     ctx.fun += "}\n";
   }
-  void appendVar(const sym::ExprType &etype, const ast::Name name) {
+  void appendVar(const sym::ExprType &etype, const uint32_t id) {
     ctx.fun += exprType(etype);
     ctx.fun += "v_";
-    ctx.fun += name;
+    ctx.fun += id;
     ctx.fun += " = 0;\n";
   }
   void visit(ast::Var &var) override {
-    appendVar(var.symbol->etype, var.name);
+    appendVar(var.symbol->etype, var.id);
   }
   void visit(ast::Let &let) override {
-    appendVar(let.symbol->etype, let.name);
+    appendVar(let.symbol->etype, let.id);
   }
   
 private:

@@ -186,6 +186,7 @@ struct FuncCall final : Expression {
 struct MemberIdent final : Expression {
   ExprPtr object;
   Name member;
+  
   uint32_t index = ~uint32_t{};
   
   void accept(Visitor &) override;
@@ -305,7 +306,7 @@ struct Func final : Declaration {
   Block body;
   
   sym::Func *symbol = nullptr;
-  uint32_t index = ~uint32_t{};
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -336,6 +337,7 @@ struct Var final : Declaration {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -346,6 +348,7 @@ struct Let final : Declaration {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -400,6 +403,7 @@ struct DeclAssign final : Assignment {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };

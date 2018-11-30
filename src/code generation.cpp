@@ -10,6 +10,7 @@
 
 #include "log output.hpp"
 #include "builtin code.hpp"
+#include "generate ids.hpp"
 #include "generate decl.hpp"
 
 std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
@@ -19,6 +20,7 @@ std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
   gen::String fun{syms.decls.size() * 1000};
   gen::TypeInst inst;
   gen::Ctx ctx {typ, fun, inst, log};
+  generateIDs(syms.decls);
   generateDecl(ctx, syms.decls);
   std::string bin;
   bin.reserve(syms.decls.size() * 1000 + 8000);
