@@ -107,11 +107,7 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
     if (!compatParams(ctx, params, args)) {
       ctx.log.error(loc) << "No matching call to function object" << fatal;
     }
-    if (func->ret) {
-      stack.pushExpr(convert(ctx, func->ret, ast::ParamRef::value));
-    } else {
-      stack.pushExpr(sym::makeLetVal(ctx.btn.Void));
-    }
+    stack.pushExpr(convertNullable(ctx, func->ret, ast::ParamRef::value));
     return nullptr;
   }
   UNREACHABLE();
@@ -202,7 +198,7 @@ void ExprLookup::expected(const ast::TypePtr &type) {
 
 ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
   stack.popCall();
-  stack.pushExpr(func->ret.type ? func->ret : sym::makeLetVal(ctx.btn.Void));
+  stack.pushExpr(func->ret);
   assert(func->node);
   return func->node.get();
 }

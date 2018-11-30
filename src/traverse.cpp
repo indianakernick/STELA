@@ -93,7 +93,6 @@ public:
     } else {
       UNREACHABLE();
     }
-    retType = retType ? retType : ast::TypePtr{ctx.btn.Void};
     if (ret.expr) {
       getExprType(ctx, ret.expr, retType);
     } else {
