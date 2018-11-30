@@ -85,6 +85,12 @@ public:
   void operator+=(const std::string_view other) {
     storage.append(other.data(), other.size());
   }
+  void operator+=(const uint32_t number) {
+    storage.append(std::to_string(number));
+  }
+  void operator+=(const size_t number) {
+    storage.append(std::to_string(number));
+  }
   
   template <size_t Size>
   void prepend(const char (&string)[Size]) {

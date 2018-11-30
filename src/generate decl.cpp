@@ -45,9 +45,10 @@ public:
   
   void visit(ast::Func &func) override {
     sym::Func *symbol = func.symbol;
+    func.index = static_cast<uint32_t>(ctx.fun.size());
     ctx.fun += exprType(symbol->ret);
     ctx.fun += "f_";
-    ctx.fun += func.name;
+    ctx.fun += func.index;
     ctx.fun += '(';
     ctx.fun += exprType(symbol->params.front());
     ctx.fun += "p_0";
@@ -55,7 +56,7 @@ public:
       ctx.fun += ", ";
       ctx.fun += exprType(symbol->params[p]);
       ctx.fun += "p_";
-      ctx.fun += std::to_string(p);
+      ctx.fun += p;
     }
     ctx.fun += ") noexcept {\n";
     func.body.accept(*this);

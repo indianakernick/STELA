@@ -305,6 +305,7 @@ struct Func final : Declaration {
   Block body;
   
   sym::Func *symbol = nullptr;
+  uint32_t index = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
