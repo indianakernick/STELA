@@ -30,10 +30,23 @@ std::string generateCpp(const std::string_view source, LogBuf &log) {
   return generateCpp(createSym(source, log), log);
 }
 
+void printSource(const std::string &cpp) {
+  const std::string endStr = "END BUILTIN LIBRARY";
+  const size_t btnEnd = cpp.rfind(endStr) + endStr.size();
+  size_t srcBeg = btnEnd;
+  while (std::isspace(cpp[srcBeg])) {
+    ++srcBeg;
+  }
+  std::cout << '\n';
+  std::cout << std::string_view{cpp.data() + srcBeg, cpp.size() - srcBeg} << '\n';
+  std::cout << '\n';
+}
+
 bool validCode(const std::string &cpp) {
   const std::string cppFileName = "temporary_source.cpp";
   const std::string errFileName = "temporary_error.txt";
   const std::string exeFileName = "temporary_executable";
+  printSource(cpp);
   std::ofstream cppFile(cppFileName);
   if (!cppFile.is_open()) {
     std::cout << "Could not open temporary source file\n";
