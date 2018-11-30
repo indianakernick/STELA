@@ -39,19 +39,6 @@ func pop_back<T>(arr: inout [T]);
 func resize<T>(arr: inout [T], size: uint);
 func reserve<T>(arr: inout [T], size: uint);
 
-The alternative is something like this:
-
-if (funcName == "duplicate") {
-  checkArgs(dupParams, args);
-  return dupRet;
-} else if ...
-
-Is an if-else somewhere really that bad? Just for a few builtin functions.
-It's a hell of a lot easier than implementing generics.
-
-If I go to all the trouble of implementing generics then I might as well expose
-some syntax for users.
-
 We don't need generic types (only generic functions) to deal with arrays.
 
 --------------------------------------------------------------------------------
@@ -94,4 +81,3 @@ think about the rules for function overloading and shadowing
 might need to rename builtin functions to make them less ambiguous
 manually manage reference count
 use macros instead of templates
-create anonymous typedefs for type expressions

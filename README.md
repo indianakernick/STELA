@@ -211,6 +211,7 @@ It might be possible to compile to C before the end of the year.
  - [ ] Compile to C++14
  - [ ] Compile to C++11
  - [ ] Compile to C99
+ - [ ] Expose some of the C standard library
  - [ ] Compile to LLVM IR
  
 ## Building

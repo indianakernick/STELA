@@ -41,7 +41,7 @@ bool validCode(const std::string &cpp) {
   }
   cppFile << cpp;
   cppFile.close();
-  std::string command = "$CXX -Wall -Wextra -Wno-unneeded-internal-declaration -Wno-unused-function -std=c++17 ";
+  std::string command = "$CXX -Wno-return-type -std=c++17 ";
   command.append(cppFileName);
   command.append(" -o ");
   command.append(exeFileName);
@@ -83,6 +83,24 @@ TEST_GROUP(Generation, {
   
   TEST(Empty source, {
     ASSERT_COMPILES("");
+  });
+  
+  TEST(Functions, {
+    ASSERT_COMPILES(R"(
+      func first() {}
+      
+      func second() -> sint {
+        return 1;
+      }
+      
+      func third(a: real) {}
+      
+      func fourth(a: bool, b: uint) {}
+      
+      func fifth(a: real, b: inout byte, c: sint) {}
+      
+      func (self: inout [struct {v: [sint];}]) sixth(a: inout sint) {}
+    )");
   });
 });
 

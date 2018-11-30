@@ -28,6 +28,7 @@ void stela::appendBuiltinCode(std::string &src) {
 
 namespace {
 
+using t_void = void;
 using t_bool = bool;
 using t_byte = int8_t;
 using t_char = char;
@@ -58,16 +59,12 @@ template <typename T>
 class retain_ptr;
 
 struct ref_count {
-  template <typename T>
-  friend class retain_ptr;
-
   t_uint count;
 };
 
 template <typename T>
 class retain_ptr {
 public:
-  using element_type = T;
   using pointer = T *;
 
   retain_ptr() noexcept
@@ -104,23 +101,12 @@ public:
   pointer get() const noexcept {
     return ptr;
   }
-  element_type &operator*() const noexcept {
-    assert(ptr);
-    return *ptr;
-  }
   pointer operator->() const noexcept {
     assert(ptr);
     return ptr;
   }
   explicit operator bool() const noexcept {
     return ptr != nullptr;
-  }
-  
-  bool operator==(const retain_ptr<T> &rhs) const noexcept {
-    return ptr == rhs.ptr;
-  }
-  bool operator!=(const retain_ptr<T> &rhs) const noexcept {
-    return ptr != rhs.ptr;
   }
 
 private:

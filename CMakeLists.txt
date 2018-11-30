@@ -86,6 +86,8 @@ add_library(STELA STATIC
         "src/unreachable.hpp"
         "src/builtin code.cpp"
         "src/builtin code.hpp"
+        "src/generate decl.cpp"
+        "src/generate decl.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
