@@ -117,7 +117,7 @@ void ExprLookup::member(const sym::Name &name) {
   stack.pushMember(name);
 }
 
-ast::Field *ExprLookup::lookupMember(const Loc loc) {
+uint32_t ExprLookup::lookupMember(const Loc loc) {
   if (stack.memVarExpr(ExprKind::expr)) {
     ast::TypePtr type = stack.popExpr().type;
     ast::TypePtr concType = lookupConcreteType(ctx, type);
@@ -126,10 +126,11 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
       ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(concType)) {
-      for (ast::Field &field : strut->fields) {
+      for (size_t f = 0; f != strut->fields.size(); ++f) {
+        const ast::Field &field = strut->fields[f];
         if (field.name == name) {
           stack.pushMemberExpr(field.type);
-          return &field;
+          return static_cast<uint32_t>(f);
         }
       }
       ctx.log.error(loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
@@ -137,7 +138,7 @@ ast::Field *ExprLookup::lookupMember(const Loc loc) {
       ctx.log.error(loc) << "Cannot access field \"" << name << "\" of " << typeDesc(type) << fatal;
     }
   }
-  return nullptr;
+  return ~uint32_t{};
 }
 
 ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {

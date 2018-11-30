@@ -79,7 +79,7 @@ public:
       for (size_t f = 0; f != fields.size(); ++f) {
         ctx.type += fields[f];
         ctx.type += " m_";
-        ctx.type += type.fields[f].name;
+        ctx.type += std::to_string(f);
         ctx.type += ";\n";
       }
       ctx.type += "};\n";

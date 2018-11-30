@@ -70,7 +70,7 @@ public:
   void visit(ast::MemberIdent &mem) override {
     lkp.member(sym::Name{mem.member});
     mem.object->accept(*this);
-    mem.definition = lkp.lookupMember(mem.loc);
+    mem.index = lkp.lookupMember(mem.loc);
   }
   void visit(ast::Subscript &sub) override {
     const sym::ExprType obj = visitExprCheck(sub.object);

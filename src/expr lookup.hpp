@@ -79,7 +79,7 @@ public:
     //   push expr
   
   void member(const sym::Name &);
-  ast::Field *lookupMember(Loc);
+  uint32_t lookupMember(Loc);
     // memVarExpr(expr)
     //   pop expr
     //   pop member

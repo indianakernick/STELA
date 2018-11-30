@@ -15,8 +15,8 @@
 std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
   Log log{buf, LogCat::generate};
   log.status() << "Generating code" << endlog;
-  gen::String typ;
-  gen::String fun;
+  gen::String typ{syms.decls.size() * 100};
+  gen::String fun{syms.decls.size() * 1000};
   gen::TypeInst inst;
   gen::Ctx ctx {typ, fun, inst, log};
   generateDecl(ctx, syms.decls);
