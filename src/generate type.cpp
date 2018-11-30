@@ -42,7 +42,9 @@ public:
   void visit(ast::ArrayType &type) override {
     type.elem->accept(*this);
     gen::String elem = std::move(name);
-    name = "t_arr$";
+    name = "t_arr_";
+    name += elem.size();
+    name += '_';
     name += elem;
     if (ctx.inst.arrayNotInst(name)) {
       ctx.type += "using ";
@@ -65,12 +67,16 @@ public:
       field.type->accept(*this);
       fields.push_back(std::move(name));
     }
-    name = "t_srt$";
+    name = "t_srt";
     for (size_t f = 0; f != fields.size(); ++f) {
-      name += fields[f];
-      name += '$';
-      name += type.fields[f].name;
       name += '_';
+      name += fields[f].size();
+      name += '_';
+      name += fields[f];
+      name += '_';
+      name += type.fields[f].name.size();
+      name += '_';
+      name += type.fields[f].name;
     }
     if (ctx.inst.structNotInst(name)) {
       ctx.type += "struct ";

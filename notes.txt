@@ -76,7 +76,6 @@ the other?
 
 --------------------------------------------------------------------------------
 
-prefix variables with v_, functions with f_ and types with t_
 think about the rules for function overloading and shadowing
 might need to rename builtin functions to make them less ambiguous
 manually manage reference count
