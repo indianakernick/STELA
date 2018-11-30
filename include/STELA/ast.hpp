@@ -200,8 +200,7 @@ struct Subscript final : Expression {
 
 struct Identifier final : Expression {
   Name name;
-  // either DeclAssign, Var or Let
-  // lowest common base is Statement
+  // either DeclAssign, FuncParam, Var or Let
   // null if the identifier refers to a function
   // error if the identifier refers to a type
   Statement *definition = nullptr;
@@ -291,6 +290,7 @@ struct FuncParam final : Declaration {
   TypePtr type;
   
   sym::Object *symbol = nullptr;
+  uint32_t index = ~uint32_t{};
   
   void accept(Visitor &) override;
 };

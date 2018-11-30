@@ -44,15 +44,12 @@ public:
     ctx.fun += func.name;
     ctx.fun += '(';
     ctx.fun += exprType(symbol->params.front());
-    if (func.receiver) {
-      ctx.fun += "v_";
-      ctx.fun += func.receiver->name;
-    }
-    for (size_t p = 0; p != func.params.size(); ++p) {
+    ctx.fun += "p_0";
+    for (size_t p = 1; p != symbol->params.size(); ++p) {
       ctx.fun += ", ";
-      ctx.fun += exprType(symbol->params[p + 1]);
-      ctx.fun += "v_";
-      ctx.fun += func.params[p].name;
+      ctx.fun += exprType(symbol->params[p]);
+      ctx.fun += "p_";
+      ctx.fun += std::to_string(p);
     }
     ctx.fun += ") noexcept {\n";
     func.body.accept(*this);
