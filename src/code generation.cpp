@@ -15,10 +15,20 @@
 std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
   Log log{buf, LogCat::generate};
   log.status() << "Generating code" << endlog;
+  gen::String typ;
+  gen::String fun;
+  gen::TypeInst inst;
+  gen::Ctx ctx {typ, fun, inst, log};
+  generateDecl(ctx, syms.decls);
   std::string bin;
   bin.reserve(syms.decls.size() * 1000 + 8000);
   appendBuiltinCode(bin);
-  generateDecl(bin, log, syms.decls);
+  appendBeginTypes(bin);
+  bin.append(typ.str());
+  appendEndTypes(bin);
+  appendBeginCode(bin);
+  bin.append(fun.str());
+  appendEndCode(bin);
   bin.append("int main() {}");
   return bin;
 }

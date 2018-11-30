@@ -16,8 +16,8 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(std::string &bin, Log &log)
-    : bin{bin}, log{log} {}
+  explicit Visitor(gen::Ctx ctx)
+    : ctx{ctx} {}
   
   void visit(ast::BtnType &type) override {
     // @TODO X macros?
@@ -25,7 +25,7 @@ public:
       case ast::BtnTypeEnum::Void:
         name = "t_void"; return;
       case ast::BtnTypeEnum::Bool:
-        name = "t_void"; return;
+        name = "t_bool"; return;
       case ast::BtnTypeEnum::Byte:
         name = "t_byte"; return;
       case ast::BtnTypeEnum::Char:
@@ -41,51 +41,62 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     type.elem->accept(*this);
-    std::string elem = std::move(name);
-    name = "ArrayPtr<";
-    name.append(elem);
-    name.push_back('>');
+    gen::String elem = std::move(name);
+    name = "t_arr$";
+    name += elem;
+    if (ctx.inst.arrayNotInst(name)) {
+      ctx.type += "using ";
+      ctx.type += name;
+      ctx.type += " = ArrayPtr<";
+      ctx.type += elem;
+      ctx.type += ">;\n";
+    }
   }
   void visit(ast::FuncType &) override {
     UNREACHABLE();
   }
   void visit(ast::NamedType &type) override {
-    name = "t_";
-    name.append(type.name);
+    type.definition->type->accept(*this);
   }
   void visit(ast::StructType &type) override {
-    std::vector<std::string> fields;
+    std::vector<gen::String> fields;
     fields.reserve(type.fields.size());
     for (const ast::Field &field : type.fields) {
       field.type->accept(*this);
-      fields.push_back(name);
+      fields.push_back(std::move(name));
     }
-    name = "anonymous_struct_";
-    name.append(std::to_string(bin.size()));
-    bin.append("struct ");
-    bin.append(name);
-    bin.append(" {\n");
+    name = "t_srt$";
     for (size_t f = 0; f != fields.size(); ++f) {
-      bin.append(fields[f]);
-      bin.append(" m_");
-      bin.append(type.fields[f].name);
-      bin.append(";\n");
+      name += fields[f];
+      name += '$';
+      name += type.fields[f].name;
+      name += '_';
     }
-    bin.append("};\n");
+    if (ctx.inst.structNotInst(name)) {
+      ctx.type += "struct ";
+      ctx.type += name;
+      ctx.type += " {\n";
+      for (size_t f = 0; f != fields.size(); ++f) {
+        ctx.type += fields[f];
+        ctx.type += " m_";
+        ctx.type += type.fields[f].name;
+        ctx.type += ";\n";
+      }
+      ctx.type += "};\n";
+    }
   }
   
-  std::string name;
+  gen::String name;
   
 private:
-  std::string &bin;
-  Log &log;
+  gen::Ctx ctx;
 };
 
 }
 
-std::string stela::generateType(std::string &bin, Log &log, const ast::TypePtr &type) {
+gen::String stela::generateType(gen::Ctx ctx, const ast::TypePtr &type) {
   assert(type);
-  Visitor visitor{bin, log};
+  Visitor visitor{ctx};
   type->accept(visitor);
-  return visitor.name;
+  return std::move(visitor.name);
 }

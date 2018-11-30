@@ -10,11 +10,11 @@
 #define stela_generate_decl_hpp
 
 #include "ast.hpp"
-#include "log output.hpp"
+#include "gen context.hpp"
 
 namespace stela {
 
-void generateDecl(std::string &, Log &, const ast::Decls &);
+void generateDecl(gen::Ctx, const ast::Decls &);
 
 }
 

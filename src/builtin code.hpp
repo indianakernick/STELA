@@ -14,6 +14,10 @@
 namespace stela {
 
 void appendBuiltinCode(std::string &);
+void appendBeginTypes(std::string &);
+void appendEndTypes(std::string &);
+void appendBeginCode(std::string &);
+void appendEndCode(std::string &);
 
 }
 

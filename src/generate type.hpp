@@ -10,11 +10,11 @@
 #define stela_generate_type_hpp
 
 #include "ast.hpp"
-#include "log output.hpp"
+#include "gen context.hpp"
 
 namespace stela {
 
-std::string generateType(std::string &, Log &, const ast::TypePtr &);
+gen::String generateType(gen::Ctx, const ast::TypePtr &);
 
 }
 

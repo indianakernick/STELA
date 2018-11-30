@@ -297,3 +297,19 @@ T &index(ArrayPtr<T> array, const t_uint index) noexcept {
 
 )delimiter");
 }
+
+void stela::appendBeginTypes(std::string &string) {
+  string += "// BEGIN TYPE DECLARATIONS\n\n";
+}
+
+void stela::appendEndTypes(std::string &string) {
+  string += "\n// END TYPE DECLARATIONS\n\n";
+}
+
+void stela::appendBeginCode(std::string &string) {
+  string += "// BEGIN CODE\n\n";
+}
+
+void stela::appendEndCode(std::string &string) {
+  string += "\n// END CODE\n\n";
+}

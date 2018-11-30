@@ -115,6 +115,14 @@ TEST_GROUP(Generation, {
       func (self: inout [struct {v: [sint];}]) sixth(a: inout sint) {}
     )");
   });
+  
+  TEST(Identical structs, {
+    ASSERT_COMPILES(R"(
+      func first(param: struct {value: sint;}) {}
+      type Number = sint;
+      func second(param: struct {value: Number;}) {}
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS

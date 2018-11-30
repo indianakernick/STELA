@@ -1849,6 +1849,18 @@ TEST_GROUP(Semantics, {
       }
     )");
   });
+  
+  TEST(Struct member type shadowing, {
+    ASSERT_SUCCEEDS(R"(
+      type t = sint;
+      func test() {
+        var sintStruct: struct {m: t;};
+        type t = real;
+        var anotherSintStruct: struct {m: sint;};
+        sintStruct = anotherSintStruct;
+      }
+    )");
+  });
 
   /*
   

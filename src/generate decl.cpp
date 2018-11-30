@@ -17,21 +17,21 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(std::string &bin, Log &log)
-    : bin{bin}, log{log} {}
+  explicit Visitor(gen::Ctx ctx)
+    : ctx{ctx} {}
   
-  std::string exprType(const sym::ExprType &etype) {
+  gen::String exprType(const sym::ExprType &etype) {
     if (etype.type == nullptr) {
-      return "void *";
+      return gen::String{"void *"};
     } else {
-      std::string name;
+      gen::String name;
       if (etype.mut == sym::ValueMut::let) {
-        name.append("const ");
+        name += "const ";
       }
-      name.append(generateType(bin, log, etype.type));
-      name.push_back(' ');
+      name += generateType(ctx, etype.type);
+      name += ' ';
       if (etype.ref == sym::ValueRef::ref) {
-        name.push_back('&');
+        name += '&';
       }
       return name;
     }
@@ -39,41 +39,51 @@ public:
   
   void visit(ast::Func &func) override {
     sym::Func *symbol = func.symbol;
-    std::string ret = exprType(symbol->ret);
-    std::vector<std::string> args;
-    args.reserve(symbol->params.size());
-    for (const sym::ExprType &param : symbol->params) {
-      args.push_back(exprType(param));
-    }
-    bin.append(ret);
-    bin.append("f_");
-    bin.append(func.name);
-    bin.push_back('(');
-    bin.append(args.front());
+    ctx.fun += exprType(symbol->ret);
+    ctx.fun += "f_";
+    ctx.fun += func.name;
+    ctx.fun += '(';
+    ctx.fun += exprType(symbol->params.front());
     if (func.receiver) {
-      bin.append("v_");
-      bin.append(func.receiver->name);
+      ctx.fun += "v_";
+      ctx.fun += func.receiver->name;
     }
     for (size_t p = 0; p != func.params.size(); ++p) {
-      bin.append(", ");
-      bin.append(args[p + 1]);
-      bin.append("v_");
-      bin.append(func.params[p].name);
+      ctx.fun += ", ";
+      ctx.fun += exprType(symbol->params[p + 1]);
+      ctx.fun += "v_";
+      ctx.fun += func.params[p].name;
     }
-    bin.append(") noexcept {\n");
+    ctx.fun += ") noexcept {\n";
     func.body.accept(*this);
-    bin.append("}\n");
+    ctx.fun += "}\n";
+  }
+  void appendVar(const ast::TypePtr &type, const ast::Name name) {
+    if (type) {
+      ctx.fun += generateType(ctx, type);
+    } else {
+      ctx.fun += "auto ";
+    }
+    ctx.fun += "v_";
+    ctx.fun += name;
+    ctx.fun += " = ";
+  }
+  void visit(ast::Var &var) override {
+    appendVar(var.type, var.name);
+  }
+  void visit(ast::Let &let) override {
+    ctx.fun += "const ";
+    appendVar(let.type, let.name);
   }
   
 private:
-  std::string &bin;
-  Log &log;
+  gen::Ctx ctx;
 };
 
 }
 
-void stela::generateDecl(std::string &bin, Log &log, const ast::Decls &decls) {
-  Visitor visitor{bin, log};
+void stela::generateDecl(gen::Ctx ctx, const ast::Decls &decls) {
+  Visitor visitor{ctx};
   for (const ast::DeclPtr &decl : decls) {
     decl->accept(visitor);
   }
