@@ -15,6 +15,15 @@
 #include "location.hpp"
 #include "retain ptr.hpp"
 
+namespace stela::sym {
+
+struct TypeAlias;
+struct Object;
+struct Func;
+struct Lambda;
+
+}
+
 namespace stela::ast {
 
 class Visitor;
@@ -281,6 +290,8 @@ struct FuncParam final : Declaration {
   ParamRef ref;
   TypePtr type;
   
+  sym::Object *symbol = nullptr;
+  
   void accept(Visitor &) override;
 };
 using FuncParams = std::vector<FuncParam>;
@@ -292,6 +303,8 @@ struct Func final : Declaration {
   FuncParams params;
   TypePtr ret;
   Block body;
+  
+  sym::Func *symbol = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -321,6 +334,8 @@ struct Var final : Declaration {
   TypePtr type;
   ExprPtr expr;
   
+  sym::Object *symbol = nullptr;
+  
   void accept(Visitor &) override;
 };
 
@@ -329,6 +344,8 @@ struct Let final : Declaration {
   TypePtr type;
   ExprPtr expr;
   
+  sym::Object *symbol = nullptr;
+  
   void accept(Visitor &) override;
 };
 
@@ -336,6 +353,8 @@ struct TypeAlias final : Declaration {
   Name name;
   TypePtr type;
   bool strong;
+  
+  sym::TypeAlias *symbol = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -378,6 +397,8 @@ struct Assign final : Assignment {
 struct DeclAssign final : Assignment {
   Name name;
   ExprPtr expr;
+  
+  sym::Object *symbol = nullptr;
   
   void accept(Visitor &) override;
 };
@@ -432,6 +453,8 @@ struct Lambda final : Literal {
   FuncParams params;
   TypePtr ret;
   Block body;
+  
+  sym::Lambda *symbol = nullptr;
   
   void accept(Visitor &) override;
 };

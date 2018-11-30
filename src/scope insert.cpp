@@ -20,6 +20,7 @@ namespace {
 
 auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
   auto paramSym = std::make_unique<sym::Object>();
+  param.symbol = paramSym.get();
   paramSym->loc = param.loc;
   paramSym->etype = etype;
   paramSym->node = {retain, &param};
@@ -65,14 +66,6 @@ sym::FuncParams convertParams(
   return symParams;
 }
 
-sym::Name lambdaName(const ast::Lambda &lambda) {
-  sym::Name name = "$lambda_";
-  name += std::to_string(lambda.loc.l);
-  name += ' ';
-  name += std::to_string(lambda.loc.c);
-  return name;
-}
-
 }
 
 sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
@@ -101,6 +94,7 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
     ctx.log.error(func.loc) << "Functions must appear at global scope" << fatal;
   }
   auto funcSym = std::make_unique<sym::Func>();
+  func.symbol = funcSym.get();
   funcSym->loc = func.loc;
   if (func.receiver) {
     if (auto strut = lookupConcrete<ast::StructType>(ctx, func.receiver->type)) {
@@ -154,13 +148,14 @@ void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
 
 sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
   auto lamSym = std::make_unique<sym::Lambda>();
+  lam.symbol = lamSym.get();
   lamSym->loc = lam.loc;
   lamSym->referenced = true;
   lamSym->params = convertParams(ctx, lam.params);
   lamSym->ret = convert(ctx, lam.ret, ast::ParamRef::value);
   lamSym->node = {retain, &lam};
   sym::Lambda *const ret = lamSym.get();
-  ctx.man.cur()->table.insert({lambdaName(lam), std::move(lamSym)});
+  ctx.man.cur()->table.insert({"$lambda", std::move(lamSym)});
   return ret;
 }
 

@@ -123,7 +123,7 @@ struct Object final : Symbol {
   ~Object();
   
   ExprType etype;
-  ast::StatPtr node;
+  retain_ptr<ast::Statement> node;
 };
 
 // the first parameter is the receiver
