@@ -37,6 +37,12 @@ public:
     }
   }
   
+  void visit(ast::Block &block) override {
+    for (const ast::StatPtr &stat : block.nodes) {
+      stat->accept(*this);
+    }
+  }
+  
   void visit(ast::Func &func) override {
     sym::Func *symbol = func.symbol;
     ctx.fun += exprType(symbol->ret);
@@ -55,22 +61,17 @@ public:
     func.body.accept(*this);
     ctx.fun += "}\n";
   }
-  void appendVar(const ast::TypePtr &type, const ast::Name name) {
-    if (type) {
-      ctx.fun += generateType(ctx, type);
-    } else {
-      ctx.fun += "auto ";
-    }
+  void appendVar(const sym::ExprType &etype, const ast::Name name) {
+    ctx.fun += exprType(etype);
     ctx.fun += "v_";
     ctx.fun += name;
-    ctx.fun += " = ";
+    ctx.fun += " = 0;\n";
   }
   void visit(ast::Var &var) override {
-    appendVar(var.type, var.name);
+    appendVar(var.symbol->etype, var.name);
   }
   void visit(ast::Let &let) override {
-    ctx.fun += "const ";
-    appendVar(let.type, let.name);
+    appendVar(let.symbol->etype, let.name);
   }
   
 private:

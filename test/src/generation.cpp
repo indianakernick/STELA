@@ -123,6 +123,15 @@ TEST_GROUP(Generation, {
       func second(param: struct {value: Number;}) {}
     )");
   });
+  
+  TEST(Vars, {
+    ASSERT_COMPILES(R"(
+      func fn() {
+        let a = 0;
+        var b = 0.0;
+      }
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS
