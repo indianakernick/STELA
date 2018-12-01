@@ -310,6 +310,17 @@ TEST_GROUP(Generation, {
       }
     )");
   });
+  
+  TEST(Closures, {
+    ASSERT_COMPILES(R"(
+      func test() {
+        var a: func();
+        var b: func() -> sint;
+        var c: func(sint) -> sint;
+        var d: func(sint, inout real) -> bool;
+      }
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS

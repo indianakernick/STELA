@@ -29,7 +29,21 @@ public:
     str += ">()";
   }
   void visit(ast::FuncType &type) override {
-    
+    str += "make_null_closure<";
+    if (type.ret) {
+      str += generateType(ctx, type.ret.get());
+    } else {
+      str += "void";
+    }
+    str += "(void *";
+    for (const ast::ParamType &param : type.params) {
+      str += ", ";
+      str += generateType(ctx, param.type.get());
+      if (param.ref == ast::ParamRef::inout) {
+        str += " &";
+      }
+    }
+    str += ") noexcept>()";
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);

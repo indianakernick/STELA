@@ -329,9 +329,9 @@ Closure<Func> make_func_closure(Func *const func) noexcept {
 template <typename Func>
 struct null_function;
 
-template <typename Ret, typename... Args>
-struct null_function<Ret(Args...)> {
-  [[noreturn]] static Ret call(Args...) noexcept {
+template <typename Ret, typename... Args, bool Noexcept>
+struct null_function<Ret(Args...) noexcept(Noexcept)> {
+  [[noreturn]] static Ret call(Args...) noexcept(Noexcept) {
     panic("Calling null function pointer");
   }
 };

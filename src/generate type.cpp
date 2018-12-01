@@ -55,7 +55,7 @@ public:
     }
   }
   void visit(ast::FuncType &) override {
-    UNREACHABLE();
+    name = "auto";
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);
