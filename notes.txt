@@ -56,9 +56,6 @@ The reference counted pointer makes the closure a reference type.
 A closure behaves very similarly to an entt::delegate except that the a pointer
 to captured variables is stored instead of an instance pointer.
 
-A different wrapper function is used depending on whether data needs to be
-captured. A non-capturing lambda yields the same closure as a regular function.
-
 entt::delegate required wrapper functions but this implementation will not
 require them.
 
@@ -81,3 +78,5 @@ might need to rename builtin functions to make them less ambiguous
 manually manage reference count
 use macros instead of templates
 pointers instead of references
+remove the null parameters from non-member functions that aren't used in pointers
+should lambdas store a retain_ptr or a value_ptr?

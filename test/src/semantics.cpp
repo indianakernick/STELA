@@ -1551,6 +1551,36 @@ TEST_GROUP(Semantics, {
       }
     )");
   });
+  
+  TEST(Stateful lambda, {
+    ASSERT_SUCCEEDS(R"(
+      func makeIDgen(first: sint) -> func() -> sint {
+        // @TODO make this a constant
+        // lambda makes a copy of captured variables
+        var id = first - 1;
+        return func() -> sint {
+          id++;
+          return id;
+        };
+      }
+
+      func test() {
+        let gen = makeIDgen(4);
+        let four = gen();
+        let five = gen();
+        let six = gen();
+      }
+    )");
+  });
+  
+  TEST(Increment constant, {
+    ASSERT_FAILS(R"(
+      func test() {
+        let one = 1;
+        one++;
+      }
+    )");
+  });
 
   TEST(Compound assign different types, {
     ASSERT_FAILS(R"(

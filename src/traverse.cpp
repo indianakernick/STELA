@@ -185,6 +185,9 @@ public:
   }
   void visit(ast::IncrDecr &as) override {
     const sym::ExprType etype = getExprType(ctx, as.expr, nullptr);
+    if (etype.mut == sym::ValueMut::let) {
+      ctx.log.error(as.loc) << "Operand to mutating unary operator must be mutable" << fatal;
+    }
     if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validIncr(builtin)) {
         return;

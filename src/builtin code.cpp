@@ -51,6 +51,11 @@ T *allocate(const size_t bytes) noexcept {
   }
 }
 
+template <typename T>
+T *allocate() noexcept {
+  return allocate<T>(sizeof(T));
+}
+
 inline void deallocate(void *const ptr) noexcept {
   operator delete(ptr);
 }
@@ -77,13 +82,6 @@ public:
     decr();
   }
   
-  retain_ptr(retain_ptr<T> &&other) noexcept
-    : ptr{other.detach()} {}
-  retain_ptr &operator=(retain_ptr<T> &&other) noexcept {
-    reset(other.detach());
-    return *this;
-  }
-  
   retain_ptr(const retain_ptr<T> &other) noexcept
     : ptr{other.get()} {
     incr();
@@ -97,9 +95,6 @@ public:
   void reset(T *const newPtr = nullptr) noexcept {
     decr();
     ptr = newPtr;
-  }
-  pointer detach() noexcept {
-    return std::exchange(ptr, nullptr);
   }
   
   pointer get() const noexcept {
@@ -117,20 +112,16 @@ private:
   pointer ptr;
   
   void incr() const noexcept {
-    if (ptr) {
-      ref_count *const refPtr = ptr;
-      assert(refPtr->count != ~t_uint{});
-      ++refPtr->count;
-    }
+    ref_count *const refPtr = ptr;
+    assert(refPtr->count != ~t_uint{});
+    ++refPtr->count;
   }
   
   void decr() const noexcept {
-    if (ptr) {
-      ref_count *const refPtr = ptr;
-      assert(refPtr->count != 0);
-      if (--refPtr->count == 0) {
-        deallocate(ptr);
-      }
+    ref_count *const refPtr = ptr;
+    assert(refPtr->count != 0);
+    if (--refPtr->count == 0) {
+      deallocate(ptr);
     }
   }
 };
@@ -309,6 +300,53 @@ const T &index(const ArrayPtr<T> &array, const t_uint index) noexcept {
   } else {
     return array->data()[index];
   }
+}
+
+struct ClosureData : ref_count {
+  virtual ~ClosureData() = default;
+};
+
+using ClosureDataPtr = retain_ptr<ClosureData>;
+
+template <typename Func>
+struct Closure {
+  Func *func;
+  ClosureDataPtr data;
+};
+
+struct FuncClosureData : ClosureData {};
+
+template <typename Func>
+Closure<Func> make_func_closure(Func *const func) noexcept {
+  auto *ptr = allocate<FuncClosureData>();
+  new (ptr) FuncClosureData(); // setup virtual destructor
+  ptr->count = 1;
+  return Closure<Func>{func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
+}
+
+template <typename Func>
+struct null_function;
+
+template <typename Ret, typename... Args>
+struct null_function<Ret(Args...)> {
+  [[noreturn]] static Ret call(Args...) noexcept {
+    panic("Calling null function pointer");
+  }
+};
+
+template <typename Func>
+Closure<Func> make_null_closure() noexcept {
+  return make_func_closure(&null_function<Func>::call);
+}
+
+template <typename Func>
+bool closure_to_bool(Closure<Func> closure) noexcept {
+  return closure.func == &null_function<Func>::call;
+}
+
+template <typename Func, typename... Args>
+auto call_closure(Closure<Func> closure, Args &&... args) noexcept {
+  return closure.func(closure.data.get(), std::forward<Args>(args)...);
 }
 
 }

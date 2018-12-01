@@ -65,6 +65,25 @@ func test() {
 }
 ```
 
+Lambdas are stateful. They carry around copies of all of the captured variables.
+
+```go
+func makeIDgen(first: sint) -> func() -> sint {
+  return func() -> sint {
+    let id = first;
+    first++;
+    return id;
+  };
+}
+
+func test() {
+  let gen = makeIDgen(4);
+  let four = gen();
+  let five = gen();
+  let six = gen();
+}
+```
+
 ### Arrays
 
 What can you do without arrays?
