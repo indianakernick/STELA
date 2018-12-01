@@ -135,3 +135,47 @@ gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
   str += ") noexcept";
   return str;
 }
+
+gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
+  gen::String name{16 + 16 * type.params.size()};
+  const gen::String ret = generateTypeOrVoid(ctx, type.ret.get());
+  name += ret.size();
+  name += "_";
+  name += ret;
+  for (const ast::ParamType &param : type.params) {
+    name += "_";
+    const gen::String paramType = generateType(ctx, param.type.get());
+    const std::string_view ref = param.ref == ast::ParamRef::inout ? "_ref" : "";
+    name += paramType.size() + ref.size();
+    name += "_";
+    name += paramType;
+    name += ref;
+  }
+  return name;
+}
+
+gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
+  gen::String name;
+  name += "f_nul_";
+  // @TODO maybe consider caching type names
+  // generateFuncName does that same work that generateNullFunc does
+  name += generateFuncName(ctx, type);
+  if (ctx.inst.funcNotInst(name)) {
+    ctx.func += "[[noreturn]] static ";
+    ctx.func += generateTypeOrVoid(ctx, type.ret.get());
+    ctx.func += ' ';
+    ctx.func += name;
+    ctx.func += "(void *";
+    for (const ast::ParamType &param : type.params) {
+      ctx.func += ", ";
+      ctx.func += generateType(ctx, param.type.get());
+      if (param.ref == ast::ParamRef::inout) {
+        ctx.func += " &";
+      }
+    }
+    ctx.func += ") noexcept {\n";
+    ctx.func += "panic(\"Calling null function pointer\");\n";
+    ctx.func += "}\n";
+  }
+  return name;
+}
