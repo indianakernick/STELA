@@ -51,7 +51,8 @@ public:
   void visit(ast::Switch &swich) override {
     const sym::ExprType etype = getExprType(ctx, swich.expr, nullptr);
     bool foundDef = false;
-    for (const ast::SwitchCase &cs : swich.cases) {
+    for (ast::SwitchCase &cs : swich.cases) {
+      cs.parent = &swich;
       if (cs.expr) {
         getExprType(ctx, cs.expr, etype.type);
       } else {

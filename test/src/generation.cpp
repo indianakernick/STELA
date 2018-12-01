@@ -54,7 +54,7 @@ bool validCode(const std::string &cpp) {
   }
   cppFile << cpp;
   cppFile.close();
-  std::string command = "$CXX -Wno-return-type -std=c++17 ";
+  std::string command = "$CXX -Wshadow -Wconversion -std=c++17 ";
   command.append(cppFileName);
   command.append(" -o ");
   command.append(exeFileName);
@@ -245,7 +245,69 @@ TEST_GROUP(Generation, {
           default return "";
         }
       }
+      
+      func redundantBreaks(dir: Dir) -> [char] {
+        var ret: [char] = "";
+        switch (dir) {
+          case (Dir_up) {
+            ret = "up";
+            break;
+          }
+          case (Dir_right) {
+            ret = "right";
+            break;
+          }
+          case (Dir_down) {
+            ret = "down";
+            break;
+          }
+          case (Dir_left) {
+            ret = "left";
+            break;
+          }
+        }
+        return ret;
+      }
+    )");
+  });
     
+  TEST(Loops, {
+    ASSERT_COMPILES(R"(
+      func breaks(param: sint) -> sint {
+        var ret = 0;
+        
+        for (i := 0; i <= param; i++) {
+          ret += i;
+          if (i == 3) {
+            ret *= 2;
+            break;
+          }
+        }
+        
+        while (ret > 4) {
+          if (ret % 3 == 0) break;
+          ret /= 3;
+        }
+        
+        return ret;
+      }
+      
+      func continues(param: sint) -> sint {
+        var ret = 1;
+        
+        for (i := param; i >= 0; i--) {
+          if (i == 1) continue;
+          ret *= i;
+        }
+        
+        while (ret > 10) {
+          ret -= 1;
+          if (ret % 3 == 1) continue;
+          ret -= 2;
+        }
+        
+        return ret;
+      }
     )");
   });
 });

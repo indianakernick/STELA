@@ -9,6 +9,7 @@
 #include "generate decl.hpp"
 
 #include "symbols.hpp"
+#include "unreachable.hpp"
 #include "generate expr.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
@@ -53,6 +54,15 @@ public:
       fi.elseBody->accept(*this);
     }
   }
+  
+  ast::Statement *nearestFlow = nullptr;
+
+  void visitFlow(ast::Statement &flow, const ast::StatPtr &body) {
+    ast::Statement *oldFlow = std::exchange(nearestFlow, &flow);
+    body->accept(*this);
+    nearestFlow = oldFlow;
+  }
+
   void visit(ast::Switch &swich) override {
     ctx.fun += "{\n";
     ctx.fun += "const auto v_swh_";
@@ -81,11 +91,11 @@ public:
       ctx.fun += ";\n";
     }
     
-    for (const ast::SwitchCase &cse : swich.cases) {
+    for (ast::SwitchCase &cse : swich.cases) {
       ctx.fun += "CASE_LABEL_";
       ctx.fun += cse.id;
       ctx.fun += ": ;\n";
-      cse.body->accept(*this);
+      visitFlow(cse, cse.body);
       ctx.fun += "goto BREAK_LABEL_";
       ctx.fun += swich.id;
       ctx.fun += ";\n";
@@ -99,6 +109,34 @@ public:
     ctx.fun += swich.id;
     ctx.fun += ": ;\n";
   }
+  void visit(ast::Break &) override {
+    assert(nearestFlow);
+    ctx.fun += "goto BREAK_LABEL_";
+    if (auto *cse = dynamic_cast<ast::SwitchCase *>(nearestFlow)) {
+      ctx.fun += cse->parent->id;
+    } else if (auto *wile = dynamic_cast<ast::While *>(nearestFlow)) {
+      ctx.fun += wile->id;
+    } else if (auto *four = dynamic_cast<ast::For *>(nearestFlow)) {
+      ctx.fun += four->id;
+    } else {
+      UNREACHABLE();
+    }
+    ctx.fun += ";\n";
+  }
+  void visit(ast::Continue &) override {
+    assert(nearestFlow);
+    ctx.fun += "goto CONTINUE_LABEL_";
+    if (auto *cse = dynamic_cast<ast::SwitchCase *>(nearestFlow)) {
+      ctx.fun += cse->id;
+    } else if (auto *wile = dynamic_cast<ast::While *>(nearestFlow)) {
+      ctx.fun += wile->id;
+    } else if (auto *four = dynamic_cast<ast::For *>(nearestFlow)) {
+      ctx.fun += four->id;
+    } else {
+      UNREACHABLE();
+    }
+    ctx.fun += ";\n";
+  }
   void visit(ast::Return &ret) override {
     ctx.fun += "return";
     if (ret.expr) {
@@ -111,7 +149,7 @@ public:
     ctx.fun += "while (";
     ctx.fun += generateExpr(ctx, wile.cond.get());
     ctx.fun += ") {\n";
-    wile.body->accept(*this);
+    visitFlow(wile, wile.body);
     ctx.fun += "CONTINUE_LABEL_";
     ctx.fun += wile.id;
     ctx.fun += ": ;\n";
@@ -128,7 +166,7 @@ public:
     ctx.fun += "while (";
     ctx.fun += generateExpr(ctx, four.cond.get());
     ctx.fun += ") {\n";
-    four.body->accept(*this);
+    visitFlow(four, four.body);
     ctx.fun += "CONTINUE_LABEL_";
     ctx.fun += four.id;
     ctx.fun += ": ;\n";

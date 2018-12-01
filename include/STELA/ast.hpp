@@ -264,8 +264,6 @@ struct Switch final : Statement {
 };
 
 struct Break final : Statement {
-  // what does it do in this context?
-
   void accept(Visitor &) override;
 };
 

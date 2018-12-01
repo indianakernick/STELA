@@ -126,21 +126,22 @@ private:
   }
 };
 
-template <typename T>
-constexpr size_t bits = sizeof(T) * CHAR_BIT;
+#define BITS(T) static_cast<T>(sizeof(T) * CHAR_BIT)
 
 inline unsigned long long ceilToPowerOf2(const unsigned long long num) {
   assert(num != 0);
-  return (1 << (bits<long long> - __builtin_clzll(num - 1))) - (num == 1);
+  return (1ull << (BITS(unsigned long long) - static_cast<unsigned long long>(__builtin_clzll(num - 1ull)))) - (num == 1ull);
 }
 inline unsigned long ceilToPowerOf2(const unsigned long num) {
   assert(num != 0);
-  return (1 << (bits<long> - __builtin_clzl(num - 1))) - (num == 1);
+  return (1ul << (BITS(unsigned long) - static_cast<unsigned long>(__builtin_clzl(num - 1ul)))) - (num == 1ul);
 }
 inline unsigned ceilToPowerOf2(const unsigned num) {
   assert(num != 0);
-  return (1 << (bits<int> - __builtin_clz(num - 1))) - (num == 1);
+  return (1u << (BITS(unsigned) - static_cast<unsigned>(__builtin_clz(num - 1u)))) - (num == 1u);
 }
+
+#undef BITS
 
 template <typename T>
 struct Array : ref_count {
