@@ -12,6 +12,7 @@
 #include "unreachable.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
+#include "generate zero expr.hpp"
 
 using namespace stela;
 
@@ -212,10 +213,14 @@ public:
     }
   }
   void visit(ast::InitList &list) override {
-    str += generateType(ctx, list.type.get());
-    str += '{';
-    pushExprs(list.exprs);
-    str += '}';
+    if (list.exprs.empty()) {
+      str += generateZeroExpr(ctx, list.type.get());
+    } else {
+      str += generateType(ctx, list.type.get());
+      str += '{';
+      pushExprs(list.exprs);
+      str += '}';
+    }
   }
 
   gen::String str;

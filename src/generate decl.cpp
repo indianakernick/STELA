@@ -13,6 +13,7 @@
 #include "generate expr.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
+#include "generate zero expr.hpp"
 
 using namespace stela;
 
@@ -205,7 +206,7 @@ public:
     if (expr) {
       ctx.fun += generateExpr(ctx, expr);
     } else {
-      ctx.fun += "{}";
+      ctx.fun += generateZeroExpr(ctx, etype.type.get());
     }
     ctx.fun += ";\n";
   }

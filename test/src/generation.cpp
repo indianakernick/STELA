@@ -247,7 +247,7 @@ TEST_GROUP(Generation, {
       }
       
       func redundantBreaks(dir: Dir) -> [char] {
-        var ret: [char] = "";
+        var ret: [char];
         switch (dir) {
           case (Dir_up) {
             ret = "up";
@@ -274,7 +274,7 @@ TEST_GROUP(Generation, {
   TEST(Loops, {
     ASSERT_COMPILES(R"(
       func breaks(param: sint) -> sint {
-        var ret = 0;
+        var ret: sint;
         
         for (i := 0; i <= param; i++) {
           ret += i;
