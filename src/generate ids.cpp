@@ -27,14 +27,18 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
-    for (const ast::SwitchCase &cse : swich.cases) {
+    swich.id = flowID++;
+    for (ast::SwitchCase &cse : swich.cases) {
+      cse.id = flowID++;
       cse.body->accept(*this);
     }
   }
   void visit(ast::While &wile) override {
+    wile.id = flowID++;
     wile.body->accept(*this);
   }
   void visit(ast::For &four) override {
+    four.id = flowID++;
     if (four.init) {
       four.init->accept(*this);
     }
@@ -61,6 +65,7 @@ public:
 private:
   uint32_t varID = 0;
   uint32_t funID = 0;
+  uint32_t flowID = 0;
 };
 
 }

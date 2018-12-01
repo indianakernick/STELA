@@ -190,6 +190,10 @@ ArrayPtr<T> array_literal(Args &&... args) noexcept {
   return array;
 }
 
+ArrayPtr<t_char> make_null_string() noexcept {
+  return make_array<t_char>(0, 0);
+}
+
 template <size_t Size>
 ArrayPtr<t_char> string_literal(const t_char (&string)[Size]) noexcept {
   ArrayPtr<t_char> array = make_array_len<t_char>(Size - 1);

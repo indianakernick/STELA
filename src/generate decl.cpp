@@ -53,6 +53,52 @@ public:
       fi.elseBody->accept(*this);
     }
   }
+  void visit(ast::Switch &swich) override {
+    ctx.fun += "{\n";
+    ctx.fun += "const auto v_swh_";
+    ctx.fun += swich.id;
+    ctx.fun += " = ";
+    ctx.fun += generateExpr(ctx, swich.expr.get());
+    ctx.fun += ";\n";
+    
+    const ast::SwitchCase *defaultCase = nullptr;
+    for (const ast::SwitchCase &cse : swich.cases) {
+      if (!cse.expr) {
+        defaultCase = &cse;
+        continue;
+      }
+      ctx.fun += "if (v_swh_";
+      ctx.fun += swich.id;
+      ctx.fun += " == (";
+      ctx.fun += generateExpr(ctx, cse.expr.get());
+      ctx.fun += ")) goto CASE_LABEL_";
+      ctx.fun += cse.id;
+      ctx.fun += ";\n";
+    }
+    if (defaultCase) {
+      ctx.fun += "goto CASE_LABEL_";
+      ctx.fun += defaultCase->id;
+      ctx.fun += ";\n";
+    }
+    
+    for (const ast::SwitchCase &cse : swich.cases) {
+      ctx.fun += "CASE_LABEL_";
+      ctx.fun += cse.id;
+      ctx.fun += ": ;\n";
+      cse.body->accept(*this);
+      ctx.fun += "goto BREAK_LABEL_";
+      ctx.fun += swich.id;
+      ctx.fun += ";\n";
+      ctx.fun += "CONTINUE_LABEL_";
+      ctx.fun += cse.id;
+      ctx.fun += ": ;\n";
+    }
+    
+    ctx.fun += "}\n";
+    ctx.fun += "BREAK_LABEL_";
+    ctx.fun += swich.id;
+    ctx.fun += ": ;\n";
+  }
   void visit(ast::Return &ret) override {
     ctx.fun += "return";
     if (ret.expr) {
@@ -64,8 +110,15 @@ public:
   void visit(ast::While &wile) override {
     ctx.fun += "while (";
     ctx.fun += generateExpr(ctx, wile.cond.get());
-    ctx.fun += ") ";
+    ctx.fun += ") {\n";
     wile.body->accept(*this);
+    ctx.fun += "CONTINUE_LABEL_";
+    ctx.fun += wile.id;
+    ctx.fun += ": ;\n";
+    ctx.fun += "}\n";
+    ctx.fun += "BREAK_LABEL_";
+    ctx.fun += wile.id;
+    ctx.fun += ": ;\n";
   }
   void visit(ast::For &four) override {
     ctx.fun += "{\n";
@@ -76,10 +129,16 @@ public:
     ctx.fun += generateExpr(ctx, four.cond.get());
     ctx.fun += ") {\n";
     four.body->accept(*this);
+    ctx.fun += "CONTINUE_LABEL_";
+    ctx.fun += four.id;
+    ctx.fun += ": ;\n";
     if (four.incr) {
       four.incr->accept(*this);
     }
     ctx.fun += "}\n";
+    ctx.fun += "BREAK_LABEL_";
+    ctx.fun += four.id;
+    ctx.fun += ": ;\n";
     ctx.fun += "}\n";
   }
   

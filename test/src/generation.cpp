@@ -217,6 +217,37 @@ TEST_GROUP(Generation, {
       }
     )");
   });
+  
+  TEST(Switch, {
+    ASSERT_COMPILES(R"(
+      type Dir uint;
+      let Dir_up = make Dir 0;
+      let Dir_right = make Dir 1;
+      let Dir_down = make Dir 2;
+      let Dir_left = make Dir 3;
+      
+      func toString(dir: Dir) -> [char] {
+        switch (dir) {
+          case (Dir_up) return "up";
+          case (Dir_right) return "right";
+          case (Dir_down) return "down";
+          case (Dir_left) return "left";
+          default return "";
+        }
+      }
+      
+      func weirdToString(dir: Dir) -> [char] {
+        switch (dir) {
+          case (Dir_up) continue;
+          case (Dir_right) return "up or right";
+          case (Dir_down) continue;
+          case (Dir_left) return "down or left";
+          default return "";
+        }
+      }
+    
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS

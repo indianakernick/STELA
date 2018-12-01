@@ -24,8 +24,10 @@ ast::Visitor::~Visitor() = default;
 
 /* LCOV_EXCL_START */
 
-// visitor disabled for FuncParam
 void ast::FuncParam::accept(Visitor &) {
+  UNREACHABLE();
+}
+void ast::SwitchCase::accept(Visitor &) {
   UNREACHABLE();
 }
 

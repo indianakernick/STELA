@@ -159,9 +159,13 @@ public:
   }
   
   void visit(ast::StringLiteral &string) override {
-    str += "string_literal(\"";
-    str += string.value;
-    str += "\")";
+    if (string.value.empty()) {
+      str += "make_null_string()";
+    } else {
+      str += "string_literal(\"";
+      str += string.value;
+      str += "\")";
+    }
   }
   void visit(ast::CharLiteral &chr) override {
     str += '\'';

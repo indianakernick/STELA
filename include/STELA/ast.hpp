@@ -241,15 +241,24 @@ struct If final : Statement {
   void accept(Visitor &) override;
 };
 
-struct SwitchCase {
+struct Switch;
+
+struct SwitchCase final : Statement {
   ExprPtr expr;
   StatPtr body;
   Loc loc;
+  
+  Switch *parent = nullptr;
+  uint32_t id = ~uint32_t{};
+  
+  void accept(Visitor &) override;
 };
 
 struct Switch final : Statement {
   ExprPtr expr;
   std::vector<SwitchCase> cases;
+  
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -274,6 +283,8 @@ struct While final : Statement {
   ExprPtr cond;
   StatPtr body;
   
+  uint32_t id = ~uint32_t{};
+  
   void accept(Visitor &) override;
 };
 
@@ -282,6 +293,8 @@ struct For final : Statement {
   ExprPtr cond;
   AsgnPtr incr;
   StatPtr body;
+  
+  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
