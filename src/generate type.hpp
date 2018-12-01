@@ -19,6 +19,7 @@ gen::String generateTypeOrVoid(gen::Ctx, ast::Type *);
 gen::String generateFuncSig(gen::Ctx, const ast::FuncType &);
 gen::String generateFuncName(gen::Ctx, const ast::FuncType &);
 gen::String generateNullFunc(gen::Ctx, const ast::FuncType &);
+gen::String generateMakeFunc(gen::Ctx, const ast::FuncType &);
 
 }
 

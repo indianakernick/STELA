@@ -29,7 +29,8 @@ public:
     str += ">()";
   }
   void visit(ast::FuncType &type) override {
-    str += "make_func_closure(&";
+    str += generateMakeFunc(ctx, type);
+    str += "(&";
     str += generateNullFunc(ctx, type);
     str += ")";
   }

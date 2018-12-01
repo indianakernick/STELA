@@ -311,29 +311,23 @@ using ClosureDataPtr = retain_ptr<ClosureData>;
 
 template <typename Func>
 struct Closure {
-  Func *func;
+  Func func;
   ClosureDataPtr data;
 };
 
 struct FuncClosureData : ClosureData {};
 
-template <typename Func>
-Closure<Func> make_func_closure(Func *const func) noexcept {
-  auto *ptr = allocate<FuncClosureData>();
-  new (ptr) FuncClosureData(); // setup virtual destructor
-  ptr->count = 1;
-  return Closure<Func>{func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
-}
-
+/*
 template <typename Func>
 bool closure_to_bool(Closure<Func> closure) noexcept {
-  return true;//return closure.func == &null_function<Func>::call;
+  return closure.func == &null_function<Func>::call;
 }
 
 template <typename Func, typename... Args>
 auto call_closure(Closure<Func> closure, Args &&... args) noexcept {
   return closure.func(closure.data.get(), std::forward<Args>(args)...);
 }
+*/
 
 }
 

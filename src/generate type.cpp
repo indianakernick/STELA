@@ -47,11 +47,11 @@ public:
     name += '_';
     name += elem;
     if (ctx.inst.arrayNotInst(name)) {
-      ctx.type += "using ";
-      ctx.type += name;
-      ctx.type += " = ArrayPtr<";
+      ctx.type += "typedef ArrayPtr<";
       ctx.type += elem;
-      ctx.type += ">;\n";
+      ctx.type += "> ";
+      ctx.type += name;
+      ctx.type += ";\n";
     }
   }
   void visit(ast::FuncType &type) override {
@@ -81,16 +81,16 @@ public:
       name += type.fields[f].name;
     }
     if (ctx.inst.structNotInst(name)) {
-      ctx.type += "struct ";
-      ctx.type += name;
-      ctx.type += " {\n";
+      ctx.type += "typedef struct {\n";
       for (size_t f = 0; f != fields.size(); ++f) {
         ctx.type += fields[f];
         ctx.type += " m_";
         ctx.type += f;
         ctx.type += ";\n";
       }
-      ctx.type += "};\n";
+      ctx.type += "} ";
+      ctx.type += name;
+      ctx.type += ";\n";
     }
   }
   
@@ -118,22 +118,29 @@ gen::String stela::generateTypeOrVoid(gen::Ctx ctx, ast::Type *type) {
 }
 
 gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
-  gen::String str{10 + 10 * type.params.size()};
-  if (type.ret) {
-    str += generateType(ctx, type.ret.get());
-  } else {
-    str += "void";
-  }
-  str += "(void *";
-  for (const ast::ParamType &param : type.params) {
-    str += ", ";
-    str += generateType(ctx, param.type.get());
-    if (param.ref == ast::ParamRef::inout) {
-      str += " &";
+  gen::String name;
+  name += "t_fun_";
+  name += generateFuncName(ctx, type);
+  if (ctx.inst.funcNotInst(name)) {
+    ctx.type += "typedef ";
+    if (type.ret) {
+      ctx.type += generateType(ctx, type.ret.get());
+    } else {
+      ctx.type += "void";
     }
+    ctx.type += "(*";
+    ctx.type += name;
+    ctx.type += ")(void *";
+    for (const ast::ParamType &param : type.params) {
+      ctx.type += ", ";
+      ctx.type += generateType(ctx, param.type.get());
+      if (param.ref == ast::ParamRef::inout) {
+        ctx.type += " &";
+      }
+    }
+    ctx.type += ") noexcept;\n";
   }
-  str += ") noexcept";
-  return str;
+  return name;
 }
 
 gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
@@ -156,7 +163,7 @@ gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
 
 gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
   gen::String name;
-  name += "f_nul_";
+  name += "f_null_";
   // @TODO maybe consider caching type names
   // generateFuncName does that same work that generateNullFunc does
   name += generateFuncName(ctx, type);
@@ -176,6 +183,29 @@ gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
     ctx.func += ") noexcept {\n";
     ctx.func += "panic(\"Calling null function pointer\");\n";
     ctx.func += "}\n";
+  }
+  return name;
+}
+
+gen::String stela::generateMakeFunc(gen::Ctx ctx, const ast::FuncType &type) {
+  gen::String name;
+  name += "f_makefunc_";
+  name += generateFuncName(ctx, type);
+  if (ctx.inst.funcNotInst(name)) {
+    ctx.func += "static Closure<";
+    const gen::String sig = generateFuncSig(ctx, type);
+    ctx.func += sig;
+    ctx.func += "> ";
+    ctx.func += name;
+    ctx.func += "(const ";
+    ctx.func += sig;
+    ctx.func += R"( func) noexcept {
+FuncClosureData *ptr = allocate<FuncClosureData>();
+new (ptr) FuncClosureData(); // setup virtual destructor
+ptr->count = 1;
+return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
+}
+)";
   }
   return name;
 }
