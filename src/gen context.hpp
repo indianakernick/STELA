@@ -17,7 +17,8 @@ namespace stela::gen {
 
 struct Ctx {
   String &type;
-  String &fun;
+  String &func;
+  String &code;
   TypeInst &inst;
   Log &log;
 };

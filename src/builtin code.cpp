@@ -8,8 +8,7 @@
 
 #include "builtin code.hpp"
 
-void stela::appendBuiltinCode(std::string &src) {
-  src.append(R"delimiter(
+constexpr std::string_view builtinCode = R"delimiter(
 
 // BEGIN BUILTIN LIBRARY
 
@@ -327,23 +326,8 @@ Closure<Func> make_func_closure(Func *const func) noexcept {
 }
 
 template <typename Func>
-struct null_function;
-
-template <typename Ret, typename... Args, bool Noexcept>
-struct null_function<Ret(Args...) noexcept(Noexcept)> {
-  [[noreturn]] static Ret call(Args...) noexcept(Noexcept) {
-    panic("Calling null function pointer");
-  }
-};
-
-template <typename Func>
-Closure<Func> make_null_closure() noexcept {
-  return make_func_closure(&null_function<Func>::call);
-}
-
-template <typename Func>
 bool closure_to_bool(Closure<Func> closure) noexcept {
-  return closure.func == &null_function<Func>::call;
+  return true;//return closure.func == &null_function<Func>::call;
 }
 
 template <typename Func, typename... Args>
@@ -355,21 +339,26 @@ auto call_closure(Closure<Func> closure, Args &&... args) noexcept {
 
 // END BUILTIN LIBRARY
 
-)delimiter");
+)delimiter";
+
+void stela::appendBuiltinCode(std::string &src) {
+  src += builtinCode;
 }
 
-void stela::appendBeginTypes(std::string &string) {
-  string += "// BEGIN TYPE DECLARATIONS\n\n";
+void stela::appendTypes(std::string &bin, const gen::String &types) {
+  bin += "// BEGIN TYPE DECLARATIONS\n\n";
+  bin += types.str();
+  bin += "\n// END TYPE DECLARATIONS\n\n";
 }
 
-void stela::appendEndTypes(std::string &string) {
-  string += "\n// END TYPE DECLARATIONS\n\n";
+void stela::appendFuncs(std::string &bin, const gen::String &funcs) {
+  bin += "// BEGIN FUNCTION DECLARATIONS\n\n";
+  bin += funcs.str();
+  bin += "\n// END FUNCTION DECLARATIONS\n\n";
 }
 
-void stela::appendBeginCode(std::string &string) {
-  string += "// BEGIN CODE\n\n";
-}
-
-void stela::appendEndCode(std::string &string) {
-  string += "\n// END CODE\n\n";
+void stela::appendCode(std::string &bin, const gen::String &code) {
+  bin += "// BEGIN CODE\n\n";
+  bin += code.str();
+  bin += "\n// END CODE\n\n";
 }

@@ -15,6 +15,8 @@
 namespace stela {
 
 gen::String generateType(gen::Ctx, ast::Type *);
+gen::String generateTypeOrVoid(gen::Ctx, ast::Type *);
+gen::String generateFuncSig(gen::Ctx, const ast::FuncType &);
 
 }
 

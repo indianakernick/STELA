@@ -39,19 +39,19 @@ public:
   }
   
   void visit(ast::Block &block) override {
-    ctx.fun += "{\n";
+    ctx.code += "{\n";
     for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
-    ctx.fun += "}\n";
+    ctx.code += "}\n";
   }
   void visit(ast::If &fi) override {
-    ctx.fun += "if (";
-    ctx.fun += generateExpr(ctx, fi.cond.get());
-    ctx.fun += ") ";
+    ctx.code += "if (";
+    ctx.code += generateExpr(ctx, fi.cond.get());
+    ctx.code += ") ";
     fi.body->accept(*this);
     if (fi.elseBody) {
-      ctx.fun += " else ";
+      ctx.code += " else ";
       fi.elseBody->accept(*this);
     }
   }
@@ -65,12 +65,12 @@ public:
   }
 
   void visit(ast::Switch &swich) override {
-    ctx.fun += "{\n";
-    ctx.fun += "const auto v_swh_";
-    ctx.fun += swich.id;
-    ctx.fun += " = ";
-    ctx.fun += generateExpr(ctx, swich.expr.get());
-    ctx.fun += ";\n";
+    ctx.code += "{\n";
+    ctx.code += "const auto v_swh_";
+    ctx.code += swich.id;
+    ctx.code += " = ";
+    ctx.code += generateExpr(ctx, swich.expr.get());
+    ctx.code += ";\n";
     
     const ast::SwitchCase *defaultCase = nullptr;
     for (const ast::SwitchCase &cse : swich.cases) {
@@ -78,137 +78,137 @@ public:
         defaultCase = &cse;
         continue;
       }
-      ctx.fun += "if (v_swh_";
-      ctx.fun += swich.id;
-      ctx.fun += " == (";
-      ctx.fun += generateExpr(ctx, cse.expr.get());
-      ctx.fun += ")) goto CASE_LABEL_";
-      ctx.fun += cse.id;
-      ctx.fun += ";\n";
+      ctx.code += "if (v_swh_";
+      ctx.code += swich.id;
+      ctx.code += " == (";
+      ctx.code += generateExpr(ctx, cse.expr.get());
+      ctx.code += ")) goto CASE_LABEL_";
+      ctx.code += cse.id;
+      ctx.code += ";\n";
     }
     if (defaultCase) {
-      ctx.fun += "goto CASE_LABEL_";
-      ctx.fun += defaultCase->id;
-      ctx.fun += ";\n";
+      ctx.code += "goto CASE_LABEL_";
+      ctx.code += defaultCase->id;
+      ctx.code += ";\n";
     }
     
     for (ast::SwitchCase &cse : swich.cases) {
-      ctx.fun += "CASE_LABEL_";
-      ctx.fun += cse.id;
-      ctx.fun += ": ;\n";
+      ctx.code += "CASE_LABEL_";
+      ctx.code += cse.id;
+      ctx.code += ": ;\n";
       visitFlow(cse, cse.body);
-      ctx.fun += "goto BREAK_LABEL_";
-      ctx.fun += swich.id;
-      ctx.fun += ";\n";
-      ctx.fun += "CONTINUE_LABEL_";
-      ctx.fun += cse.id;
-      ctx.fun += ": ;\n";
+      ctx.code += "goto BREAK_LABEL_";
+      ctx.code += swich.id;
+      ctx.code += ";\n";
+      ctx.code += "CONTINUE_LABEL_";
+      ctx.code += cse.id;
+      ctx.code += ": ;\n";
     }
     
-    ctx.fun += "}\n";
-    ctx.fun += "BREAK_LABEL_";
-    ctx.fun += swich.id;
-    ctx.fun += ": ;\n";
+    ctx.code += "}\n";
+    ctx.code += "BREAK_LABEL_";
+    ctx.code += swich.id;
+    ctx.code += ": ;\n";
   }
   void visit(ast::Break &) override {
     assert(nearestFlow);
-    ctx.fun += "goto BREAK_LABEL_";
+    ctx.code += "goto BREAK_LABEL_";
     if (auto *cse = dynamic_cast<ast::SwitchCase *>(nearestFlow)) {
-      ctx.fun += cse->parent->id;
+      ctx.code += cse->parent->id;
     } else if (auto *wile = dynamic_cast<ast::While *>(nearestFlow)) {
-      ctx.fun += wile->id;
+      ctx.code += wile->id;
     } else if (auto *four = dynamic_cast<ast::For *>(nearestFlow)) {
-      ctx.fun += four->id;
+      ctx.code += four->id;
     } else {
       UNREACHABLE();
     }
-    ctx.fun += ";\n";
+    ctx.code += ";\n";
   }
   void visit(ast::Continue &) override {
     assert(nearestFlow);
-    ctx.fun += "goto CONTINUE_LABEL_";
+    ctx.code += "goto CONTINUE_LABEL_";
     if (auto *cse = dynamic_cast<ast::SwitchCase *>(nearestFlow)) {
-      ctx.fun += cse->id;
+      ctx.code += cse->id;
     } else if (auto *wile = dynamic_cast<ast::While *>(nearestFlow)) {
-      ctx.fun += wile->id;
+      ctx.code += wile->id;
     } else if (auto *four = dynamic_cast<ast::For *>(nearestFlow)) {
-      ctx.fun += four->id;
+      ctx.code += four->id;
     } else {
       UNREACHABLE();
     }
-    ctx.fun += ";\n";
+    ctx.code += ";\n";
   }
   void visit(ast::Return &ret) override {
-    ctx.fun += "return";
+    ctx.code += "return";
     if (ret.expr) {
-      ctx.fun += ' ';
-      ctx.fun += generateExpr(ctx, ret.expr.get());
+      ctx.code += ' ';
+      ctx.code += generateExpr(ctx, ret.expr.get());
     }
-    ctx.fun += ";\n";
+    ctx.code += ";\n";
   }
   void visit(ast::While &wile) override {
-    ctx.fun += "while (";
-    ctx.fun += generateExpr(ctx, wile.cond.get());
-    ctx.fun += ") {\n";
+    ctx.code += "while (";
+    ctx.code += generateExpr(ctx, wile.cond.get());
+    ctx.code += ") {\n";
     visitFlow(wile, wile.body);
-    ctx.fun += "CONTINUE_LABEL_";
-    ctx.fun += wile.id;
-    ctx.fun += ": ;\n";
-    ctx.fun += "}\n";
-    ctx.fun += "BREAK_LABEL_";
-    ctx.fun += wile.id;
-    ctx.fun += ": ;\n";
+    ctx.code += "CONTINUE_LABEL_";
+    ctx.code += wile.id;
+    ctx.code += ": ;\n";
+    ctx.code += "}\n";
+    ctx.code += "BREAK_LABEL_";
+    ctx.code += wile.id;
+    ctx.code += ": ;\n";
   }
   void visit(ast::For &four) override {
-    ctx.fun += "{\n";
+    ctx.code += "{\n";
     if (four.init) {
       four.init->accept(*this);
     }
-    ctx.fun += "while (";
-    ctx.fun += generateExpr(ctx, four.cond.get());
-    ctx.fun += ") {\n";
+    ctx.code += "while (";
+    ctx.code += generateExpr(ctx, four.cond.get());
+    ctx.code += ") {\n";
     visitFlow(four, four.body);
-    ctx.fun += "CONTINUE_LABEL_";
-    ctx.fun += four.id;
-    ctx.fun += ": ;\n";
+    ctx.code += "CONTINUE_LABEL_";
+    ctx.code += four.id;
+    ctx.code += ": ;\n";
     if (four.incr) {
       four.incr->accept(*this);
     }
-    ctx.fun += "}\n";
-    ctx.fun += "BREAK_LABEL_";
-    ctx.fun += four.id;
-    ctx.fun += ": ;\n";
-    ctx.fun += "}\n";
+    ctx.code += "}\n";
+    ctx.code += "BREAK_LABEL_";
+    ctx.code += four.id;
+    ctx.code += ": ;\n";
+    ctx.code += "}\n";
   }
   
   void visit(ast::Func &func) override {
     sym::Func *symbol = func.symbol;
-    ctx.fun += exprType(symbol->ret);
-    ctx.fun += "f_";
-    ctx.fun += func.id;
-    ctx.fun += '(';
-    ctx.fun += exprType(symbol->params.front());
-    ctx.fun += "p_0";
+    ctx.code += exprType(symbol->ret);
+    ctx.code += "f_";
+    ctx.code += func.id;
+    ctx.code += '(';
+    ctx.code += exprType(symbol->params.front());
+    ctx.code += "p_0";
     for (size_t p = 1; p != symbol->params.size(); ++p) {
-      ctx.fun += ", ";
-      ctx.fun += exprType(symbol->params[p]);
-      ctx.fun += "p_";
-      ctx.fun += p;
+      ctx.code += ", ";
+      ctx.code += exprType(symbol->params[p]);
+      ctx.code += "p_";
+      ctx.code += p;
     }
-    ctx.fun += ") noexcept ";
+    ctx.code += ") noexcept ";
     func.body.accept(*this);
   }
   void appendVar(const sym::ExprType &etype, const uint32_t id, ast::Expression *expr) {
-    ctx.fun += exprType(etype);
-    ctx.fun += "v_";
-    ctx.fun += id;
-    ctx.fun += " = ";
+    ctx.code += exprType(etype);
+    ctx.code += "v_";
+    ctx.code += id;
+    ctx.code += " = ";
     if (expr) {
-      ctx.fun += generateExpr(ctx, expr);
+      ctx.code += generateExpr(ctx, expr);
     } else {
-      ctx.fun += generateZeroExpr(ctx, etype.type.get());
+      ctx.code += generateZeroExpr(ctx, etype.type.get());
     }
-    ctx.fun += ";\n";
+    ctx.code += ";\n";
   }
   void visit(ast::Var &var) override {
     appendVar(var.symbol->etype, var.id, var.expr.get());
@@ -218,35 +218,35 @@ public:
   }
   
   void visit(ast::CompAssign &assign) override {
-    ctx.fun += generateExpr(ctx, assign.left.get());
-    ctx.fun += ' ';
-    ctx.fun += opName(assign.oper);
-    ctx.fun += ' ';
-    ctx.fun += generateExpr(ctx, assign.right.get());
-    ctx.fun += ";\n";
+    ctx.code += generateExpr(ctx, assign.left.get());
+    ctx.code += ' ';
+    ctx.code += opName(assign.oper);
+    ctx.code += ' ';
+    ctx.code += generateExpr(ctx, assign.right.get());
+    ctx.code += ";\n";
   }
   void visit(ast::IncrDecr &incr) override {
     if (incr.incr) {
-      ctx.fun += "++";
+      ctx.code += "++";
     } else {
-      ctx.fun += "--";
+      ctx.code += "--";
     }
-    ctx.fun += '(';
-    ctx.fun += generateExpr(ctx, incr.expr.get());
-    ctx.fun += ");\n";
+    ctx.code += '(';
+    ctx.code += generateExpr(ctx, incr.expr.get());
+    ctx.code += ");\n";
   }
   void visit(ast::Assign &assign) override {
-    ctx.fun += generateExpr(ctx, assign.left.get());
-    ctx.fun += " = ";
-    ctx.fun += generateExpr(ctx, assign.right.get());
-    ctx.fun += ";\n";
+    ctx.code += generateExpr(ctx, assign.left.get());
+    ctx.code += " = ";
+    ctx.code += generateExpr(ctx, assign.right.get());
+    ctx.code += ";\n";
   }
   void visit(ast::DeclAssign &decl) override {
     appendVar(decl.symbol->etype, decl.id, decl.expr.get());
   }
   void visit(ast::CallAssign &call) override {
-    ctx.fun += generateExpr(ctx, &call.call);
-    ctx.fun += ";\n";
+    ctx.code += generateExpr(ctx, &call.call);
+    ctx.code += ";\n";
   }
   
 private:

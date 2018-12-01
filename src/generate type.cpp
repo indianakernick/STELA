@@ -54,8 +54,10 @@ public:
       ctx.type += ">;\n";
     }
   }
-  void visit(ast::FuncType &) override {
-    name = "auto";
+  void visit(ast::FuncType &type) override {
+    name = "Closure<";
+    name += generateFuncSig(ctx, type);
+    name += ">";
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);
@@ -105,4 +107,31 @@ gen::String stela::generateType(gen::Ctx ctx, ast::Type *type) {
   Visitor visitor{ctx};
   type->accept(visitor);
   return std::move(visitor.name);
+}
+
+gen::String stela::generateTypeOrVoid(gen::Ctx ctx, ast::Type *type) {
+  if (type) {
+    return generateType(ctx, type);
+  } else {
+    return gen::String{"t_void"};
+  }
+}
+
+gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
+  gen::String str{10 + 10 * type.params.size()};
+  if (type.ret) {
+    str += generateType(ctx, type.ret.get());
+  } else {
+    str += "void";
+  }
+  str += "(void *";
+  for (const ast::ParamType &param : type.params) {
+    str += ", ";
+    str += generateType(ctx, param.type.get());
+    if (param.ref == ast::ParamRef::inout) {
+      str += " &";
+    }
+  }
+  str += ") noexcept";
+  return str;
 }

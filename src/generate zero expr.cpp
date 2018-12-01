@@ -29,21 +29,43 @@ public:
     str += ">()";
   }
   void visit(ast::FuncType &type) override {
-    str += "make_null_closure<";
-    if (type.ret) {
-      str += generateType(ctx, type.ret.get());
-    } else {
-      str += "void";
-    }
-    str += "(void *";
+    gen::String name;
+    name += "f_nul_";
+    const gen::String ret = generateTypeOrVoid(ctx, type.ret.get());
+    name += ret.size();
+    name += "_";
+    name += ret;
     for (const ast::ParamType &param : type.params) {
-      str += ", ";
-      str += generateType(ctx, param.type.get());
+      name += "_";
+      gen::String paramType = generateType(ctx, param.type.get());
       if (param.ref == ast::ParamRef::inout) {
-        str += " &";
+        paramType += "_ref";
       }
+      name += paramType.size();
+      name += "_";
+      name += paramType;
     }
-    str += ") noexcept>()";
+    if (ctx.inst.funcNotInst(name)) {
+      ctx.func += "[[noreturn]] ";
+      ctx.func += ret;
+      ctx.func += ' ';
+      ctx.func += name;
+      ctx.func += "(void *";
+      for (const ast::ParamType &param : type.params) {
+        const gen::String paramType = generateType(ctx, param.type.get());
+        ctx.func += ", ";
+        ctx.func += paramType;
+        if (param.ref == ast::ParamRef::inout) {
+          ctx.func += " &";
+        }
+      }
+      ctx.func += ") noexcept {\n";
+      ctx.func += "panic(\"Calling null function pointer\");\n";
+      ctx.func += "}\n";
+    }
+    str += "make_func_closure(&";
+    str += name;
+    str += ")";
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);
