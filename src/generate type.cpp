@@ -100,7 +100,7 @@ private:
 
 }
 
-gen::String stela::generateType(gen::Ctx ctx, const ast::TypePtr &type) {
+gen::String stela::generateType(gen::Ctx ctx, ast::Type *type) {
   assert(type);
   Visitor visitor{ctx};
   type->accept(visitor);

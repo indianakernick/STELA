@@ -138,6 +138,7 @@ public:
     } else if (std::holds_alternative<Uint>(num)) {
       type = ctx.btn.Uint;
     }
+    n.type = type;
     lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
   void visit(ast::BoolLiteral &) override {
@@ -166,6 +167,7 @@ public:
       }
       elem = lookupStrongType(ctx, std::move(expr.type));
     }
+    arr.type = elem;
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
     array->elem = std::move(elem);
@@ -191,6 +193,7 @@ public:
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
       }
     }
+    list.type = expected;
     lkp.setExpr(sym::makeLetVal(std::move(expected)));
   }
   void visit(ast::Lambda &lam) override {

@@ -84,11 +84,13 @@ bool generate(const std::string_view source, LogBuf &log) {
 }
 
 #define ASSERT_COMPILES(SOURCE)                                                 \
-  ASSERT_TRUE(generate(SOURCE, log))
+  const bool success = generate(SOURCE, log);                                   \
+  ASSERT_TRUE(success)
 #define ASSERT_STELA_FAILS(SOURCE)                                              \
   ASSERT_THROWS(generate(SOURCE, log), FatalError)
 #define ASSERT_CPP_FAILS(SOURCE)                                                \
-  ASSERT_FALSE(generate(SOURCE, log))
+  const bool success = generate(SOURCE, log);                                   \
+  ASSERT_FALSE(success)
 
 TEST_GROUP(Generation, {
   stela::StreamLog log;
@@ -129,6 +131,89 @@ TEST_GROUP(Generation, {
       func fn() {
         let a = 0;
         var b = 0.0;
+      }
+    )");
+  });
+  
+  TEST(Expressions, {
+    ASSERT_COMPILES(R"(
+      func fac(n: sint) -> sint {
+        return n == 0 ? 1 : n * fac(n - 1);
+      }
+    )");
+  });
+  
+  TEST(If, {
+    ASSERT_COMPILES(R"(
+      func test(p: bool) -> real {
+        if (!p && true) {
+          return 11.0;
+        } else {
+          return -make real 1;
+        }
+      }
+    )");
+  });
+  
+  TEST(Member functions, {
+    ASSERT_COMPILES(R"(
+      type Vec2 struct {
+        x: real;
+        y: real;
+      };
+      
+      let zero = make Vec2 {0.0, 0.0};
+      let alsoZero = make Vec2 {};
+      
+      func (self: Vec2) mag2() -> real {
+        return self.x * self.x + self.y * self.y;
+      }
+      
+      func add(a: Vec2, b: Vec2) -> Vec2 {
+        return make Vec2 {a.x + b.x, a.y + b.y};
+      }
+      
+      func test() {
+        let zero = alsoZero.mag2();
+        let one_two = make Vec2 {1.0, 2.0};
+        let three_four = make Vec2 {3.0, 4.0};
+        let four_six = add(one_two, three_four);
+        let five = one_two.mag2();
+      }
+    )");
+  });
+  
+  TEST(Arrays, {
+    ASSERT_COMPILES(R"(
+      func squares(count: uint) -> [uint] {
+        var array: [uint] = [];
+        if (count == 0u) {
+          return array;
+        }
+        reserve(array, count);
+        for (i := 1u; i <= count; i++) {
+          push_back(array, i * i);
+        }
+        return array;
+      }
+
+      func test() {
+        var empty = squares(0u);
+        let one_four_nine = squares(3u);
+        empty = [];
+        
+        let nested: [[[real]]] = [[[0.0]]];
+        let zero: real = nested[0][0][0];
+      }
+    )");
+  });
+  
+  TEST(Strings, {
+    ASSERT_COMPILES(R"(
+      func test() {
+        var hello = "Hello world";
+        let w = hello[6];
+        hello[0] = 'Y';
       }
     )");
   });

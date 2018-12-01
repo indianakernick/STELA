@@ -94,6 +94,8 @@ add_library(STELA STATIC
         "src/type instantiations.hpp"
         "src/generate ids.cpp"
         "src/generate ids.hpp"
+        "src/generate expr.cpp"
+        "src/generate expr.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

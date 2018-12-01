@@ -14,7 +14,7 @@
 
 namespace stela {
 
-gen::String generateType(gen::Ctx, const ast::TypePtr &);
+gen::String generateType(gen::Ctx, ast::Type *);
 
 }
 

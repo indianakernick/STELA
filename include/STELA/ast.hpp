@@ -176,6 +176,7 @@ struct Func;
 struct FuncCall final : Expression {
   ExprPtr func;
   FuncArgs args;
+  
   // could be a Func or a BtnFunc
   // null if calling a function pointer
   Declaration *definition = nullptr;
@@ -254,6 +255,8 @@ struct Switch final : Statement {
 };
 
 struct Break final : Statement {
+  // what does it do in this context?
+
   void accept(Visitor &) override;
 };
 
@@ -433,6 +436,8 @@ struct CharLiteral final : Literal {
 struct NumberLiteral final : Literal {
   std::string_view value;
   
+  ast::TypePtr type = nullptr;
+  
   void accept(Visitor &) override;
 };
 
@@ -445,11 +450,15 @@ struct BoolLiteral final : Literal {
 struct ArrayLiteral final : Literal {
   std::vector<ExprPtr> exprs;
   
+  ast::TypePtr type = nullptr;
+  
   void accept(Visitor &) override;
 };
 
 struct InitList final : Literal {
   std::vector<ExprPtr> exprs;
+  
+  ast::TypePtr type = nullptr;
   
   void accept(Visitor &) override;
 };

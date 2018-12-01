@@ -80,3 +80,4 @@ think about the rules for function overloading and shadowing
 might need to rename builtin functions to make them less ambiguous
 manually manage reference count
 use macros instead of templates
+pointers instead of references
