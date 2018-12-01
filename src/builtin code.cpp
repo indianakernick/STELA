@@ -285,16 +285,7 @@ void reserve(ArrayPtr<T> &array, const t_uint cap) noexcept {
 }
 
 template <typename T>
-T &index(ArrayPtr<T> &array, const t_uint index) noexcept {
-  if (UNLIKELY(index >= array->len)) {
-    panic("Indexing past end of array");
-  } else {
-    return array->data()[index];
-  }
-}
-
-template <typename T>
-const T &index(const ArrayPtr<T> &array, const t_uint index) noexcept {
+T &index(ArrayPtr<T> array, const t_uint index) noexcept {
   if (UNLIKELY(index >= array->len)) {
     panic("Indexing past end of array");
   } else {
@@ -305,6 +296,12 @@ const T &index(const ArrayPtr<T> &array, const t_uint index) noexcept {
 struct ClosureData : ref_count {
   virtual ~ClosureData() = default;
 };
+
+// Copy the captured data when assigned
+//  - std::function
+// Share the captured data when assigned
+//  - Golang
+//  - JavaScript
 
 using ClosureDataPtr = retain_ptr<ClosureData>;
 

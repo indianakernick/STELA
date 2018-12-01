@@ -27,9 +27,6 @@ public:
       return gen::String{"void *"};
     } else {
       gen::String name;
-      if (etype.mut == sym::ValueMut::let) {
-        name += "const ";
-      }
       name += generateType(ctx, etype.type.get());
       name += ' ';
       if (etype.ref == sym::ValueRef::ref) {
