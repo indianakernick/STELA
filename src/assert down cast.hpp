@@ -24,9 +24,10 @@ Derived *assertDownCast(Base *const base) noexcept {
 
 template <typename Derived, typename Base>
 Derived *assertDownCast(Base *const base) noexcept {
-  Derived *const ptr = dynamic_cast<Derived *>(base);
-  assert(ptr);
-  return ptr;
+  assert(base);
+  Derived *const derived = dynamic_cast<Derived *>(base);
+  assert(derived);
+  return derived;
 }
 
 #endif

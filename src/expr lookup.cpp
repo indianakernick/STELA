@@ -16,6 +16,7 @@
 #include "compare types.hpp"
 #include "scope traverse.hpp"
 #include "builtin symbols.hpp"
+#include "assert down cast.hpp"
 #include "compare params args.hpp"
 
 using namespace stela;
@@ -84,9 +85,7 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
   if (stack.call(ExprKind::btn_func)) {
     sym::Name name = stack.popBtnFunc();
     sym::Symbol *symbol = findScope(ctx.man.cur(), name).symbol;
-    assert(symbol);
-    sym::BtnFunc *func = dynamic_cast<sym::BtnFunc *>(symbol);
-    assert(func);
+    sym::BtnFunc *func = assertDownCast<sym::BtnFunc>(symbol);
     stack.popCall();
     assert(func->node);
     ast::TypePtr retType = callBtnFunc(ctx, func->node->value, args, loc);
@@ -152,9 +151,7 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
     if (scope->type != sym::ScopeType::ns) {
       // make sure we're inside a closure
       if (sym::Scope *closureScope = findNearest(sym::ScopeType::closure, currentScope)) {
-        assert(closureScope->symbol);
-        auto lamSym = dynamic_cast<sym::Lambda *>(closureScope->symbol);
-        assert(lamSym);
+        auto *lamSym = assertDownCast<sym::Lambda>(closureScope->symbol);
         lamSym->captures.push_back(object);
       }
     }
@@ -208,8 +205,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
   const auto [begin, end] = scope->table.equal_range(name);
   assert(begin != end);
   if (std::next(begin) == end) {
-    auto *funcSym = dynamic_cast<sym::Func *>(begin->second.get());
-    assert(funcSym);
+    auto *funcSym = assertDownCast<sym::Func>(begin->second.get());
     auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
     if (expType && !compareTypes(ctx, expType, funcType)) {
       ctx.log.error(loc) << "Function \"" << name << "\" does not match signature" << fatal;
@@ -221,8 +217,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
       ctx.log.error(loc) << "Ambiguous reference to overloaded function \"" << name << '"' << fatal;
     }
     for (auto f = begin; f != end; ++f) {
-      auto *funcSym = dynamic_cast<sym::Func *>(f->second.get());
-      assert(funcSym);
+      auto *funcSym = assertDownCast<sym::Func>(f->second.get());
       auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
       if (compareTypes(ctx, expType, funcType)) {
         stack.pushExpr(sym::makeLetVal(std::move(funcType)));

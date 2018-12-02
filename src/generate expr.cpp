@@ -88,9 +88,7 @@ public:
       str += '(';
       if (func->receiver) {
         str += '(';
-        auto *mem = dynamic_cast<ast::MemberIdent *>(call.func.get());
-        assert(mem);
-        mem->object->accept(*this);
+        assertDownCast<ast::MemberIdent>(call.func.get())->object->accept(*this);
         str += ')';
       } else {
         str += "nullptr";
@@ -156,9 +154,7 @@ public:
       return;
     }
     if (auto *func = dynamic_cast<ast::Func *>(ident.definition)) {
-      assert(ident.exprType);
-      auto *funcType = dynamic_cast<ast::FuncType *>(ident.exprType.get());
-      assert(funcType);
+      auto *funcType = assertDownCast<ast::FuncType>(ident.exprType.get());
       str += generateMakeFunc(ctx, *funcType);
       str += "(&f_";
       str += func->id;
