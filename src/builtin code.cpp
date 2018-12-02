@@ -295,30 +295,12 @@ struct ClosureData : ref_count {
 // Copy the captured data when assigned
 //  - std::function
 // Share the captured data when assigned
-//  - Golang
+//  - Go
 //  - JavaScript
 
 using ClosureDataPtr = retain_ptr<ClosureData>;
 
-/*template <typename Func>
-struct Closure {
-  Func func;
-  ClosureDataPtr data;
-};*/
-
 struct FuncClosureData : ClosureData {};
-
-/*
-template <typename Func>
-bool closure_to_bool(Closure<Func> closure) noexcept {
-  return closure.func != &null_function<Func>::call;
-}
-
-template <typename Func, typename... Args>
-auto call_closure(Closure<Func> closure, Args &&... args) noexcept {
-  return closure.func(closure.data.get(), std::forward<Args>(args)...);
-}
-*/
 
 }
 

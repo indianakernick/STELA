@@ -176,3 +176,7 @@ ast::Type *stela::concreteType(ast::Type *type) {
   }
   return type;
 }
+
+gen::String stela::generateLambdaCapture(gen::Ctx, const ast::Lambda &) {
+  return gen::String{"FuncClosureData"};
+}

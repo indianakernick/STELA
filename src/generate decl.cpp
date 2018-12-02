@@ -261,3 +261,7 @@ void stela::generateDecl(gen::Ctx ctx, const ast::Decls &decls) {
     decl->accept(visitor);
   }
 }
+
+gen::String stela::generateDecl(gen::Ctx ctx, const ast::Block &block) {
+  return gen::String{"\n"};
+}

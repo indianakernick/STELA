@@ -26,6 +26,8 @@ Concrete *concreteType(ast::Type *type) {
   return dynamic_cast<Concrete *>(concreteType(type));
 }
 
+gen::String generateLambdaCapture(gen::Ctx, const ast::Lambda &);
+
 }
 
 #endif

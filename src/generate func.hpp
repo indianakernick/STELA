@@ -17,8 +17,8 @@ namespace stela {
 
 gen::String generateNullFunc(gen::Ctx, const ast::FuncType &);
 gen::String generateMakeFunc(gen::Ctx, ast::FuncType &);
-gen::String boolConv(gen::Ctx, const sym::ExprType &, ast::Name);
-gen::String callClosure(gen::Ctx, const sym::ExprType &, ast::Name);
+gen::String generateLambda(gen::Ctx, const ast::Lambda &);
+gen::String generateMakeLam(gen::Ctx, const ast::Lambda &);
 
 }
 

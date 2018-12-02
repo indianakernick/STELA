@@ -15,6 +15,7 @@
 namespace stela {
 
 void generateDecl(gen::Ctx, const ast::Decls &);
+gen::String generateDecl(gen::Ctx, const ast::Block &);
 
 }
 

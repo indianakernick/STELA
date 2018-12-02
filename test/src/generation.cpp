@@ -340,6 +340,14 @@ TEST_GROUP(Generation, {
       }
     )");
   });
+  
+  TEST(Lambda, {
+    ASSERT_COMPILES(R"(
+      func test() {
+        let lam = func(){};
+      }
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS

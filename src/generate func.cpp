@@ -10,6 +10,8 @@
 
 #include "unreachable.hpp"
 #include "generate type.hpp"
+#include "generate decl.hpp"
+#include "assert down cast.hpp"
 
 using namespace stela;
 
@@ -61,13 +63,71 @@ return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
   return name;
 }
 
-gen::String stela::boolConv(gen::Ctx ctx, const sym::ExprType &etype, const ast::Name name) {
-  if (auto *func = dynamic_cast<ast::FuncType *>(etype.type.get())) {
-    gen::String str;
-    str += name;
-    str += ".func != &";
-    str += generateNullFunc(ctx, *func);
-    return str;
+gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
+  gen::String func;
+  func += "static ";
+  func += generateTypeOrVoid(ctx, lambda.ret.get());
+  func += " ";
+  gen::String name;
+  name += "f_lam_";
+  // @TODO lambda need unique IDs
+  name += lambda.loc.l;
+  func += name;
+  func += "(";
+  func += generateLambdaCapture(ctx, lambda);
+  func += " &capture";
+  sym::Lambda *symbol = lambda.symbol;
+  for (size_t p = 0; p != symbol->params.size(); ++p) {
+    func += ", ";
+    func += generateType(ctx, symbol->params[p].type.get());
+    if (symbol->params[p].ref == sym::ValueRef::ref) {
+      func += " &";
+    }
+    func += "p_";
+    func += p;
   }
-  UNREACHABLE();
+  func += ") noexcept {\n";
+  func += generateDecl(ctx, lambda.body);
+  func += "}\n";
+  ctx.func += func;
+  return name;
+}
+
+gen::String stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
+  gen::String func;
+  func += "static inline ";
+  func += generateType(ctx, lambda.exprType.get());
+  func += " ";
+  gen::String name;
+  name += "f_makelam_";
+  name += lambda.loc.l;
+  func += name;
+  func += "(";
+  const gen::String capture = generateLambdaCapture(ctx, lambda);
+  func += capture;
+  func += " capture) noexcept {\n";
+  
+  func += "auto *ptr = static_cast<";
+  func += capture;
+  func += " *>(allocate(sizeof(";
+  func += capture;
+  func += ")));\n";
+  
+  func += "new (ptr) ";
+  func += capture;
+  func += "(capture);\n";
+  
+  func += "ptr->count = 1; // @TODO might not need to do this \n";
+  
+  func += "return {reinterpret_cast<";
+  auto *funcType = assertDownCast<ast::FuncType>(lambda.exprType.get());
+  func += generateFuncSig(ctx, *funcType);
+  func += ">(";
+  func += generateLambda(ctx, lambda);
+  func += "), ClosureDataPtr{static_cast<ClosureData *>(ptr)}};\n";
+  
+  func += "}\n";
+  
+  ctx.func += func;
+  return name;
 }

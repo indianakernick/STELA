@@ -250,6 +250,10 @@ public:
       str += '}';
     }
   }
+  void visit(ast::Lambda &lambda) override {
+    str += generateMakeLam(ctx, lambda);
+    str += "({})";
+  }
 
   gen::String str;
 
