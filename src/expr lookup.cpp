@@ -147,16 +147,31 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
     ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
+    bool inClosure = false;
     // don't capture globals
     if (scope->type != sym::ScopeType::ns) {
       // make sure we're inside a closure
       if (sym::Scope *closureScope = findNearest(sym::ScopeType::closure, currentScope)) {
         auto *lamSym = assertDownCast<sym::Lambda>(closureScope->symbol);
-        lamSym->captures.push_back(object);
+        // make sure the variable hasn't been captured already
+        bool alreadyCaptured = false;
+        for (sym::Object *capture : lamSym->captures) {
+          if (capture == object) {
+            alreadyCaptured = true;
+          }
+        }
+        if (!alreadyCaptured) {
+          lamSym->captures.push_back(object);
+        }
+        inClosure = true;
       }
     }
     object->referenced = true;
-    stack.pushExpr(object->etype);
+    if (inClosure) {
+      stack.pushExpr(sym::makeVarVal(object->etype.type));
+    } else {
+      stack.pushExpr(object->etype);
+    }
     return object->node.get();
   }
   if (dynamic_cast<sym::Func *>(symbol)) {

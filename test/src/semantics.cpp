@@ -1555,9 +1555,7 @@ TEST_GROUP(Semantics, {
   TEST(Stateful lambda, {
     ASSERT_SUCCEEDS(R"(
       func makeIDgen(first: sint) -> func() -> sint {
-        // @TODO make this a constant
-        // lambda makes a copy of captured variables
-        var id = first - 1;
+        let id = first - 1;
         return func() -> sint {
           id++;
           return id;
