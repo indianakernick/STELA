@@ -61,7 +61,10 @@ public:
   size_t size() const {
     return storage.size();
   }
-  
+  bool empty() const {
+    return storage.empty();
+  }
+
   template <size_t Size>
   void operator+=(const char (&string)[Size]) {
     static_assert(Size != 0, "Appending empty char array");

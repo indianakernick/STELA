@@ -169,3 +169,10 @@ gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   }
   return name;
 }
+
+ast::Type *stela::concreteType(ast::Type *type) {
+  if (auto *named = dynamic_cast<ast::NamedType *>(type)) {
+    return concreteType(named->definition->type.get());
+  }
+  return type;
+}

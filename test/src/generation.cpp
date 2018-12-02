@@ -329,7 +329,10 @@ TEST_GROUP(Generation, {
         var c: func(sint) -> sint;
         var d: func(sint, inout real) -> bool;
         let e = fn;
-        let tru = e(4, 4.0);
+        
+        if (e) {
+          let tru = e(4, 4.0);
+        }
         
         var two = 6;
         var six = 2;

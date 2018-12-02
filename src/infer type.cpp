@@ -209,7 +209,9 @@ public:
     expected = type;
     expr->accept(*this);
     expected = std::move(oldExpected);
-    return lkp.leaveSubExpr();
+    sym::ExprType etype = lkp.leaveSubExpr();
+    expr->exprType = etype.type;
+    return etype;
   }
 
   bool convertibleToBool(const ast::TypePtr &type) {
@@ -220,11 +222,9 @@ public:
     sym::ExprType etype = visitExprNoCheck(expr, type);
     if (type && !compareTypes(ctx, type, etype.type)) {
       if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
-        expr->exprType = ctx.btn.Bool;
         return sym::makeLetVal(ctx.btn.Bool);
       }
     }
-    expr->exprType = etype.type;
     return etype;
   }
 
@@ -232,14 +232,12 @@ public:
     sym::ExprType etype = visitExprNoCheck(expr, type);
     if (type && !compareTypes(ctx, type, etype.type)) {
       if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
-        expr->exprType = ctx.btn.Bool;
         return sym::makeLetVal(ctx.btn.Bool);
       } else {
         ctx.log.error(expr->loc) << "Expected " << typeDesc(type) << " but got "
           << typeDesc(etype.type) << fatal;
       }
     }
-    expr->exprType = etype.type;
     return etype;
   }
 

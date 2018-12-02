@@ -19,6 +19,13 @@ gen::String generateTypeOrVoid(gen::Ctx, ast::Type *);
 gen::String generateFuncSig(gen::Ctx, const ast::FuncType &);
 gen::String generateFuncName(gen::Ctx, const ast::FuncType &);
 
+ast::Type *concreteType(ast::Type *);
+
+template <typename Concrete>
+Concrete *concreteType(ast::Type *type) {
+  return dynamic_cast<Concrete *>(concreteType(type));
+}
+
 }
 
 #endif

@@ -127,31 +127,38 @@ public:
   }
   void visit(ast::Identifier &ident) override {
     assert(ident.definition);
+    gen::String name;
     if (auto *param = dynamic_cast<ast::FuncParam *>(ident.definition)) {
       // @TODO uncomment when we move from references to pointers
       //str += "(";
       //if (param->ref == ast::ParamRef::inout) {
       //  str += "*";
       //}
-      str += "p_";
-      str += param->index;
+      name += "p_";
+      name += param->index;
       //str += ")";
-      return;
+    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(ident.definition)) {
+      name += "v_";
+      name += decl->id;
+    } else if (auto *var = dynamic_cast<ast::Var *>(ident.definition)) {
+      name += "v_";
+      name += var->id;
+    } else if (auto *let = dynamic_cast<ast::Let *>(ident.definition)) {
+      name += "v_";
+      name += let->id;
     }
-    if (auto *var = dynamic_cast<ast::DeclAssign *>(ident.definition)) {
-      str += "v_";
-      str += var->id;
-      return;
-    }
-    if (auto *var = dynamic_cast<ast::Var *>(ident.definition)) {
-      str += "v_";
-      str += var->id;
-      return;
-    }
-    if (auto *let = dynamic_cast<ast::Let *>(ident.definition)) {
-      str += "v_";
-      str += let->id;
-      return;
+    if (!name.empty()) {
+      auto *funcType = concreteType<ast::FuncType>(ident.exprType.get());
+      auto *btnType = concreteType<ast::BtnType>(ident.expectedType.get());
+      if (funcType && btnType && btnType->value == ast::BtnTypeEnum::Bool) {
+        str += "(";
+        str += name;
+        str += ".func != &";
+        str += generateNullFunc(ctx, *funcType);
+        str += ")";
+        return;
+      }
+      str += name;
     }
     if (auto *func = dynamic_cast<ast::Func *>(ident.definition)) {
       auto *funcType = assertDownCast<ast::FuncType>(ident.exprType.get());
@@ -161,7 +168,7 @@ public:
       str += ")";
       return;
     }
-    UNREACHABLE();
+    assert(!name.empty());
   }
   void visit(ast::Ternary &tern) override {
     str += '(';

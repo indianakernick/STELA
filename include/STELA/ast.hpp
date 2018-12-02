@@ -46,8 +46,8 @@ using TypePtr = retain_ptr<Type>;
 struct Expression : Node {
   ~Expression();
   
-  ast::TypePtr expectedType;
-  ast::TypePtr exprType;
+  ast::TypePtr expectedType; // not all expressions have an expected type
+  ast::TypePtr exprType; // every expression has a type
 };
 using ExprPtr = retain_ptr<Expression>;
 
