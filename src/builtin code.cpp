@@ -309,11 +309,11 @@ struct ClosureData : ref_count {
 
 using ClosureDataPtr = retain_ptr<ClosureData>;
 
-template <typename Func>
+/*template <typename Func>
 struct Closure {
   Func func;
   ClosureDataPtr data;
-};
+};*/
 
 struct FuncClosureData : ClosureData {};
 

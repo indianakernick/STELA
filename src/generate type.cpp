@@ -55,9 +55,18 @@ public:
     }
   }
   void visit(ast::FuncType &type) override {
-    name = "Closure<";
-    name += generateFuncSig(ctx, type);
-    name += ">";
+    name += "t_clo_";
+    name += generateFuncName(ctx, type);
+    if (ctx.inst.funcNotInst(name)) {
+      const gen::String sig = generateFuncSig(ctx, type);
+      ctx.type += "typedef struct {\n";
+      ctx.type += sig;
+      ctx.type += " func;\n";
+      ctx.type += "ClosureDataPtr data;\n";
+      ctx.type += "} ";
+      ctx.type += name;
+      ctx.type += ";\n";
+    }
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);
@@ -187,18 +196,17 @@ gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
   return name;
 }
 
-gen::String stela::generateMakeFunc(gen::Ctx ctx, const ast::FuncType &type) {
+gen::String stela::generateMakeFunc(gen::Ctx ctx, ast::FuncType &type) {
   gen::String name;
   name += "f_makefunc_";
   name += generateFuncName(ctx, type);
   if (ctx.inst.funcNotInst(name)) {
-    ctx.func += "static Closure<";
-    const gen::String sig = generateFuncSig(ctx, type);
-    ctx.func += sig;
-    ctx.func += "> ";
+    ctx.func += "static ";
+    ctx.func += generateType(ctx, &type);
+    ctx.func += " ";
     ctx.func += name;
     ctx.func += "(const ";
-    ctx.func += sig;
+    ctx.func += generateFuncSig(ctx, type);
     ctx.func += R"( func) noexcept {
 FuncClosureData *ptr = allocate<FuncClosureData>();
 new (ptr) FuncClosureData(); // setup virtual destructor
