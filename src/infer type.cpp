@@ -138,7 +138,6 @@ public:
     } else if (std::holds_alternative<Uint>(num)) {
       type = ctx.btn.Uint;
     }
-    n.type = type;
     lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
   void visit(ast::BoolLiteral &) override {
@@ -167,7 +166,6 @@ public:
       }
       elem = lookupStrongType(ctx, std::move(expr.type));
     }
-    arr.type = elem;
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
     array->elem = std::move(elem);
@@ -193,7 +191,6 @@ public:
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
       }
     }
-    list.type = expected;
     lkp.setExpr(sym::makeLetVal(std::move(expected)));
   }
   void visit(ast::Lambda &lam) override {
@@ -206,6 +203,7 @@ public:
   }
 
   sym::ExprType visitExprNoCheck(const ast::ExprPtr &expr, const ast::TypePtr &type) {
+    expr->expectedType = type;
     lkp.enterSubExpr();
     ast::TypePtr oldExpected = std::move(expected);
     expected = type;
@@ -222,9 +220,11 @@ public:
     sym::ExprType etype = visitExprNoCheck(expr, type);
     if (type && !compareTypes(ctx, type, etype.type)) {
       if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
+        expr->exprType = ctx.btn.Bool;
         return sym::makeLetVal(ctx.btn.Bool);
       }
     }
+    expr->exprType = etype.type;
     return etype;
   }
 
@@ -232,12 +232,14 @@ public:
     sym::ExprType etype = visitExprNoCheck(expr, type);
     if (type && !compareTypes(ctx, type, etype.type)) {
       if (compareTypes(ctx, type, ctx.btn.Bool) && convertibleToBool(etype.type)) {
+        expr->exprType = ctx.btn.Bool;
         return sym::makeLetVal(ctx.btn.Bool);
       } else {
         ctx.log.error(expr->loc) << "Expected " << typeDesc(type) << " but got "
           << typeDesc(etype.type) << fatal;
       }
     }
+    expr->exprType = etype.type;
     return etype;
   }
 

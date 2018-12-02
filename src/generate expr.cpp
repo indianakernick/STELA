@@ -13,6 +13,7 @@
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
+#include "assert down cast.hpp"
 #include "generate zero expr.hpp"
 
 using namespace stela;
@@ -155,8 +156,10 @@ public:
       return;
     }
     if (auto *func = dynamic_cast<ast::Func *>(ident.definition)) {
-      assert(func->type);
-      str += generateMakeFunc(ctx, *func->type);
+      assert(ident.exprType);
+      auto *funcType = dynamic_cast<ast::FuncType *>(ident.exprType.get());
+      assert(funcType);
+      str += generateMakeFunc(ctx, *funcType);
       str += "(&f_";
       str += func->id;
       str += ")";
@@ -195,7 +198,7 @@ public:
     str += '\'';
   }
   void visit(ast::NumberLiteral &num) override {
-    str += generateType(ctx, num.type.get());
+    str += generateType(ctx, num.exprType.get());
     str += '(';
     str += num.value;
     str += ')';
@@ -221,13 +224,14 @@ public:
     }
   }
   void visit(ast::ArrayLiteral &arr) override {
+    ast::TypePtr elem = assertDownCast<ast::ArrayType>(arr.exprType.get())->elem;
     if (arr.exprs.empty()) {
       str += "make_null_array<";
-      str += generateType(ctx, arr.type.get());
+      str += generateType(ctx, elem.get());
       str += ">()";
     } else {
       str += "array_literal<";
-      str += generateType(ctx, arr.type.get());
+      str += generateType(ctx, elem.get());
       str += ">(";
       pushExprs(arr.exprs);
       str += ')';
@@ -235,9 +239,9 @@ public:
   }
   void visit(ast::InitList &list) override {
     if (list.exprs.empty()) {
-      str += generateZeroExpr(ctx, list.type.get());
+      str += generateZeroExpr(ctx, list.exprType.get());
     } else {
-      str += generateType(ctx, list.type.get());
+      str += generateType(ctx, list.exprType.get());
       str += '{';
       pushExprs(list.exprs);
       str += '}';

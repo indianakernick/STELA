@@ -45,6 +45,9 @@ using TypePtr = retain_ptr<Type>;
 
 struct Expression : Node {
   ~Expression();
+  
+  ast::TypePtr expectedType;
+  ast::TypePtr exprType;
 };
 using ExprPtr = retain_ptr<Expression>;
 
@@ -321,9 +324,6 @@ struct Func final : Declaration {
   Block body;
   
   sym::Func *symbol = nullptr;
-  // type is only set when this function (or one of its overloads) is used as
-  // a function pointer
-  retain_ptr<ast::FuncType> type;
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
@@ -451,8 +451,6 @@ struct CharLiteral final : Literal {
 struct NumberLiteral final : Literal {
   std::string_view value;
   
-  ast::TypePtr type = nullptr;
-  
   void accept(Visitor &) override;
 };
 
@@ -465,15 +463,11 @@ struct BoolLiteral final : Literal {
 struct ArrayLiteral final : Literal {
   std::vector<ExprPtr> exprs;
   
-  ast::TypePtr type = nullptr;
-  
   void accept(Visitor &) override;
 };
 
 struct InitList final : Literal {
   std::vector<ExprPtr> exprs;
-  
-  ast::TypePtr type = nullptr;
   
   void accept(Visitor &) override;
 };
