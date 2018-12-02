@@ -70,8 +70,7 @@ gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   func += " ";
   gen::String name;
   name += "f_lam_";
-  // @TODO lambda need unique IDs
-  name += lambda.loc.l;
+  name += lambda.id;
   func += name;
   func += "(";
   func += generateLambdaCapture(ctx, lambda);
@@ -101,7 +100,7 @@ gen::String stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   func += " ";
   gen::String name;
   name += "f_makelam_";
-  name += lambda.loc.l;
+  name += lambda.id;
   func += name;
   func += "(";
   const gen::String capture = generateLambdaCapture(ctx, lambda);
