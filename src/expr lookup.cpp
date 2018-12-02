@@ -140,34 +140,47 @@ uint32_t ExprLookup::lookupMember(const Loc loc) {
   return ~uint32_t{};
 }
 
-ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
+namespace {
+
+bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scope, sym::Scope *currentScope) {
+  if (scope->type == sym::ScopeType::ns) {
+    // don't capture globals
+    return false;
+  }
+  sym::Scope *closureScope = findNearest(sym::ScopeType::closure, currentScope);
+  if (!closureScope) {
+    // we aren't in a lambda
+    return false;
+  }
+  if (findNearest(sym::ScopeType::closure, scope) == closureScope) {
+    // if we can reach the closure scope from the object scope, object is local
+    return false;
+  }
+  auto *lamSym = assertDownCast<sym::Lambda>(closureScope->symbol);
+  for (size_t c = 0; c != lamSym->captures.size(); ++c) {
+    if (lamSym->captures[c] == object) {
+      // already been captured
+      ident.captureIndex = static_cast<uint32_t>(c);
+      return true;
+    }
+  }
+  // capture new variable
+  ident.captureIndex = static_cast<uint32_t>(lamSym->captures.size());
+  lamSym->captures.push_back(object);
+  return true;
+}
+
+}
+
+ast::Statement *ExprLookup::lookupIdent(ast::Identifier &ident) {
   sym::Scope *currentScope = ctx.man.cur();
-  const auto [symbol, scope] = findScope(currentScope, name);
+  const auto [symbol, scope] = findScope(currentScope, sym::Name{ident.name});
   if (symbol == nullptr) {
-    ctx.log.error(loc) << "Use of undefined symbol \"" << name << '"' << fatal;
+    ctx.log.error(ident.loc) << "Use of undefined symbol \"" << ident.name << '"' << fatal;
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
-    bool inClosure = false;
-    // don't capture globals
-    if (scope->type != sym::ScopeType::ns) {
-      // make sure we're inside a closure
-      if (sym::Scope *closureScope = findNearest(sym::ScopeType::closure, currentScope)) {
-        auto *lamSym = assertDownCast<sym::Lambda>(closureScope->symbol);
-        // make sure the variable hasn't been captured already
-        bool alreadyCaptured = false;
-        for (sym::Object *capture : lamSym->captures) {
-          if (capture == object) {
-            alreadyCaptured = true;
-          }
-        }
-        if (!alreadyCaptured) {
-          lamSym->captures.push_back(object);
-        }
-        inClosure = true;
-      }
-    }
     object->referenced = true;
-    if (inClosure) {
+    if (lambdaCapture(ident, object, scope, currentScope)) {
       stack.pushExpr(sym::makeVarVal(object->etype.type));
     } else {
       stack.pushExpr(object->etype);
@@ -176,21 +189,22 @@ ast::Statement *ExprLookup::lookupIdent(const sym::Name &name, const Loc loc) {
   }
   if (dynamic_cast<sym::Func *>(symbol)) {
     if (stack.top() == ExprKind::call) {
-      stack.pushFunc(name);
+      stack.pushFunc(sym::Name{ident.name});
       return nullptr;
     } else {
-      return pushFunPtr(scope, name, loc);
+      return pushFunPtr(scope, sym::Name{ident.name}, ident.loc);
     }
   }
   if (dynamic_cast<sym::BtnFunc *>(symbol)) {
     if (stack.top() != ExprKind::call) {
-      ctx.log.error(loc) << "Reference to builtin function \"" << name << "\" must be called" << fatal;
+      ctx.log.error(ident.loc) << "Reference to builtin function \"" << ident.name
+        << "\" must be called" << fatal;
     }
-    stack.pushBtnFunc(name);
+    stack.pushBtnFunc(sym::Name{ident.name});
     return nullptr;
   }
-  ctx.log.error(loc) << "Expected variable or function but found "
-    << symbolDesc(symbol) << " \"" << name << "\"" << fatal;
+  ctx.log.error(ident.loc) << "Expected variable or function but found "
+    << symbolDesc(symbol) << " \"" << ident.name << "\"" << fatal;
 }
 
 void ExprLookup::setExpr(sym::ExprType type) {

@@ -8,6 +8,7 @@
 
 #include "generate type.hpp"
 
+#include "symbols.hpp"
 #include "unreachable.hpp"
 
 using namespace stela;
@@ -177,6 +178,60 @@ ast::Type *stela::concreteType(ast::Type *type) {
   return type;
 }
 
-gen::String stela::generateLambdaCapture(gen::Ctx, const ast::Lambda &) {
-  return gen::String{"FuncClosureData"};
+gen::String stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &lambda) {
+  sym::Lambda *symbol = lambda.symbol;
+  const size_t numCaptures = symbol->captures.size();
+  std::vector<gen::String> captureTypes;
+  captureTypes.reserve(numCaptures);
+  for (sym::Object *capture : symbol->captures) {
+    captureTypes.push_back(generateType(ctx, capture->etype.type.get()));
+  }
+  gen::String name;
+  name += "t_cap";
+  for (size_t c = 0; c != numCaptures; ++c) {
+    name += "_";
+    name += captureTypes[c].size();
+    name += "_";
+    name += captureTypes[c];
+  }
+  if (ctx.inst.structNotInst(name)) {
+    gen::String type;
+    type += "struct ";
+    type += name;
+    type += " : ClosureData {\n";
+    type += name;
+    type += "(";
+    for (size_t c = 0; c != numCaptures; ++c) {
+      type += captureTypes[c];
+      type += " c_";
+      type += c;
+      if (c != numCaptures - 1) {
+        type += ", ";
+      }
+    }
+    type += ")\n";
+    if (numCaptures != 0) {
+      type += ": ";
+    }
+    for (size_t c = 0; c != numCaptures; ++c) {
+      type += "c_";
+      type += c;
+      type += "{c_";
+      type += c;
+      type += "}";
+      if (c != numCaptures - 1) {
+        type += ", ";
+      }
+    }
+    type += "{}\n";
+    for (size_t c = 0; c != numCaptures; ++c) {
+      type += captureTypes[c];
+      type += " c_";
+      type += c;
+      type += ";\n";
+    }
+    type += "};\n";
+    ctx.type += type;
+  }
+  return name;
 }

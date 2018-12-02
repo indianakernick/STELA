@@ -129,6 +129,7 @@ public:
   }
   void visit(ast::Lambda &lam) override {
     lam.id = lamID++;
+    visit(lam.body);
   }
   
 private:

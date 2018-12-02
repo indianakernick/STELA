@@ -89,7 +89,7 @@ public:
     // else
     //   return null
   
-  ast::Statement *lookupIdent(const sym::Name &, Loc);
+  ast::Statement *lookupIdent(ast::Identifier &);
     // standard lookup
     // if name is function
     //   exprs.push_back({Expr::Type::free_fun, name});

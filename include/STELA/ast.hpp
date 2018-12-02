@@ -210,6 +210,9 @@ struct Identifier final : Expression {
   // may be a Func if not being called or null if the function is called
   // error if the identifier refers to a type
   Statement *definition = nullptr;
+  // This remains set to ~uint32_t{} if the identifier does not refer to
+  // a captured variable
+  uint32_t captureIndex = ~uint32_t{};
   
   void accept(Visitor &) override;
 };

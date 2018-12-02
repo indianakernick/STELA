@@ -352,6 +352,25 @@ TEST_GROUP(Generation, {
       }
     )");
   });
+  
+  TEST(Stateful lambda, {
+    ASSERT_COMPILES(R"(
+      func makeIDgen(next: sint) -> func() -> sint {
+        return func() -> sint {
+          let id = next;
+          next++;
+          return id;
+        };
+      }
+
+      func test() {
+        let gen = makeIDgen(4);
+        let four = gen();
+        let five = gen();
+        let six = gen();
+      }
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS

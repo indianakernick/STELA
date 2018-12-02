@@ -125,10 +125,10 @@ public:
     sub.index->accept(*this);
     str += ')';
   }
-  void visit(ast::Identifier &ident) override {
-    assert(ident.definition);
+  void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
+    assert(definition);
     gen::String name;
-    if (auto *param = dynamic_cast<ast::FuncParam *>(ident.definition)) {
+    if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
       // @TODO uncomment when we move from references to pointers
       //str += "(";
       //if (param->ref == ast::ParamRef::inout) {
@@ -137,19 +137,19 @@ public:
       name += "p_";
       name += param->index;
       //str += ")";
-    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(ident.definition)) {
+    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
       name += "v_";
       name += decl->id;
-    } else if (auto *var = dynamic_cast<ast::Var *>(ident.definition)) {
+    } else if (auto *var = dynamic_cast<ast::Var *>(definition)) {
       name += "v_";
       name += var->id;
-    } else if (auto *let = dynamic_cast<ast::Let *>(ident.definition)) {
+    } else if (auto *let = dynamic_cast<ast::Let *>(definition)) {
       name += "v_";
       name += let->id;
     }
     if (!name.empty()) {
-      auto *funcType = concreteType<ast::FuncType>(ident.exprType.get());
-      auto *btnType = concreteType<ast::BtnType>(ident.expectedType.get());
+      auto *funcType = concreteType<ast::FuncType>(exprType);
+      auto *btnType = concreteType<ast::BtnType>(expectedType);
       if (funcType && btnType && btnType->value == ast::BtnTypeEnum::Bool) {
         str += "(";
         str += name;
@@ -160,8 +160,8 @@ public:
       }
       str += name;
     }
-    if (auto *func = dynamic_cast<ast::Func *>(ident.definition)) {
-      auto *funcType = assertDownCast<ast::FuncType>(ident.exprType.get());
+    if (auto *func = dynamic_cast<ast::Func *>(definition)) {
+      auto *funcType = assertDownCast<ast::FuncType>(exprType);
       str += generateMakeFunc(ctx, *funcType);
       str += "(&f_";
       str += func->id;
@@ -169,6 +169,14 @@ public:
       return;
     }
     assert(!name.empty());
+  }
+  void visit(ast::Identifier &ident) override {
+    if (ident.captureIndex != ~uint32_t{}) {
+      str += "capture.c_";
+      str += ident.captureIndex;
+      return;
+    }
+    writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
   }
   void visit(ast::Ternary &tern) override {
     str += '(';
@@ -252,7 +260,20 @@ public:
   }
   void visit(ast::Lambda &lambda) override {
     str += generateMakeLam(ctx, lambda);
-    str += "({})";
+    str += "({";
+    sym::Lambda *symbol = lambda.symbol;
+    if (symbol->captures.empty()) {
+      str += "})";
+      return;
+    } else {
+      sym::Object *cap = symbol->captures[0];
+      writeID(cap->node.get(), cap->etype.type.get(), nullptr);
+    }
+    for (auto c = symbol->captures.cbegin() + 1; c != symbol->captures.cend(); ++c) {
+      str += ", ";
+      writeID((*c)->node.get(), (*c)->etype.type.get(), nullptr);
+    }
+    str += "})";
   }
 
   gen::String str;

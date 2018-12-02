@@ -88,7 +88,7 @@ public:
   }
   void visit(ast::Identifier &id) override {
     lkp.expected(expected);
-    id.definition = lkp.lookupIdent(sym::Name{id.name}, id.loc);
+    id.definition = lkp.lookupIdent(id);
   }
   void visit(ast::Ternary &tern) override {
     visitExprCheck(tern.cond, ctx.btn.Bool);
