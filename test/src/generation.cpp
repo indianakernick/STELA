@@ -344,7 +344,11 @@ TEST_GROUP(Generation, {
   TEST(Lambda, {
     ASSERT_COMPILES(R"(
       func test() {
-        let lam = func(){};
+        let empty = func(){};
+        let add = func(a: sint, b: sint) -> sint {
+          return a + b;
+        };
+        let three = add(1, 2);
       }
     )");
   });

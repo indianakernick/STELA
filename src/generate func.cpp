@@ -80,11 +80,12 @@ gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   for (size_t p = 0; p != symbol->params.size(); ++p) {
     func += ", ";
     func += generateType(ctx, symbol->params[p].type.get());
+    func += ' ';
     if (symbol->params[p].ref == sym::ValueRef::ref) {
-      func += " &";
+      func += '&';
     }
     func += "p_";
-    func += p;
+    func += (p + 1);
   }
   func += ") noexcept {\n";
   func += generateDecl(ctx, lambda.body);
