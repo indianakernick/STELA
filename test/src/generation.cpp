@@ -371,6 +371,24 @@ TEST_GROUP(Generation, {
       }
     )");
   });
+  
+  TEST(Nested lambda, {
+    ASSERT_COMPILES(R"(
+      func makeAdder() -> func (sint) -> func (sint) -> sint {
+        return func(left: sint) -> func (sint) -> sint {
+          return func(right: sint) -> sint {
+            return left + right;
+          };
+        };
+      }
+      
+      func test() {
+        let add = makeAdder();
+        let add_1 = add(1);
+        let three = add_1(2);
+      }
+    )");
+  });
 });
 
 #undef ASSERT_CPP_FAILS
