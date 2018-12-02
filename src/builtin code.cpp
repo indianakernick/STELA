@@ -35,32 +35,23 @@ using t_real = float;
 using t_sint = int32_t;
 using t_uint = uint32_t;
 
-[[noreturn]] inline void panic(const char *const reason) noexcept {
+[[noreturn]] void panic(const char *const reason) noexcept {
   std::puts(reason);
   std::exit(EXIT_FAILURE);
 }
 
-template <typename T>
-T *allocate(const size_t bytes) noexcept {
+void *allocate(const size_t bytes) noexcept {
   void *const ptr = operator new(bytes, std::nothrow_t{});
   if (UNLIKELY(ptr == nullptr)) {
     panic("Out of memory");
   } else {
-    return static_cast<T *>(ptr);
+    return ptr;
   }
 }
 
-template <typename T>
-T *allocate() noexcept {
-  return allocate<T>(sizeof(T));
-}
-
-inline void deallocate(void *const ptr) noexcept {
+void deallocate(void *const ptr) noexcept {
   operator delete(ptr);
 }
-
-template <typename T>
-class retain_ptr;
 
 struct ref_count {
   t_uint count;
@@ -127,15 +118,15 @@ private:
 
 #define BITS(T) static_cast<T>(sizeof(T) * CHAR_BIT)
 
-inline unsigned long long ceilToPowerOf2(const unsigned long long num) {
+unsigned long long ceilToPowerOf2(const unsigned long long num) {
   assert(num != 0);
   return (1ull << (BITS(unsigned long long) - static_cast<unsigned long long>(__builtin_clzll(num - 1ull)))) - (num == 1ull);
 }
-inline unsigned long ceilToPowerOf2(const unsigned long num) {
+unsigned long ceilToPowerOf2(const unsigned long num) {
   assert(num != 0);
   return (1ul << (BITS(unsigned long) - static_cast<unsigned long>(__builtin_clzl(num - 1ul)))) - (num == 1ul);
 }
-inline unsigned ceilToPowerOf2(const unsigned num) {
+unsigned ceilToPowerOf2(const unsigned num) {
   assert(num != 0);
   return (1u << (BITS(unsigned) - static_cast<unsigned>(__builtin_clz(num - 1u)))) - (num == 1u);
 }
@@ -165,7 +156,7 @@ using ArrayPtr = retain_ptr<Array<T>>;
 
 template <typename T>
 ArrayPtr<T> make_array(const t_uint cap, const t_uint len) noexcept {
-  Array<T> *const ptr = allocate<Array<T>>(sizeof(Array<T>) + cap * sizeof(T));
+  auto *ptr = static_cast<Array<T> *>(allocate(sizeof(Array<T>) + cap * sizeof(T)));
   ptr->count = 1;
   ptr->cap = cap;
   ptr->len = len;
@@ -320,7 +311,7 @@ struct FuncClosureData : ClosureData {};
 /*
 template <typename Func>
 bool closure_to_bool(Closure<Func> closure) noexcept {
-  return closure.func == &null_function<Func>::call;
+  return closure.func != &null_function<Func>::call;
 }
 
 template <typename Func, typename... Args>

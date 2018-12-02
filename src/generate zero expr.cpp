@@ -9,6 +9,7 @@
 #include "generate zero expr.hpp"
 
 #include "generate type.hpp"
+#include "generate func.hpp"
 
 using namespace stela;
 

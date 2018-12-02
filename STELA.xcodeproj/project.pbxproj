@@ -46,6 +46,7 @@
 		45816F5621B128EC00712CA3 /* generate ids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5421B128EC00712CA3 /* generate ids.cpp */; };
 		45816F5921B1E68700712CA3 /* generate expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5721B1E68700712CA3 /* generate expr.cpp */; };
 		45816F5C21B2685300712CA3 /* generate zero expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5A21B2685300712CA3 /* generate zero expr.cpp */; };
+		45816F6221B3583D00712CA3 /* generate func.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F6021B3583C00712CA3 /* generate func.cpp */; };
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -184,6 +185,8 @@
 		45816F5821B1E68700712CA3 /* generate expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate expr.hpp"; sourceTree = "<group>"; };
 		45816F5A21B2685300712CA3 /* generate zero expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate zero expr.cpp"; sourceTree = "<group>"; };
 		45816F5B21B2685300712CA3 /* generate zero expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate zero expr.hpp"; sourceTree = "<group>"; };
+		45816F6021B3583C00712CA3 /* generate func.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate func.cpp"; sourceTree = "<group>"; };
+		45816F6121B3583C00712CA3 /* generate func.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate func.hpp"; sourceTree = "<group>"; };
 		45A723372129525700BFE7FB /* scope traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope traverse.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -309,6 +312,8 @@
 				45816F4A21B0B6A700712CA3 /* generate decl.hpp */,
 				45816F4C21B0BF9500712CA3 /* generate type.cpp */,
 				45816F4D21B0BF9500712CA3 /* generate type.hpp */,
+				45816F6021B3583C00712CA3 /* generate func.cpp */,
+				45816F6121B3583C00712CA3 /* generate func.hpp */,
 				45816F4F21B0EBE100712CA3 /* gen context.hpp */,
 				45816F5021B0FA5200712CA3 /* gen string.hpp */,
 				45816F5221B1049300712CA3 /* type instantiations.cpp */,
@@ -661,6 +666,7 @@
 				454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */,
 				4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
+				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,
 				4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */,
 				454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */,
 				454EB80621ABD838001A5D78 /* plain format.cpp in Sources */,

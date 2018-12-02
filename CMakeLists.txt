@@ -98,6 +98,8 @@ add_library(STELA STATIC
         "src/generate expr.hpp"
         "src/generate zero expr.cpp"
         "src/generate zero expr.hpp"
+        "src/generate func.cpp"
+        "src/generate func.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
