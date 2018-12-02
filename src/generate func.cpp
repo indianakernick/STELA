@@ -65,12 +65,7 @@ gen::String stela::boolConv(gen::Ctx ctx, const sym::ExprType &etype, const ast:
   if (auto *func = dynamic_cast<ast::FuncType *>(etype.type.get())) {
     gen::String str;
     str += name;
-    if (etype.ref == sym::ValueRef::ref) {
-      str += "->";
-    } else {
-      str += ".";
-    }
-    str += "func != &";
+    str += ".func != &";
     str += generateNullFunc(ctx, *func);
     return str;
   }

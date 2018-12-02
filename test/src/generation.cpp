@@ -313,11 +313,27 @@ TEST_GROUP(Generation, {
   
   TEST(Closures, {
     ASSERT_COMPILES(R"(
+      func fn(first: sint, second: real) -> bool {
+        return make real first == second;
+      }
+      
+      func swap(a: inout sint, b: inout sint) {
+        let temp = a;
+        a = b;
+        b = temp;
+      }
+      
       func test() {
         var a: func();
         var b: func() -> sint;
         var c: func(sint) -> sint;
         var d: func(sint, inout real) -> bool;
+        let e = fn;
+        let tru = e(4, 4.0);
+        
+        var two = 6;
+        var six = 2;
+        swap(two, six);
       }
     )");
   });

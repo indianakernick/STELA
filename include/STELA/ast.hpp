@@ -202,8 +202,9 @@ struct Subscript final : Expression {
 
 struct Identifier final : Expression {
   Name name;
+  
   // either DeclAssign, FuncParam, Var or Let
-  // null if the identifier refers to a function
+  // may be a Func if not being called or null if the function is called
   // error if the identifier refers to a type
   Statement *definition = nullptr;
   
@@ -320,6 +321,9 @@ struct Func final : Declaration {
   Block body;
   
   sym::Func *symbol = nullptr;
+  // type is only set when this function (or one of its overloads) is used as
+  // a function pointer
+  retain_ptr<ast::FuncType> type;
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;

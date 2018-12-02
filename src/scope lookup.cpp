@@ -104,12 +104,15 @@ void writeFuncType(ast::FuncType &funcType, const Func &func) {
 }
 
 ast::TypePtr stela::getFuncType(Log &log, ast::Func &func, Loc loc) {
+  if (func.type) {
+    return func.type;
+  }
   if (func.receiver) {
     log.error(loc) << "Cannot take address of member function" << fatal;
   }
-  auto funcType = make_retain<ast::FuncType>();
-  writeFuncType(*funcType, func);
-  return funcType;
+  func.type = make_retain<ast::FuncType>();
+  writeFuncType(*func.type, func);
+  return func.type;
 }
 
 ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {

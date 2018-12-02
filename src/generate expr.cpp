@@ -12,6 +12,7 @@
 #include "unreachable.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
+#include "generate func.hpp"
 #include "generate zero expr.hpp"
 
 using namespace stela;
@@ -71,9 +72,16 @@ public:
   }
   void visit(ast::FuncCall &call) override {
     if (call.definition == nullptr) {
-      UNREACHABLE();
-    }
-    if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
+      call.func->accept(*this);
+      gen::String func = std::move(str);
+      str += func;
+      str += ".func(";
+      str += func;
+      str += ".data.get()";
+      // @TODO get the parameter types of a function pointer
+      pushArgs(call.args, {});
+      str += ")";
+    } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
       str += "f_";
       str += func->id;
       str += '(';
@@ -88,8 +96,7 @@ public:
       }
       pushArgs(call.args, func->symbol->params);
       str += ')';
-    }
-    if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
+    } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       pushBtnFunc(btnFunc->value);
       str += '(';
       if (call.args.empty()) {
@@ -122,8 +129,14 @@ public:
   void visit(ast::Identifier &ident) override {
     assert(ident.definition);
     if (auto *param = dynamic_cast<ast::FuncParam *>(ident.definition)) {
+      // @TODO uncomment when we move from references to pointers
+      //str += "(";
+      //if (param->ref == ast::ParamRef::inout) {
+      //  str += "*";
+      //}
       str += "p_";
       str += param->index;
+      //str += ")";
       return;
     }
     if (auto *var = dynamic_cast<ast::DeclAssign *>(ident.definition)) {
@@ -139,6 +152,14 @@ public:
     if (auto *let = dynamic_cast<ast::Let *>(ident.definition)) {
       str += "v_";
       str += let->id;
+      return;
+    }
+    if (auto *func = dynamic_cast<ast::Func *>(ident.definition)) {
+      assert(func->type);
+      str += generateMakeFunc(ctx, *func->type);
+      str += "(&f_";
+      str += func->id;
+      str += ")";
       return;
     }
     UNREACHABLE();
