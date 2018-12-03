@@ -1702,14 +1702,6 @@ TEST_GROUP(Semantics, {
     )");
   });
   
-  TEST(Return sint from void function, {
-    ASSERT_FAILS(R"(
-      func getVoid() {
-        return 0;
-      }
-    )");
-  });
-  
   TEST(Return void from sint function, {
     ASSERT_FAILS(R"(
       func getSint() -> sint {
@@ -1887,6 +1879,59 @@ TEST_GROUP(Semantics, {
         var anotherSintStruct: struct {m: sint;};
         sintStruct = anotherSintStruct;
       }
+    )");
+  });
+  
+  TEST(Return type deduction, {
+    ASSERT_SUCCEEDS(R"(
+      func fac(n: sint) {
+        if (n == 0) {
+          return 1;
+        } else {
+          return n * fac(n - 1);
+        }
+      }
+      
+      func oneOrNone(b: bool) {
+        if (b) {
+          return [1];
+        } else {
+          return [];
+        }
+      }
+      
+      func test() {
+        let two: sint = fac(2);
+        let six = fac(3);
+        let none = oneOrNone(false);
+        let one: [sint] = oneOrNone(true);
+      }
+    )");
+  });
+  
+  TEST(Return type cannot be deduced, {
+    ASSERT_FAILS(R"(
+      func fac(n: sint) {
+        return n == 0 ? 1 : n * fac(n - 1);
+      }
+    )");
+  });
+  
+  TEST(Lambda return type deduction, {
+    ASSERT_SUCCEEDS(R"(
+      func makeAdd(a: sint) {
+        return func(b: sint) {
+          return func(c: sint) {
+            return a + b + c;
+          };
+        };
+      }
+      
+      let add_111 = makeAdd(111);
+      let add_222: func(sint) -> func(sint) -> sint = makeAdd(222);
+      
+      let five = func() { return 5; }();
+      let six: real = func() { return 6.0; }();
     )");
   });
 

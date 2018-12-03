@@ -146,6 +146,9 @@ public:
   void visit(ast::FuncType &type) override {
     if (type.ret) {
       type.ret->accept(*this);
+    } else {
+      // @TODO maybe the return type of a FuncType should NOT be optional
+      type.ret = ctx.btn.Void;
     }
     for (const ast::ParamType &param : type.params) {
       param.type->accept(*this);

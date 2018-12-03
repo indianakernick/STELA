@@ -80,7 +80,8 @@ sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::
 
 sym::ExprType stela::convertNullable(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
   if (type == nullptr) {
-    return sym::makeVarVal(ctx.btn.Void);
+    // @TODO shouldn't this be let val?
+    return {nullptr, sym::ValueMut::var, convertRef(ref)};
   } else {
     return convert(ctx, type, ref);
   }
@@ -155,6 +156,13 @@ void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
   }
 }
 
+void stela::leaveFuncScope(sym::Ctx ctx, sym::Func *funcSym, ast::Func &func) {
+  if (!funcSym->ret.type) {
+    funcSym->ret.type = ctx.btn.Void;
+  }
+  func.ret = funcSym->ret.type;
+}
+
 sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
   auto lamSym = std::make_unique<sym::Lambda>();
   lam.symbol = lamSym.get();
@@ -175,4 +183,11 @@ void stela::enterLambdaScope(sym::Lambda *lamSym, ast::Lambda &lam) {
       makeParam(lamSym->params[i], lam.params[i])
     });
   }
+}
+
+void stela::leaveLambdaScope(sym::Ctx ctx, sym::Lambda *lamSym, ast::Lambda &lam) {
+  if (!lamSym->ret.type) {
+    lamSym->ret.type = ctx.btn.Void;
+  }
+  lam.ret = lamSym->ret.type;
 }

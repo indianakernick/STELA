@@ -393,14 +393,14 @@ TEST_GROUP(Generation, {
   TEST(Nested lambda, {
     ASSERT_COMPILES(R"(
       // f_0
-      func makeAdd(a: sint) -> func(sint) -> func(sint) -> sint {
+      func makeAdd(a: sint) {
         // lam_0: a - p_1
-        // fake a has no index
-        return func(b: sint) -> func(sint) -> sint {
+        // cap a has no index
+        return func(b: sint) {
           // lam_1: a - c_0, b - p_1
-          // fake a has index 0
-          // fake b has no index
-          return func(c: sint) -> sint {
+          // cap a has index 0
+          // cap b has no index
+          return func(c: sint) {
             // c_0 + c_1 + p_1
             // a has index 0
             // b has index 1
@@ -421,11 +421,11 @@ TEST_GROUP(Generation, {
   TEST(Nested nested lambda, {
     ASSERT_COMPILES(R"(
       // f_0
-      func makeAdd(a: sint) -> func(uint) -> func(byte) -> func(char) -> real {
+      func makeAdd(a: sint) {
         // lam_0: a - p_1
         // cap a has no index
         var other0 = 0;
-        return func(b: uint) -> func(byte) -> func(char) -> real {
+        return func(b: uint) {
           // lam_1: a - c_0, b - p_1
           // cap a has index 0
           // cap b has no index
@@ -433,7 +433,7 @@ TEST_GROUP(Generation, {
           var other1 = 1;
           var other2 = 2;
           a *= 2;
-          return func(c: byte) -> func(char) -> real {
+          return func(c: byte) {
             other0++;
             other1++;
             c = make byte (make sint c * 2);
@@ -443,7 +443,7 @@ TEST_GROUP(Generation, {
             // cap a has index 0
             // cap b has index 1
             // cap c has no index
-            return func(d: char) -> real {
+            return func(d: char) {
               d *= 2c;
               other1++;
               b *= 2u;

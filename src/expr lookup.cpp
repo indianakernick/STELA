@@ -75,12 +75,18 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
     sym::ExprType receiver = stack.popExpr();
     sym::Name name = stack.popMember();
     const FunKey key {name, pushReceiver(receiver, args)};
-    return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
+    sym::Func *funcSym = lookupFun(ctx.man.cur(), key, loc);
+    assert(funcSym->ret.type);
+    return popCallPushRet(funcSym);
   }
   if (stack.call(ExprKind::func)) {
     sym::Name name = stack.popFunc();
     const FunKey key {name, pushReceiver(sym::null_type, args)};
-    return popCallPushRet(lookupFun(ctx.man.cur(), key, loc));
+    sym::Func *funcSym = lookupFun(ctx.man.cur(), key, loc);
+    if (!funcSym->ret.type) {
+      ctx.log.error(loc) << "Return type of function \"" << name << "\" cannot be deduced" << fatal;
+    }
+    return popCallPushRet(funcSym);
   }
   if (stack.call(ExprKind::btn_func)) {
     sym::Name name = stack.popBtnFunc();
@@ -106,7 +112,8 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
     if (!compatParams(ctx, params, args)) {
       ctx.log.error(loc) << "No matching call to function object" << fatal;
     }
-    stack.pushExpr(convertNullable(ctx, func->ret, ast::ParamRef::value));
+    assert(func->ret);
+    stack.pushExpr(convert(ctx, func->ret, ast::ParamRef::value));
     return nullptr;
   }
   UNREACHABLE();

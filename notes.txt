@@ -78,4 +78,4 @@ might need to rename builtin functions to make them less ambiguous
 manually manage reference count
 pointers instead of references
 remove the null parameters from non-member functions that aren't used in pointers
-the work for return type deduction was done when we did return type validation
+should we add a void type accessible to the programmer and make return type on function types compulsory?

@@ -119,14 +119,6 @@ gen::String stela::generateType(gen::Ctx ctx, ast::Type *type) {
   return std::move(visitor.name);
 }
 
-gen::String stela::generateTypeOrVoid(gen::Ctx ctx, ast::Type *type) {
-  if (type) {
-    return generateType(ctx, type);
-  } else {
-    return gen::String{"t_void"};
-  }
-}
-
 gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
   gen::String name;
   name += "t_fun_";
@@ -155,7 +147,7 @@ gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
 
 gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   gen::String name{16 + 16 * type.params.size()};
-  const gen::String ret = generateTypeOrVoid(ctx, type.ret.get());
+  const gen::String ret = generateType(ctx, type.ret.get());
   name += ret.size();
   name += "_";
   name += ret;

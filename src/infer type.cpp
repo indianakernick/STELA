@@ -198,6 +198,7 @@ public:
     lamSym->scope = ctx.man.enterScope(sym::ScopeType::closure, lamSym);
     enterLambdaScope(lamSym, lam);
     traverse(ctx, lam.body);
+    leaveLambdaScope(ctx, lamSym, lam);
     ctx.man.leaveScope();
     lam.exprType = getLambdaType(ctx, lam);
     lkp.setExpr(sym::makeLetVal(lam.exprType));

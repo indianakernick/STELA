@@ -19,8 +19,10 @@ sym::ExprType convertNullable(sym::Ctx, const ast::TypePtr &, ast::ParamRef);
 void insert(sym::Ctx, const sym::Name &, sym::SymbolPtr);
 sym::Func *insert(sym::Ctx, ast::Func &);
 void enterFuncScope(sym::Func *, ast::Func &);
+void leaveFuncScope(sym::Ctx, sym::Func *, ast::Func &);
 sym::Lambda *insert(sym::Ctx, ast::Lambda &);
 void enterLambdaScope(sym::Lambda *, ast::Lambda &);
+void leaveLambdaScope(sym::Ctx, sym::Lambda *, ast::Lambda &);
 
 template <typename Symbol, typename AST_Node>
 Symbol *insert(sym::Ctx ctx, AST_Node &node) {

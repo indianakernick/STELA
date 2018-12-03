@@ -23,7 +23,7 @@ gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
   name += generateFuncName(ctx, type);
   if (ctx.inst.funcNotInst(name)) {
     ctx.func += "[[noreturn]] static ";
-    ctx.func += generateTypeOrVoid(ctx, type.ret.get());
+    ctx.func += generateType(ctx, type.ret.get());
     ctx.func += ' ';
     ctx.func += name;
     ctx.func += "(void *";
@@ -66,7 +66,7 @@ return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
 gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   gen::String func;
   func += "static ";
-  func += generateTypeOrVoid(ctx, lambda.ret.get());
+  func += generateType(ctx, lambda.ret.get());
   func += " ";
   gen::String name;
   name += "f_lam_";

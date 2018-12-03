@@ -86,19 +86,27 @@ public:
       ctx.man.cur()
     );
     assert(funcScope->symbol);
-    ast::TypePtr retType;
+    ast::TypePtr *retType;
     if (auto func = dynamic_cast<sym::Func *>(funcScope->symbol)) {
-      retType = func->ret.type;
+      retType = &func->ret.type;
     } else if (auto lamb = dynamic_cast<sym::Lambda *>(funcScope->symbol)) {
-      retType = lamb->ret.type;
+      retType = &lamb->ret.type;
     } else {
       UNREACHABLE();
     }
     if (ret.expr) {
-      getExprType(ctx, ret.expr, retType);
+      if (*retType) {
+        getExprType(ctx, ret.expr, *retType);
+      } else {
+        *retType = getExprType(ctx, ret.expr, nullptr).type;
+      }
     } else {
-      if (!compareTypes(ctx, retType, ctx.btn.Void)) {
-        ctx.log.error(ret.loc) << "Expected " << typeDesc(retType) << " but got void" << fatal;
+      if (*retType) {
+        if (!compareTypes(ctx, *retType, ctx.btn.Void)) {
+          ctx.log.error(ret.loc) << "Expected " << typeDesc(*retType) << " but got void" << fatal;
+        }
+      } else {
+        *retType = ctx.btn.Void;
       }
     }
   }
@@ -128,6 +136,7 @@ public:
     for (const ast::StatPtr &stat : func.body.nodes) {
       stat->accept(*this);
     }
+    leaveFuncScope(ctx, funcSym, func);
     ctx.man.leaveScope();
   }
   ast::TypePtr objectType(
