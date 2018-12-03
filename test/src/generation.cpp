@@ -112,9 +112,9 @@ TEST_GROUP(Generation, {
       
       func fourth(a: bool, b: uint) {}
       
-      func fifth(a: real, b: inout byte, c: sint) {}
+      func fifth(a: real, b: ref byte, c: sint) {}
       
-      func (self: inout [struct {v: [sint];}]) sixth(a: inout sint) {}
+      func (self: ref [struct {v: [sint];}]) sixth(a: ref sint) {}
     )");
   });
   
@@ -313,20 +313,26 @@ TEST_GROUP(Generation, {
   
   TEST(Pass reference to reference, {
     ASSERT_COMPILES(R"(
-      func swap_impl(a: inout sint, b: inout sint) {
+      func swap_impl(a: ref sint, b: ref sint) {
         let temp = a;
         a = b;
         b = temp;
       }
       
-      func swap(a: inout sint, b: inout sint) {
+      func swap(a: ref sint, b: ref sint) {
         swap_impl(a, b);
+      }
+      
+      func identity(param: ref sint) {
+        return param;
       }
       
       func test() {
         var two = 6;
         var six = 2;
         swap(two, six);
+        var one = 1;
+        let stillOne = identity(one);
       }
     )");
   })
@@ -341,7 +347,7 @@ TEST_GROUP(Generation, {
         var a: func();
         var b: func() -> sint;
         var c: func(sint) -> sint;
-        var d: func(sint, inout real) -> bool;
+        var d: func(sint, ref real) -> bool;
         let e = fn;
         
         if (e) {

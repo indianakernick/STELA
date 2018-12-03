@@ -239,7 +239,7 @@ ast::TypePtr sizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   return ctx.btn.Uint;
 }
 
-// func push_back<T>(arr: inout [T], elem: T);
+// func push_back<T>(arr: ref [T], elem: T);
 ast::TypePtr pushBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "push_back", loc, args.size() == 2);
   auto array = checkArray(ctx, "push_back", loc, args[0].type);
@@ -251,7 +251,7 @@ ast::TypePtr pushBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc
   return ctx.btn.Void;
 }
 
-// func append<T>(arr: inout [T], other: [T]);
+// func append<T>(arr: ref [T], other: [T]);
 ast::TypePtr appendFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "append", loc, args.size() == 2);
   auto array = checkArray(ctx, "append", loc, args[0].type);
@@ -263,7 +263,7 @@ ast::TypePtr appendFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) 
   return ctx.btn.Void;
 }
 
-// func pop_back<T>(arr: inout [T]);
+// func pop_back<T>(arr: ref [T]);
 ast::TypePtr popBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "pop_back", loc, args.size() == 1);
   checkArray(ctx, "pop_back", loc, args[0].type);
@@ -271,7 +271,7 @@ ast::TypePtr popBackFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc)
   return ctx.btn.Void;
 }
 
-// func resize<T>(arr: inout [T], size: uint);
+// func resize<T>(arr: ref [T], size: uint);
 ast::TypePtr resizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "resize", loc, args.size() == 2);
   checkArray(ctx, "resize", loc, args[0].type);
@@ -280,7 +280,7 @@ ast::TypePtr resizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) 
   return ctx.btn.Void;
 }
 
-// func reserve<T>(arr: inout [T], cap: uint);
+// func reserve<T>(arr: ref [T], cap: uint);
 ast::TypePtr reserveFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "reserve", loc, args.size() == 2);
   checkArray(ctx, "reserve", loc, args[0].type);

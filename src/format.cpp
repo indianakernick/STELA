@@ -30,8 +30,8 @@ public:
     pushKey("func");
     pushOp("(");
     for (auto p = type.params.cbegin(); p != type.params.cend(); ++p) {
-      if (p->ref == ast::ParamRef::inout) {
-        pushKey("inout");
+      if (p->ref == ast::ParamRef::ref) {
+        pushKey("ref");
       }
       p->type->accept(*this);
       if (p != type.params.cend() - 1) {
@@ -420,8 +420,8 @@ private:
     push(Tag::plain, param.name);
     pushOp(":");
     pushSpace();
-    if (param.ref == ast::ParamRef::inout) {
-      pushKey("inout");
+    if (param.ref == ast::ParamRef::ref) {
+      pushKey("ref");
     }
     param.type->accept(*this);
   }

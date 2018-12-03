@@ -130,7 +130,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params.size(), 1);
     
     ASSERT_EQ(func->params[0].name, "one");
-    ASSERT_EQ(func->params[0].ref, ParamRef::value);
+    ASSERT_EQ(func->params[0].ref, ParamRef::val);
     auto *intType = ASSERT_DOWN_CAST(const NamedType, func->params[0].type);
     ASSERT_EQ(intType->name, "Int");
     
@@ -141,7 +141,7 @@ TEST_GROUP(Syntax, {
   
   TEST(Func - two param, {
     const char *source = R"(
-      func swap(first: inout Int, second: inout Int) {}
+      func swap(first: ref Int, second: ref Int) {}
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
@@ -151,8 +151,8 @@ TEST_GROUP(Syntax, {
     
     ASSERT_EQ(func->params[0].name, "first");
     ASSERT_EQ(func->params[1].name, "second");
-    ASSERT_EQ(func->params[0].ref, ParamRef::inout);
-    ASSERT_EQ(func->params[1].ref, ParamRef::inout);
+    ASSERT_EQ(func->params[0].ref, ParamRef::ref);
+    ASSERT_EQ(func->params[1].ref, ParamRef::ref);
   });
   
   TEST(Func - two param (no comma), {
@@ -184,7 +184,7 @@ TEST_GROUP(Syntax, {
   
   TEST(Type - Array of functions, {
     const char *source = R"(
-      type dummy = [func(inout Int, inout Double) -> Char];
+      type dummy = [func(ref Int, ref Double) -> Char];
     )";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
@@ -194,8 +194,8 @@ TEST_GROUP(Syntax, {
     auto *array = ASSERT_DOWN_CAST(const ArrayType, alias->type);
     auto *func = ASSERT_DOWN_CAST(const FuncType, array->elem);
     ASSERT_EQ(func->params.size(), 2);
-    ASSERT_EQ(func->params[0].ref, ParamRef::inout);
-    ASSERT_EQ(func->params[1].ref, ParamRef::inout);
+    ASSERT_EQ(func->params[0].ref, ParamRef::ref);
+    ASSERT_EQ(func->params[1].ref, ParamRef::ref);
     
     auto *first = ASSERT_DOWN_CAST(const NamedType, func->params[0].type);
     ASSERT_EQ(first->name, "Int");
@@ -603,7 +603,7 @@ TEST_GROUP(Syntax, {
         y: Float;
       };
     
-      func (self: inout Vec2) add(other: Vec2) {
+      func (self: ref Vec2) add(other: Vec2) {
         self.x += other.x;
         self.y += other.y;
       }
@@ -1275,7 +1275,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->name, "fac");
     ASSERT_EQ(func->params.size(), 1);
       ASSERT_EQ(func->params[0].name, "n");
-      ASSERT_EQ(func->params[0].ref, ParamRef::value);
+      ASSERT_EQ(func->params[0].ref, ParamRef::val);
       auto *inttype = ASSERT_DOWN_CAST(const NamedType, func->params[0].type);
         ASSERT_EQ(inttype->name, "Int");
     ASSERT_FALSE(func->ret);

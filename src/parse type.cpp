@@ -83,10 +83,10 @@ ast::TypePtr parseStructType(ParseTokens &tok) {
 }
 
 ast::ParamRef stela::parseRef(ParseTokens &tok) {
-  if (tok.checkKeyword("inout")) {
-    return ast::ParamRef::inout;
+  if (tok.checkKeyword("ref")) {
+    return ast::ParamRef::ref;
   } else {
-    return ast::ParamRef::value;
+    return ast::ParamRef::val;
   }
 }
 

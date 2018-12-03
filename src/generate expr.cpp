@@ -43,7 +43,7 @@ public:
   
   void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
     for (size_t i = 0; i != args.size(); ++i) {
-      // @TODO use address operator for inout parameters
+      // @TODO use address operator for ref parameters
       str += ", (";
       args[i]->accept(*this);
       str += ')';
@@ -132,7 +132,7 @@ public:
     if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
       // @TODO uncomment when we move from references to pointers
       //str += "(";
-      //if (param->ref == ast::ParamRef::inout) {
+      //if (param->ref == ast::ParamRef::ref) {
       //  str += "*";
       //}
       name += "p_";

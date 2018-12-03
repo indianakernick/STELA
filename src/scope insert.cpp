@@ -28,7 +28,7 @@ auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
 }
 
 sym::ValueRef convertRef(const ast::ParamRef ref) {
-  if (ref == ast::ParamRef::inout) {
+  if (ref == ast::ParamRef::ref) {
     return sym::ValueRef::ref;
   } else {
     return sym::ValueRef::val;
@@ -116,7 +116,7 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
     }
   }
   funcSym->params = convertParams(ctx, func.receiver, func.params);
-  funcSym->ret = convertNullable(ctx, func.ret, ast::ParamRef::value);
+  funcSym->ret = convertNullable(ctx, func.ret, ast::ParamRef::val);
   funcSym->node = {retain, &func};
   const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name{func.name});
   for (auto s = beg; s != end; ++s) {
@@ -169,7 +169,7 @@ sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
   lamSym->loc = lam.loc;
   lamSym->referenced = true;
   lamSym->params = convertParams(ctx, lam.params);
-  lamSym->ret = convertNullable(ctx, lam.ret, ast::ParamRef::value);
+  lamSym->ret = convertNullable(ctx, lam.ret, ast::ParamRef::val);
   lamSym->node = {retain, &lam};
   sym::Lambda *const ret = lamSym.get();
   ctx.man.cur()->table.insert({"$lambda", std::move(lamSym)});

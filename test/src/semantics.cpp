@@ -608,12 +608,12 @@ TEST_GROUP(Semantics, {
         
       let origin = newVec(0.0, 0.0);
         
-      func (self: inout Vec) add(other: Vec) {
+      func (self: ref Vec) add(other: Vec) {
         self.x += other.x;
         self.y += other.y;
       }
     
-      func (self: inout Vec) div(val: real) {
+      func (self: ref Vec) div(val: real) {
         self.x /= val;
         self.y /= val;
       }
@@ -639,11 +639,11 @@ TEST_GROUP(Semantics, {
         s: [char];
       };
     
-      func change(string: inout [char]) {
+      func change(string: ref [char]) {
         string = "still a string";
       }
     
-      func change(mstr: inout MyString) {
+      func change(mstr: ref MyString) {
         change(mstr.s);
       }
     
@@ -666,7 +666,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Struct - Member function sint, {
     ASSERT_SUCCEEDS(R"(
-      func (self: inout sint) zero() {
+      func (self: ref sint) zero() {
         self = 0;
       }
     
@@ -711,7 +711,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Swap literals, {
     ASSERT_FAILS(R"(
-      func swap(a: inout sint, b: inout sint) {
+      func swap(a: ref sint, b: ref sint) {
         let temp: sint = a;
         a = b;
         b = temp;
@@ -719,6 +719,22 @@ TEST_GROUP(Semantics, {
     
       func main() {
         swap(4, 5);
+      }
+    )");
+  });
+  
+  TEST(Swap constants, {
+    ASSERT_FAILS(R"(
+      func swap(a: ref sint, b: ref sint) {
+        let temp: sint = a;
+        a = b;
+        b = temp;
+      }
+    
+      func main() {
+        let four = 4;
+        let five = 5;
+        swap(four, five);
       }
     )");
   });
@@ -1344,15 +1360,15 @@ TEST_GROUP(Semantics, {
       };
       type Vector = Vec2;
     
-      func one(a: real, b: inout real, c: Vector) -> Vec2 {
+      func one(a: real, b: ref real, c: Vector) -> Vec2 {
         b = a;
         return make Vector {c.x * a, c.y + a};
       }
     
       let ptr0 = one;
-      let ptr1: func(real, inout real, Vector) -> Vec2 = one;
-      let ptr2: func(real, inout real, Vec2) -> Vector = one;
-      let ptr3 = make func(real, inout real, Vector) -> Vec2 one;
+      let ptr1: func(real, ref real, Vector) -> Vec2 = one;
+      let ptr2: func(real, ref real, Vec2) -> Vector = one;
+      let ptr3 = make func(real, ref real, Vector) -> Vec2 one;
     )");
   });
   
@@ -1480,7 +1496,7 @@ TEST_GROUP(Semantics, {
   
   TEST(Assign to function paramenter, {
     ASSERT_SUCCEEDS(R"(
-      func fn(a: sint, b: inout sint) {
+      func fn(a: sint, b: ref sint) {
         a = 1;
         b = 2;
       }
@@ -1821,13 +1837,13 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS(R"(
       type IntStack [sint];
 
-      func (self: inout IntStack) push(value: sint) {
+      func (self: ref IntStack) push(value: sint) {
         push_back(self, value);
       }
-      func (self: inout IntStack) pop() {
+      func (self: ref IntStack) pop() {
         pop_back(self);
       }
-      func (self: inout IntStack) pop_top() -> sint {
+      func (self: ref IntStack) pop_top() -> sint {
         let top = self[size(self) - 1u];
         pop_back(self);
         return top;
@@ -1852,7 +1868,7 @@ TEST_GROUP(Semantics, {
   TEST(Call void lambda, {
     ASSERT_SUCCEEDS(R"(
       func test() {
-        let lam = func(a: inout sint) {
+        let lam = func(a: ref sint) {
           a += 4;
         };
         var yeah = 7;

@@ -33,13 +33,13 @@ let nesting = make sint make real make uint {};
 
 type IntStack [sint];
 
-func (self: inout IntStack) push(value: sint) {
+func (self: ref IntStack) push(value: sint) {
   push_back(self, value);
 }
-func (self: inout IntStack) pop() {
+func (self: ref IntStack) pop() {
   pop_back(self);
 }
-func (self: inout IntStack) pop_top() -> sint {
+func (self: ref IntStack) pop_top() -> sint {
   let top = self[size(self) - 1u];
   pop_back(self);
   return top;
@@ -50,7 +50,7 @@ func (self: IntStack) top() -> sint {
 func (self: IntStack) empty() -> bool {
   return size(self) == 0u;
 }
-func justPop(stack: inout IntStack) {
+func justPop(stack: ref IntStack) {
   while (!stack.empty()) {
     stack.pop();
     continue; // for no reason
@@ -73,7 +73,7 @@ func sort(array: [sint], pred: func(sint, sint)->bool) {
   // sorting...
 }
 
-func customSwap(a: [sint], b: [sint], swap: func(inout sint, inout sint)) {
+func customSwap(a: [sint], b: [sint], swap: func(ref sint, ref sint)) {
   // yeah...
 }
 

@@ -136,7 +136,7 @@ gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
     for (const ast::ParamType &param : type.params) {
       ctx.type += ", ";
       ctx.type += generateType(ctx, param.type.get());
-      if (param.ref == ast::ParamRef::inout) {
+      if (param.ref == ast::ParamRef::ref) {
         ctx.type += " &";
       }
     }
@@ -154,7 +154,7 @@ gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   for (const ast::ParamType &param : type.params) {
     name += "_";
     const gen::String paramType = generateType(ctx, param.type.get());
-    const std::string_view ref = param.ref == ast::ParamRef::inout ? "_ref" : "";
+    const std::string_view ref = param.ref == ast::ParamRef::ref ? "_ref" : "";
     name += paramType.size() + ref.size();
     name += "_";
     name += paramType;

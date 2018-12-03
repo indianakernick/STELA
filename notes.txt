@@ -21,7 +21,7 @@ func min<T: Ordered>(vals: [T]) -> T {
   return elem;
 }
 
-func swap<T>(a: inout T, b inout T) {
+func swap<T>(a: ref T, b ref T) {
   let temp = a;
   a = b;
   b = temp;
@@ -33,11 +33,11 @@ of generics.
 func duplicate<T>(arr: [T]) -> [T];
 func capacity<T>(arr: [T]) -> uint;
 func size<T>(arr: [T]) -> uint;
-func push_back<T>(arr: inout [T], elem: T);
-func append<T>(arr: inout [T], other: [T]);
-func pop_back<T>(arr: inout [T]);
-func resize<T>(arr: inout [T], size: uint);
-func reserve<T>(arr: inout [T], size: uint);
+func push_back<T>(arr: ref [T], elem: T);
+func append<T>(arr: ref [T], other: [T]);
+func pop_back<T>(arr: ref [T]);
+func resize<T>(arr: ref [T], size: uint);
+func reserve<T>(arr: ref [T], size: uint);
 
 We don't need generic types (only generic functions) to deal with arrays.
 
@@ -78,3 +78,4 @@ might need to rename builtin functions to make them less ambiguous. Maybe prefix
 manually manage reference count
 pointers instead of references
 remove the null parameters from non-member functions that aren't used in pointers
+should mutability be part of the type system properly? What we have now just lets use make variables constant

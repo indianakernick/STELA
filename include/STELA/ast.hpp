@@ -102,10 +102,10 @@ struct ArrayType final : Type {
   void accept(Visitor &) override;
 };
 
-/// A function parameter can be passed by value or by reference (inout)
+/// A function parameter can be passed by value or by reference
 enum class ParamRef {
-  value,
-  inout
+  val,
+  ref
 };
 
 struct ParamType {

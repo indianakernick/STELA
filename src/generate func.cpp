@@ -30,7 +30,7 @@ gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
     for (const ast::ParamType &param : type.params) {
       ctx.func += ", ";
       ctx.func += generateType(ctx, param.type.get());
-      if (param.ref == ast::ParamRef::inout) {
+      if (param.ref == ast::ParamRef::ref) {
         ctx.func += " &";
       }
     }
