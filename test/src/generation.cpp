@@ -54,7 +54,7 @@ bool validCode(const std::string &cpp) {
   }
   cppFile << cpp;
   cppFile.close();
-  std::string command = "$CXX -Wshadow -Wconversion -std=c++17 ";
+  std::string command = "$CXX -std=c++17 ";
   command.append(cppFileName);
   command.append(" -o ");
   command.append(exeFileName);
