@@ -19,7 +19,7 @@ namespace stela {
 /// Initialize the builtin and standard library modules
 Symbols initModules(LogBuf &);
 /// Perform semantic analysis on an AST and create a module. The declarations
-/// are moved out of the AST object and into the module. AST object can be
+/// are moved out of the AST object and into Symbols. AST object can be
 /// discarded
 void compileModule(Symbols &, AST &, LogBuf &);
 /// Compile the ASTs into Modules in the right order

@@ -1,16 +1,181 @@
 # Statically Typed Embeddable LAnguage
 
-[![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA) [![Coverage Status](https://coveralls.io/repos/github/Kerndog73/STELA/badge.svg?branch=master)](https://coveralls.io/github/Kerndog73/STELA?branch=master) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/9a5be676e21c47c09c0ee3aed1e65bd5)](https://www.codacy.com/app/kerndog73/STELA?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Kerndog73/STELA&amp;utm_campaign=Badge_Grade) [![Lines of Code](https://tokei.rs/b1/github/Kerndog73/STELA)](https://github.com/Aaronepower/tokei)
+[![Build Status](https://travis-ci.org/Kerndog73/STELA.svg?branch=master)](https://travis-ci.org/Kerndog73/STELA)
+[![Coverage Status](https://coveralls.io/repos/github/Kerndog73/STELA/badge.svg?branch=master)](https://coveralls.io/github/Kerndog73/STELA?branch=master)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/9a5be676e21c47c09c0ee3aed1e65bd5)](https://www.codacy.com/app/kerndog73/STELA?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Kerndog73/STELA&amp;utm_campaign=Badge_Grade)
+[![Lines of Code](https://tokei.rs/b1/github/Kerndog73/STELA)](https://github.com/Aaronepower/tokei)
 
 A scripting language built for speed in world where JavaScript runs on web servers.
 
 ## Examples
 
-The semantic analyser is nearing completion as I write this. These are a few examples taken from the [semantic tests](test/src/semantics.cpp) that illistrate (with code) the semantics of the language. You can't actually run any of these examples but you can put them through the semantic analyser and not get any errors. Also, notice that they're being syntax highlighted as Go because the syntax of this language is pretty close to Go.
+Support for compiling to C++ has arrived! However, the resultant program has an empty main function and 
+Stela has no way of accessing the C standard library so you have to tweak compiled programs if you want them to output something.
+That isn't something I'm going to fix because compiling to C++ is just a milestone on my way to JITing with LLVM.
+
+The CLI is not implemented yet so here is an example of compiling a Stela program to C++. See the **Building** section.
+
+```C++
+#include <fstream>
+#include <iostream>
+#include <STELA/code generation.hpp>
+#include <STELA/syntax analysis.hpp>
+#include <STELA/semantic analysis.hpp>
+
+int main() {
+  const std::string_view source = R"(
+    func plus(left: real, right: real) {
+      return left + right;
+    }
+  )";
+
+  // Create a log stategy object
+  // ColorLog implements color logging using escape codes
+  // There's also StreamLog which writes to a std::ostream
+  // and NoLog which just does nothing.
+  stela::ColorLog log;
+  // LogPri::status is the lowest logging priority 
+  // so we'll get everything
+  log.pri(stela::LogPri::status);
+  
+  // Create an Abstract Syntax Tree from the source code
+  stela::AST ast = stela::createAST(source, log);
+  // Initialize the builtin types and functions
+  stela::Symbols syms = stela::initModules(log);
+  // Perform semantic analysis (type checking and all that) on the AST
+  stela::compileModule(syms, ast, log);
+  
+  // Generate C++ source
+  // The whole program (with all of the modules) is compiled into one
+  // C++ source file
+  std::string cpp = stela::generateCpp(syms, log);
+  std::ofstream file("program.cpp");
+  if (file.is_open()) {
+    file << cpp;
+  } else {
+    std::cout << "Couldn't open output file\n";
+    return 1;
+  }
+  return 0;
+}
+```
+
+Here's some programs you can try out!
+
+### Lambdas
+
+Lambdas and return type deduction make partial application pretty easy.
+
+```go
+func makeAdder(left: sint) {
+  return func(right: sint) {
+    return left + right;
+  };
+}
+
+func test() {
+  let add3 = makeAdder(3);
+  let nine = add3(6);
+  let eight = makeAdder(6)(2);
+}
+```
+
+Function pointers are initialized to `panic` functions so if you call a function pointer that hasn't been assigned
+a function, you'll get an error message that lets you know and then the program crashes.
+Compile `var lam: func();` to see what I mean.
+This also makes calling function pointers a little bit faster because there's no need to check for null.
+Arrays are never null as well, they're always initialized to an empty array so that we don't need to check for null in the array functions either.
+
+Lambdas are stateful. They carry around copies of all of the captured variables.
+
+```go
+func makeIDgen(first: sint) {
+  return func() {
+    let id = first;
+    first++;
+    return id;
+  };
+}
+
+func test() {
+  let gen = makeIDgen(4);
+  let four = gen();
+  let five = gen();
+  let six = gen();
+  // gen and otherGen share state
+  let otherGen = gen;
+  let seven = otherGen();
+  let eight = gen();
+  let nine = otherGen();
+  // Closures in Stela behave like this std::shared_ptr<std::function>
+  // except that they're pretty damn close to being as fast as a
+  // plain old function pointer
+  // See the generated C++ for this program to learn more:
+  //   let lam = func() { return 2; };
+  //   let two = lam();
+}
+```
+
+I spent about a day getting this monstrosity to produce the right code.
+
+If you look at the `return` statement for the deepest lambda, you'll see a reference to `a`.
+To access `a`, this lambda has to capture `a`, the parent has to capture `a` and the parent of the parent has to capture `a`.
+While doing this, we have to make sure we don't accidentially get `a` mixed up with `c` or something.
+To test this, I made all of the parameters different types and compiled with `-Wconversion`.
+It seems like a simple problem but then you start writing code that writes code and you realise it's quite tricky indeed.
+
+```go
+func makeAdd(a: sint) {
+  var other0 = 0;
+  return func(b: uint) {
+    other0++;
+    var other1 = 1;
+    var other2 = 2;
+    a *= 2;
+    return func(c: byte) {
+      other0++;
+      other1++;
+      c = make byte (make sint c * 2);
+      other2++;
+      other1++;
+      return func(d: char) {
+        d *= 2c;
+        other1++;
+        b *= 2u;
+        other0++;
+        return make real a + make real b + make real c + make real d;
+      };
+    };
+  };
+}
+
+func test() {
+  let add_1 = makeAdd(1);
+  let add_1_2 = add_1(2u);
+  let add_1_2_3 = add_1_2(3b);
+  let twenty = add_1_2_3(4c);
+}
+```
 
 ### Modules
 
-Modules are pretty cool. So are 2D vectors!
+Modules are essentially just a way of concatenating ASTs in the right order. 
+There's a function called `findModuleOrder` which analyses the graph of imports in multiple ASTs and determines the order.
+You can pass the `ModuleOrder` to `compileModules` to concatenate the ASTs in the right order and then compile them.
+
+To compile a program with modules, you'll have to do something like this:
+
+```C++
+stela::ASTs asts;
+asts.push_back(stela::createAST(glm_source, log));
+asts.push_back(stela::createAST(main_source, log));
+stela::ModuleOrder order = stela::findModuleOrder(asts, log);
+stela::compileModules(syms, order, asts, log);
+````
+
+If you change one line of code in any of your modules, the whole program will have to be recompiled.
+Programs you write in Stela probably aren't going to be large enough for this to really matter at all.
+Compiling the whole program produces faster code. It's a bit like passing `-flto` to GCC or Clang.
 
 ```go
 module glm;
@@ -39,54 +204,24 @@ Other module...
 import glm;
 
 func main() {
-  // Wow, glm::vec2 is just like C++!
-  let one_two = make glm::vec2 {1.0, 2.0};
-  let three_four = make glm::vec2 {3.0, 4.0};
-  let four_six = glm::add(one_two, three_four);
-  let five = glm::mag2(one_two);
-}
-```
-
-### Lambdas
-
-Lambdas make partial application pretty easy.
-
-```go
-func makeAdder(left: sint) -> func(sint) -> sint {
-  return func(right: sint) -> sint {
-    return left + right;
-  };
-}
-
-func test() {
-  let add3 = makeAdder(3);
-  let nine = add3(6);
-  let eight = makeAdder(6)(2);
-}
-```
-
-Lambdas are stateful. They carry around copies of all of the captured variables.
-
-```go
-func makeIDgen(first: sint) -> func() -> sint {
-  return func() -> sint {
-    let id = first;
-    first++;
-    return id;
-  };
-}
-
-func test() {
-  let gen = makeIDgen(4);
-  let four = gen();
-  let five = gen();
-  let six = gen();
+  let one_two = make vec2 {1.0, 2.0};
+  let three_four = make vec2 {3.0, 4.0};
+  let four_six = add(one_two, three_four);
+  let five = mag2(one_two);
 }
 ```
 
 ### Arrays
 
-What can you do without arrays?
+Arrays in Stela behave like `std::shared_ptr<std::vector>` except that the reference count, 
+the size, the capacity and the array itself are all in one memory allocation. 
+We you pass around an array, you're just passing around a pointer so it's quite a bit faster than `std::shared_ptr<std::vector>`.
+If you want to copy an array, you have to explicitly `duplicate` it.
+
+Arrays and lambdas are the only things that are managed by reference counted pointers.
+Everything else is just values. If you're worried about passing a big `struct` to a function, you can pass by reference.
+I have implemented `const &` yet but I plan to. I'm not away of any way to leak memory or access a nullptr.
+There's no way of creating a circular reference because there's no way for an array or a lambda to point to itself.
 
 ```go
 func squares(count: uint) -> [uint] {
@@ -110,6 +245,15 @@ func test() {
 ### Get a pointer to function
 
 Just like in C++, if you want a pointer to an overloaded function, you need to select which overload you want.
+
+Calling a function pointer is Stela is almost as fast as calling a function pointer in C++.
+It's faster than `std::function` because it avoids a lot of indirection and virtual function calls.
+A function pointer in Stela is a `struct` with a C function pointer and a pointer to the captured
+data. The pointer to the captured data is passed as the first argument.
+
+All generated non-member functions have a `void *` as their first parameter so that they
+can be passed a pointer to nothing! I do plan on removing the `void *` parameter for functions
+that are never stored in function pointers.
 
 ```go
 func add(a: sint, b: sint) -> sint {
@@ -137,6 +281,10 @@ let sub_ptr = sub;
 ### Tag dispatch
 
 This example shows strong type aliases and function overloading.
+
+This example is the reason why I can't rely on C++'s function overloading method.
+In the generated code, `first_t`, `second_t` and `third_t` are not distinct types.
+The three `get` functions have the same signature in the generated C++ so they have to be named `f_0`, `f_1` and `f_2`.
 
 ```go
 type first_t struct{};
@@ -169,6 +317,9 @@ func test() {
 ### Member functions
 
 Member functions can be created for any type, including builtin types!
+
+There's nothing special about member functions. They just allow you to write `v.f()` instead of `f(v)`.
+That's really all they are. Just a little bit of sugar!
 
 ```go
 // Just to demonstrate weak type aliases too
@@ -226,7 +377,7 @@ let Choice_yes = 1;
 
 It might be possible to compile to C before the end of the year.
  
- - [ ] Compile to C++17
+ - [x] Compile to C++17
  - [ ] Compile to C++14
  - [ ] Compile to C++11
  - [ ] Compile to C11
@@ -235,7 +386,8 @@ It might be possible to compile to C before the end of the year.
  
 ## Building
 
-This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. CMake will automatically download Simpleton so you don't have to worry about it.
+This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. 
+CMake will automatically download Simpleton so you don't have to worry about it.
 
 ```bash
 cd build

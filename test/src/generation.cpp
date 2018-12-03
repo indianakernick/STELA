@@ -365,10 +365,10 @@ TEST_GROUP(Generation, {
   
   TEST(Stateful lambda, {
     ASSERT_COMPILES(R"(
-      func makeIDgen(next: sint) -> func() -> sint {
-        return func() -> sint {
-          let id = next;
-          next++;
+      func makeIDgen(first: sint) {
+        return func() {
+          let id = first;
+          first++;
           return id;
         };
       }
@@ -378,6 +378,10 @@ TEST_GROUP(Generation, {
         let four = gen();
         let five = gen();
         let six = gen();
+        let otherGen = gen;
+        let seven = otherGen();
+        let eight = gen();
+        let nine = otherGen();
       }
     )");
   });
