@@ -1934,6 +1934,20 @@ TEST_GROUP(Semantics, {
       let six: real = func() { return 6.0; }();
     )");
   });
+  
+  TEST(Void in array, {
+    ASSERT_FAILS(R"(
+      func nothing() {}
+      let array = [nothing()];
+    )");
+  });
+  
+  TEST(Cast from void, {
+    ASSERT_FAILS(R"(
+      func nothing() {}
+      let something = make sint nothing();
+    )");
+  });
 
   /*
   

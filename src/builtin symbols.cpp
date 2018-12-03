@@ -69,18 +69,16 @@ void insertFuncs(sym::Table &table) {
   insertFunc(table, ast::BtnFuncEnum::reserve,   "reserve");
 }
 
-using TypeEnum = ast::BtnTypeEnum;
-
-bool isBoolType(const TypeEnum type) {
-  return type == TypeEnum::Bool;
+bool isBoolType(const ast::BtnTypeEnum type) {
+  return type == ast::BtnTypeEnum::Bool;
 }
 
-bool isBitwiseType(const TypeEnum type) {
-  return type == TypeEnum::Byte || type == TypeEnum::Uint;
+bool isBitwiseType(const ast::BtnTypeEnum type) {
+  return type == ast::BtnTypeEnum::Byte || type == ast::BtnTypeEnum::Uint;
 }
 
-bool isArithType(const TypeEnum type) {
-  return TypeEnum::Char <= type && type <= TypeEnum::Uint;
+bool isArithType(const ast::BtnTypeEnum type) {
+  return ast::BtnTypeEnum::Char <= type && type <= ast::BtnTypeEnum::Uint;
 }
 
 template <typename Enum>
@@ -142,7 +140,7 @@ bool stela::validOp(const ast::UnOp op, const ast::BtnTypePtr &type) {
   UNREACHABLE();
 }
 
-ast::BtnTypePtr checkType(bool(*category)(TypeEnum), const ast::BtnTypePtr &type) {
+ast::BtnTypePtr checkType(bool(*category)(ast::BtnTypeEnum), const ast::BtnTypePtr &type) {
   return category(type->value) ? type : nullptr;
 }
 
@@ -182,7 +180,11 @@ bool stela::validOp(
 }
 
 bool stela::validSubscript(const ast::BtnTypePtr &index) {
-  return index->value == TypeEnum::Sint || index->value == TypeEnum::Uint;
+  return index->value == ast::BtnTypeEnum::Sint || index->value == ast::BtnTypeEnum::Uint;
+}
+
+bool stela::validCast(const ast::BtnTypePtr &dst, const ast::BtnTypePtr &src) {
+  return dst->value != ast::BtnTypeEnum::Void && src->value != ast::BtnTypeEnum::Void;
 }
 
 namespace {

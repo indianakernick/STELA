@@ -106,9 +106,11 @@ public:
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
     const sym::ExprType etype = visitExprNoCheckBool(make.expr, make.type);
-    if (lookupConcrete<ast::BtnType>(ctx, make.type)) {
-      if (lookupConcrete<ast::BtnType>(ctx, etype.type)) {
-        return lkp.setExpr(sym::makeLetVal(make.type));
+    if (auto dst = lookupConcrete<ast::BtnType>(ctx, make.type)) {
+      if (auto src = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
+        if (validCast(dst, src)) {
+          return lkp.setExpr(sym::makeLetVal(make.type));
+        }
       }
     }
     if (compareTypes(ctx, lookupConcreteType(ctx, etype.type), lookupConcreteType(ctx, make.type))) {
@@ -165,6 +167,11 @@ public:
         }
       }
       elem = lookupStrongType(ctx, std::move(expr.type));
+      if (auto btn = lookupConcrete<ast::BtnType>(ctx, elem)) {
+        if (btn->value == ast::BtnTypeEnum::Void) {
+          ctx.log.error(arr.loc) << "Array element type cannot be void" << fatal;
+        }
+      }
     }
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
