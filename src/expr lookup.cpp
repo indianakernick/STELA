@@ -142,7 +142,12 @@ uint32_t ExprLookup::lookupMember(const Loc loc) {
 
 namespace {
 
+sym::Scope *findParentClosure(sym::Scope *closureScope) {
+  return findNearest(sym::ScopeType::closure, closureScope->parent);
+}
+
 bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scope, sym::Scope *currentScope) {
+  // @TODO this function is huge!
   if (scope->type == sym::ScopeType::ns) {
     // don't capture globals
     return false;
@@ -158,21 +163,53 @@ bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scop
   }
   auto *lamSym = assertDownCast<sym::Lambda>(closureScope->symbol);
   for (size_t c = 0; c != lamSym->captures.size(); ++c) {
-    if (lamSym->captures[c] == object) {
+    if (lamSym->captures[c].object == object->node.get()) {
       // already been captured
       ident.captureIndex = static_cast<uint32_t>(c);
       return true;
     }
   }
   // capture new variable
+  sym::Scope *parentClosure = findParentClosure(closureScope);
+  if (parentClosure) {
+    // nested closure
+    if (lambdaCapture(ident, object, scope, closureScope->parent)) {
+      // the parent closure has to capture the variable
+      sym::Lambda *parentLambda = assertDownCast<sym::Lambda>(parentClosure->symbol);
+      for (size_t c = 0; c != parentLambda->captures.size(); ++c) {
+        if (parentLambda->captures[c].object == object->node.get()) {
+          // this closure captures the captured variable
+          sym::ClosureCap cap;
+          cap.object = ident.definition;
+          // the capture ident refers to the captured object in the parent
+          cap.index = static_cast<uint32_t>(c);
+          cap.type = object->etype.type;
+          // the identifier refers to the captured object in this closure
+          ident.captureIndex = static_cast<uint32_t>(lamSym->captures.size());
+          lamSym->captures.push_back(std::move(cap));
+          return true;
+        }
+      }
+      // lambdaCapture returns true when an object is captured
+      // the parent must have captured the object
+      // so we must find the object in the parent
+      UNREACHABLE();
+    }
+  }
+  sym::ClosureCap cap;
+  cap.object = ident.definition;
+  // capture ident refers to a local variable in the parent scope
+  cap.index = ~uint32_t{};
+  cap.type = object->etype.type;
+  // identifier refers to the captured object in this closure
   ident.captureIndex = static_cast<uint32_t>(lamSym->captures.size());
-  lamSym->captures.push_back(object);
+  lamSym->captures.push_back(std::move(cap));
   return true;
 }
 
 }
 
-ast::Statement *ExprLookup::lookupIdent(ast::Identifier &ident) {
+void ExprLookup::lookupIdent(ast::Identifier &ident) {
   sym::Scope *currentScope = ctx.man.cur();
   const auto [symbol, scope] = findScope(currentScope, sym::Name{ident.name});
   if (symbol == nullptr) {
@@ -180,20 +217,21 @@ ast::Statement *ExprLookup::lookupIdent(ast::Identifier &ident) {
   }
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
     object->referenced = true;
+    ident.definition = object->node.get();
     if (lambdaCapture(ident, object, scope, currentScope)) {
       stack.pushExpr(sym::makeVarVal(object->etype.type));
     } else {
       stack.pushExpr(object->etype);
     }
-    return object->node.get();
+    return;
   }
   if (dynamic_cast<sym::Func *>(symbol)) {
     if (stack.top() == ExprKind::call) {
       stack.pushFunc(sym::Name{ident.name});
-      return nullptr;
     } else {
-      return pushFunPtr(scope, sym::Name{ident.name}, ident.loc);
+      ident.definition = pushFunPtr(scope, sym::Name{ident.name}, ident.loc);
     }
+    return;
   }
   if (dynamic_cast<sym::BtnFunc *>(symbol)) {
     if (stack.top() != ExprKind::call) {
@@ -201,7 +239,7 @@ ast::Statement *ExprLookup::lookupIdent(ast::Identifier &ident) {
         << "\" must be called" << fatal;
     }
     stack.pushBtnFunc(sym::Name{ident.name});
-    return nullptr;
+    return;
   }
   ctx.log.error(ident.loc) << "Expected variable or function but found "
     << symbolDesc(symbol) << " \"" << ident.name << "\"" << fatal;

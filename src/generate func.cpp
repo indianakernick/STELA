@@ -117,7 +117,7 @@ gen::String stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   func += capture;
   func += "(capture);\n";
   
-  func += "ptr->count = 1; // @TODO might not need to do this \n";
+  func += "ptr->count = 1;\n";
   
   func += "return {reinterpret_cast<";
   auto *funcType = assertDownCast<ast::FuncType>(lambda.exprType.get());

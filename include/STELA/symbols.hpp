@@ -139,6 +139,11 @@ struct Func final : Symbol {
 };
 using FuncPtr = std::unique_ptr<Func>;
 
+struct ClosureCap {
+  ast::TypePtr type;
+  ast::Statement *object = nullptr;
+  uint32_t index = ~uint32_t{};
+};
 struct Lambda final : Symbol {
   ~Lambda();
   
@@ -146,7 +151,7 @@ struct Lambda final : Symbol {
   FuncParams params;
   Scope *scope;
   retain_ptr<ast::Lambda> node;
-  std::vector<Object *> captures;
+  std::vector<ClosureCap> captures;
 };
 
 struct BtnFunc final : Symbol {

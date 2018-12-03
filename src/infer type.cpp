@@ -88,7 +88,7 @@ public:
   }
   void visit(ast::Identifier &id) override {
     lkp.expected(expected);
-    id.definition = lkp.lookupIdent(id);
+    lkp.lookupIdent(id);
   }
   void visit(ast::Ternary &tern) override {
     visitExprCheck(tern.cond, ctx.btn.Bool);
@@ -199,7 +199,8 @@ public:
     enterLambdaScope(lamSym, lam);
     traverse(ctx, lam.body);
     ctx.man.leaveScope();
-    lkp.setExpr(sym::makeLetVal(getLambdaType(ctx, lam)));
+    lam.exprType = getLambdaType(ctx, lam);
+    lkp.setExpr(sym::makeLetVal(lam.exprType));
   }
 
   sym::ExprType visitExprNoCheck(const ast::ExprPtr &expr, const ast::TypePtr &type) {

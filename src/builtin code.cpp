@@ -292,12 +292,6 @@ struct ClosureData : ref_count {
   virtual ~ClosureData() = default;
 };
 
-// Copy the captured data when assigned
-//  - std::function
-// Share the captured data when assigned
-//  - Go
-//  - JavaScript
-
 using ClosureDataPtr = retain_ptr<ClosureData>;
 
 struct FuncClosureData : ClosureData {};

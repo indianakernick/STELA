@@ -126,6 +126,7 @@ public:
     str += ')';
   }
   void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
+    // @TODO this function is too big. Chop, chop!
     assert(definition);
     gen::String name;
     if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
@@ -170,13 +171,19 @@ public:
     }
     assert(!name.empty());
   }
-  void visit(ast::Identifier &ident) override {
-    if (ident.captureIndex != ~uint32_t{}) {
+  bool writeCapture(const uint32_t index) {
+    if (index == ~uint32_t{}) {
+      return false;
+    } else {
       str += "capture.c_";
-      str += ident.captureIndex;
-      return;
+      str += index;
+      return true;
     }
-    writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
+  }
+  void visit(ast::Identifier &ident) override {
+    if (!writeCapture(ident.captureIndex)) {
+      writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
+    }
   }
   void visit(ast::Ternary &tern) override {
     str += '(';
@@ -211,7 +218,11 @@ public:
   void visit(ast::NumberLiteral &num) override {
     str += generateType(ctx, num.exprType.get());
     str += '(';
-    str += num.value;
+    if (isalpha(num.value.back())) {
+      str += std::string_view{num.value.data(), num.value.size() - 1};
+    } else {
+      str += num.value;
+    }
     str += ')';
   }
   void visit(ast::BoolLiteral &bol) override {
@@ -258,6 +269,11 @@ public:
       str += '}';
     }
   }
+  void writeCapture(const sym::ClosureCap &cap) {
+    if (!writeCapture(cap.index)) {
+      writeID(cap.object, cap.type.get(), nullptr);
+    }
+  }
   void visit(ast::Lambda &lambda) override {
     str += generateMakeLam(ctx, lambda);
     str += "({";
@@ -266,12 +282,11 @@ public:
       str += "})";
       return;
     } else {
-      sym::Object *cap = symbol->captures[0];
-      writeID(cap->node.get(), cap->etype.type.get(), nullptr);
+      writeCapture(symbol->captures[0]);
     }
     for (auto c = symbol->captures.cbegin() + 1; c != symbol->captures.cend(); ++c) {
       str += ", ";
-      writeID((*c)->node.get(), (*c)->etype.type.get(), nullptr);
+      writeCapture(*c);
     }
     str += "})";
   }

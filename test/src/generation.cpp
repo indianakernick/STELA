@@ -311,16 +311,30 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(Pass reference to reference, {
+    ASSERT_COMPILES(R"(
+      func swap_impl(a: inout sint, b: inout sint) {
+        let temp = a;
+        a = b;
+        b = temp;
+      }
+      
+      func swap(a: inout sint, b: inout sint) {
+        swap_impl(a, b);
+      }
+      
+      func test() {
+        var two = 6;
+        var six = 2;
+        swap(two, six);
+      }
+    )");
+  })
+  
   TEST(Closures, {
     ASSERT_COMPILES(R"(
       func fn(first: sint, second: real) -> bool {
         return make real first == second;
-      }
-      
-      func swap(a: inout sint, b: inout sint) {
-        let temp = a;
-        a = b;
-        b = temp;
       }
       
       func test() {
@@ -333,10 +347,6 @@ TEST_GROUP(Generation, {
         if (e) {
           let tru = e(4, 4.0);
         }
-        
-        var two = 6;
-        var six = 2;
-        swap(two, six);
       }
     )");
   });
@@ -372,20 +382,88 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(Immediately invoked lambda, {
+    ASSERT_COMPILES(R"(
+      let nine = func() -> sint {
+        return 4 + 5;
+      }();
+    )");
+  });
+  
   TEST(Nested lambda, {
     ASSERT_COMPILES(R"(
-      func makeAdder() -> func (sint) -> func (sint) -> sint {
-        return func(left: sint) -> func (sint) -> sint {
-          return func(right: sint) -> sint {
-            return left + right;
+      // f_0
+      func makeAdd(a: sint) -> func(sint) -> func(sint) -> sint {
+        // lam_0: a - p_1
+        // fake a has no index
+        return func(b: sint) -> func(sint) -> sint {
+          // lam_1: a - c_0, b - p_1
+          // fake a has index 0
+          // fake b has no index
+          return func(c: sint) -> sint {
+            // c_0 + c_1 + p_1
+            // a has index 0
+            // b has index 1
+            // c has no index
+            return a + b + c;
           };
         };
       }
       
       func test() {
-        let add = makeAdder();
-        let add_1 = add(1);
-        let three = add_1(2);
+        let add_1 = makeAdd(1);
+        let add_1_2 = add_1(2);
+        let six = add_1_2(3);
+      }
+    )");
+  });
+  
+  TEST(Nested nested lambda, {
+    ASSERT_COMPILES(R"(
+      // f_0
+      func makeAdd(a: sint) -> func(uint) -> func(byte) -> func(char) -> real {
+        // lam_0: a - p_1
+        // cap a has no index
+        var other0 = 0;
+        return func(b: uint) -> func(byte) -> func(char) -> real {
+          // lam_1: a - c_0, b - p_1
+          // cap a has index 0
+          // cap b has no index
+          other0++;
+          var other1 = 1;
+          var other2 = 2;
+          a *= 2;
+          return func(c: byte) -> func(char) -> real {
+            other0++;
+            other1++;
+            c = make byte (make sint c * 2);
+            other2++;
+            other1++;
+            // lam_2: a - c_0, b - c_0, c - p_1
+            // cap a has index 0
+            // cap b has index 1
+            // cap c has no index
+            return func(d: char) -> real {
+              d *= 2c;
+              other1++;
+              b *= 2u;
+              other0++;
+              // c_0 + c_1 + c_2 + p_1
+              // a has index 0
+              // b has index 1
+              // c has index 2
+              // d has no index
+              return make real a + make real b + make real c + make real d;
+            };
+          };
+        };
+      }
+      
+      func test() {
+        let add_1 = makeAdd(1);
+        let add_1_2 = add_1(2u);
+        let add_1_2_3 = add_1_2(3b);
+        let twenty = add_1_2_3(4c);
       }
     )");
   });

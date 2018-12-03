@@ -76,7 +76,6 @@ the other?
 think about the rules for function overloading and shadowing
 might need to rename builtin functions to make them less ambiguous
 manually manage reference count
-use macros instead of templates
 pointers instead of references
 remove the null parameters from non-member functions that aren't used in pointers
-should lambdas store a retain_ptr or a value_ptr?
+the work for return type deduction was done when we did return type validation

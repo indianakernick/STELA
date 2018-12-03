@@ -183,8 +183,8 @@ gen::String stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &lambda
   const size_t numCaptures = symbol->captures.size();
   std::vector<gen::String> captureTypes;
   captureTypes.reserve(numCaptures);
-  for (sym::Object *capture : symbol->captures) {
-    captureTypes.push_back(generateType(ctx, capture->etype.type.get()));
+  for (const sym::ClosureCap &cap : symbol->captures) {
+    captureTypes.push_back(generateType(ctx, cap.type.get()));
   }
   gen::String name;
   name += "t_cap";
