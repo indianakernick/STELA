@@ -98,6 +98,8 @@ add_library(STELA STATIC
         "src/generate expr.hpp"
         "src/generate zero expr.cpp"
         "src/generate zero expr.hpp"
+        "src/generate type.cpp"
+        "src/generate type.hpp"
         "src/generate func.cpp"
         "src/generate func.hpp"
         "src/assert down cast.hpp"
