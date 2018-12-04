@@ -1752,7 +1752,7 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS(R"(
       func test() {
         var array: [sint] = [1, 4, 9, 16, 25, 36];
-        var otherArray: [sint] = duplicate(array);
+        var otherArray: [sint] = array;
         let eight: uint = capacity(array);
         let six: uint = size(otherArray);
         push_back(otherArray, make sint eight);

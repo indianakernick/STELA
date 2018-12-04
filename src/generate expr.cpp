@@ -52,8 +52,6 @@ public:
   void pushBtnFunc(const ast::BtnFuncEnum e) {
     // @TODO X macros?
     switch (e) {
-      case ast::BtnFuncEnum::duplicate:
-        str += "duplicate"; return;
       case ast::BtnFuncEnum::capacity:
         str += "capacity"; return;
       case ast::BtnFuncEnum::size:

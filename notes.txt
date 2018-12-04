@@ -30,7 +30,6 @@ func swap<T>(a: ref T, b ref T) {
 In provide functions for working with arrays, we're going to need some kind
 of generics.
 
-func duplicate<T>(arr: [T]) -> [T];
 func capacity<T>(arr: [T]) -> uint;
 func size<T>(arr: [T]) -> uint;
 func push_back<T>(arr: ref [T], elem: T);
@@ -79,3 +78,4 @@ manually manage reference count
 pointers instead of references
 remove the null parameters from non-member functions that aren't used in pointers
 should mutability be part of the type system properly? What we have now just lets use make variables constant
+maybe a move keyword that does a similar job to std::move

@@ -333,7 +333,6 @@ struct Func final : Declaration {
 };
 
 enum class BtnFuncEnum {
-  duplicate,
   capacity,
   size,
   push_back,

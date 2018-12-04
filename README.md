@@ -7,6 +7,21 @@
 
 A scripting language built for speed in world where JavaScript runs on web servers.
 
+**Disclamer:**
+I'm calling this a "scripting language built for speed" but does that really
+make sense? If you want speed, you need control. You need to be able to do
+unsafe things. std::string_view is fast but std::string_view is also unsafe. It
+could hold a tangling pointer if you're not careful. operator[] is fast but it's
+unsafe. operator[] doesn't do bounds checking. I've never used .at() and I never
+will! I know what I'm doing. I know not to access memory outside the bounds of
+an array.
+
+Being safe costs performance. Scripting languages are meant to be safe because
+scripts are meant to be written by both non-programmers and programmers. I'll
+try to get as much safety and speed as I can. Even if I don't make this as fast
+as I would like, it will still be much faster than Lua simply due to LLVM and
+static typing.
+
 ## Examples
 
 Support for compiling to C++ has arrived! However, the resultant program has an empty main function and 
@@ -84,7 +99,6 @@ Function pointers are initialized to `panic` functions so if you call a function
 a function, you'll get an error message that lets you know and then the program crashes.
 Compile `var lam: func();` to see what I mean.
 This also makes calling function pointers a little bit faster because there's no need to check for null.
-Arrays are never null as well, they're always initialized to an empty array so that we don't need to check for null in the array functions either.
 
 Lambdas are stateful. They carry around copies of all of the captured variables.
 
@@ -213,15 +227,10 @@ func main() {
 
 ### Arrays
 
-Arrays in Stela behave like `std::shared_ptr<std::vector>` except that the reference count, 
-the size, the capacity and the array itself are all in one memory allocation. 
-We you pass around an array, you're just passing around a pointer so it's quite a bit faster than `std::shared_ptr<std::vector>`.
-If you want to copy an array, you have to explicitly `duplicate` it.
-
-Arrays and lambdas are the only things that are managed by reference counted pointers.
-Everything else is just values. If you're worried about passing a big `struct` to a function, you can pass by reference.
-I have implemented `const &` yet but I plan to. I'm not away of any way to leak memory or access a nullptr.
-There's no way of creating a circular reference because there's no way for an array or a lambda to point to itself.
+Arrays in Stela behave like `std::vector`.
+If you're worried about passing a big array to a function, you can pass by reference.
+I haven't implemented `const &` yet but I plan to. I'm not aware of any way to leak memory or access a nullptr.
+There's no way of creating a circular reference because there's no way for a lambda to point to itself.
 
 ```go
 func squares(count: uint) -> [uint] {

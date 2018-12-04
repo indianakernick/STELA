@@ -48,7 +48,7 @@ public:
     name += '_';
     name += elem;
     if (ctx.inst.arrayNotInst(name)) {
-      ctx.type += "typedef ArrayPtr<";
+      ctx.type += "typedef Array<";
       ctx.type += elem;
       ctx.type += "> ";
       ctx.type += name;

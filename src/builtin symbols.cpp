@@ -59,7 +59,6 @@ void insertFunc(sym::Table &table, const ast::BtnFuncEnum e, const ast::Name nam
 }
 
 void insertFuncs(sym::Table &table) {
-  insertFunc(table, ast::BtnFuncEnum::duplicate, "duplicate");
   insertFunc(table, ast::BtnFuncEnum::capacity,  "capacity");
   insertFunc(table, ast::BtnFuncEnum::size,      "size");
   insertFunc(table, ast::BtnFuncEnum::push_back, "push_back");
@@ -218,13 +217,6 @@ void checkMutRef(Log &log, const ast::Name name, const Loc loc, const sym::ExprT
   }
 }
 
-// func duplicate<T>(arr: [T]) -> [T];
-ast::TypePtr duplicateFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
-  checkArgs(ctx.log, "duplicate", loc, args.size() == 1);
-  checkArray(ctx, "duplicate", loc, args[0].type);
-  return args[0].type;
-}
-
 // func capacity<T>(arr: [T]) -> uint;
 ast::TypePtr capacityFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "capacity", loc, args.size() == 1);
@@ -298,8 +290,6 @@ ast::TypePtr stela::callBtnFunc(
   const Loc loc
 ) {
   switch (e) {
-    case ast::BtnFuncEnum::duplicate:
-      return duplicateFn(ctx, args, loc);
     case ast::BtnFuncEnum::capacity:
       return capacityFn(ctx, args, loc);
     case ast::BtnFuncEnum::size:
