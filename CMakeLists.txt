@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.9)
 project(STELA)
 
 find_package(Git REQUIRED)
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM 7.0.0 REQUIRED CONFIG)
 message(STATUS "Found LLVM: ${LLVM_DIR} ${LLVM_PACKAGE_VERSION}")
 include(ExternalProject)
 
