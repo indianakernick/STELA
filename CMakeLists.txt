@@ -24,6 +24,7 @@ add_library(STELA STATIC
         "include/STELA/retain ptr.hpp"
         "include/STELA/plain format.hpp"
         "include/STELA/code generation.hpp"
+        "include/STELA/c standard library.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
