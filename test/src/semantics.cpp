@@ -12,6 +12,7 @@
 #include <STELA/modules.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
+#include <STELA/c standard library.hpp>
 
 using namespace stela;
 using namespace stela::ast;
@@ -368,6 +369,29 @@ TEST_GROUP(Semantics, {
     asts.push_back(createAST(sourceA, log));
     const ModuleOrder order = findModuleOrder(asts, log);
     compileModules(syms, order, asts, log);
+  });
+  
+  TEST(Modules - cmath, {
+    const char *source = R"(
+      type Vec2 struct {
+        x: real;
+        y: real;
+      };
+    
+      func (self: Vec2) mag() {
+        return sqrt(self.x * self.x + self.y * self.y);
+      }
+    
+      func test() {
+        let vec = make Vec2 {3.0, 4.0};
+        let five = vec.mag();
+      }
+    )";
+    
+    AST ast = createAST(source, log);
+    Symbols syms = initModules(log);
+    includeCmath(syms, log);
+    compileModule(syms, ast, log);
   });
   
   log.pri(LogPri::warning);
@@ -1962,6 +1986,18 @@ TEST_GROUP(Semantics, {
     ASSERT_FAILS(R"(
       func nothing() {}
       let something = make sint nothing();
+    )");
+  });
+  
+  TEST(Assign to return, {
+    ASSERT_FAILS(R"(
+      func getFive() {
+        return 5;
+      }
+      
+      func test() {
+        getFive() = 11;
+      }
     )");
   });
 

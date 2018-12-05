@@ -13,6 +13,7 @@ constexpr std::string_view builtinCode = R"delimiter(
 // BEGIN BUILTIN LIBRARY
 
 #include <new>
+#include <cmath>
 #include <cstdio>
 #include <memory>
 #include <climits>

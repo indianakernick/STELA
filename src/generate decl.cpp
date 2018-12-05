@@ -182,6 +182,9 @@ public:
   }
   
   void visit(ast::Func &func) override {
+    str += "// ";
+    str += func.name;
+    str += '\n';
     sym::Func *symbol = func.symbol;
     str += exprType(symbol->ret);
     str += "f_";

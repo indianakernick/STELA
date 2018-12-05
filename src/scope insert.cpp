@@ -80,8 +80,7 @@ sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::
 
 sym::ExprType stela::convertNullable(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
   if (type == nullptr) {
-    // @TODO shouldn't this be let val?
-    return {nullptr, sym::ValueMut::var, convertRef(ref)};
+    return {nullptr, sym::ValueMut::let, convertRef(ref)};
   } else {
     return convert(ctx, type, ref);
   }
