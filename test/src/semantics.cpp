@@ -379,7 +379,7 @@ TEST_GROUP(Semantics, {
       };
     
       func (self: Vec2) mag() {
-        return sqrt(self.x * self.x + self.y * self.y);
+        return (self.x * self.x + self.y * self.y);
       }
     
       func test() {

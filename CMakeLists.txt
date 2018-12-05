@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.9)
 project(STELA)
 
 find_package(Git REQUIRED)
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 include(ExternalProject)
 
 add_library(STELA STATIC
@@ -103,6 +105,7 @@ add_library(STELA STATIC
         "src/generate func.cpp"
         "src/generate func.hpp"
         "src/assert down cast.hpp"
+        "src/c standard library.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
@@ -122,11 +125,29 @@ target_include_directories(STELA
         INTERFACE
         include
         PUBLIC
+        ${LLVM_INCLUDE_DIRS}
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/STELA>
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${SOURCE_DIR}
+)
+
+target_link_directories(STELA
+        PUBLIC
+        ${LLVM_LIB_DIR}
+)
+
+target_compile_definitions(STELA
+        PUBLIC
+        ${LLVM_DEFINITIONS}
+)
+
+llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
+
+target_link_libraries(STELA
+        PUBLIC
+        ${llvm_libs}
 )
 
 target_compile_features(STELA

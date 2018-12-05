@@ -13,33 +13,27 @@ matrix:
     osx_image: xcode10
     compiler: clang
     env: COMPILER=clang++
+    install: ["brew install llvm"]
   - os: linux
     compiler: clang
     addons:
       apt:
-        sources: ['ubuntu-toolchain-r-test', 'llvm-toolchain-trusty-6.0']
-        packages: ['clang-6.0', 'g++-7']
-    env: COMPILER=clang++-6.0
+        sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
+        packages: ["clang-7.0", "g++-7", "llvm-7.0"]
+    env: COMPILER=clang++-7.0
   - os: linux
     compiler: gcc
     addons:
       apt:
-        sources: ["ubuntu-toolchain-r-test"]
-        packages: ["g++-7"]
-    env: COMPILER=g++-7
-  - os: linux
-    compiler: gcc
-    addons:
-      apt:
-        sources: ["ubuntu-toolchain-r-test"]
-        packages: ["g++-8"]
+        sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
+        packages: ["g++-8", "llvm-7.0"]
     env: COMPILER=g++-8
   - os: linux
     compiler: gcc
     addons:
       apt:
-        sources: ["ubuntu-toolchain-r-test"]
-        packages: ["g++-7"]
+        sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
+        packages: ["g++-7", "llvm-7.0"]
     env:
       - COMPILER=g++-7
       - CXXFLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"

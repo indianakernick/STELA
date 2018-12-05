@@ -83,3 +83,18 @@ maybe a move keyword that does a similar job to std::move
 remove the power operator **
 deal with user types void *
 
+
+find_package(LLVM REQUIRED CONFIG)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+
+target_include_directories(STELA
+        PUBLIC
+        ${LLVM_INCLUDE_DIRS}
+)
+
+llvm_map_components_to_libnames(llvm_libs engine)
+
+target_link_libraries(STELA
+        PUBLIC
+        ${llvm_libs}
+)

@@ -854,7 +854,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
+				HEADER_SEARCH_PATHS = (
+					$PROJECT_DIR/include/STELA,
+					/usr/local/Cellar/llvm/7.0.0/include,
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -876,6 +879,45 @@
 					"-Wweak-vtables",
 					"-isystem/usr/local/include",
 				);
+				OTHER_LDFLAGS = (
+					"-L/usr/local/Cellar/llvm/7.0.0/lib",
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-lLLVMAsmParser",
+					"-lLLVMMCJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMGlobalISel",
+					"-lLLVMSelectionDAG",
+					"-lLLVMAsmPrinter",
+					"-lLLVMCodeGen",
+					"-lLLVMTarget",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMAggressiveInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMBitWriter",
+					"-lLLVMAnalysis",
+					"-lLLVMProfileData",
+					"-lLLVMX86Desc",
+					"-lLLVMObject",
+					"-lLLVMMCParser",
+					"-lLLVMBitReader",
+					"-lLLVMMCDisassembler",
+					"-lLLVMX86Info",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMMC",
+					"-lLLVMDebugInfoCodeView",
+					"-lLLVMDebugInfoMSF",
+					"-lLLVMX86Utils",
+					"-lLLVMCore",
+					"-lLLVMBinaryFormat",
+					"-lLLVMSupport",
+					"-lLLVMDemangle",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -893,7 +935,10 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
+				HEADER_SEARCH_PATHS = (
+					$PROJECT_DIR/include/STELA,
+					/usr/local/Cellar/llvm/7.0.0/include,
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -915,6 +960,45 @@
 					"-Wreturn-type",
 					"-Wweak-vtables",
 					"-isystem/usr/local/include",
+				);
+				OTHER_LDFLAGS = (
+					"-L/usr/local/Cellar/llvm/7.0.0/lib",
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					"-lLLVMAsmParser",
+					"-lLLVMMCJIT",
+					"-lLLVMExecutionEngine",
+					"-lLLVMRuntimeDyld",
+					"-lLLVMX86Disassembler",
+					"-lLLVMX86AsmParser",
+					"-lLLVMX86CodeGen",
+					"-lLLVMGlobalISel",
+					"-lLLVMSelectionDAG",
+					"-lLLVMAsmPrinter",
+					"-lLLVMCodeGen",
+					"-lLLVMTarget",
+					"-lLLVMScalarOpts",
+					"-lLLVMInstCombine",
+					"-lLLVMAggressiveInstCombine",
+					"-lLLVMTransformUtils",
+					"-lLLVMBitWriter",
+					"-lLLVMAnalysis",
+					"-lLLVMProfileData",
+					"-lLLVMX86Desc",
+					"-lLLVMObject",
+					"-lLLVMMCParser",
+					"-lLLVMBitReader",
+					"-lLLVMMCDisassembler",
+					"-lLLVMX86Info",
+					"-lLLVMX86AsmPrinter",
+					"-lLLVMMC",
+					"-lLLVMDebugInfoCodeView",
+					"-lLLVMDebugInfoMSF",
+					"-lLLVMX86Utils",
+					"-lLLVMCore",
+					"-lLLVMBinaryFormat",
+					"-lLLVMSupport",
+					"-lLLVMDemangle",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
