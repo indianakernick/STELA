@@ -31,8 +31,6 @@ matrix:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
         packages: ["g++-8", "llvm-7"]
     env: COMPILER=g++-8
-    after_install:
-      - ls /usr/local
   - os: linux
     compiler: gcc
     addons:
@@ -49,6 +47,10 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
+
+after_install:
+- echo "after_install"
+- ls /usr/local
 
 script:
 - cd build
