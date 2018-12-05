@@ -47,9 +47,6 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
-
-after_install:
-- echo "after_install"
 - ls /usr/local
 
 script:
