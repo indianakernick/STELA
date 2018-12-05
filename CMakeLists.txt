@@ -5,7 +5,7 @@ project(STELA)
 
 find_package(Git REQUIRED)
 find_package(LLVM REQUIRED CONFIG)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Found LLVM: ${LLVM_DIR} ${LLVM_PACKAGE_VERSION}")
 include(ExternalProject)
 
 add_library(STELA STATIC
