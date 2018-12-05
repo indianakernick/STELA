@@ -133,11 +133,6 @@ target_include_directories(STELA
         ${SOURCE_DIR}
 )
 
-target_link_directories(STELA
-        PUBLIC
-        ${LLVM_LIB_DIR}
-)
-
 target_compile_definitions(STELA
         PUBLIC
         ${LLVM_DEFINITIONS}
