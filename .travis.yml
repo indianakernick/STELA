@@ -22,7 +22,7 @@ matrix:
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
-        packages: ["clang-7", "g++-7", "llvm-7", "tree"]
+        packages: ["clang-7", "g++-7", "llvm-7-dev", "tree"]
     env:
     - COMPILER=clang++-7
     - PREFIX=/usr/local/clang/lib/cmake/llvm
@@ -31,7 +31,7 @@ matrix:
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
-        packages: ["g++-8", "llvm-7", "tree"]
+        packages: ["g++-8", "llvm-7-dev", "tree"]
     env:
     - COMPILER=g++-8
     - PREFIX=/usr/local/clang/lib/cmake/llvm
