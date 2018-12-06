@@ -25,3 +25,8 @@ target_link_libraries(Test
         PRIVATE
         STELA
 )
+
+if(TEST_COVERAGE)
+        message(STATUS "TEST_COVERAGE defined in subdirectory")
+        set(CMAKE_CXX_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
+endif()
