@@ -48,7 +48,7 @@ matrix:
 before_install:
 - export CXX=${COMPILER}
 - ls /usr/local
-- ls /usr/local/clang/lib
+- ls /usr/local/clang/lib/cmake
 
 script:
 - cd build
