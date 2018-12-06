@@ -14,23 +14,27 @@ matrix:
     compiler: clang
     env: COMPILER=clang++
     install:
-      - brew install llvm
+    - brew install llvm
     env:
-      - PREFIX=/usr/local/opt/llvm/lib/cmake/llvm
+    - PREFIX=/usr/local/opt/llvm/lib/cmake/llvm
   - os: linux
     compiler: clang
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
         packages: ["clang-7", "g++-7", "llvm-7"]
-    env: COMPILER=clang++-7
+    env:
+    - COMPILER=clang++-7
+    - PREFIX=/usr/local/clang/lib/cmake/llvm
   - os: linux
     compiler: gcc
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
         packages: ["g++-8", "llvm-7"]
-    env: COMPILER=g++-8
+    env:
+    - COMPILER=g++-8
+    - PREFIX=/usr/local/clang/lib/cmake/llvm
   - os: linux
     compiler: gcc
     addons:
@@ -38,17 +42,16 @@ matrix:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
         packages: ["g++-7", "llvm-7"]
     env:
-      - COMPILER=g++-7
-      - CXXFLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+    - COMPILER=g++-7
+    - PREFIX=/usr/local/clang/lib/cmake/llvm
+    - CXXFLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
     install:
-      - pip install --user cpp-coveralls
+    - pip install --user cpp-coveralls
     after_success:
-      - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build -e Examples -e test -e CLI --extension cpp --extension hpp -i src -i include
+    - coveralls --gcov gcov-7 --gcov-options '\-lp' --root ${TRAVIS_BUILD_DIR} --build-root ${TRAVIS_BUILD_DIR}/build -e Examples -e test -e CLI --extension cpp --extension hpp -i src -i include
 
 before_install:
 - export CXX=${COMPILER}
-- ls /usr/local
-- ls /usr/local/clang/lib/cmake
 
 script:
 - cd build
