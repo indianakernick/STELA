@@ -52,7 +52,7 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
-- tree /usr/lib
+- tree /usr/lib/llvm-7
 
 script:
 - cd build
