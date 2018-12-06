@@ -126,7 +126,7 @@ target_include_directories(STELA
         INTERFACE
         include
         PUBLIC
-        ${LLVM_INCLUDE_DIRS}
+#        ${LLVM_INCLUDE_DIRS}
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/STELA>
         PRIVATE
@@ -134,23 +134,21 @@ target_include_directories(STELA
         ${SOURCE_DIR}
 )
 
-target_compile_definitions(STELA
-        PUBLIC
-        ${LLVM_DEFINITIONS}
-)
+#target_compile_definitions(STELA
+#        PUBLIC
+#        ${LLVM_DEFINITIONS}
+#)
 
-llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
+#llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
 
 message(STATUS "Include dirs: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
 message(STATUS "Libs: ${llvm_libs}")
 
 # succeeds when linking with none of these
-# fi  fails individually
-# si  succeeds individually
-
-# fi LLVMCore;
-# fi LLVMMCJIT;
+# fails when linking any of these
+#    LLVMCore;
+#    LLVMMCJIT;
 #    LLVMAsmPrinter;
 #    LLVMAsmParser;
 #    LLVMX86CodeGen;
@@ -163,7 +161,7 @@ message(STATUS "Libs: ${llvm_libs}")
 
 target_link_libraries(STELA
         PUBLIC
-        LLVMAsmPrinter
+        LLVMCore
 )
 
 target_compile_features(STELA
