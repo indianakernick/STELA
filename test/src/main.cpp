@@ -6,7 +6,7 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-/*#include "macros.hpp"
+#include "macros.hpp"
 
 #include "lexer.hpp"
 #include "syntax.hpp"
@@ -33,9 +33,9 @@ int main() {
   } else {
     return failures;
   }
-}*/
+}
 
-#include <iostream>
+/*#include <iostream>
 #include <memory>
 
 #include <llvm/ADT/StringRef.h>
@@ -124,3 +124,4 @@ int main() {
   
   return 0;
 }
+*/
