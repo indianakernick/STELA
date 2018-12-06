@@ -134,10 +134,10 @@ target_include_directories(STELA
         ${SOURCE_DIR}
 )
 
-#target_compile_definitions(STELA
-#        PUBLIC
-#        ${LLVM_DEFINITIONS}
-#)
+target_compile_definitions(STELA
+        PUBLIC
+        ${LLVM_DEFINITIONS}
+)
 
 llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
 
