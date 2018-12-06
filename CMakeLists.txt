@@ -150,7 +150,7 @@ message(STATUS "Libs: ${llvm_libs}")
 # si  succeeds individually
 
 # fi LLVMCore;
-#    LLVMMCJIT;
+# fi LLVMMCJIT;
 #    LLVMAsmPrinter;
 #    LLVMAsmParser;
 #    LLVMX86CodeGen;
@@ -163,7 +163,7 @@ message(STATUS "Libs: ${llvm_libs}")
 
 target_link_libraries(STELA
         PUBLIC
-        LLVMMCJIT
+        LLVMAsmPrinter
 )
 
 target_compile_features(STELA
