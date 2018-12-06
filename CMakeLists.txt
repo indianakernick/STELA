@@ -146,21 +146,24 @@ message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
 message(STATUS "Libs: ${llvm_libs}")
 
 # succeeds when linking with none of these
-#   LLVMCore;
-#   LLVMMCJIT;
-#   LLVMAsmPrinter;
-#   LLVMAsmParser;
-#   LLVMX86CodeGen;
-#   LLVMX86AsmParser;
-#   LLVMX86AsmPrinter;
-#   LLVMX86Desc;
-#   LLVMX86Disassembler;
-#   LLVMX86Info;
-#   LLVMX86Utils
+# fi  fails individually
+# si  succeeds individually
+
+# fi LLVMCore;
+#    LLVMMCJIT;
+#    LLVMAsmPrinter;
+#    LLVMAsmParser;
+#    LLVMX86CodeGen;
+#    LLVMX86AsmParser;
+#    LLVMX86AsmPrinter;
+#    LLVMX86Desc;
+#    LLVMX86Disassembler;
+#    LLVMX86Info;
+#    LLVMX86Utils
 
 target_link_libraries(STELA
         PUBLIC
-        LLVMCore
+        LLVMMCJIT
 )
 
 target_compile_features(STELA
