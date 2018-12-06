@@ -14,28 +14,7 @@
 #include "semantics.hpp"
 #include "generation.hpp"
 
-int main() {
-  int failures = 0;
-  failures += testFormat();
-  failures += testLexer();
-  failures += testSyntax();
-  failures += testSemantics();
-  failures += testGeneration();
-  if (failures == 0) {
-    std::cout << "ALL PASSED!\n";
-  } else if (failures == 1) {
-    std::cout << "1 TEST FAILED!\n";
-  } else {
-    std::cout << failures << " TESTS FAILED!\n";
-  }
-  if (failures > 255) {
-    return 255;
-  } else {
-    return failures;
-  }
-}
-
-/*#include <iostream>
+#include <iostream>
 #include <memory>
 
 #include <llvm/ADT/StringRef.h>
@@ -121,7 +100,23 @@ int main() {
   } else {
     std::cerr << "Error getting function\n";
   }
-  
-  return 0;
+
+  int failures = 0;
+  failures += testFormat();
+  failures += testLexer();
+  failures += testSyntax();
+  failures += testSemantics();
+  failures += testGeneration();
+  if (failures == 0) {
+    std::cout << "ALL PASSED!\n";
+  } else if (failures == 1) {
+    std::cout << "1 TEST FAILED!\n";
+  } else {
+    std::cout << failures << " TESTS FAILED!\n";
+  }
+  if (failures > 255) {
+    return 255;
+  } else {
+    return failures;
+  }
 }
-*/

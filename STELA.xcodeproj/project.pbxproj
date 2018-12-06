@@ -856,7 +856,7 @@
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = (
 					$PROJECT_DIR/include/STELA,
-					/usr/local/Cellar/llvm/7.0.0/include,
+					/usr/local/opt/llvm/include,
 				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -937,7 +937,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
 				HEADER_SEARCH_PATHS = (
 					$PROJECT_DIR/include/STELA,
-					/usr/local/Cellar/llvm/7.0.0/include,
+					/usr/local/opt/llvm/include,
 				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1015,6 +1015,7 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					"$(PROJECT_DIR)/include",
+					/usr/local/opt/llvm/include,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CPLUSPLUSFLAGS = (
@@ -1041,6 +1042,7 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					"$(PROJECT_DIR)/include",
+					/usr/local/opt/llvm/include,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				OTHER_CPLUSPLUSFLAGS = (
