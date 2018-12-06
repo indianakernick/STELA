@@ -22,28 +22,25 @@ matrix:
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
-        packages: ["clang-7", "g++-7", "llvm-7-dev", "tree"]
+        packages: ["clang-7", "g++-7", "llvm-7-dev"]
     env:
     - COMPILER=clang++-7
-    - PREFIX=/usr/local/clang/lib/cmake/llvm
   - os: linux
     compiler: gcc
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
-        packages: ["g++-8", "llvm-7-dev", "tree"]
+        packages: ["g++-8", "llvm-7-dev"]
     env:
     - COMPILER=g++-8
-    - PREFIX=/usr/local/clang/lib/cmake/llvm
   - os: linux
     compiler: gcc
     addons:
       apt:
         sources: ["ubuntu-toolchain-r-test", "llvm-toolchain-trusty-7"]
-        packages: ["g++-7", "llvm-7"]
+        packages: ["g++-7", "llvm-7-dev"]
     env:
     - COMPILER=g++-7
-    - PREFIX=/usr/local/clang/lib/cmake/llvm
     - CXXFLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
     install:
     - pip install --user cpp-coveralls
@@ -52,7 +49,6 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
-- tree /usr/lib/llvm-7
 
 script:
 - cd build
