@@ -145,10 +145,23 @@ message(STATUS "Include dirs: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
 message(STATUS "Libs: ${llvm_libs}")
 
-#target_link_libraries(STELA
-#        PUBLIC
-#        ${llvm_libs}
-#)
+# succeeds when linking with none of these
+#   LLVMCore;
+#   LLVMMCJIT;
+#   LLVMAsmPrinter;
+#   LLVMAsmParser;
+#   LLVMX86CodeGen;
+#   LLVMX86AsmParser;
+#   LLVMX86AsmPrinter;
+#   LLVMX86Desc;
+#   LLVMX86Disassembler;
+#   LLVMX86Info;
+#   LLVMX86Utils
+
+target_link_libraries(STELA
+        PUBLIC
+        LLVMCore
+)
 
 target_compile_features(STELA
         PUBLIC
