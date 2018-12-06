@@ -12,10 +12,10 @@ matrix:
   - os: osx
     osx_image: xcode10
     compiler: clang
-    env: COMPILER=clang++
     install:
     - brew install llvm
     env:
+    - COMPILER=clang++
     - DEFINITION="-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm/lib/cmake/llvm"
   - os: linux
     compiler: clang
