@@ -139,7 +139,11 @@ target_include_directories(STELA
 #        ${LLVM_DEFINITIONS}
 #)
 
-#llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
+llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
+
+message(STATUS "Include dirs: ${LLVM_INCLUDE_DIRS}")
+message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
+message(STATUS "Libs: ${llvm_libs}")
 
 #target_link_libraries(STELA
 #        PUBLIC
