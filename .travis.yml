@@ -16,7 +16,7 @@ matrix:
     install:
     - brew install llvm
     env:
-    - PREFIX=/usr/local/opt/llvm/lib/cmake/llvm
+    - DEFINITION="-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm/lib/cmake/llvm"
   - os: linux
     compiler: clang
     addons:
@@ -41,7 +41,7 @@ matrix:
         packages: ["g++-7", "llvm-7-dev"]
     env:
     - COMPILER=g++-7
-    - CXXFLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+    - DEFINITION=-DTEST_COVERAGE
     install:
     - pip install --user cpp-coveralls
     after_success:
@@ -52,6 +52,6 @@ before_install:
 
 script:
 - cd build
-- cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH=${PREFIX} ..
+- cmake -DCMAKE_BUILD_TYPE=Debug ${DEFINITION} ..
 - make
 - test/suite
