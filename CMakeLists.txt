@@ -145,10 +145,10 @@ message(STATUS "Include dirs: ${LLVM_INCLUDE_DIRS}")
 message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
 message(STATUS "Libs: ${llvm_libs}")
 
-target_link_libraries(STELA
-        PUBLIC
-        ${llvm_libs}
-)
+#target_link_libraries(STELA
+#        PUBLIC
+#        ${llvm_libs}
+#)
 
 target_compile_features(STELA
         PUBLIC
