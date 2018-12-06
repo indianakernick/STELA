@@ -52,7 +52,7 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
-- tree /usr
+- tree /usr/lib
 
 script:
 - cd build
