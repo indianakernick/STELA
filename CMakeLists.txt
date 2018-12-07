@@ -107,6 +107,7 @@ add_library(STELA STATIC
         "src/generate func.hpp"
         "src/assert down cast.hpp"
         "src/c standard library.cpp"
+        "src/iterator range.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

@@ -119,6 +119,7 @@
 		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
+		454B36E721BA3B3100485BA4 /* iterator range.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "iterator range.hpp"; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
 		454EB7FD21A0E837001A5D78 /* context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = context.hpp; sourceTree = "<group>"; };
@@ -338,6 +339,7 @@
 			children = (
 				45816F4521AF857500712CA3 /* unreachable.hpp */,
 				45816F6321B3780C00712CA3 /* assert down cast.hpp */,
+				454B36E721BA3B3100485BA4 /* iterator range.hpp */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";

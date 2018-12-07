@@ -95,8 +95,8 @@ namespace {
 template <typename Func>
 void writeFuncType(ast::FuncType &funcType, const Func &func) {
   funcType.params.reserve(func.params.size());
-  for (auto p = func.params.cbegin(); p != func.params.cend(); ++p) {
-    funcType.params.push_back(ast::ParamType{p->ref, p->type});
+  for (const ast::FuncParam &param : func.params) {
+    funcType.params.push_back(ast::ParamType{param.ref, param.type});
   }
   funcType.ret = func.ret;
 }
@@ -116,8 +116,8 @@ ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
   if (lam.ret) {
     validateType(ctx, lam.ret);
   }
-  for (auto p = lam.params.cbegin(); p != lam.params.cend(); ++p) {
-    validateType(ctx, p->type);
+  for (const ast::FuncParam &param : lam.params) {
+    validateType(ctx, param.type);
   }
   auto funcType = make_retain<ast::FuncType>();
   writeFuncType(*funcType, lam);

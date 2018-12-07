@@ -9,6 +9,7 @@
 #include "format.hpp"
 
 #include "operator name.hpp"
+#include "iterator range.hpp"
 #include "syntax analysis.hpp"
 
 using namespace stela;
@@ -29,7 +30,7 @@ public:
   void visit(ast::FuncType &type) override {
     pushKey("func");
     pushOp("(");
-    for (auto p = type.params.cbegin(); p != type.params.cend(); ++p) {
+    for (auto p : citer_range(type.params)) {
       if (p->ref == ast::ParamRef::ref) {
         pushKey("ref");
       }
@@ -427,7 +428,7 @@ private:
   }
   void pushParams(const ast::FuncParams &params) {
     pushOp("(");
-    for (auto p = params.cbegin(); p != params.cend(); ++p) {
+    for (auto p : citer_range(params)) {
       pushParam(*p);
       if (p != params.cend() - 1) {
         pushOp(",");
@@ -437,7 +438,7 @@ private:
     pushOp(")");
   }
   void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
-    for (auto e = exprs.cbegin(); e != exprs.cend(); ++e) {
+    for (auto e : citer_range(exprs)) {
       (*e)->accept(*this);
       if (e != exprs.cend() - 1) {
         pushOp(",");
