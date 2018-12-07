@@ -17,7 +17,6 @@
 #include <iostream>
 #include <memory>
 
-/*
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
@@ -33,10 +32,9 @@
 void foo() {
   std::cout << "foo()\n";
 }
-*/
 
 int main() {
-  /*llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTarget();
   llvm::InitializeNativeTargetAsmPrinter();
   llvm::InitializeNativeTargetAsmParser();
   
@@ -102,7 +100,6 @@ int main() {
   } else {
     std::cerr << "Error getting function\n";
   }
-  */
 
   int failures = 0;
   failures += testFormat();
