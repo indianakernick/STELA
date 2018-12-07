@@ -41,7 +41,7 @@ matrix:
         packages: ["g++-7", "llvm-7-dev"]
     env:
     - COMPILER=g++-7
-    - DEFINITION="-DTEST_COVERAGE=YES"
+    - CXX_FLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
     install:
     - pip install --user cpp-coveralls
     after_success:
