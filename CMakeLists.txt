@@ -173,7 +173,7 @@ if(TEST_COVERAGE)
         set_target_properties(STELA
                 PROPERTIES
                 COMPILE_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
-                LINK_FLAGS "--coverage"
+                LINK_FLAGS "--coverage -lgcov"
         )
 endif()
 
