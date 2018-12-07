@@ -66,6 +66,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		454B36E521BA231B00485BA4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA43320D7AFB8006108C1;
+			remoteInfo = CLI;
+		};
 		4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
@@ -79,13 +86,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
 			remoteInfo = STELA;
-		};
-		45BBA43F20D7B57E006108C1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 45BBA43320D7AFB8006108C1;
-			remoteInfo = CLI;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -544,7 +544,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				45BBA44020D7B57E006108C1 /* PBXTargetDependency */,
+				454B36E621BA231B00485BA4 /* PBXTargetDependency */,
 				45BBA40120D640F0006108C1 /* PBXTargetDependency */,
 			);
 			name = Test;
@@ -719,6 +719,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		454B36E621BA231B00485BA4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA43320D7AFB8006108C1 /* CLI */;
+			targetProxy = 454B36E521BA231B00485BA4 /* PBXContainerItemProxy */;
+		};
 		4572CAA1210716A300EA1A56 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
@@ -728,11 +733,6 @@
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
 			targetProxy = 45BBA40020D640F0006108C1 /* PBXContainerItemProxy */;
-		};
-		45BBA44020D7B57E006108C1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 45BBA43320D7AFB8006108C1 /* CLI */;
-			targetProxy = 45BBA43F20D7B57E006108C1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -854,10 +854,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = (
-					$PROJECT_DIR/include/STELA,
-					/usr/local/opt/llvm/include,
-				);
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -879,20 +876,8 @@
 					"-Wreturn-type",
 					"-Wweak-vtables",
 					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
 					"-fPIC",
-					"-fvisibility=default",
-					"-Werror=date-time",
-					"-Werror=unguarded-availability-new",
-					"-Wno-unused-parameter",
-					"-Wwrite-strings",
-					"-Wcast-qual",
-					"-Wmissing-field-initializers",
-					"-Wno-long-long",
-					"-Wcovered-switch-default",
-					"-Wno-class-memaccess",
-					"-Wnon-virtual-dtor",
-					"-Wdelete-non-virtual-dtor",
-					"-Wstring-conversion",
 					"-D__STDC_CONSTANT_MACROS",
 					"-D__STDC_FORMAT_MACROS",
 					"-D__STDC_LIMIT_MACROS",
@@ -915,10 +900,7 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = (
-					$PROJECT_DIR/include/STELA,
-					/usr/local/opt/llvm/include,
-				);
+				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -941,20 +923,8 @@
 					"-Wreturn-type",
 					"-Wweak-vtables",
 					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
 					"-fPIC",
-					"-fvisibility=default",
-					"-Werror=date-time",
-					"-Werror=unguarded-availability-new",
-					"-Wno-unused-parameter",
-					"-Wwrite-strings",
-					"-Wcast-qual",
-					"-Wmissing-field-initializers",
-					"-Wno-long-long",
-					"-Wcovered-switch-default",
-					"-Wno-class-memaccess",
-					"-Wnon-virtual-dtor",
-					"-Wdelete-non-virtual-dtor",
-					"-Wstring-conversion",
 					"-D__STDC_CONSTANT_MACROS",
 					"-D__STDC_FORMAT_MACROS",
 					"-D__STDC_LIMIT_MACROS",
@@ -975,7 +945,6 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					"$(PROJECT_DIR)/include",
-					/usr/local/opt/llvm/include,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
@@ -986,29 +955,19 @@
 					"-Weffc++",
 					"-Wpedantic",
 					"-Wno-documentation",
-					"-fPIC",
-					"-fvisibility-inlines-hidden",
-					"-Werror=date-time",
-					"-Werror=unguarded-availability-new",
-					"-Wno-unused-parameter",
-					"-Wwrite-strings",
-					"-Wcast-qual",
-					"-Wmissing-field-initializers",
-					"-pedantic",
-					"-Wno-long-long",
-					"-Wcovered-switch-default",
-					"-Wno-class-memaccess",
-					"-Wnon-virtual-dtor",
-					"-Wdelete-non-virtual-dtor",
-					"-Wstring-conversion",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
 					"-D__STDC_CONSTANT_MACROS",
 					"-D__STDC_FORMAT_MACROS",
 					"-D__STDC_LIMIT_MACROS",
+					"-isystem/usr/local/opt/llvm/include",
 				);
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/indikernick/Dev/Projects/C++/Games/STELA/build/Debug/libSTELA.a",
 					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
 					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
 					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
@@ -1062,7 +1021,6 @@
 				HEADER_SEARCH_PATHS = (
 					/usr/local/include,
 					"$(PROJECT_DIR)/include",
-					/usr/local/opt/llvm/include,
 				);
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
@@ -1073,29 +1031,19 @@
 					"-Weffc++",
 					"-Wpedantic",
 					"-Wno-documentation",
-					"-fPIC",
-					"-fvisibility-inlines-hidden",
-					"-Werror=date-time",
-					"-Werror=unguarded-availability-new",
-					"-Wno-unused-parameter",
-					"-Wwrite-strings",
-					"-Wcast-qual",
-					"-Wmissing-field-initializers",
-					"-pedantic",
-					"-Wno-long-long",
-					"-Wcovered-switch-default",
-					"-Wno-class-memaccess",
-					"-Wnon-virtual-dtor",
-					"-Wdelete-non-virtual-dtor",
-					"-Wstring-conversion",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
 					"-D__STDC_CONSTANT_MACROS",
 					"-D__STDC_FORMAT_MACROS",
 					"-D__STDC_LIMIT_MACROS",
+					"-isystem/usr/local/opt/llvm/include",
 				);
 				OTHER_LDFLAGS = (
 					"-Wl,-search_paths_first",
 					"-Wl,-headerpad_max_install_names",
-					"/Users/indikernick/Dev/Projects/C++/Games/STELA/build/Debug/libSTELA.a",
 					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
 					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
 					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
