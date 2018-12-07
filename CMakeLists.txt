@@ -126,7 +126,7 @@ target_include_directories(STELA
         INTERFACE
         include
         PUBLIC
-#        ${LLVM_INCLUDE_DIRS}
+        ${LLVM_INCLUDE_DIRS}
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/STELA>
         PRIVATE
@@ -134,48 +134,22 @@ target_include_directories(STELA
         ${SOURCE_DIR}
 )
 
-#target_compile_definitions(STELA
-#        PUBLIC
-#        ${LLVM_DEFINITIONS}
-#)
+target_compile_definitions(STELA
+        PUBLIC
+        ${LLVM_DEFINITIONS}
+)
 
-#llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
-
-message(STATUS "Include dirs: ${LLVM_INCLUDE_DIRS}")
-message(STATUS "Definitions: ${LLVM_DEFINITIONS}")
-message(STATUS "Libs: ${llvm_libs}")
-
-# succeeds when linking with none of these
-# fails when linking any of these
-#    LLVMCore;
-#    LLVMMCJIT;
-#    LLVMAsmPrinter;
-#    LLVMAsmParser;
-#    LLVMX86CodeGen;
-#    LLVMX86AsmParser;
-#    LLVMX86AsmPrinter;
-#    LLVMX86Desc;
-#    LLVMX86Disassembler;
-#    LLVMX86Info;
-#    LLVMX86Utils
+llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
 
 target_link_libraries(STELA
         PUBLIC
-        LLVMCore
+        ${llvm_libs}
 )
 
 target_compile_features(STELA
         PUBLIC
         cxx_std_17
 )
-
-#if(TEST_COVERAGE)
-#        set_target_properties(STELA
-#                PROPERTIES
-#                COMPILE_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
-#                LINK_FLAGS "--coverage -lgcov"
-#        )
-#endif()
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT result)

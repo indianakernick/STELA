@@ -21,14 +21,6 @@ set_target_properties(Test
         PROPERTIES OUTPUT_NAME "suite"
 )
 
-#if(TEST_COVERAGE)
-#        set_target_properties(Test
-#                PROPERTIES
-#                COMPILE_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
-#                LINK_FLAGS "--coverage -lgcov"
-#        )
-#endif()
-
 target_link_libraries(Test
         PRIVATE
         STELA
