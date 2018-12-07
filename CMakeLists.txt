@@ -170,8 +170,11 @@ target_compile_features(STELA
 )
 
 if(TEST_COVERAGE)
-        set(CMAKE_CXX_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
-        set(CMAKE_EXE_LINKER_FLAGS "--coverage")
+        set_target_properties(STELA
+                PROPERTIES
+                COMPILE_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+                LINK_FLAGS "--coverage"
+        )
 endif()
 
 include(CheckIPOSupported)
