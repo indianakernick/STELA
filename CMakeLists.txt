@@ -173,14 +173,13 @@ if(TEST_COVERAGE)
         set(CMAKE_CXX_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
 endif()
 
-include(CheckIPOSupported)
-
-check_ipo_supported(RESULT result)
-if(result)
-        set_target_properties(STELA
-                PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
-        )
-endif()
+#include(CheckIPOSupported)
+#check_ipo_supported(RESULT result)
+#if(result)
+#        set_target_properties(STELA
+#                PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
+#        )
+#endif()
 
 install(TARGETS STELA
         ARCHIVE DESTINATION lib

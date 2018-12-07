@@ -1,10 +1,5 @@
 cmake_minimum_required(VERSION 3.2)
 
-# doesn't seem to do anything
-if(TEST_COVERAGE)
-        set(CMAKE_CXX_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
-endif()
-
 add_executable(Test
         "src/lexer.cpp"
         "src/lexer.hpp"
@@ -27,7 +22,6 @@ set_target_properties(Test
 )
 
 target_link_libraries(Test
-        # was PRIVATE
-        PUBLIC
+        PRIVATE
         STELA
 )
