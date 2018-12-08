@@ -133,6 +133,7 @@
 		454EB80821ABE74E001A5D78 /* symbol desc.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "symbol desc.hpp"; sourceTree = "<group>"; };
 		454EB80A21ACAAC8001A5D78 /* check scopes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "check scopes.cpp"; sourceTree = "<group>"; };
 		454EB80B21ACAAC8001A5D78 /* check scopes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "check scopes.hpp"; sourceTree = "<group>"; };
+		455DADA521BBAE940012A261 /* algorithms.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = algorithms.hpp; sourceTree = "<group>"; };
 		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
@@ -340,6 +341,7 @@
 				45816F4521AF857500712CA3 /* unreachable.hpp */,
 				45816F6321B3780C00712CA3 /* assert down cast.hpp */,
 				454B36E721BA3B3100485BA4 /* iterator range.hpp */,
+				455DADA521BBAE940012A261 /* algorithms.hpp */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";

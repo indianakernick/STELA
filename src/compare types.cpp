@@ -8,8 +8,8 @@
 
 #include "compare types.hpp"
 
+#include "algorithms.hpp"
 #include "scope lookup.hpp"
-#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
@@ -61,7 +61,7 @@ private:
     if (!compareTypes(ctx, left.ret, right.ret)) {
       return false;
     }
-    return Utils::equal_size(left.params, right.params, compareParams);
+    return equal_size(left.params, right.params, compareParams);
   }
   static bool compare(const sym::Ctx &, ast::NamedType &left, ast::NamedType &right) {
     return left.name == right.name;
@@ -70,7 +70,7 @@ private:
     const auto compareFields = [&ctx] (const ast::Field &a, const ast::Field &b) {
       return a.name == b.name && compareTypes(ctx, a.type, b.type);
     };
-    return Utils::equal_size(left.fields, right.fields, compareFields);
+    return equal_size(left.fields, right.fields, compareFields);
   }
   template <typename Right>
   static bool compare(const sym::Ctx &, Left &, Right &) {
@@ -166,10 +166,10 @@ public:
       field.type->accept(*this);
       names.push_back({field.name, field.loc});
     }
-    Utils::sort(names, [] (auto a, auto b) {
+    sort(names, [] (auto a, auto b) {
       return a.first < b.first;
     });
-    const auto dup = Utils::adjacent_find(names, [] (auto a, auto b) {
+    const auto dup = adjacent_find(names, [] (auto a, auto b) {
       return a.first == b.first;
     });
     if (dup != names.cend()) {

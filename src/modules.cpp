@@ -9,7 +9,7 @@
 #include "modules.hpp"
 
 #include "log output.hpp"
-#include <Simpleton/Utils/algorithm.hpp>
+#include "algorithms.hpp"
 
 using namespace stela;
 
@@ -29,7 +29,7 @@ public:
   }
 
   void checkCycle(const size_t index, const ast::Name &name) {
-    if (Utils::contains(stack, index)) {
+    if (contains(stack, index)) {
       log.error() << "Cyclic dependencies detected in module \"" << name << "\"" << fatal;
     }
   }
@@ -41,7 +41,7 @@ public:
         return visit(i);
       }
     }
-    if (!Utils::contains(compiled, name)) {
+    if (!contains(compiled, name)) {
       log.error() << "Module \"" << name << "\" not found" << fatal;
     }
   }
@@ -82,8 +82,8 @@ void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogBuf 
     names.push_back(ast.name);
   }
   names.insert(names.end(), compiled.cbegin(), compiled.cend());
-  Utils::sort(names);
-  const auto dup = Utils::adjacent_find(names);
+  sort(names);
+  const auto dup = adjacent_find(names);
   if (dup != names.cend()) {
     Log log{buf, LogCat::semantic};
     log.error() << "Duplicate module \"" << *dup << "\"" << fatal;

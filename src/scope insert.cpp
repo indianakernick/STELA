@@ -12,7 +12,6 @@
 #include "scope lookup.hpp"
 #include "compare types.hpp"
 #include "compare params args.hpp"
-#include <Simpleton/Utils/algorithm.hpp>
 
 using namespace stela;
 
