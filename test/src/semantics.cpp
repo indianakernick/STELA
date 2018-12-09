@@ -19,7 +19,7 @@ using namespace stela::ast;
 
 namespace {
 
-Symbols createSym(const std::string_view source, LogBuf &log) {
+Symbols createSym(const std::string_view source, LogSink &log) {
   AST ast = createAST(source, log);
   Symbols syms = initModules(log);
   compileModule(syms, ast, log);
@@ -39,8 +39,8 @@ AST makeModuleAST(const ast::Name name, ast::Names &&imports) {
 #define ASSERT_FAILS(SOURCE) ASSERT_THROWS(createSym(SOURCE, log), stela::FatalError)
 
 TEST_GROUP(Semantics, {
-  StreamLog log;
-  log.pri(LogPri::status);
+  StreamSink stream;
+  FilterSink log{stream, LogPri::status};
   
   TEST(Empty source, {
     const Symbols syms = createSym("", log);

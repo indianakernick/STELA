@@ -17,7 +17,7 @@
 
 using namespace stela;
 
-LogBuf::~LogBuf() = default;
+LogSink::~LogSink() = default;
 
 std::ostream &stela::operator<<(std::ostream &stream, const LogCat cat) {
   // Categories are adjectives
@@ -75,50 +75,6 @@ std::streambuf *stela::silentBuf() {
   return &buf;
 }
 
-void stela::LogBuf::pri(const LogPri newPri) {
-  priority = newPri;
-}
-
-void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
-  if (canLog(pri)) {
-    begin(cat, pri, mod, loc);
-  }
-}
-
-void stela::LogBuf::beginLog(const LogCat cat, const LogPri pri, const LogMod mod) {
-  if (canLog(pri)) {
-    begin(cat, pri, mod);
-  }
-}
-
-void stela::LogBuf::endLog(const LogCat cat, const LogPri pri) {
-  if (canLog(pri)) {
-    end(cat, pri);
-  }
-}
-
-std::streambuf *stela::LogBuf::getStreambuf(const LogCat cat, const LogPri pri) {
-  if (canLog(pri)) {
-    return getBuf(cat, pri);
-  } else {
-    return silentBuf();
-  }
-}
-
-bool stela::LogBuf::canLog(const LogPri pri) const {
-  return static_cast<uint8_t>(pri) >= static_cast<uint8_t>(priority);
-}
-
-stela::StreamLog::StreamLog()
-  : StreamLog{std::cerr} {}
-
-stela::StreamLog::StreamLog(const std::ostream &stream)
-  : buf{stream.rdbuf()} {}
-
-std::streambuf *stela::StreamLog::getBuf(LogCat, LogPri) {
-  return buf;
-}
-
 namespace {
 
 int ceilToMultiple(const int factor, const int num) {
@@ -130,20 +86,47 @@ int locationWidth(const size_t modWidth) {
   return ceilToMultiple(8, static_cast<int>(modWidth) + 6);
 }
 
-void writeMod(std::ostream &stream, const LogMod mod) {
+void writeModLoc(std::ostream &stream, const LogMod mod, const Loc loc) {
+  std::ostringstream str;
+  bool empty = true;
   if (!mod.empty()) {
-    stream << std::left << std::setw(locationWidth(mod.size())) << mod;
+    str << mod << ':';
+    empty = false;
+  }
+  if (loc.l != 0 || loc.c != 0) {
+    str << loc;
+    empty = false;
+  }
+  if (!empty) {
+    stream << std::left << std::setw(locationWidth(mod.size())) << str.str();
   }
 }
 
-void writeModLoc(std::ostream &stream, const LogMod mod, const Loc loc) {
-  std::ostringstream str;
-  if (!mod.empty()) {
-    str << mod << ':';
-  }
-  str << loc;
-  stream << std::left << std::setw(locationWidth(mod.size())) << str.str();
 }
+
+stela::StreamSink::StreamSink()
+  : StreamSink{std::cerr} {}
+
+stela::StreamSink::StreamSink(const std::ostream &stream)
+  : buf{stream.rdbuf()} {}
+
+bool stela::StreamSink::writeHead(const LogInfo &head) {
+  std::ostream stream{buf};
+  writeModLoc(stream, head.mod, head.loc);
+  stream << head.cat << ' ' << head.pri << ": ";
+  return true;
+}
+
+std::streambuf *stela::StreamSink::getBuf(const LogInfo &) {
+  return buf;
+}
+
+void stela::StreamSink::writeTail(const LogInfo &) {
+  std::ostream stream{buf};
+  stream << std::endl;
+}
+
+namespace {
 
 void priorityColor(const LogPri pri) {
   if (pri == LogPri::verbose) {
@@ -163,52 +146,55 @@ void priorityColor(const LogPri pri) {
 
 }
 
-void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
-  std::ostream stream{buf};
-  writeModLoc(stream, mod, loc);
-  stream << cat << ' ' << pri << ": ";
+bool stela::ColorSink::writeHead(const LogInfo &head) {
+  std::cerr << con::bold;
+  writeModLoc(std::cerr, head.mod, head.loc);
+  std::cerr << con::no_bold_faint;
+  priorityColor(head.pri);
+  std::cerr << head.cat << ' ' << head.pri;
+  std::cerr << con::text_default << ": " << con::italic;
+  return true;
 }
 
-void stela::StreamLog::begin(const LogCat cat, const LogPri pri, const LogMod mod) {
-  std::ostream stream{buf};
-  writeMod(stream, mod);
-  stream << cat << ' ' << pri << ": ";
-}
-
-void stela::StreamLog::end(LogCat, LogPri) {
-  std::ostream stream{buf};
-  stream << std::endl;
-}
-
-std::streambuf *stela::ColorLog::getBuf(LogCat, LogPri) {
+std::streambuf *stela::ColorSink::getBuf(const LogInfo &) {
   return std::cerr.rdbuf();
 }
 
-void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const LogMod mod, const Loc loc) {
-  std::cerr << con::bold;
-  writeModLoc(std::cerr, mod, loc);
-  std::cerr << con::no_bold_faint;
-  priorityColor(pri);
-  std::cerr << cat << ' ' << pri;
-  std::cerr << con::text_default << ": " << con::italic;
-}
-
-void stela::ColorLog::begin(const LogCat cat, const LogPri pri, const LogMod mod) {
-  std::cerr << con::bold;
-  writeMod(std::cerr, mod);
-  std::cerr << con::no_bold_faint;
-  priorityColor(pri);
-  std::cerr << cat << ' ' << pri;
-  std::cerr << con::text_default << ": " << con::italic;
-}
-
-void stela::ColorLog::end(LogCat, LogPri) {
+void stela::ColorSink::writeTail(const LogInfo &) {
   std::cerr << con::no_italic << std::endl;
 }
 
-std::streambuf *stela::NoLog::getBuf(LogCat, LogPri) {
-  return silentBuf();
+bool stela::NullSink::writeHead(const LogInfo &) {
+  return false;
 }
-void stela::NoLog::begin(LogCat, LogPri, LogMod, Loc) {}
-void stela::NoLog::begin(LogCat, LogPri, LogMod) {}
-void stela::NoLog::end(LogCat, LogPri) {}
+
+std::streambuf *stela::NullSink::getBuf(const LogInfo &) {
+  UNREACHABLE();
+}
+
+void stela::NullSink::writeTail(const LogInfo &) {
+  UNREACHABLE();
+}
+
+stela::FilterSink::FilterSink(LogSink &child, LogPri pri)
+  : child{child}, priority{pri} {}
+
+void stela::FilterSink::pri(const LogPri pri) {
+  priority = pri;
+}
+
+bool stela::FilterSink::writeHead(const LogInfo &head) {
+  if (static_cast<uint8_t>(head.pri) >= static_cast<uint8_t>(priority)) {
+    return child.writeHead(head);
+  } else {
+    return false;
+  }
+}
+
+std::streambuf *stela::FilterSink::getBuf(const LogInfo &head) {
+  return child.getBuf(head);
+}
+
+void stela::FilterSink::writeTail(const LogInfo &head) {
+  return child.writeTail(head);
+}

@@ -17,7 +17,7 @@
 
 using namespace stela;
 
-Symbols stela::initModules(LogBuf &) {
+Symbols stela::initModules(LogSink &) {
   Symbols syms;
   syms.scopes.push_back(makeBuiltinModule(syms.builtins));
   syms.global = syms.scopes.back().get();
@@ -40,14 +40,14 @@ void compileModuleImpl(Symbols &syms, AST &ast, Log &log) {
 
 }
 
-void stela::compileModule(Symbols &syms, AST &ast, LogBuf &buf) {
-  Log log{buf, LogCat::semantic};
+void stela::compileModule(Symbols &syms, AST &ast, LogSink &sink) {
+  Log log{sink, LogCat::semantic};
   compileModuleImpl(syms, ast, log);
   checkScopes(log, syms);
 }
 
-void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogBuf &buf) {
-  Log log{buf, LogCat::semantic};
+void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogSink &sink) {
+  Log log{sink, LogCat::semantic};
   for (const size_t index : order) {
     compileModuleImpl(syms, asts[index], log);
   }

@@ -23,7 +23,7 @@ constexpr fatal_t fatal {};
 
 class LogStream {
 public:
-  LogStream(LogBuf &, LogCat, LogPri);
+  LogStream(LogSink &, const LogInfo &);
 
   void operator<<(endlog_t);
   [[noreturn]] void operator<<(fatal_t);
@@ -36,14 +36,14 @@ public:
 
 private:
   std::ostream stream;
-  LogBuf &buf;
-  LogCat category;
-  LogPri priority;
+  LogSink &sink;
+  LogInfo head;
+  bool silent;
 };
 
 class Log {
 public:
-  Log(LogBuf &, LogCat);
+  Log(LogSink &, LogCat);
   
   void module(LogMod);
   
@@ -62,7 +62,7 @@ public:
   LogStream log(LogPri);
   
 private:
-  LogBuf &buf;
+  LogSink &sink;
   LogCat cat;
   LogMod mod;
 };

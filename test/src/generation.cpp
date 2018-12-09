@@ -19,14 +19,14 @@ using namespace stela;
 
 namespace {
 
-Symbols createSym(const std::string_view source, LogBuf &log) {
+Symbols createSym(const std::string_view source, LogSink &log) {
   AST ast = createAST(source, log);
   Symbols syms = initModules(log);
   compileModule(syms, ast, log);
   return syms;
 }
 
-std::string generateCpp(const std::string_view source, LogBuf &log) {
+std::string generateCpp(const std::string_view source, LogSink &log) {
   return generateCpp(createSym(source, log), log);
 }
 
@@ -77,7 +77,7 @@ bool validCode(const std::string &cpp) {
   return true;
 }
 
-bool generate(const std::string_view source, LogBuf &log) {
+bool generate(const std::string_view source, LogSink &log) {
   return validCode(generateCpp(source, log));
 }
 
@@ -93,8 +93,8 @@ bool generate(const std::string_view source, LogBuf &log) {
   ASSERT_FALSE(success)
 
 TEST_GROUP(Generation, {
-  stela::StreamLog log;
-  log.pri(LogPri::status);
+  StreamSink stream;
+FilterSink log{stream, LogPri::status};
   
   TEST(Empty source, {
     ASSERT_COMPILES("");

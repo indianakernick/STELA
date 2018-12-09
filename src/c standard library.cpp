@@ -41,8 +41,8 @@ void insertBinary(const ast::TypePtr &type, sym::Table &table, const sym::Name &
 
 }
 
-void stela::includeCmath(Symbols &syms, LogBuf &buf) {
-  Log log{buf, LogCat::semantic};
+void stela::includeCmath(Symbols &syms, LogSink &sink) {
+  Log log{sink, LogCat::semantic};
   log.status() << "Including cmath" << endlog;
   log.module("cmath");
   ScopeMan man = createModule(syms, "$cmath");

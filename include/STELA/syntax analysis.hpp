@@ -15,8 +15,8 @@
 
 namespace stela {
 
-AST createAST(const Tokens &, LogBuf &);
-AST createAST(std::string_view, LogBuf &);
+AST createAST(const Tokens &, LogSink &);
+AST createAST(std::string_view, LogSink &);
 
 }
 

@@ -14,8 +14,8 @@
 
 using namespace stela;
 
-AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
-  Log log{buf, LogCat::syntax};
+AST stela::createAST(const Tokens &tokens, LogSink &sink) {
+  Log log{sink, LogCat::syntax};
   log.verbose() << "Parsing " << tokens.size() << " tokens" << endlog;
 
   AST ast;
@@ -52,6 +52,6 @@ AST stela::createAST(const Tokens &tokens, LogBuf &buf) {
   return ast;
 }
 
-AST stela::createAST(const std::string_view source, LogBuf &buf) {
-  return createAST(tokenize(source, buf), buf);
+AST stela::createAST(const std::string_view source, LogSink &sink) {
+  return createAST(tokenize(source, sink), sink);
 }

@@ -90,7 +90,7 @@ namespace stela {
 
 fmt::Tokens format(ast::Node *);
 fmt::Tokens format(const AST &);
-fmt::Tokens format(std::string_view, LogBuf &);
+fmt::Tokens format(std::string_view, LogSink &);
 
 }
 

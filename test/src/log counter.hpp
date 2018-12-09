@@ -11,10 +11,11 @@
 
 #include <STELA/log.hpp>
 
-class CountLogs final : public stela::LogBuf {
+class CountLogs final : public stela::LogSink {
 public:
   CountLogs() = default;
   
+  uint32_t status() const;
   uint32_t verbose() const;
   uint32_t info() const;
   uint32_t warn() const;
@@ -22,15 +23,15 @@ public:
   void reset();
   
 private:
+  uint32_t statusCount = 0;
   uint32_t verboseCount = 0;
   uint32_t infoCount = 0;
   uint32_t warnCount = 0;
   uint32_t errorCount = 0;
   
-  std::streambuf *getBuf(stela::LogCat, stela::LogPri) override;
-  void begin(stela::LogCat, stela::LogPri, stela::LogMod, stela::Loc) override;
-  void begin(stela::LogCat, stela::LogPri, stela::LogMod) override;
-  void end(stela::LogCat, stela::LogPri) override;
+  bool writeHead(const stela::LogInfo &) override;
+  std::streambuf *getBuf(const stela::LogInfo &) override;
+  void writeTail(const stela::LogInfo &) override;
 };
 
 #endif

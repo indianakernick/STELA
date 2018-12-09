@@ -55,7 +55,8 @@ void printTokens(const Tokens &tokens) {
   ASSERT_EQ(tokens[INDEX].view, VIEW)
 
 TEST_GROUP(Lexer, {
-  StreamLog log;
+  StreamSink stream;
+  FilterSink log{stream, LogPri::info};
 
   TEST(Empty source, {
     const Tokens tokens = tokenize("", log);

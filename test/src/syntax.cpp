@@ -48,7 +48,8 @@ using namespace stela::ast;
   } do{}while(0)
 
 TEST_GROUP(Syntax, {
-  StreamLog log;
+  StreamSink stream;
+  FilterSink log{stream, LogPri::info};
 
   TEST(No tokens, {
     const AST ast = createAST(Tokens{}, log);
@@ -100,8 +101,7 @@ TEST_GROUP(Syntax, {
       if (true) {}
     )";
     try {
-      NoLog noLog;
-      noLog.pri(LogPri::verbose);
+      NullSink noLog;
       createAST(source, noLog);
     } catch (FatalError &e) {
       std::cout << "Should have got nothing but this " << e.what() << " exception\n";
@@ -554,8 +554,7 @@ TEST_GROUP(Syntax, {
     // good test for the color logger because all priorities are used
     // can't use color logger for everything because Xcode Console doesn't
     // support color. ;-(
-    ColorLog colorLog;
-    colorLog.pri(LogPri::verbose);
+    ColorSink colorLog;
     ASSERT_THROWS(createAST(source, colorLog), FatalError);
   });
   

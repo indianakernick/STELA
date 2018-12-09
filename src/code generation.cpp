@@ -13,8 +13,8 @@
 #include "generate ids.hpp"
 #include "generate decl.hpp"
 
-std::string stela::generateCpp(const Symbols &syms, LogBuf &buf) {
-  Log log{buf, LogCat::generate};
+std::string stela::generateCpp(const Symbols &syms, LogSink &sink) {
+  Log log{sink, LogCat::generate};
   log.status() << "Generating code" << endlog;
   gen::String type{syms.decls.size() * 100};
   gen::String func{syms.decls.size() * 100};

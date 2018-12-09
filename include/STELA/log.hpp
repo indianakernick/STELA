@@ -37,6 +37,13 @@ enum class LogPri : uint8_t {
 /// Logging module
 using LogMod = std::string_view;
 
+struct LogInfo {
+  LogMod mod;
+  Loc loc;
+  LogCat cat;
+  LogPri pri;
+};
+
 std::ostream &operator<<(std::ostream &, LogCat);
 std::ostream &operator<<(std::ostream &, LogPri);
 std::ostream &operator<<(std::ostream &, Loc);
@@ -51,59 +58,60 @@ public:
 std::streambuf *silentBuf();
 
 /// Controls the output of the logger
-class LogBuf {
+class LogSink {
 public:
-  virtual ~LogBuf();
+  virtual ~LogSink();
   
-  void pri(LogPri);
-  
-  void beginLog(LogCat, LogPri, LogMod, Loc);
-  void beginLog(LogCat, LogPri, LogMod);
-  void endLog(LogCat, LogPri);
-  std::streambuf *getStreambuf(LogCat, LogPri);
-  
-private:
-  virtual void begin(LogCat, LogPri, LogMod, Loc) = 0;
-  virtual void begin(LogCat, LogPri, LogMod) = 0;
-  virtual void end(LogCat, LogPri) = 0;
-  virtual std::streambuf *getBuf(LogCat, LogPri) = 0;
-  
-  bool canLog(LogPri) const;
-  
-  LogPri priority = LogPri::info;
+  virtual bool writeHead(const LogInfo &) = 0;
+  virtual std::streambuf *getBuf(const LogInfo &) = 0;
+  virtual void writeTail(const LogInfo &) = 0;
 };
 
 /// Write to a stream
-class StreamLog final : public LogBuf {
+class StreamSink final : public LogSink {
 public:
   /// Write to std::cerr
-  StreamLog();
+  StreamSink();
   /// Write to a stream
-  explicit StreamLog(const std::ostream &);
+  explicit StreamSink(const std::ostream &);
+  
+  bool writeHead(const LogInfo &) override;
+  std::streambuf *getBuf(const LogInfo &) override;
+  void writeTail(const LogInfo &) override;
   
 private:
   std::streambuf *buf;
-  
-  std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, LogMod, Loc) override;
-  void begin(LogCat, LogPri, LogMod) override;
-  void end(LogCat, LogPri) override;
 };
 
 /// Write colored text to stderr
-class ColorLog final : public LogBuf {
-  std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, LogMod, Loc) override;
-  void begin(LogCat, LogPri, LogMod) override;
-  void end(LogCat, LogPri) override;
+class ColorSink final : public LogSink {
+public:
+  bool writeHead(const LogInfo &) override;
+  std::streambuf *getBuf(const LogInfo &) override;
+  void writeTail(const LogInfo &) override;
 };
 
 /// Do nothing
-class NoLog final : public LogBuf {
-  std::streambuf *getBuf(LogCat, LogPri) override;
-  void begin(LogCat, LogPri, LogMod, Loc) override;
-  void begin(LogCat, LogPri, LogMod) override;
-  void end(LogCat, LogPri) override;
+class NullSink final : public LogSink {
+public:
+  bool writeHead(const LogInfo &) override;
+  std::streambuf *getBuf(const LogInfo &) override;
+  void writeTail(const LogInfo &) override;
+};
+
+class FilterSink final : public LogSink {
+public:
+  FilterSink(LogSink &, LogPri);
+  
+  void pri(LogPri);
+  
+  bool writeHead(const LogInfo &) override;
+  std::streambuf *getBuf(const LogInfo &) override;
+  void writeTail(const LogInfo &) override;
+
+private:
+  LogSink &child;
+  LogPri priority;
 };
 
 }

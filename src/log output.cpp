@@ -8,14 +8,19 @@
 
 #include "log output.hpp"
 
-stela::LogStream::LogStream(LogBuf &buf, const LogCat cat, const LogPri pri)
-  : stream{buf.getStreambuf(cat, pri)},
-    buf{buf},
-    category{cat},
-    priority{pri} {}
+stela::LogStream::LogStream(LogSink &sink, const LogInfo &head)
+  : stream{nullptr}, sink{sink}, head{head}, silent{!sink.writeHead(head)} {
+  if (silent) {
+    stream.rdbuf(silentBuf());
+  } else {
+    stream.rdbuf(sink.getBuf(head));
+  }
+}
 
 void stela::LogStream::operator<<(endlog_t) {
-  buf.endLog(category, priority);
+  if (!silent) {
+    sink.writeTail(head);
+  }
 }
 
 void stela::LogStream::operator<<(fatal_t) {
@@ -23,8 +28,8 @@ void stela::LogStream::operator<<(fatal_t) {
   throw FatalError{};
 }
 
-stela::Log::Log(LogBuf &buf, const LogCat cat)
-  : buf{buf}, cat{cat} {}
+stela::Log::Log(LogSink &sink, const LogCat cat)
+  : sink{sink}, cat{cat} {}
 
 void stela::Log::module(const LogMod module) {
   mod = module;
@@ -53,8 +58,7 @@ stela::LogStream stela::Log::error(const Loc loc) {
 /* LCOV_EXCL_END */
 
 stela::LogStream stela::Log::log(const LogPri pri, const Loc loc) {
-  buf.beginLog(cat, pri, mod, loc);
-  return {buf, cat, pri};
+  return {sink, {mod, loc, cat, pri}};
 }
 
 /* LCOV_EXCL_START */
@@ -80,6 +84,5 @@ stela::LogStream stela::Log::error() {
 /* LCOV_EXCL_END */
 
 stela::LogStream stela::Log::log(const LogPri pri) {
-  buf.beginLog(cat, pri, mod);
-  return {buf, cat, pri};
+  return {sink, {mod, Loc{}, cat, pri}};
 }

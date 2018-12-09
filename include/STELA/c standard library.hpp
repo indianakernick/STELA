@@ -14,8 +14,8 @@
 
 namespace stela {
 
-void includeCmath(Symbols &, LogBuf &);
-// void includeCstdio(Symbols &, LogBuf &);
+void includeCmath(Symbols &, LogSink &);
+// void includeCstdio(Symbols &, LogSink &);
 
 }
 

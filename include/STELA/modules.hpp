@@ -18,11 +18,11 @@ using ModuleOrder = std::vector<size_t>;
 
 /// Find the order which modules must be compiled in. Cyclic dependencies are
 /// not allowed
-ModuleOrder findModuleOrder(const ASTs &, LogBuf &);
+ModuleOrder findModuleOrder(const ASTs &, LogSink &);
 /// Find the order which modules must be compiled in. Cyclic dependencies are
 /// not allowed. Assumes that modules with the given names have already
 /// been compiled
-ModuleOrder findModuleOrder(const ASTs &, const ast::Names &, LogBuf &);
+ModuleOrder findModuleOrder(const ASTs &, const ast::Names &, LogSink &);
 
 }
 

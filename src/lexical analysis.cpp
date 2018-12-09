@@ -174,8 +174,8 @@ bool parseMultiComment(Utils::ParseString &str, Log &log) {
 
 }
 
-Tokens stela::tokenize(const std::string_view source, LogBuf &buf) {
-  Log log{buf, LogCat::lexical};
+Tokens stela::tokenize(const std::string_view source, LogSink &sink) {
+  Log log{sink, LogCat::lexical};
   log.verbose() << "Parsing " << source.size() << " characters" << endlog;
   
   Utils::ParseString str(source);

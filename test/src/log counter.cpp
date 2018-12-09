@@ -10,6 +10,10 @@
 
 using namespace stela;
 
+uint32_t CountLogs::status() const {
+  return statusCount;
+}
+
 uint32_t CountLogs::verbose() const {
   return verboseCount;
 }
@@ -27,19 +31,14 @@ uint32_t CountLogs::error() const {
 }
 
 void CountLogs::reset() {
-  verboseCount = infoCount = warnCount = errorCount = 0;
+  statusCount = verboseCount = infoCount = warnCount = errorCount = 0;
 }
 
-std::streambuf *CountLogs::getBuf(LogCat, LogPri) {
-  return silentBuf();
-}
-
-void CountLogs::begin(const LogCat cat, const LogPri pri, const LogMod mod, Loc) {
-  begin(cat, pri, mod);
-}
-
-void CountLogs::begin(LogCat, const LogPri pri, LogMod) {
-  switch (pri) {
+bool CountLogs::writeHead(const stela::LogInfo &info) {
+  switch (info.pri) {
+    case LogPri::status:
+      ++statusCount;
+      break;
     case LogPri::verbose:
       ++verboseCount;
       break;
@@ -52,8 +51,13 @@ void CountLogs::begin(LogCat, const LogPri pri, LogMod) {
     case LogPri::error:
       ++errorCount;
       break;
-    default: ;
+    case LogPri::nothing: ;
   }
+  return false;
 }
 
-void CountLogs::end(LogCat, LogPri) {}
+std::streambuf *CountLogs::getBuf(const stela::LogInfo &) {
+  return silentBuf();
+}
+
+void CountLogs::writeTail(const stela::LogInfo &) {}

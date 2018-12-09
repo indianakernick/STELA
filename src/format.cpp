@@ -477,6 +477,6 @@ stela::fmt::Tokens stela::format(const AST &ast) {
   return visitor.tokens;
 }
 
-stela::fmt::Tokens stela::format(const std::string_view source, LogBuf &buf) {
-  return format(createAST(source, buf));
+stela::fmt::Tokens stela::format(const std::string_view source, LogSink &sink) {
+  return format(createAST(source, sink));
 }

@@ -155,7 +155,8 @@ func anotherDummy(dir: Dir) -> uint {
 }
 )";
 
-  stela::StreamLog log;
+  stela::StreamSink stream;
+  stela::FilterSink log{stream, stela::LogPri::info};
   stela::fmt::Tokens tokens;
   
   TEST(Get tokens, {

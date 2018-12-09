@@ -17,13 +17,13 @@ namespace {
 
 class Visitor {
 public:
-  Visitor(const ASTs &asts, const ast::Names &compiled, LogBuf &buf)
+  Visitor(const ASTs &asts, const ast::Names &compiled, LogSink &sink)
     : order{},
       stack{},
       visited(asts.size(), false),
       asts{asts},
       compiled{compiled},
-      log{buf, LogCat::semantic} {
+      log{sink, LogCat::semantic} {
     order.reserve(asts.size());
     stack.reserve(asts.size());
   }
@@ -75,7 +75,7 @@ private:
   Log log;
 };
 
-void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogBuf &buf) {
+void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogSink &sink) {
   ast::Names names;
   names.reserve(asts.size() + compiled.size());
   for (const AST &ast : asts) {
@@ -85,20 +85,20 @@ void checkDuplicateModules(const ASTs &asts, const ast::Names &compiled, LogBuf 
   sort(names);
   const auto dup = adjacent_find(names);
   if (dup != names.cend()) {
-    Log log{buf, LogCat::semantic};
+    Log log{sink, LogCat::semantic};
     log.error() << "Duplicate module \"" << *dup << "\"" << fatal;
   }
 }
 
 }
 
-ModuleOrder stela::findModuleOrder(const ASTs &asts, LogBuf &buf) {
-  return findModuleOrder(asts, {}, buf);
+ModuleOrder stela::findModuleOrder(const ASTs &asts, LogSink &sink) {
+  return findModuleOrder(asts, {}, sink);
 }
 
-ModuleOrder stela::findModuleOrder(const ASTs &asts, const ast::Names &compiled, LogBuf &buf) {
-  checkDuplicateModules(asts, compiled, buf);
-  Visitor visitor{asts, compiled, buf};
+ModuleOrder stela::findModuleOrder(const ASTs &asts, const ast::Names &compiled, LogSink &sink) {
+  checkDuplicateModules(asts, compiled, sink);
+  Visitor visitor{asts, compiled, sink};
   visitor.visit();
   return visitor.order;
 }

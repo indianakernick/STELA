@@ -14,7 +14,7 @@
 
 namespace stela {
 
-std::string generateCpp(const Symbols &, LogBuf &);
+std::string generateCpp(const Symbols &, LogSink &);
 
 }
 
