@@ -8,8 +8,11 @@
 
 #include "generate type.hpp"
 
+#include "llvm.hpp"
 #include "symbols.hpp"
+#include <llvm/ir/type.h>
 #include "unreachable.hpp"
+#include <llvm/ir/DerivedTypes.h>
 
 using namespace stela;
 
@@ -21,27 +24,24 @@ public:
     : ctx{ctx} {}
   
   void visit(ast::BtnType &type) override {
-    // @TODO X macros?
+    llvm::LLVMContext &context = getLLVM();
     switch (type.value) {
       case ast::BtnTypeEnum::Void:
-        name = "t_void"; return;
+        llvmType = llvm::Type::getVoidTy(context); return;
       case ast::BtnTypeEnum::Bool:
-        name = "t_bool"; return;
       case ast::BtnTypeEnum::Byte:
-        name = "t_byte"; return;
       case ast::BtnTypeEnum::Char:
-        name = "t_char"; return;
+        llvmType = llvm::Type::getInt8Ty(context); return;
       case ast::BtnTypeEnum::Real:
-        name = "t_real"; return;
+        llvmType = llvm::Type::getFloatTy(context); return;
       case ast::BtnTypeEnum::Sint:
-        name = "t_sint"; return;
       case ast::BtnTypeEnum::Uint:
-        name = "t_uint"; return;
+        llvmType = llvm::Type::getInt32Ty(context); return;
     }
     UNREACHABLE();
   }
   void visit(ast::ArrayType &type) override {
-    type.elem->accept(*this);
+    /*type.elem->accept(*this);
     gen::String elem = std::move(name);
     name = "t_arr_";
     name += elem.size();
@@ -53,58 +53,28 @@ public:
       ctx.type += "> ";
       ctx.type += name;
       ctx.type += ";\n";
-    }
+    }*/
   }
   void visit(ast::FuncType &type) override {
-    name += "t_clo_";
-    name += generateFuncName(ctx, type);
-    if (ctx.inst.funcNotInst(name)) {
-      const gen::String sig = generateFuncSig(ctx, type);
-      ctx.type += "typedef struct {\n";
-      ctx.type += sig;
-      ctx.type += " func;\n";
-      ctx.type += "ClosureDataPtr data;\n";
-      ctx.type += "} ";
-      ctx.type += name;
-      ctx.type += ";\n";
-    }
+    llvmType = llvm::StructType::get(getLLVM(), {
+      generateFuncSig(ctx, type),
+      getCloDataPtr(ctx)
+    });
   }
   void visit(ast::NamedType &type) override {
     type.definition->type->accept(*this);
   }
   void visit(ast::StructType &type) override {
-    std::vector<gen::String> fields;
-    fields.reserve(type.fields.size());
+    std::vector<llvm::Type *> elems;
+    elems.reserve(type.fields.size());
     for (const ast::Field &field : type.fields) {
       field.type->accept(*this);
-      fields.push_back(std::move(name));
+      elems.push_back(llvmType);
     }
-    name = "t_srt";
-    for (size_t f = 0; f != fields.size(); ++f) {
-      name += '_';
-      name += fields[f].size();
-      name += '_';
-      name += fields[f];
-      name += '_';
-      name += type.fields[f].name.size();
-      name += '_';
-      name += type.fields[f].name;
-    }
-    if (ctx.inst.structNotInst(name)) {
-      ctx.type += "typedef struct {\n";
-      for (size_t f = 0; f != fields.size(); ++f) {
-        ctx.type += fields[f];
-        ctx.type += " m_";
-        ctx.type += f;
-        ctx.type += ";\n";
-      }
-      ctx.type += "} ";
-      ctx.type += name;
-      ctx.type += ";\n";
-    }
+    llvmType = llvm::StructType::get(getLLVM(), elems);
   }
   
-  gen::String name;
+  llvm::Type *llvmType = nullptr;
   
 private:
   gen::Ctx ctx;
@@ -112,37 +82,30 @@ private:
 
 }
 
-gen::String stela::generateType(gen::Ctx ctx, ast::Type *type) {
+llvm::Type *stela::generateType(gen::Ctx ctx, ast::Type *type) {
   assert(type);
   Visitor visitor{ctx};
   type->accept(visitor);
-  return std::move(visitor.name);
+  return std::move(visitor.llvmType);
 }
 
-gen::String stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
-  gen::String name;
-  name += "t_fun_";
-  name += generateFuncName(ctx, type);
-  if (ctx.inst.funcNotInst(name)) {
-    ctx.type += "typedef ";
-    if (type.ret) {
-      ctx.type += generateType(ctx, type.ret.get());
-    } else {
-      ctx.type += "void";
-    }
-    ctx.type += "(*";
-    ctx.type += name;
-    ctx.type += ")(void *";
-    for (const ast::ParamType &param : type.params) {
-      ctx.type += ", ";
-      ctx.type += generateType(ctx, param.type.get());
-      if (param.ref == ast::ParamRef::ref) {
-        ctx.type += " &";
-      }
-    }
-    ctx.type += ") noexcept;\n";
+llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
+  llvm::Type *ret;
+  if (type.ret) {
+    ret = generateType(ctx, type.ret.get());
+  } else {
+    ret = llvm::Type::getVoidTy(getLLVM());
   }
-  return name;
+  std::vector<llvm::Type *> params;
+  params.push_back(getVoidPtr(ctx));
+  for (const ast::ParamType &param : type.params) {
+    llvm::Type *paramType = generateType(ctx, param.type.get());
+    if (param.ref == ast::ParamRef::ref) {
+      paramType = llvm::PointerType::get(paramType, 0);
+    }
+    params.push_back(paramType);
+  }
+  return llvm::FunctionType::get(ret, params, false);
 }
 
 gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
@@ -163,6 +126,17 @@ gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   return name;
 }
 
+llvm::PointerType *stela::getVoidPtr(gen::Ctx) {
+  return llvm::IntegerType::getInt8PtrTy(getLLVM());
+}
+
+llvm::PointerType *stela::getCloDataPtr(gen::Ctx ctx) {
+  llvm::FunctionType *virtualDtor = llvm::FunctionType::get(getVoidPtr(ctx), false);
+  llvm::IntegerType *refCount = llvm::IntegerType::getInt32Ty(getLLVM());
+  llvm::StructType *cloData = llvm::StructType::get(getLLVM(), {virtualDtor, refCount});
+  return llvm::PointerType::get(cloData, 0);
+}
+
 ast::Type *stela::concreteType(ast::Type *type) {
   if (auto *named = dynamic_cast<ast::NamedType *>(type)) {
     return concreteType(named->definition->type.get());
@@ -170,60 +144,15 @@ ast::Type *stela::concreteType(ast::Type *type) {
   return type;
 }
 
-gen::String stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &lambda) {
+llvm::StructType *stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &lambda) {
   sym::Lambda *symbol = lambda.symbol;
   const size_t numCaptures = symbol->captures.size();
-  std::vector<gen::String> captureTypes;
-  captureTypes.reserve(numCaptures);
+  std::vector<llvm::Type *> types;
+  types.reserve(2 + numCaptures);
+  types.push_back(llvm::FunctionType::get(getVoidPtr(ctx), false));
+  types.push_back(llvm::IntegerType::getInt32Ty(getLLVM()));
   for (const sym::ClosureCap &cap : symbol->captures) {
-    captureTypes.push_back(generateType(ctx, cap.type.get()));
+    types.push_back(generateType(ctx, cap.type.get()));
   }
-  gen::String name;
-  name += "t_cap";
-  for (size_t c = 0; c != numCaptures; ++c) {
-    name += "_";
-    name += captureTypes[c].size();
-    name += "_";
-    name += captureTypes[c];
-  }
-  if (ctx.inst.structNotInst(name)) {
-    gen::String type;
-    type += "struct ";
-    type += name;
-    type += " : ClosureData {\n";
-    type += name;
-    type += "(";
-    for (size_t c = 0; c != numCaptures; ++c) {
-      type += captureTypes[c];
-      type += " c_";
-      type += c;
-      if (c != numCaptures - 1) {
-        type += ", ";
-      }
-    }
-    type += ")\n";
-    if (numCaptures != 0) {
-      type += ": ";
-    }
-    for (size_t c = 0; c != numCaptures; ++c) {
-      type += "c_";
-      type += c;
-      type += "{c_";
-      type += c;
-      type += "}";
-      if (c != numCaptures - 1) {
-        type += ", ";
-      }
-    }
-    type += "{}\n";
-    for (size_t c = 0; c != numCaptures; ++c) {
-      type += captureTypes[c];
-      type += " c_";
-      type += c;
-      type += ";\n";
-    }
-    type += "};\n";
-    ctx.type += type;
-  }
-  return name;
+  return llvm::StructType::get(getLLVM(), types);
 }

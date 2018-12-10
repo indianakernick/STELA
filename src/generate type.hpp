@@ -12,11 +12,22 @@
 #include "ast.hpp"
 #include "gen context.hpp"
 
+namespace llvm {
+
+class Type;
+class FunctionType;
+class PointerType;
+class StructType;
+
+}
+
 namespace stela {
 
-gen::String generateType(gen::Ctx, ast::Type *);
-gen::String generateFuncSig(gen::Ctx, const ast::FuncType &);
+llvm::Type *generateType(gen::Ctx, ast::Type *);
+llvm::FunctionType *generateFuncSig(gen::Ctx, const ast::FuncType &);
 gen::String generateFuncName(gen::Ctx, const ast::FuncType &);
+llvm::PointerType *getVoidPtr(gen::Ctx);
+llvm::PointerType *getCloDataPtr(gen::Ctx);
 
 ast::Type *concreteType(ast::Type *);
 
@@ -25,7 +36,7 @@ Concrete *concreteType(ast::Type *type) {
   return dynamic_cast<Concrete *>(concreteType(type));
 }
 
-gen::String generateLambdaCapture(gen::Ctx, const ast::Lambda &);
+llvm::StructType *generateLambdaCapture(gen::Ctx, const ast::Lambda &);
 
 }
 
