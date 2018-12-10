@@ -17,6 +17,8 @@
 #include <iostream>
 #include <memory>
 
+#include <STELA/llvm.hpp>
+
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
@@ -34,11 +36,9 @@ void foo() {
 }
 
 int main() {
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmPrinter();
-  llvm::InitializeNativeTargetAsmParser();
+  stela::initLLVM();
+  llvm::LLVMContext &context = stela::getLLVM();
   
-  llvm::LLVMContext context;
   auto module = std::make_unique<llvm::Module>("top", context);
   llvm::IRBuilder<> builder{context};
   
@@ -100,6 +100,8 @@ int main() {
   } else {
     std::cerr << "Error getting function\n";
   }
+  
+  stela::quitLLVM();
 
   int failures = 0;
   failures += testFormat();

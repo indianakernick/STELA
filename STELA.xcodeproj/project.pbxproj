@@ -19,6 +19,7 @@
 		454EB80621ABD838001A5D78 /* plain format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80521ABD838001A5D78 /* plain format.cpp */; };
 		454EB80921ABE74E001A5D78 /* symbol desc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80721ABE74E001A5D78 /* symbol desc.cpp */; };
 		454EB80C21ACAAC9001A5D78 /* check scopes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80A21ACAAC8001A5D78 /* check scopes.cpp */; };
+		455DADA921BDE5870012A261 /* llvm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455DADA721BDE5870012A261 /* llvm.cpp */; };
 		455F4187217BF0CF00C62BBF /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455F4186217BF0CF00C62BBF /* modules.cpp */; };
 		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
@@ -134,6 +135,8 @@
 		454EB80A21ACAAC8001A5D78 /* check scopes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "check scopes.cpp"; sourceTree = "<group>"; };
 		454EB80B21ACAAC8001A5D78 /* check scopes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "check scopes.hpp"; sourceTree = "<group>"; };
 		455DADA521BBAE940012A261 /* algorithms.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = algorithms.hpp; sourceTree = "<group>"; };
+		455DADA621BDE4F90012A261 /* llvm.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = llvm.hpp; sourceTree = "<group>"; };
+		455DADA721BDE5870012A261 /* llvm.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = llvm.cpp; sourceTree = "<group>"; };
 		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
@@ -331,6 +334,7 @@
 				45816F5521B128EC00712CA3 /* generate ids.hpp */,
 				45816F5A21B2685300712CA3 /* generate zero expr.cpp */,
 				45816F5B21B2685300712CA3 /* generate zero expr.hpp */,
+				455DADA721BDE5870012A261 /* llvm.cpp */,
 			);
 			name = "Code Generation";
 			sourceTree = "<group>";
@@ -438,6 +442,7 @@
 				454EB80421ABD7D2001A5D78 /* plain format.hpp */,
 				454EB7FB219E4681001A5D78 /* retain ptr.hpp */,
 				45816F6421B622BD00712CA3 /* c standard library.hpp */,
+				455DADA621BDE4F90012A261 /* llvm.hpp */,
 			);
 			path = STELA;
 			sourceTree = "<group>";
@@ -652,6 +657,7 @@
 			files = (
 				4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */,
 				4572CAAE210EF61100EA1A56 /* scope lookup.cpp in Sources */,
+				455DADA921BDE5870012A261 /* llvm.cpp in Sources */,
 				450E329120E89D6100F222F1 /* context stack.cpp in Sources */,
 				450E329220E89D6100F222F1 /* parse type.cpp in Sources */,
 				450E329320E89D6100F222F1 /* parse func.cpp in Sources */,

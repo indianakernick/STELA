@@ -25,6 +25,7 @@ add_library(STELA STATIC
         "include/STELA/plain format.hpp"
         "include/STELA/code generation.hpp"
         "include/STELA/c standard library.hpp"
+        "include/STELA/llvm.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"
@@ -108,6 +109,7 @@ add_library(STELA STATIC
         "src/assert down cast.hpp"
         "src/c standard library.cpp"
         "src/iterator range.hpp"
+        "src/llvm.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

@@ -94,7 +94,7 @@ bool generate(const std::string_view source, LogSink &log) {
 
 TEST_GROUP(Generation, {
   StreamSink stream;
-FilterSink log{stream, LogPri::status};
+  FilterSink log{stream, LogPri::status};
   
   TEST(Empty source, {
     ASSERT_COMPILES("");
