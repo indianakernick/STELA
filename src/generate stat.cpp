@@ -10,8 +10,8 @@
 
 #include "llvm.hpp"
 #include "generate expr.hpp"
-#include <llvm/ir/IRBuilder.h>
-#include <llvm/ir/BasicBlock.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/BasicBlock.h>
 
 using namespace stela;
 

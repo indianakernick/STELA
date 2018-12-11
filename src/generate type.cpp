@@ -10,9 +10,9 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
-#include <llvm/ir/type.h>
+#include <llvm/IR/Type.h>
 #include "unreachable.hpp"
-#include <llvm/ir/DerivedTypes.h>
+#include <llvm/IR/DerivedTypes.h>
 
 using namespace stela;
 

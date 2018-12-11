@@ -11,7 +11,7 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
-#include <llvm/ir/IRBuilder.h>
+#include <llvm/IR/IRBuilder.h>
 
 namespace stela {
 

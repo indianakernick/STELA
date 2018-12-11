@@ -10,8 +10,8 @@
 
 #include <memory>
 #include <cassert>
-#include <llvm/ir/LLVMcontext.h>
-#include <llvm/support/TargetSelect.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/Support/TargetSelect.h>
 
 namespace {
 
