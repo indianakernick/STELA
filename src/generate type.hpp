@@ -26,6 +26,7 @@ namespace stela {
 llvm::Type *generateType(gen::Ctx, ast::Type *);
 llvm::FunctionType *generateFuncSig(gen::Ctx, const ast::FuncType &);
 gen::String generateFuncName(gen::Ctx, const ast::FuncType &);
+
 llvm::PointerType *getVoidPtr(gen::Ctx);
 llvm::PointerType *getCloDataPtr(gen::Ctx);
 

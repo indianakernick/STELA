@@ -9,7 +9,7 @@
 #ifndef stela_number_literal_hpp
 #define stela_number_literal_hpp
 
-#include <variant>
+#include "number.hpp"
 #include <string_view>
 #include "log output.hpp"
 
@@ -18,15 +18,6 @@ namespace stela {
 /// If a valid number literal can be found at the start of the string, the
 /// size (in characters) of the literal is returned, otherwise 0 is returned
 size_t validNumberLiteral(std::string_view, Loc, Log &);
-
-using Bool = bool;
-using Byte = uint8_t;
-using Char = int8_t;
-using Real = float;
-using Sint = int32_t;
-using Uint = uint32_t;
-
-using NumberVariant = std::variant<Byte, Char, Real, Sint, Uint>;
 
 /// Parses the number literal at the start of the string. Returns a NumberVariant
 /// that holds the number literal in a type that most accuratly represents it

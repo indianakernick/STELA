@@ -11,6 +11,7 @@
 
 #include <vector>
 #include <optional>
+#include "number.hpp"
 #include <string_view>
 #include "location.hpp"
 #include "retain ptr.hpp"
@@ -446,12 +447,17 @@ struct StringLiteral final : Literal {
 
 struct CharLiteral final : Literal {
   std::string_view value;
+  char number = 0;
   
   void accept(Visitor &) override;
 };
 
 struct NumberLiteral final : Literal {
+  // @TODO rename these
+  // std::string_view literal
+  // NumberVarient value
   std::string_view value;
+  NumberVariant number;
   
   void accept(Visitor &) override;
 };

@@ -8,11 +8,13 @@
 
 #include "generate expr.hpp"
 
+#include "llvm.hpp"
 #include "symbols.hpp"
 #include "unreachable.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
+#include <llvm/IR/IRBuilder.h>
 #include "assert down cast.hpp"
 #include "generate zero expr.hpp"
 
@@ -22,26 +24,26 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  explicit Visitor(gen::Ctx ctx)
-    : ctx{ctx} {}
+  Visitor(gen::Ctx ctx, llvm::IRBuilder<> &builder)
+    : ctx{ctx}, builder{builder} {}
 
   void visit(ast::BinaryExpr &expr) override {
-    str += '(';
+    /*str += '(';
     expr.left->accept(*this);
     str += ") ";
     str += opName(expr.oper);
     str += " (";
     expr.right->accept(*this);
-    str += ')';
+    str += ')';*/
   }
   void visit(ast::UnaryExpr &expr) override {
-    str += opName(expr.oper);
+    /*str += opName(expr.oper);
     str += '(';
     expr.expr->accept(*this);
-    str += ')';
+    str += ')';*/
   }
   
-  void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
+  /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
     for (size_t i = 0; i != args.size(); ++i) {
       // @TODO use address operator for ref parameters
       str += ", (";
@@ -207,30 +209,41 @@ public:
       str += string.value;
       str += "\")";
     }
-  }
+  }*/
   void visit(ast::CharLiteral &chr) override {
-    str += '\'';
-    str += chr.value;
-    str += '\'';
+    value = llvm::ConstantInt::get(
+      llvm::IntegerType::getInt8Ty(getLLVM()),
+      static_cast<uint64_t>(chr.number),
+      true
+    );
   }
   void visit(ast::NumberLiteral &num) override {
-    str += generateType(ctx, num.exprType.get());
-    str += '(';
-    if (isalpha(num.value.back())) {
-      str += std::string_view{num.value.data(), num.value.size() - 1};
-    } else {
-      str += num.value;
-    }
-    str += ')';
+    llvm::Type *type = generateType(ctx, num.exprType.get());
+    std::visit([this, type] (auto val) {
+      using Type = std::decay_t<decltype(val)>;
+      if constexpr (std::is_floating_point_v<Type>) {
+        value = llvm::ConstantFP::get(
+          type,
+          static_cast<double>(val)
+        );
+      } else if constexpr (!std::is_same_v<Type, std::monostate>){
+        value = llvm::ConstantInt::get(
+          type,
+          static_cast<uint64_t>(val),
+          std::is_signed_v<Type>
+        );
+      }
+    }, num.number);
   }
   void visit(ast::BoolLiteral &bol) override {
+    llvm::Type *boolType = llvm::IntegerType::getInt8Ty(getLLVM());
     if (bol.value) {
-      str += "true";
+      value = llvm::ConstantInt::getTrue(boolType);
     } else {
-      str += "false";
+      value = llvm::ConstantInt::getFalse(boolType);
     }
   }
-  void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
+  /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
     if (exprs.empty()) {
       return;
     }
@@ -287,18 +300,23 @@ public:
       writeCapture(*c);
     }
     str += "})";
-  }
+  }*/
 
-  gen::String str;
+  llvm::Value *value;
 
 private:
   gen::Ctx ctx;
+  llvm::IRBuilder<> &builder;
 };
 
 }
 
-gen::String stela::generateExpr(gen::Ctx ctx, ast::Expression *expr) {
-  Visitor visitor{ctx};
+llvm::Value *stela::generateExpr(
+  gen::Ctx ctx,
+  llvm::IRBuilder<> &builder,
+  ast::Expression *expr
+) {
+  Visitor visitor{ctx, builder};
   expr->accept(visitor);
-  return std::move(visitor.str);
+  return visitor.value;
 }

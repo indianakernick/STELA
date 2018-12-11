@@ -109,7 +109,7 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &ty
 }
 
 gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
-  gen::String name{16 + 16 * type.params.size()};
+  /*gen::String name{16 + 16 * type.params.size()};
   const gen::String ret = generateType(ctx, type.ret.get());
   name += ret.size();
   name += "_";
@@ -123,7 +123,8 @@ gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
     name += paramType;
     name += ref;
   }
-  return name;
+  return name;*/
+  return {};
 }
 
 llvm::PointerType *stela::getVoidPtr(gen::Ctx) {

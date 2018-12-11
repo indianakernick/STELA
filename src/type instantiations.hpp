@@ -14,6 +14,7 @@
 
 namespace stela::gen {
 
+// @TODO remove this
 class TypeInst {
 public:
   TypeInst();

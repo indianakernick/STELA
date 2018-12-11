@@ -11,10 +11,11 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
+#include <llvm/ir/IRBuilder.h>
 
 namespace stela {
 
-gen::String generateZeroExpr(gen::Ctx, ast::Type *);
+llvm::Value *generateZeroExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Type *);
 
 }
 

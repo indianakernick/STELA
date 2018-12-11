@@ -16,7 +16,7 @@
 using namespace stela;
 
 gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
-  gen::String name;
+  /*gen::String name;
   name += "f_null_";
   // @TODO maybe consider caching type names
   // generateFuncName does that same work that generateNullFunc does
@@ -38,11 +38,12 @@ gen::String stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
     ctx.func += "panic(\"Calling null function pointer\");\n";
     ctx.func += "}\n";
   }
-  return name;
+  return name;*/
+  return {};
 }
 
 gen::String stela::generateMakeFunc(gen::Ctx ctx, ast::FuncType &type) {
-  gen::String name;
+  /*gen::String name;
   name += "f_makefunc_";
   name += generateFuncName(ctx, type);
   if (ctx.inst.funcNotInst(name)) {
@@ -60,11 +61,12 @@ return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
 }
 )";
   }
-  return name;
+  return name;*/
+  return {};
 }
 
 gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
-  gen::String func;
+  /*gen::String func;
   func += "static ";
   func += generateType(ctx, lambda.ret.get());
   func += " ";
@@ -90,11 +92,12 @@ gen::String stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   func += generateDecl(ctx, lambda.body);
   func += "}\n";
   ctx.func += func;
-  return name;
+  return name;*/
+  return {};
 }
 
 gen::String stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
-  gen::String func;
+  /*gen::String func;
   func += "static inline ";
   func += generateType(ctx, lambda.exprType.get());
   func += " ";
@@ -129,5 +132,6 @@ gen::String stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   func += "}\n";
   
   ctx.func += func;
-  return name;
+  return name;*/
+  return {};
 }

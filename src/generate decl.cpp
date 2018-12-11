@@ -9,6 +9,7 @@
 #include "generate decl.hpp"
 
 #include "symbols.hpp"
+#include <llvm/ir/Type.h>
 #include "unreachable.hpp"
 #include "generate expr.hpp"
 #include "generate type.hpp"
@@ -24,17 +25,15 @@ public:
   explicit Visitor(gen::Ctx ctx)
     : ctx{ctx} {}
   
-  gen::String exprType(const sym::ExprType &etype) {
+  /*llvm::Type *exprType(const sym::ExprType &etype) {
     if (etype.type == nullptr) {
-      return gen::String{"void *"};
+      return getVoidPtr(ctx);
     } else {
-      gen::String name;
-      name += generateType(ctx, etype.type.get());
-      name += ' ';
+      llvm::Type *type = generateType(ctx, etype.type.get());
       if (etype.ref == sym::ValueRef::ref) {
-        name += '&';
+        return type->getPointerTo();
       }
-      return name;
+      return type;
     }
   }
   
@@ -250,7 +249,7 @@ public:
   void visit(ast::CallAssign &call) override {
     str += generateExpr(ctx, &call.call);
     str += ";\n";
-  }
+  }*/
   
   gen::String str;
   

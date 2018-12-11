@@ -121,23 +121,28 @@ public:
   }
   
   void visit(ast::StringLiteral &) override {
+    // @TODO deal with \n \t and others
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
-  void visit(ast::CharLiteral &) override {
+  void visit(ast::CharLiteral &chr) override {
+    if (chr.value.size() == 1) {
+      // @TODO deal with \n \t and others
+      chr.number = chr.value[0];
+    }
     lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }
   void visit(ast::NumberLiteral &n) override {
-    const NumberVariant num = parseNumberLiteral(n.value, ctx.log);
+    n.number = parseNumberLiteral(n.value, ctx.log);
     ast::TypePtr type;
-    if (std::holds_alternative<Byte>(num)) {
+    if (std::holds_alternative<Byte>(n.number)) {
       type = ctx.btn.Byte;
-    } else if (std::holds_alternative<Char>(num)) {
+    } else if (std::holds_alternative<Char>(n.number)) {
       type = ctx.btn.Char;
-    } else if (std::holds_alternative<Real>(num)) {
+    } else if (std::holds_alternative<Real>(n.number)) {
       type = ctx.btn.Real;
-    } else if (std::holds_alternative<Sint>(num)) {
+    } else if (std::holds_alternative<Sint>(n.number)) {
       type = ctx.btn.Sint;
-    } else if (std::holds_alternative<Uint>(num)) {
+    } else if (std::holds_alternative<Uint>(n.number)) {
       type = ctx.btn.Uint;
     }
     lkp.setExpr(sym::makeLetVal(std::move(type)));
