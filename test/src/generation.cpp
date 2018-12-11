@@ -57,15 +57,15 @@ TEST_GROUP(Generation, {
     )");
   });
   
-  /*
   TEST(Identical structs, {
-    ASSERT_COMPILES(R"(
+    ASSERT_SUCCEEDS(R"(
       func first(param: struct {value: sint;}) {}
       type Number = sint;
       func second(param: struct {value: Number;}) {}
     )");
   });
   
+  /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
       func fn() {
