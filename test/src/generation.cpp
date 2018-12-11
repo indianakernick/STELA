@@ -39,8 +39,8 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS("");
   });
   
-  /*TEST(Functions, {
-    ASSERT_COMPILES(R"(
+  TEST(Functions, {
+    ASSERT_SUCCEEDS(R"(
       func first() {}
       
       func second() -> sint {
@@ -57,6 +57,7 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  /*
   TEST(Identical structs, {
     ASSERT_COMPILES(R"(
       func first(param: struct {value: sint;}) {}

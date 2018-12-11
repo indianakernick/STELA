@@ -113,6 +113,7 @@ ast::TypePtr stela::getFuncType(Log &log, ast::Func &func, Loc loc) {
 }
 
 ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
+  // @TODO maybe do this validation in "infer type.cpp"
   if (lam.ret) {
     validateType(ctx, lam.ret);
   }

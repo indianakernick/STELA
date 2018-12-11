@@ -21,7 +21,7 @@ class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
     : ctx{ctx}, func{func}, builder{getLLVM()} {
-    currBlock = llvm::BasicBlock::Create(getLLVM(), "entry", func);
+    currBlock = llvm::BasicBlock::Create(getLLVM(), "", func);
     builder.SetInsertPoint(currBlock);
   }
 
@@ -86,6 +86,16 @@ public:
   }
   void visit(ast::For &four) {}
   
+  void visit(ast::Var &var) {}
+  void visit(ast::Let &let) {}
+  
+  // @TODO maybe do this with a Pass
+  void insertRetVoid() {
+    if (currBlock->empty() || !currBlock->back().isTerminator()) {
+      builder.CreateRetVoid();
+    }
+  }
+  
 private:
   gen::Ctx ctx;
   llvm::Function *func;
@@ -118,6 +128,7 @@ void stela::generateStat(gen::Ctx ctx, llvm::Function *func, ast::Block &block) 
   for (const ast::StatPtr &stat : block.nodes) {
     stat->accept(visitor);
   }
+  visitor.insertRetVoid();
 }
 
 int idoLoop(int x, int y) {

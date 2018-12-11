@@ -30,11 +30,14 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   
   std::string str;
   llvm::raw_string_ostream strStream(str);
+  strStream << *module;
+  strStream.flush();
+  log.info() << '\n' << str << endlog;
+  
+  str.clear();
   if (llvm::verifyModule(*module, &strStream)) {
-    log.error() << "Module Error: " << str << endlog;
-    str.clear();
-    strStream << *module;
-    log.info() << str << fatal;
+    strStream.flush();
+    log.error() << str << fatal;
   }
   
   auto engine = llvm::EngineBuilder(std::move(module))
@@ -42,8 +45,8 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
                 .setOptLevel(llvm::CodeGenOpt::Aggressive)
                 .setEngineKind(llvm::EngineKind::JIT)
                 .create();
-  if (!engine) {
-    log.error() << "Execution engine error: " << str << fatal;
+  if (engine == nullptr) {
+    log.error() << str << fatal;
   }
   
   engine->finalizeObject();

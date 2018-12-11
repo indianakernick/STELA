@@ -16,6 +16,12 @@
 #include "location.hpp"
 #include "retain ptr.hpp"
 
+namespace llvm {
+
+class Function;
+
+}
+
 namespace stela::sym {
 
 struct TypeAlias;
@@ -328,6 +334,8 @@ struct Func final : Declaration {
   Block body;
   
   sym::Func *symbol = nullptr;
+  llvm::Function *llvmFunc = nullptr;
+  // @TODO remove this
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;

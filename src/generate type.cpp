@@ -41,6 +41,8 @@ public:
     UNREACHABLE();
   }
   void visit(ast::ArrayType &type) override {
+    // @TODO placeholder
+    llvmType = generateType(ctx, type.elem.get())->getPointerTo();
     /*type.elem->accept(*this);
     gen::String elem = std::move(name);
     name = "t_arr_";
@@ -57,7 +59,7 @@ public:
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(getLLVM(), {
-      generateFuncSig(ctx, type),
+      generateLambSig(ctx, type),
       getCloDataPtr(ctx)
     });
   }
@@ -89,7 +91,38 @@ llvm::Type *stela::generateType(gen::Ctx ctx, ast::Type *type) {
   return std::move(visitor.llvmType);
 }
 
-llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &type) {
+namespace {
+
+ast::ParamType convert(const ast::FuncParam &param) {
+  return {param.ref, param.type};
+}
+
+llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
+  llvm::Type *paramType = generateType(ctx, param.type.get());
+  if (param.ref == ast::ParamRef::ref) {
+    paramType = llvm::PointerType::get(paramType, 0);
+  }
+  return paramType;
+}
+
+}
+
+// @TODO generateFuncSig and generateLambSig are very similar
+llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) {
+  llvm::Type *ret = generateType(ctx, func.ret.get());
+  std::vector<llvm::Type *> params;
+  if (func.receiver) {
+    params.push_back(convertParam(ctx, convert(func.receiver.value())));
+  } else {
+    params.push_back(getVoidPtr(ctx));
+  }
+  for (const ast::FuncParam &param : func.params) {
+    params.push_back(convertParam(ctx, convert(param)));
+  }
+  return llvm::FunctionType::get(ret, params, false);
+}
+
+llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &type) {
   llvm::Type *ret;
   if (type.ret) {
     ret = generateType(ctx, type.ret.get());
@@ -99,11 +132,7 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::FuncType &ty
   std::vector<llvm::Type *> params;
   params.push_back(getVoidPtr(ctx));
   for (const ast::ParamType &param : type.params) {
-    llvm::Type *paramType = generateType(ctx, param.type.get());
-    if (param.ref == ast::ParamRef::ref) {
-      paramType = llvm::PointerType::get(paramType, 0);
-    }
-    params.push_back(paramType);
+    params.push_back(convertParam(ctx, param));
   }
   return llvm::FunctionType::get(ret, params, false);
 }
