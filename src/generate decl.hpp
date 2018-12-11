@@ -12,9 +12,15 @@
 #include "ast.hpp"
 #include "gen context.hpp"
 
+namespace llvm {
+
+class Module;
+
+}
+
 namespace stela {
 
-void generateDecl(gen::Ctx, const ast::Decls &);
+void generateDecl(gen::Ctx, llvm::Module *, const ast::Decls &);
 gen::String generateDecl(gen::Ctx, const ast::Block &);
 
 }

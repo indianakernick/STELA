@@ -19,90 +19,27 @@ using namespace stela;
 
 namespace {
 
-Symbols createSym(const std::string_view source, LogSink &log) {
-  AST ast = createAST(source, log);
-  Symbols syms = initModules(log);
-  compileModule(syms, ast, log);
-  return syms;
-}
-
-std::string generateCpp(const std::string_view source, LogSink &log) {
-  return generateCpp(createSym(source, log), log);
-}
-
-void printSource(const std::string &cpp) {
-  const std::string endStr = "END BUILTIN LIBRARY";
-  const size_t btnEnd = cpp.rfind(endStr) + endStr.size();
-  size_t srcBeg = btnEnd;
-  while (std::isspace(cpp[srcBeg])) {
-    ++srcBeg;
-  }
-  std::cout << '\n';
-  std::cout << std::string_view{cpp.data() + srcBeg, cpp.size() - srcBeg} << '\n';
-  std::cout << '\n';
-}
-
-bool validCode(const std::string &cpp) {
-  const std::string cppFileName = "temporary_source.cpp";
-  const std::string errFileName = "temporary_error.txt";
-  const std::string exeFileName = "temporary_executable";
-  printSource(cpp);
-  std::ofstream cppFile(cppFileName);
-  if (!cppFile.is_open()) {
-    std::cout << "Could not open temporary source file\n";
-    return false;
-  }
-  cppFile << cpp;
-  cppFile.close();
-  std::string command = "$CXX -std=c++17 ";
-  command.append(cppFileName);
-  command.append(" -o ");
-  command.append(exeFileName);
-  command.append(" 2> ");
-  command.append(errFileName);
-  system(command.c_str());
-  std::ifstream errFile(errFileName);
-  if (!errFile.is_open()) {
-    std::cout << "Could not open temporary error file\n";
-    return false;
-  }
-  errFile.seekg(0, std::ios::end);
-  std::string errMsg(static_cast<size_t>(errFile.tellg()), '\0');
-  errFile.seekg(0, std::ios::beg);
-  errFile.read(errMsg.data(), static_cast<std::streamsize>(errMsg.size()));
-  if (errMsg.size() > 1) {
-    std::cout << errMsg << '\n';
-    return false;
-  }
-  return true;
-}
-
-bool generate(const std::string_view source, LogSink &log) {
-  return validCode(generateCpp(source, log));
+llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
+  stela::AST ast = stela::createAST(source, log);
+  stela::Symbols syms = stela::initModules(log);
+  stela::compileModule(syms, ast, log);
+  return stela::generate(syms, log);
 }
 
 }
 
-#define ASSERT_COMPILES(SOURCE)                                                 \
-  const bool success = generate(SOURCE, log);                                   \
-  ASSERT_TRUE(success)
-#define ASSERT_STELA_FAILS(SOURCE)                                              \
-  ASSERT_THROWS(generate(SOURCE, log), FatalError)
-#define ASSERT_CPP_FAILS(SOURCE)                                                \
-  const bool success = generate(SOURCE, log);                                   \
-  ASSERT_FALSE(success)
+#define ASSERT_SUCCEEDS(SOURCE) generate(SOURCE, log)
+#define ASSERT_FAILS(SOURCE) ASSERT_THROWS(generate(SOURCE, log), stela::FatalError)
 
 TEST_GROUP(Generation, {
   StreamSink stream;
   FilterSink log{stream, LogPri::status};
   
-  /*
-  
   TEST(Empty source, {
-    ASSERT_COMPILES("");
+    ASSERT_SUCCEEDS("");
   });
   
-  TEST(Functions, {
+  /*TEST(Functions, {
     ASSERT_COMPILES(R"(
       func first() {}
       
@@ -482,6 +419,5 @@ TEST_GROUP(Generation, {
   */
 });
 
-#undef ASSERT_CPP_FAILS
-#undef ASSERT_STELA_FAILS
-#undef ASSERT_COMPILES
+#undef ASSERT_FAILS
+#undef ASSERT_SUCCEEDS

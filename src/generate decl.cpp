@@ -22,8 +22,8 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  explicit Visitor(gen::Ctx ctx)
-    : ctx{ctx} {}
+  Visitor(gen::Ctx ctx, llvm::Module *module)
+    : ctx{ctx}, module{module} {}
   
   /*llvm::Type *exprType(const sym::ExprType &etype) {
     if (etype.type == nullptr) {
@@ -255,12 +255,13 @@ public:
   
 private:
   gen::Ctx ctx;
+  llvm::Module *module;
 };
 
 }
 
-void stela::generateDecl(gen::Ctx ctx, const ast::Decls &decls) {
-  Visitor visitor{ctx};
+void stela::generateDecl(gen::Ctx ctx, llvm::Module *module, const ast::Decls &decls) {
+  Visitor visitor{ctx, module};
   for (const ast::DeclPtr &decl : decls) {
     decl->accept(visitor);
   }
@@ -268,7 +269,7 @@ void stela::generateDecl(gen::Ctx ctx, const ast::Decls &decls) {
 }
 
 gen::String stela::generateDecl(gen::Ctx ctx, const ast::Block &block) {
-  Visitor visitor{ctx};
+  Visitor visitor{ctx, nullptr};
   for (const ast::StatPtr &stat : block.nodes) {
     stat->accept(visitor);
   }

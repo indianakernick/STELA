@@ -8,27 +8,44 @@
 
 #include "code generation.hpp"
 
+#include "llvm.hpp"
 #include "log output.hpp"
-#include "builtin code.hpp"
 #include "generate ids.hpp"
 #include "generate decl.hpp"
+#include <llvm/IR/Verifier.h>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 
-std::string stela::generateCpp(const Symbols &syms, LogSink &sink) {
+llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   Log log{sink, LogCat::generate};
   log.status() << "Generating code" << endlog;
+  
   gen::String type{syms.decls.size() * 100};
   gen::String func{syms.decls.size() * 100};
   gen::String code{syms.decls.size() * 1000};
   gen::TypeInst inst;
   gen::Ctx ctx {type, func, code, inst, log};
   generateIDs(syms.decls);
-  generateDecl(ctx, syms.decls);
-  std::string bin;
-  bin.reserve(syms.decls.size() * 1000 + 8000);
-  appendBuiltinCode(bin);
-  appendTypes(bin, type);
-  appendFuncs(bin, func);
-  appendCode(bin, code);
-  bin.append("int main() {}");
-  return bin;
+  auto module = std::make_unique<llvm::Module>("module", getLLVM());
+  generateDecl(ctx, module.get(), syms.decls);
+  
+  std::string str;
+  llvm::raw_string_ostream strStream(str);
+  if (llvm::verifyModule(*module, &strStream)) {
+    log.error() << "Module Error: " << str << endlog;
+    str.clear();
+    strStream << *module;
+    log.info() << str << fatal;
+  }
+  
+  auto engine = llvm::EngineBuilder(std::move(module))
+                .setErrorStr(&str)
+                .setOptLevel(llvm::CodeGenOpt::Aggressive)
+                .setEngineKind(llvm::EngineKind::JIT)
+                .create();
+  if (!engine) {
+    log.error() << "Execution engine error: " << str << fatal;
+  }
+  
+  engine->finalizeObject();
+  return engine;
 }

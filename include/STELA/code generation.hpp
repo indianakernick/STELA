@@ -12,9 +12,15 @@
 #include "log.hpp"
 #include "symbols.hpp"
 
+namespace llvm {
+
+class ExecutionEngine;
+
+}
+
 namespace stela {
 
-std::string generateCpp(const Symbols &, LogSink &);
+llvm::ExecutionEngine *generate(const Symbols &, LogSink &);
 
 }
 

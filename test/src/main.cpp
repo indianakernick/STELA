@@ -100,8 +100,6 @@ int main() {
   } else {
     std::cerr << "Error getting function\n";
   }
-  
-  stela::quitLLVM();
 
   int failures = 0;
   failures += testFormat();
@@ -109,6 +107,7 @@ int main() {
   failures += testSyntax();
   failures += testSemantics();
   failures += testGeneration();
+  stela::quitLLVM();
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
   } else if (failures == 1) {
