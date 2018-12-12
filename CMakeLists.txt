@@ -115,6 +115,8 @@ add_library(STELA STATIC
         "src/generate stat.hpp"
         "src/check missing return.cpp"
         "src/check missing return.hpp"
+        "src/optimize module.cpp"
+        "src/optimize module.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

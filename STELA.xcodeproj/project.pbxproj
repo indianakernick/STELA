@@ -14,6 +14,7 @@
 		450E329420E89D6100F222F1 /* parse stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328520E89A4700F222F1 /* parse stat.cpp */; };
 		450E329520E89D6100F222F1 /* parse decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328820E89B5C00F222F1 /* parse decl.cpp */; };
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
+		454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B743F21C0EB4900BB4BD0 /* optimize module.cpp */; };
 		454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB7FE21AB6E41001A5D78 /* expr lookup.cpp */; };
 		454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80121AB74DE001A5D78 /* expr stack.cpp */; };
 		454EB80621ABD838001A5D78 /* plain format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80521ABD838001A5D78 /* plain format.cpp */; };
@@ -123,6 +124,8 @@
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
 		454B36E721BA3B3100485BA4 /* iterator range.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "iterator range.hpp"; sourceTree = "<group>"; };
+		454B743F21C0EB4900BB4BD0 /* optimize module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "optimize module.cpp"; sourceTree = "<group>"; };
+		454B744021C0EB4900BB4BD0 /* optimize module.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "optimize module.hpp"; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
 		454EB7FD21A0E837001A5D78 /* context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = context.hpp; sourceTree = "<group>"; };
@@ -346,6 +349,8 @@
 				45816F5A21B2685300712CA3 /* generate zero expr.cpp */,
 				45816F5B21B2685300712CA3 /* generate zero expr.hpp */,
 				455DADA721BDE5870012A261 /* llvm.cpp */,
+				454B743F21C0EB4900BB4BD0 /* optimize module.cpp */,
+				454B744021C0EB4900BB4BD0 /* optimize module.hpp */,
 			);
 			name = "Code Generation";
 			sourceTree = "<group>";
@@ -694,6 +699,7 @@
 				4572CAAB210EF60500EA1A56 /* scope insert.cpp in Sources */,
 				454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */,
 				4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */,
+				454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,
 				4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */,

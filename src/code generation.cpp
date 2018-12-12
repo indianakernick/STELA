@@ -13,6 +13,7 @@
 #include "generate ids.hpp"
 #include "generate decl.hpp"
 #include <llvm/IR/Verifier.h>
+#include "optimize module.hpp"
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
@@ -40,6 +41,7 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
     log.error() << str << fatal;
   }
   
+  llvm::Module *modulePtr = module.get();
   auto engine = llvm::EngineBuilder(std::move(module))
                 .setErrorStr(&str)
                 .setOptLevel(llvm::CodeGenOpt::Aggressive)
@@ -48,6 +50,8 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   if (engine == nullptr) {
     log.error() << str << fatal;
   }
+  
+  optimizeModule(engine, modulePtr);
   
   if (llvm::TargetMachine *machine = engine->getTargetMachine()) {
     log.info() << "Generating code for " << machine->getTargetTriple().str() << endlog;
