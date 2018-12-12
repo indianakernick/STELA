@@ -2205,6 +2205,14 @@ TEST_GROUP(Semantics, {
       };
     )");
   });
+  
+  TEST(Flow - empty switch no return, {
+    ASSERT_FAILS(R"(
+      func test(x: sint) -> real {
+        switch (x) {}
+      }
+    )");
+  });
 });
 
 #undef ASSERT_SUCCEEDS
