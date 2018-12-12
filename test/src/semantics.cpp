@@ -2001,30 +2001,34 @@ TEST_GROUP(Semantics, {
     )");
   });
 
-  /*
-  
-  Perhaps control flow analysis should be handled by code generation
-  
-  TEST(Expr - Missing return, {
-    const char *source = R"(
+  TEST(Flow - Missing return, {
+    ASSERT_FAILS(R"(
       func getSomething() -> sint {}
-    )";
-    ASSERT_FAILS();
+    )");
   });
   
-  TEST(Expr - May not return, {
-    const char *source = R"(
+  TEST(Flow - No return from void function, {
+    ASSERT_SUCCEEDS(R"(
+      func test(x: bool) {
+        if (x) {
+          return;
+        }
+      }
+    )");
+  });
+  
+  TEST(Flow - May not return, {
+    ASSERT_FAILS(R"(
       func maybe3(b: bool) -> sint {
         if (b) {
           return 3;
         }
       }
-    )";
-    ASSERT_FAILS();
+    )");
   });
   
-  TEST(Expr - If will return, {
-    const char *source = R"(
+  TEST(Flow - If will return, {
+    ASSERT_SUCCEEDS(R"(
       func willReturn(b: bool) -> sint {
         if (b) {
           return 3;
@@ -2032,12 +2036,175 @@ TEST_GROUP(Semantics, {
           return -1;
         }
       }
-    )";
-    ASSERT_SUCCEEDS();
+    )");
+  });
+
+  TEST(Flow - continue to nothing, {
+    ASSERT_FAILS(R"(
+      func test(x: sint) {
+        switch (x) {
+          case (5) {
+            continue;
+          }
+        }
+      }
+    )");
+  });
+
+  TEST(Flow - unreachable, {
+    ASSERT_FAILS(R"(
+      func test() {
+        if (true) {
+          return;
+        } else {
+          return;
+        }
+        var a = 1;
+      }
+    )");
   });
   
-  */
-
+  TEST(Flow - switch will return, {
+    ASSERT_SUCCEEDS(R"(
+      func test(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            return 2.0;
+          }
+          default {
+            continue;
+          }
+          case (15) {
+            return 4.9;
+          }
+        }
+      }
+    )");
+  });
+  
+  TEST(Flow - switch may not return, {
+    ASSERT_FAILS(R"(
+      func test(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            return 2.0;
+          }
+          default {
+            continue;
+          }
+          case (15) {
+            break;
+          }
+        }
+      }
+    )");
+  });
+  
+  TEST(Flow - switch no return, {
+    ASSERT_FAILS(R"(
+      let test = func(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            break;
+          }
+          default {
+            continue;
+          }
+          case (15) {
+            break;
+          }
+        }
+      };
+    )");
+  });
+  
+  TEST(Flow - return after switch, {
+    ASSERT_SUCCEEDS(R"(
+      let test = func(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            break;
+          }
+          default {
+            continue;
+          }
+          case (15) {
+            return 4.9;
+          }
+        }
+        return 2.0;
+      };
+    )");
+  });
+  
+  TEST(Flow - for loop may not return, {
+    ASSERT_FAILS(R"(
+      let test = func(x: sint) -> real {
+        for (i := x; i != x + 10; i++) {
+          return 2.0;
+        }
+      };
+    )");
+  });
+  
+  TEST(Flow - while loop may not return, {
+    ASSERT_FAILS(R"(
+      let test = func(x: sint) -> real {
+        while (x != 4) {
+          return 2.0;
+        }
+      };
+    )");
+  });
+  
+  TEST(Flow - switch may not return after break, {
+    ASSERT_FAILS(R"(
+      let test = func(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            if (x % 2 == 0) {
+              break;
+            }
+            return 2.0;
+          }
+          default {
+            return 4.9;
+          }
+        }
+      };
+    )");
+  });
+  
+  TEST(Flow - maybe always return, {
+    ASSERT_SUCCEEDS(R"(
+      let test = func(x: sint) -> real {
+        if (x == 7) {
+          return 2.0;
+        }
+        return 4.9;
+      };
+    )");
+  });
+  
+  TEST(Flow - maybe break maybe return, {
+    ASSERT_FAILS(R"(
+      let test = func(x: sint) -> real {
+        switch (x) {
+          case (5) {
+            if (x % 2 == 0) {
+              break;
+            }
+            if (true) {
+              return 2.0;
+            }
+          }
+          default {
+            return 4.9;
+          }
+        }
+      };
+    )");
+  });
 });
 
 #undef ASSERT_SUCCEEDS

@@ -89,13 +89,6 @@ public:
   void visit(ast::Var &var) {}
   void visit(ast::Let &let) {}
   
-  // @TODO maybe do this with a Pass
-  void insertRetVoid() {
-    if (currBlock->empty() || !currBlock->back().isTerminator()) {
-      builder.CreateRetVoid();
-    }
-  }
-  
 private:
   gen::Ctx ctx;
   llvm::Function *func;
@@ -128,7 +121,6 @@ void stela::generateStat(gen::Ctx ctx, llvm::Function *func, ast::Block &block) 
   for (const ast::StatPtr &stat : block.nodes) {
     stat->accept(visitor);
   }
-  visitor.insertRetVoid();
 }
 
 int idoLoop(int x, int y) {

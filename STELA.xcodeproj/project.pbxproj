@@ -21,6 +21,7 @@
 		454EB80C21ACAAC9001A5D78 /* check scopes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80A21ACAAC8001A5D78 /* check scopes.cpp */; };
 		455DADA921BDE5870012A261 /* llvm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455DADA721BDE5870012A261 /* llvm.cpp */; };
 		455DADAC21BE29920012A261 /* generate stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455DADAA21BE29920012A261 /* generate stat.cpp */; };
+		455DADB021C0899F0012A261 /* check missing return.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455DADAE21C0899F0012A261 /* check missing return.cpp */; };
 		455F4187217BF0CF00C62BBF /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455F4186217BF0CF00C62BBF /* modules.cpp */; };
 		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
@@ -141,6 +142,8 @@
 		455DADAA21BE29920012A261 /* generate stat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate stat.cpp"; sourceTree = "<group>"; };
 		455DADAB21BE29920012A261 /* generate stat.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate stat.hpp"; sourceTree = "<group>"; };
 		455DADAD21BF6B9A0012A261 /* number.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = number.hpp; sourceTree = "<group>"; };
+		455DADAE21C0899F0012A261 /* check missing return.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "check missing return.cpp"; sourceTree = "<group>"; };
+		455DADAF21C0899F0012A261 /* check missing return.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "check missing return.hpp"; sourceTree = "<group>"; };
 		455F4185217BEDA700C62BBF /* modules.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = modules.hpp; sourceTree = "<group>"; };
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
@@ -301,6 +304,8 @@
 				454EB80A21ACAAC8001A5D78 /* check scopes.cpp */,
 				454EB80B21ACAAC8001A5D78 /* check scopes.hpp */,
 				45816F6521B6249200712CA3 /* c standard library.cpp */,
+				455DADAE21C0899F0012A261 /* check missing return.cpp */,
+				455DADAF21C0899F0012A261 /* check missing return.hpp */,
 			);
 			name = "Semantic Analysis";
 			sourceTree = "<group>";
@@ -707,6 +712,7 @@
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
 				45816F5621B128EC00712CA3 /* generate ids.cpp in Sources */,
 				45816F6621B6249200712CA3 /* c standard library.cpp in Sources */,
+				455DADB021C0899F0012A261 /* check missing return.cpp in Sources */,
 				45EE9C2520E23D1C00CC3289 /* number literal.cpp in Sources */,
 				454EB80921ABE74E001A5D78 /* symbol desc.cpp in Sources */,
 				45816F4E21B0BF9500712CA3 /* generate type.cpp in Sources */,

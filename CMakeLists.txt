@@ -113,6 +113,8 @@ add_library(STELA STATIC
         "src/llvm.cpp"
         "src/generate stat.cpp"
         "src/generate stat.hpp"
+        "src/check missing return.cpp"
+        "src/check missing return.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

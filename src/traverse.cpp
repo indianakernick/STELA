@@ -17,6 +17,7 @@
 #include "compare types.hpp"
 #include "scope traverse.hpp"
 #include "builtin symbols.hpp"
+#include "check missing return.hpp"
 
 using namespace stela;
 
@@ -138,6 +139,7 @@ public:
     }
     leaveFuncScope(ctx, funcSym, func);
     ctx.man.leaveScope();
+    checkMissingRet(ctx, func.body, func.ret, func.loc);
   }
   ast::TypePtr objectType(
     const ast::TypePtr &type,

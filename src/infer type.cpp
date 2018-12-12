@@ -17,6 +17,7 @@
 #include "compare types.hpp"
 #include "number literal.hpp"
 #include "builtin symbols.hpp"
+#include "check missing return.hpp"
 
 using namespace stela;
 
@@ -214,6 +215,7 @@ public:
     ctx.man.leaveScope();
     lam.exprType = getLambdaType(ctx, lam);
     lkp.setExpr(sym::makeLetVal(lam.exprType));
+    checkMissingRet(ctx, lam.body, lam.ret, lam.loc);
   }
 
   sym::ExprType visitExprNoCheck(const ast::ExprPtr &expr, const ast::TypePtr &type) {
