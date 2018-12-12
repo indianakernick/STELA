@@ -80,6 +80,7 @@ public:
     auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
     setCurr(body);
     visitFlow(wile.body.get(), done, cond);
+    builder.CreateBr(cond);
     setCurr(cond);
     builder.CreateCondBr(generateExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);
@@ -104,7 +105,7 @@ private:
   
   llvm::BasicBlock *nextEmpty() {
     llvm::BasicBlock *nextBlock;
-    if (currBlock->empty()) {
+    if (func->size() > 1 && currBlock->empty()) {
       nextBlock = currBlock;
     } else {
       nextBlock = llvm::BasicBlock::Create(getLLVM(), "", func);

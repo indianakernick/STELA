@@ -27,20 +27,118 @@ public:
   Visitor(gen::Ctx ctx, llvm::IRBuilder<> &builder)
     : ctx{ctx}, builder{builder} {}
 
+  enum class ArithNumber {
+    signed_int,
+    unsigned_int,
+    floating_point
+  };
+  static ArithNumber classifyArith(ast::Expression *expr) {
+    ast::BtnType *type = concreteType<ast::BtnType>(expr->exprType.get());
+    assert(type);
+    switch (type->value) {
+      case ast::BtnTypeEnum::Char:
+      case ast::BtnTypeEnum::Sint:
+        return ArithNumber::signed_int;
+      case ast::BtnTypeEnum::Bool:
+      case ast::BtnTypeEnum::Byte:
+      case ast::BtnTypeEnum::Uint:
+        return ArithNumber::unsigned_int;
+      case ast::BtnTypeEnum::Real:
+        return ArithNumber::floating_point;
+      case ast::BtnTypeEnum::Void: ;
+    }
+    UNREACHABLE();
+  }
+
   void visit(ast::BinaryExpr &expr) override {
-    /*str += '(';
     expr.left->accept(*this);
-    str += ") ";
-    str += opName(expr.oper);
-    str += " (";
+    llvm::Value *left = value;
     expr.right->accept(*this);
-    str += ')';*/
+    llvm::Value *right = value;
+    const ArithNumber arith = classifyArith(expr.left.get());
+    
+    #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
+      if (arith == ArithNumber::floating_point) {                               \
+        value = builder.FLOAT_OP(left, right);                                  \
+      } else {                                                                  \
+        value = builder.INT_OP(left, right);                                    \
+      }                                                                         \
+      return
+    
+    #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP) \
+      if (arith == ArithNumber::signed_int) { \
+        value = builder.S_OP(left, right); \
+      } else if (arith == ArithNumber::unsigned_int) { \
+        value = builder.U_OP(left, right); \
+      } else { \
+        value = builder.F_OP(left, right); \
+      } \
+      return
+    
+    switch (expr.oper) {
+      case ast::BinOp::bool_or:
+      case ast::BinOp::bit_or:
+        value = builder.CreateOr(left, right); return;
+      case ast::BinOp::bit_xor:
+        value = builder.CreateXor(left, right); return;
+      case ast::BinOp::bool_and:
+      case ast::BinOp::bit_and:
+        value = builder.CreateAnd(left, right); return;
+      case ast::BinOp::bit_shl:
+        value = builder.CreateShl(left, right); return;
+      case ast::BinOp::bit_shr:
+        value = builder.CreateLShr(left, right); return;
+      case ast::BinOp::eq:
+        INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
+      case ast::BinOp::ne:
+        INT_FLOAT_OP(CreateICmpNE, CreateFCmpONE);
+      case ast::BinOp::lt:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
+      case ast::BinOp::le:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLE, CreateICmpULE, CreateFCmpOLE);
+      case ast::BinOp::gt:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGT, CreateICmpUGT, CreateFCmpOGT);
+      case ast::BinOp::ge:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGE, CreateICmpUGE, CreateFCmpOGE);
+      case ast::BinOp::add:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateNSWAdd, CreateAdd, CreateFAdd);
+      case ast::BinOp::sub:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateNSWSub, CreateSub, CreateFSub);
+      case ast::BinOp::mul:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateNSWMul, CreateMul, CreateFMul);
+      case ast::BinOp::div:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateSDiv, CreateUDiv, CreateFDiv);
+      case ast::BinOp::mod:
+        SIGNED_UNSIGNED_FLOAT_OP(CreateSRem, CreateURem, CreateFRem);
+      case ast::BinOp::pow:
+        assert(false);
+    }
+    UNREACHABLE();
+    
+    #undef SIGNED_UNSIGNED_FLOAT_OP
+    #undef INT_FLOAT_OP
   }
   void visit(ast::UnaryExpr &expr) override {
-    /*str += opName(expr.oper);
-    str += '(';
     expr.expr->accept(*this);
-    str += ')';*/
+    llvm::Value *operand = value;
+    const ArithNumber arith = classifyArith(expr.expr.get());
+    
+    switch (expr.oper) {
+      case ast::UnOp::neg:
+        if (arith == ArithNumber::signed_int) {
+          value = builder.CreateNSWNeg(operand);
+        } else if (arith == ArithNumber::unsigned_int) {
+          value = builder.CreateNeg(operand);
+        } else {
+          value = builder.CreateFNeg(operand);
+        }
+        return;
+      case ast::UnOp::bool_not:
+        value = builder.CreateXor(operand, 1); return;
+      case ast::UnOp::bit_not:
+        value = builder.CreateNot(operand); return;
+    }
+    UNREACHABLE();
   }
   
   /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
@@ -113,11 +211,12 @@ public:
       str += ')';
     }
   }
+  */
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
-    str += ".m_";
-    str += mem.index;
+    value = builder.CreateStructGEP(value, mem.index);
   }
+  /*
   void visit(ast::Subscript &sub) override {
     str += "index(";
     sub.object->accept(*this);
@@ -238,9 +337,9 @@ public:
   void visit(ast::BoolLiteral &bol) override {
     llvm::Type *boolType = llvm::IntegerType::getInt8Ty(getLLVM());
     if (bol.value) {
-      value = llvm::ConstantInt::getTrue(boolType);
+      value = llvm::ConstantInt::get(boolType, 1);
     } else {
-      value = llvm::ConstantInt::getFalse(boolType);
+      value = llvm::ConstantInt::get(boolType, 0);
     }
   }
   /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
