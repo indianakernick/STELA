@@ -90,10 +90,13 @@ void writeModLoc(std::ostream &stream, const LogMod mod, const Loc loc) {
   std::ostringstream str;
   bool empty = true;
   if (!mod.empty()) {
-    str << mod << ':';
+    str << mod;
     empty = false;
   }
   if (loc.l != 0 || loc.c != 0) {
+    if (!mod.empty()) {
+      str << ':';
+    }
     str << loc;
     empty = false;
   }
