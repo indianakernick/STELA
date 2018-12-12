@@ -71,12 +71,10 @@ public:
     }
   }
   void visit(ast::While &wile) override {
-    wile.id = flowID++;
     wile.cond->accept(*this);
     wile.body->accept(*this);
   }
   void visit(ast::For &four) override {
-    four.id = flowID++;
     if (four.init) {
       four.init->accept(*this);
     }
@@ -88,17 +86,14 @@ public:
   }
   
   void visit(ast::Func &func) override {
-    func.id = funID++;
     visit(func.body);
   }
   void visit(ast::Var &var) override {
-    var.id = varID++;
     if (var.expr) {
       var.expr->accept(*this);
     }
   }
   void visit(ast::Let &let) override {
-    let.id = varID++;
     let.expr->accept(*this);
   }
   
@@ -110,7 +105,6 @@ public:
     incr.expr->accept(*this);
   }
   void visit(ast::DeclAssign &assign) override {
-    assign.id = varID++;
     assign.expr->accept(*this);
   }
   void visit(ast::CallAssign &assign) override {
@@ -133,8 +127,6 @@ public:
   }
   
 private:
-  uint32_t varID = 0;
-  uint32_t funID = 0;
   uint32_t flowID = 0;
   uint32_t lamID = 0;
 };

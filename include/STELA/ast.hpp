@@ -296,8 +296,6 @@ struct While final : Statement {
   ExprPtr cond;
   StatPtr body;
   
-  uint32_t id = ~uint32_t{};
-  
   void accept(Visitor &) override;
 };
 
@@ -306,8 +304,6 @@ struct For final : Statement {
   ExprPtr cond;
   AsgnPtr incr;
   StatPtr body;
-  
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -336,8 +332,6 @@ struct Func final : Declaration {
   
   sym::Func *symbol = nullptr;
   llvm::Function *llvmFunc = nullptr;
-  // @TODO remove this
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -368,8 +362,6 @@ struct Var final : Declaration {
   
   sym::Object *symbol = nullptr;
   llvm::Value *llvmAddr = nullptr;
-  // @TODO remove this
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -381,8 +373,6 @@ struct Let final : Declaration {
   
   sym::Object *symbol = nullptr;
   llvm::Value *llvmAddr = nullptr;
-  // @TODO remove this
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -438,8 +428,6 @@ struct DeclAssign final : Assignment {
   
   sym::Object *symbol = nullptr;
   llvm::Value *llvmAddr = nullptr;
-  // @TODO remove this
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
