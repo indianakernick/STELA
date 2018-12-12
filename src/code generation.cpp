@@ -49,6 +49,10 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
     log.error() << str << fatal;
   }
   
+  if (llvm::TargetMachine *machine = engine->getTargetMachine()) {
+    log.info() << "Generating code for " << machine->getTargetTriple().str() << endlog;
+  }
   engine->finalizeObject();
+  
   return engine;
 }
