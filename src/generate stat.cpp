@@ -9,9 +9,12 @@
 #include "generate stat.hpp"
 
 #include "llvm.hpp"
+#include "symbols.hpp"
 #include "generate expr.hpp"
+#include "generate type.hpp"
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/BasicBlock.h>
+#include "generate zero expr.hpp"
 
 using namespace stela;
 
@@ -21,7 +24,9 @@ class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
     : ctx{ctx}, func{func}, builder{getLLVM()} {
+    builder.SetInsertPoint(llvm::BasicBlock::Create(getLLVM(), "entry", func));
     currBlock = llvm::BasicBlock::Create(getLLVM(), "", func);
+    builder.CreateBr(currBlock);
     builder.SetInsertPoint(currBlock);
   }
 
@@ -40,12 +45,12 @@ public:
     breakBlock = oldBrake;
   }
   
-  void visit(ast::Block &block) {
+  void visit(ast::Block &block) override {
     for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
   }
-  void visit(ast::If &fi) {
+  void visit(ast::If &fi) override {
     auto *troo = llvm::BasicBlock::Create(getLLVM(), "", func);
     auto *folse = llvm::BasicBlock::Create(getLLVM(), "", func);
     builder.CreateCondBr(generateExpr(ctx, builder, fi.cond.get()), troo, folse);
@@ -56,25 +61,25 @@ public:
       fi.elseBody->accept(*this);
     }
   }
-  void visit(ast::Switch &swich) {
+  void visit(ast::Switch &swich) override {
     
   }
-  void visit(ast::Break &) {
+  void visit(ast::Break &) override {
     assert(breakBlock);
     builder.CreateBr(breakBlock);
   }
-  void visit(ast::Continue &) {
+  void visit(ast::Continue &) override {
     assert(continueBlock);
     builder.CreateBr(continueBlock);
   }
-  void visit(ast::Return &ret) {
+  void visit(ast::Return &ret) override {
     if (ret.expr) {
       builder.CreateRet(generateExpr(ctx, builder, ret.expr.get()));
     } else {
       builder.CreateRetVoid();
     }
   }
-  void visit(ast::While &wile) {
+  void visit(ast::While &wile) override {
     auto *cond = nextEmpty();
     auto *body = llvm::BasicBlock::Create(getLLVM(), "", func);
     auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
@@ -87,10 +92,42 @@ public:
     builder.CreateCondBr(generateExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);
   }
-  void visit(ast::For &four) {}
+  void visit(ast::For &four) override {}
   
-  void visit(ast::Var &var) {}
-  void visit(ast::Let &let) {}
+  llvm::Value *insertVar(ast::Type *type, ast::Expression *expr) {
+    llvm::BasicBlock *entry = &func->getEntryBlock();
+    builder.SetInsertPoint(entry, entry->begin());
+    llvm::Type *llvmType = generateType(ctx, type);
+    llvm::Value *llvmAddr = builder.CreateAlloca(llvmType);
+    builder.SetInsertPoint(currBlock);
+    if (expr) {
+      builder.CreateStore(generateExpr(ctx, builder, expr), llvmAddr);
+    } else {
+      builder.CreateStore(generateZeroExpr(ctx, builder, type), llvmAddr);
+    }
+    return llvmAddr;
+  }
+  void visit(ast::Var &var) override {
+    var.llvmAddr = insertVar(var.symbol->etype.type.get(), var.expr.get());
+  }
+  void visit(ast::Let &let) override {
+    let.llvmAddr = insertVar(let.symbol->etype.type.get(), let.expr.get());
+  }
+  
+  void visit(ast::IncrDecr &assign) override {
+    //llvm::Value *addr = generateExpr(ctx, builder, assign.expr.get());
+  }
+  void visit(ast::Assign &assign) override {
+    llvm::Value *addr = generateExpr(ctx, builder, assign.left.get());
+    llvm::Value *value = generateExpr(ctx, builder, assign.right.get());
+    builder.CreateStore(value, addr);
+  }
+  void visit(ast::DeclAssign &assign) override {
+    assign.llvmAddr = insertVar(assign.symbol->etype.type.get(), assign.expr.get());
+  }
+  void visit(ast::CallAssign &assign) override {
+    generateExpr(ctx, builder, &assign.call);
+  }
   
 private:
   gen::Ctx ctx;
@@ -107,7 +144,7 @@ private:
   
   llvm::BasicBlock *nextEmpty() {
     llvm::BasicBlock *nextBlock;
-    if (func->size() > 1 && currBlock->empty()) {
+    if (currBlock->empty()) {
       nextBlock = currBlock;
     } else {
       nextBlock = llvm::BasicBlock::Create(getLLVM(), "", func);

@@ -19,6 +19,7 @@
 namespace llvm {
 
 class Function;
+class Value;
 
 }
 
@@ -366,6 +367,8 @@ struct Var final : Declaration {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  llvm::Value *llvmAddr = nullptr;
+  // @TODO remove this
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
@@ -377,6 +380,8 @@ struct Let final : Declaration {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  llvm::Value *llvmAddr = nullptr;
+  // @TODO remove this
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
@@ -432,6 +437,8 @@ struct DeclAssign final : Assignment {
   ExprPtr expr;
   
   sym::Object *symbol = nullptr;
+  llvm::Value *llvmAddr = nullptr;
+  // @TODO remove this
   uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;

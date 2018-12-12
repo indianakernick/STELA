@@ -87,6 +87,17 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(Local variables, {
+    ASSERT_SUCCEEDS(R"(
+      func test() -> sint {
+        let x = 5;
+        var y = 11;
+        y = x + 2;
+        return x * y;
+      }
+    )");
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

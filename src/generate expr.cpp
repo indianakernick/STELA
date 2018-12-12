@@ -27,6 +27,21 @@ public:
   Visitor(gen::Ctx ctx, llvm::IRBuilder<> &builder)
     : ctx{ctx}, builder{builder} {}
 
+  llvm::Value *visitValue(ast::Expression *expr) {
+    expr->accept(*this);
+    if (value->getType()->isPointerTy()) {
+      return builder.CreateLoad(value);
+    } else {
+      return value;
+    }
+    /*
+    while (value->getType()->isPointerTy()) {
+      value = builder.CreateLoad(value);
+    }
+    return value;
+    */
+  }
+
   enum class ArithNumber {
     signed_int,
     unsigned_int,
@@ -51,10 +66,8 @@ public:
   }
 
   void visit(ast::BinaryExpr &expr) override {
-    expr.left->accept(*this);
-    llvm::Value *left = value;
-    expr.right->accept(*this);
-    llvm::Value *right = value;
+    llvm::Value *left = visitValue(expr.left.get());
+    llvm::Value *right = visitValue(expr.right.get());
     const ArithNumber arith = classifyArith(expr.left.get());
     
     #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
@@ -119,8 +132,7 @@ public:
     #undef INT_FLOAT_OP
   }
   void visit(ast::UnaryExpr &expr) override {
-    expr.expr->accept(*this);
-    llvm::Value *operand = value;
+    llvm::Value *operand = visitValue(expr.expr.get());
     const ArithNumber arith = classifyArith(expr.expr.get());
     
     switch (expr.oper) {
@@ -279,11 +291,25 @@ public:
       return true;
     }
   }
-  void visit(ast::Identifier &ident) override {
-    if (!writeCapture(ident.captureIndex)) {
-      writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
+  */
+  
+  llvm::Value *getAddr(ast::Statement *definition) {
+    if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
+      return decl->llvmAddr;
+    } else if (auto *var = dynamic_cast<ast::Var *>(definition)) {
+      return var->llvmAddr;
+    } else if (auto *let = dynamic_cast<ast::Let *>(definition)) {
+      return let->llvmAddr;
     }
+    return nullptr;
   }
+  void visit(ast::Identifier &ident) override {
+    /*if (!writeCapture(ident.captureIndex)) {
+      writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
+    }*/
+    value = getAddr(ident.definition);
+  }
+  /*
   void visit(ast::Ternary &tern) override {
     str += '(';
     tern.cond->accept(*this);

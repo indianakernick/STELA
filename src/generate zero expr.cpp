@@ -79,7 +79,7 @@ private:
 
 }
 
-llvm::Value *generateZeroExpr(gen::Ctx ctx, llvm::IRBuilder<> &builder, ast::Type *type) {
+llvm::Value *stela::generateZeroExpr(gen::Ctx ctx, llvm::IRBuilder<> &builder, ast::Type *type) {
   Visitor visitor{ctx, builder};
   type->accept(visitor);
   return visitor.value;
