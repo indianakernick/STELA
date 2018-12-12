@@ -80,7 +80,9 @@ public:
     auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
     setCurr(body);
     visitFlow(wile.body.get(), done, cond);
-    builder.CreateBr(cond);
+    if (currBlock->empty() || !currBlock->back().isTerminator()) {
+      builder.CreateBr(cond);
+    }
     setCurr(cond);
     builder.CreateCondBr(generateExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);

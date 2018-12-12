@@ -65,6 +65,28 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(Expressions, {
+    ASSERT_SUCCEEDS(R"(
+      func ifs() -> real {
+        if (11 < 14 || 6 == 7) {
+          return 3.0 / 4.0;
+        } else if (11u <= 9u) {
+          return 2.0 * 9.0;
+        } else {
+          return 16.0 + 1.0;
+        }
+      }
+      
+      func wile() -> uint {
+        while (1 == 2) {}
+        while (2 == 1) {
+          return 2u;
+        }
+        return 16u / 3u;
+      }
+    )");
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
