@@ -53,6 +53,10 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   
   optimizeModule(engine, modulePtr);
   
+  /*strStream << *modulePtr;
+  strStream.flush();
+  log.info() << '\n' << str << endlog;*/
+  
   if (llvm::TargetMachine *machine = engine->getTargetMachine()) {
     log.info() << "Generating code for " << machine->getTargetTriple().str() << endlog;
   }
