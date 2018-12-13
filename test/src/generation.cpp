@@ -449,6 +449,49 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(1, 1, 1), 1);
   });
   
+  TEST(Sequential for loop, {
+    ASSERT_SUCCEEDS(R"(
+      func test(a: uint, b: uint) -> uint {
+        var sum = 0u;
+        for (i := 0u; i != a; i = i + 1u) {
+          sum = sum + 1u;
+        }
+        for (i := 0u; i != b; i = i + 1u) {
+          sum = sum + 1u;
+        }
+        return sum;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Uint(Uint, Uint));
+    ASSERT_EQ(func(0, 0), 0);
+    ASSERT_EQ(func(0, 4), 4);
+    ASSERT_EQ(func(5, 0), 5);
+    ASSERT_EQ(func(9, 10), 19);
+    ASSERT_EQ(func(12000, 321), 12321);
+  });
+  
+  TEST(Returning while loop, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) {
+        while (val > 8) {
+          if (val % 2 == 1) {
+            val = val - 1;
+          }
+          return val;
+        }
+        return val * 2;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(8), 16);
+    ASSERT_EQ(func(16), 16);
+    ASSERT_EQ(func(17), 16);
+    ASSERT_EQ(func(4), 8);
+    ASSERT_EQ(func(9), 8);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
