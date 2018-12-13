@@ -35,6 +35,18 @@ public:
       return value;
     }
   }
+  llvm::Value *visitAddr(ast::Expression *expr) {
+    expr->accept(*this);
+    assert(value->getType()->isPointerTy());
+    return value;
+  }
+  llvm::Value *visitParam(const ast::ParamRef ref, ast::Expression *expr) {
+    if (ref == ast::ParamRef::ref) {
+      return visitAddr(expr);
+    } else {
+      return visitValue(expr);
+    }
+  }
 
   void visit(ast::BinaryExpr &expr) override {
     llvm::Value *left = visitValue(expr.left.get());
@@ -152,8 +164,37 @@ public:
     }
     UNREACHABLE();
   }
+  */
+  void pushArgs(
+    std::vector<llvm::Value *> &args,
+    const ast::FuncArgs &callArgs,
+    const ast::FuncParams &params
+  ) {
+    for (size_t a = 0; a != callArgs.size(); ++a) {
+      args.push_back(visitParam(params[a].ref, callArgs[a].get()));
+    }
+  }
   void visit(ast::FuncCall &call) override {
     if (call.definition == nullptr) {
+      // call a function pointer
+      assert(false);
+    } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
+      std::vector<llvm::Value *> args;
+      args.reserve(1 + call.args.size());
+      if (func->receiver) {
+        const ast::ParamRef ref = func->receiver.value().ref;
+        ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
+        args.push_back(visitParam(ref, self));
+      } else {
+        args.push_back(llvm::ConstantPointerNull::get(getVoidPtr(ctx)));
+      }
+      pushArgs(args, call.args, func->params);
+      value = builder.CreateCall(func->llvmFunc, args);
+    } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
+      // call a builtin function
+      assert(false);
+    }
+    /*if (call.definition == nullptr) {
       call.func->accept(*this);
       gen::String func = std::move(str);
       str += func;
@@ -192,9 +233,9 @@ public:
         str += ')';
       }
       str += ')';
-    }
+    }*/
   }
-  */
+  
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
     value = builder.CreateStructGEP(value, mem.index);

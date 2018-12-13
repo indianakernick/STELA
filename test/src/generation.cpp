@@ -47,35 +47,6 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS("");
   });
   
-  TEST(Functions, {
-    ASSERT_SUCCEEDS(R"(
-      func first() {}
-      
-      func second() -> sint {
-        return 1;
-      }
-      
-      func third(a: real) {}
-      
-      func fourth(a: bool, b: uint) {}
-      
-      func fifth(a: real, b: ref byte, c: sint) {}
-      
-      func (self: ref [struct {v: [sint];}]) sixth(a: ref sint) {}
-    )");
-  });
-  
-  TEST(Local variables, {
-    ASSERT_SUCCEEDS(R"(
-      func test() -> sint {
-        let x = 5;
-        var y = 11;
-        y = x + 2;
-        return x * y;
-      }
-    )");
-  });
-  
   TEST(Function arguments, {
     ASSERT_SUCCEEDS(R"(
       func divide(a: real, b: real) -> real {
@@ -328,6 +299,106 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(0), 2);
     ASSERT_EQ(func(-1), 3);
     ASSERT_EQ(func(-8), -4);
+  });
+  
+  TEST(Function call, {
+    ASSERT_SUCCEEDS(R"(
+      func helper(a: sint) {
+        return a * 2;
+      }
+      func helper(a: sint, b: sint) {
+        return helper(a) + b * 4;
+      }
+      func swap(a: ref sint, b: ref sint) {
+        let t = a;
+        a = b;
+        b = t;
+      }
+      
+      func test(val: sint) {
+        var a = 4;
+        swap(a, val);
+        return helper(a, val);
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(-8), 0);
+    ASSERT_EQ(func(0), 16);
+    ASSERT_EQ(func(8), 32);
+  });
+  
+  TEST(Void function call, {
+    ASSERT_SUCCEEDS(R"(
+      func increase(val: ref real) {
+        val = val * 2.0;
+      }
+      func increaseMore(val: ref real) {
+        increase(val);
+        return increase(val);
+      }
+      
+      func test(val: real) {
+        val = val + 4.0;
+        increaseMore(val);
+        return val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Real));
+    ASSERT_EQ(func(-4.0f), 0.0f);
+    ASSERT_EQ(func(0.0f), 16.0f);
+    ASSERT_EQ(func(4.0f), 32.0f);
+  });
+  
+  TEST(Member function call, {
+    ASSERT_SUCCEEDS(R"(
+      func (a: sint) helper() {
+        return a * 2;
+      }
+      func (a: sint) helper(b: sint) {
+        return a.helper() + b * 4;
+      }
+      func (a: ref sint) swap(b: ref sint) {
+        let t = a;
+        a = b;
+        b = t;
+      }
+    
+      func test(val: sint) {
+        var a = 4;
+        a.swap(val);
+        return a.helper(val);
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(-8), 0);
+    ASSERT_EQ(func(0), 16);
+    ASSERT_EQ(func(8), 32);
+  });
+  
+  TEST(Void member function call, {
+    ASSERT_SUCCEEDS(R"(
+      func (val: ref real) increase() {
+        val = val * 2.0;
+      }
+      func (val: ref real) increaseMore() {
+        val.increase();
+        return val.increase();
+      }
+      
+      func test(val: real) {
+        val = val + 4.0;
+        val.increaseMore();
+        return val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Real));
+    ASSERT_EQ(func(-4.0f), 0.0f);
+    ASSERT_EQ(func(0.0f), 16.0f);
+    ASSERT_EQ(func(4.0f), 32.0f);
   });
   
   /*

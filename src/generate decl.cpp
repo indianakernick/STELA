@@ -90,7 +90,7 @@ public:
       module
     );
     func.llvmFunc->setCallingConv(llvm::CallingConv::C);
-    generateStat(ctx, func.llvmFunc, func.params, func.body);
+    generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }
   void appendVar(const sym::ExprType &etype, const uint32_t id, ast::Expression *expr) {
     /*str += exprType(etype);

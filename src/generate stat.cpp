@@ -224,7 +224,12 @@ public:
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      builder.CreateRet(generateValueExpr(ctx, builder, ret.expr.get()));
+      llvm::Value *value = generateValueExpr(ctx, builder, ret.expr.get());
+      if (value->getType()->isVoidTy()) {
+        builder.CreateRetVoid();
+      } else {
+        builder.CreateRet(value);
+      }
     } else {
       builder.CreateRetVoid();
     }
@@ -341,10 +346,15 @@ private:
 void stela::generateStat(
   gen::Ctx ctx,
   llvm::Function *func,
+  ast::Receiver &rec,
   ast::FuncParams &params,
   ast::Block &block
 ) {
   Visitor visitor{ctx, func};
+  // @TODO maybe do parameter insersion in a separate function
+  if (rec) {
+    visitor.insert(rec.value(), 0);
+  }
   for (size_t p = 0; p != params.size(); ++p) {
     visitor.insert(params[p], p + 1);
   }

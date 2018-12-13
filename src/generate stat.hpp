@@ -20,7 +20,7 @@ class Function;
 
 namespace stela {
 
-void generateStat(gen::Ctx, llvm::Function *, ast::FuncParams &, ast::Block &);
+void generateStat(gen::Ctx, llvm::Function *, ast::Receiver &, ast::FuncParams &, ast::Block &);
 
 }
 
