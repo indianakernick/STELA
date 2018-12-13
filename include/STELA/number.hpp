@@ -14,6 +14,7 @@
 
 namespace stela {
 
+using Void = void;
 using Bool = bool;
 using Byte = uint8_t;
 using Char = int8_t;

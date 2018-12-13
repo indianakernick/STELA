@@ -11,9 +11,11 @@
 #include <fstream>
 #include <iostream>
 #include "macros.hpp"
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
+#include <STELA/llvm.hpp>
 
 using namespace stela;
 
@@ -26,9 +28,15 @@ llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
   return stela::generate(syms, log);
 }
 
+template <typename Fun>
+auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
+  return stela::Function<Fun>{engine->getFunctionAddress(name)};
 }
 
-#define ASSERT_SUCCEEDS(SOURCE) generate(SOURCE, log)
+}
+
+#define GET_FUNC(NAME, ...) getFunc<__VA_ARGS__>(engine, NAME)
+#define ASSERT_SUCCEEDS(SOURCE) [[maybe_unused]] auto *engine = generate(SOURCE, log)
 #define ASSERT_FAILS(SOURCE) ASSERT_THROWS(generate(SOURCE, log), stela::FatalError)
 
 TEST_GROUP(Generation, {
@@ -104,6 +112,9 @@ TEST_GROUP(Generation, {
         return a / b;
       }
     )");
+    auto func = GET_FUNC("divide", Real(Real, Real));
+    ASSERT_EQ(func(10.0f, -2.0f), -5.0f);
+    ASSERT_EQ(func(4.0f, 0.0f), std::numeric_limits<Real>::infinity());
   });
   
   TEST(Ref function arguments, {
@@ -114,6 +125,12 @@ TEST_GROUP(Generation, {
         b = t;
       }
     )");
+    auto func = GET_FUNC("swap", Void(Sint *, Sint *));
+    Sint four = 7;
+    Sint seven = 4;
+    func(&four, &seven);
+    ASSERT_EQ(four, 4);
+    ASSERT_EQ(seven, 7);
   });
   
   TEST(For loop, {
@@ -126,6 +143,25 @@ TEST_GROUP(Generation, {
         return product;
       }
     )");
+    
+    auto func = GET_FUNC("multiply", Uint(Uint, Uint));
+    ASSERT_EQ(func(0, 0), 0);
+    ASSERT_EQ(func(5, 0), 0);
+    ASSERT_EQ(func(0, 5), 0);
+    ASSERT_EQ(func(3, 4), 12);
+    ASSERT_EQ(func(6, 6), 36);
+  });
+  
+  TEST(Identity, {
+    ASSERT_SUCCEEDS(R"(
+      func identity(value: sint) -> sint {
+        return value;
+      }
+    )");
+    auto func = GET_FUNC("identity", Sint(Sint));
+    ASSERT_EQ(func(0), 0);
+    ASSERT_EQ(func(-11), -11);
+    ASSERT_EQ(func(42), 42);
   });
   
   /*
@@ -485,3 +521,4 @@ TEST_GROUP(Generation, {
 
 #undef ASSERT_FAILS
 #undef ASSERT_SUCCEEDS
+#undef GET_FUNC
