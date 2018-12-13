@@ -137,7 +137,7 @@ llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &ty
   return llvm::FunctionType::get(ret, params, false);
 }
 
-gen::String stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
+std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   /*gen::String name{16 + 16 * type.params.size()};
   const gen::String ret = generateType(ctx, type.ret.get());
   name += ret.size();

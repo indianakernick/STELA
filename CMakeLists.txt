@@ -27,6 +27,7 @@ add_library(STELA STATIC
         "include/STELA/c standard library.hpp"
         "include/STELA/llvm.hpp"
         "include/STELA/number.hpp"
+        "include/STELA/binding.hpp"
         "src/lexical analysis.cpp"
         "src/log.cpp"
         "src/log output.cpp"

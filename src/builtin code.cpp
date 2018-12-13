@@ -8,7 +8,7 @@
 
 #include "builtin code.hpp"
 
-constexpr std::string_view builtinCode = R"delimiter(
+constexpr const char *builtinCode = R"delimiter(
 
 // BEGIN BUILTIN LIBRARY
 
@@ -305,25 +305,3 @@ struct FuncClosureData : ClosureData {};
 // END BUILTIN LIBRARY
 
 )delimiter";
-
-void stela::appendBuiltinCode(std::string &src) {
-  src += builtinCode;
-}
-
-void stela::appendTypes(std::string &bin, const gen::String &types) {
-  bin += "// BEGIN TYPE DECLARATIONS\n\n";
-  bin += types.str();
-  bin += "\n// END TYPE DECLARATIONS\n\n";
-}
-
-void stela::appendFuncs(std::string &bin, const gen::String &funcs) {
-  bin += "// BEGIN FUNCTION DECLARATIONS\n\n";
-  bin += funcs.str();
-  bin += "\n// END FUNCTION DECLARATIONS\n\n";
-}
-
-void stela::appendCode(std::string &bin, const gen::String &code) {
-  bin += "// BEGIN CODE\n\n";
-  bin += code.str();
-  bin += "\n// END CODE\n\n";
-}

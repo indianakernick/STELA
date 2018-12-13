@@ -9,16 +9,19 @@
 #ifndef stela_gen_context_hpp
 #define stela_gen_context_hpp
 
-#include "gen string.hpp"
 #include "log output.hpp"
 #include "type instantiations.hpp"
+
+namespace llvm {
+
+class LLVMContext;
+
+}
 
 namespace stela::gen {
 
 struct Ctx {
-  String &type;
-  String &func;
-  String &code;
+  llvm::LLVMContext &llvm;
   TypeInst &inst;
   Log &log;
 };

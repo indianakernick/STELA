@@ -126,6 +126,7 @@
 		454B36E721BA3B3100485BA4 /* iterator range.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "iterator range.hpp"; sourceTree = "<group>"; };
 		454B743F21C0EB4900BB4BD0 /* optimize module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "optimize module.cpp"; sourceTree = "<group>"; };
 		454B744021C0EB4900BB4BD0 /* optimize module.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "optimize module.hpp"; sourceTree = "<group>"; };
+		454B744221C201A900BB4BD0 /* binding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = binding.hpp; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
 		454EB7FD21A0E837001A5D78 /* context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = context.hpp; sourceTree = "<group>"; };
@@ -192,7 +193,6 @@
 		45816F4C21B0BF9500712CA3 /* generate type.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate type.cpp"; sourceTree = "<group>"; };
 		45816F4D21B0BF9500712CA3 /* generate type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate type.hpp"; sourceTree = "<group>"; };
 		45816F4F21B0EBE100712CA3 /* gen context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen context.hpp"; sourceTree = "<group>"; };
-		45816F5021B0FA5200712CA3 /* gen string.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen string.hpp"; sourceTree = "<group>"; };
 		45816F5121B1032500712CA3 /* type instantiations.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "type instantiations.hpp"; sourceTree = "<group>"; };
 		45816F5221B1049300712CA3 /* type instantiations.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "type instantiations.cpp"; sourceTree = "<group>"; };
 		45816F5421B128EC00712CA3 /* generate ids.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate ids.cpp"; sourceTree = "<group>"; };
@@ -341,7 +341,6 @@
 				45816F5721B1E68700712CA3 /* generate expr.cpp */,
 				45816F5821B1E68700712CA3 /* generate expr.hpp */,
 				45816F4F21B0EBE100712CA3 /* gen context.hpp */,
-				45816F5021B0FA5200712CA3 /* gen string.hpp */,
 				45816F5221B1049300712CA3 /* type instantiations.cpp */,
 				45816F5121B1032500712CA3 /* type instantiations.hpp */,
 				45816F5421B128EC00712CA3 /* generate ids.cpp */,
@@ -460,6 +459,7 @@
 				45816F6421B622BD00712CA3 /* c standard library.hpp */,
 				455DADA621BDE4F90012A261 /* llvm.hpp */,
 				455DADAD21BF6B9A0012A261 /* number.hpp */,
+				454B744221C201A900BB4BD0 /* binding.hpp */,
 			);
 			path = STELA;
 			sourceTree = "<group>";

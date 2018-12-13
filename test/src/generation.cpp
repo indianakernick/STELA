@@ -158,6 +158,7 @@ TEST_GROUP(Generation, {
         return value;
       }
     )");
+    
     auto func = GET_FUNC("identity", Sint(Sint));
     ASSERT_EQ(func(0), 0);
     ASSERT_EQ(func(-11), -11);

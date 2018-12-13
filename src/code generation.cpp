@@ -20,11 +20,8 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   Log log{sink, LogCat::generate};
   log.status() << "Generating code" << endlog;
   
-  gen::String type{syms.decls.size() * 100};
-  gen::String func{syms.decls.size() * 100};
-  gen::String code{syms.decls.size() * 1000};
   gen::TypeInst inst;
-  gen::Ctx ctx {type, func, code, inst, log};
+  gen::Ctx ctx {getLLVM(), inst, log};
   generateIDs(syms.decls);
   auto module = std::make_unique<llvm::Module>("module", getLLVM());
   generateDecl(ctx, module.get(), syms.decls);

@@ -165,8 +165,6 @@ public:
     str += ";\n";
   }*/
   
-  gen::String str;
-  
 private:
   gen::Ctx ctx;
   llvm::Module *module;
@@ -179,13 +177,4 @@ void stela::generateDecl(gen::Ctx ctx, llvm::Module *module, const ast::Decls &d
   for (const ast::DeclPtr &decl : decls) {
     decl->accept(visitor);
   }
-  ctx.code += visitor.str;
-}
-
-gen::String stela::generateDecl(gen::Ctx ctx, const ast::Block &block) {
-  Visitor visitor{ctx, nullptr};
-  for (const ast::StatPtr &stat : block.nodes) {
-    stat->accept(visitor);
-  }
-  return std::move(visitor.str);
 }

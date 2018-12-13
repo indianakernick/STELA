@@ -21,7 +21,6 @@ class Module;
 namespace stela {
 
 void generateDecl(gen::Ctx, llvm::Module *, const ast::Decls &);
-gen::String generateDecl(gen::Ctx, const ast::Block &);
 
 }
 

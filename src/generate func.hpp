@@ -15,10 +15,10 @@
 
 namespace stela {
 
-gen::String generateNullFunc(gen::Ctx, const ast::FuncType &);
-gen::String generateMakeFunc(gen::Ctx, ast::FuncType &);
-gen::String generateLambda(gen::Ctx, const ast::Lambda &);
-gen::String generateMakeLam(gen::Ctx, const ast::Lambda &);
+std::string generateNullFunc(gen::Ctx, const ast::FuncType &);
+std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
+std::string generateLambda(gen::Ctx, const ast::Lambda &);
+std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
 }
 

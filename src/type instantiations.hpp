@@ -10,11 +10,9 @@
 #define stela_type_instantiations_hpp
 
 #include <unordered_set>
-#include "gen string.hpp"
 
 namespace stela::gen {
 
-// @TODO remove this
 class TypeInst {
 public:
   TypeInst();
@@ -22,14 +20,9 @@ public:
   // return false and insert if not instantiated
   // return true and dont insert if instantiated
   
-  bool arrayNotInst(const gen::String &);
-  bool funcNotInst(const gen::String &);
-  bool structNotInst(const gen::String &);
-
+  
 private:
-  std::unordered_set<String> arrays;
-  std::unordered_set<String> funcs;
-  std::unordered_set<String> structs;
+  
 };
 
 }
