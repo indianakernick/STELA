@@ -30,13 +30,6 @@ public:
     builder.SetInsertPoint(currBlock);
   }
 
-  /*void ensureCurrBlock() {
-    if (!currBlock) {
-      currBlock = llvm::BasicBlock::Create(ctx.llvm, "", func);
-      builder.SetInsertPoint(currBlock);
-    }
-  }*/
-
   void visitFlow(ast::Statement *body, llvm::BasicBlock *brake, llvm::BasicBlock *continu) {
     llvm::BasicBlock *oldBrake = std::exchange(breakBlock, brake);
     llvm::BasicBlock *oldContinue = std::exchange(continueBlock, continu);
@@ -102,63 +95,8 @@ public:
     if (done) {
       setCurr(done);
     }
-    
-    /*auto *troo = llvm::BasicBlock::Create(ctx.llvm, "", func);
-    auto *folse = llvm::BasicBlock::Create(ctx.llvm, "", func);
-    builder.SetInsertPoint(currBlock);
-    builder.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
-    auto *done = llvm::BasicBlock::Create(ctx.llvm);
-    setCurr(troo);
-    fi.body->accept(*this);
-    appendBr(done);
-    setCurr(folse);
-    if (fi.elseBody) {
-      fi.elseBody->accept(*this);
-    }
-    appendBr(done);
-    setCurr(done);*/
   }
   void visit(ast::Switch &swich) override {
-    /*
-    
-    switch (expr) {
-      case (case_expr_0) {
-        // do stuff 0
-      }
-      default {
-        // do stuff 2
-      }
-      case (case_expr_1) {
-        // do stuff 1
-      }
-    }
-    
-    const value = expr;
-    
-    check_block_0:
-    if (value == case_expr_0) goto case_block_0; else goto check_block_1;
-    
-    check_block_1:
-    if (value == case_expr_1) goto case_block_2; else goto check_block_2;
-    
-    check_block_2:
-    goto case_block_1
-    
-    case_block_0:
-    // do stuff 0
-    goto done;
-    
-    case_block_1:
-    // do stuff 2
-    goto done;
-    
-    case_block_2:
-    // do stuff 1
-    goto done;
-    
-    done:
-    
-    */
     llvm::Value *value = generateValueExpr(ctx, builder, swich.expr.get());
     if (swich.cases.empty()) {
       return;

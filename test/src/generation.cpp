@@ -401,6 +401,54 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(4.0f), 32.0f);
   });
   
+  TEST(Nested for loop, {
+    ASSERT_SUCCEEDS(R"(
+      func test(a: uint, b: uint) -> uint {
+        var product = 0u;
+        for (i := 0u; i != a; i = i + 1u) {
+          for (j := 0u; j != b; j = j + 1u) {
+            product = product + 1u;
+          }
+        }
+        return product;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Uint(Uint, Uint));
+    ASSERT_EQ(func(0, 0), 0);
+    ASSERT_EQ(func(0, 4), 0);
+    ASSERT_EQ(func(4, 0), 0);
+    ASSERT_EQ(func(1, 1), 1);
+    ASSERT_EQ(func(3, 4), 12);
+    ASSERT_EQ(func(6, 6), 36);
+    ASSERT_EQ(func(9, 5), 45);
+  });
+  
+  TEST(Nested nested for loop, {
+    ASSERT_SUCCEEDS(R"(
+      func test(a: uint, b: uint, c: uint) -> uint {
+        var product = 0u;
+        for (i := 0u; i != a; i = i + 1u) {
+          for (j := 0u; j != b; j = j + 1u) {
+            for (k := 0u; k != c; k = k + 1u) {
+              product = product + 1u;
+            }
+          }
+        }
+        return product;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Uint(Uint, Uint, Uint));
+    ASSERT_EQ(func(0, 0, 0), 0);
+    ASSERT_EQ(func(0, 0, 4), 0);
+    ASSERT_EQ(func(0, 5, 0), 0);
+    ASSERT_EQ(func(6, 0, 0), 0);
+    ASSERT_EQ(func(2, 2, 2), 8);
+    ASSERT_EQ(func(2, 4, 8), 64);
+    ASSERT_EQ(func(1, 1, 1), 1);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
