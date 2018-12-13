@@ -294,7 +294,9 @@ public:
   */
   
   llvm::Value *getAddr(ast::Statement *definition) {
-    if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
+    if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
+      return param->llvmAddr;
+    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
       return decl->llvmAddr;
     } else if (auto *var = dynamic_cast<ast::Var *>(definition)) {
       return var->llvmAddr;
@@ -436,7 +438,7 @@ private:
 
 }
 
-llvm::Value *stela::generateExpr(
+llvm::Value *stela::generateAddrExpr(
   gen::Ctx ctx,
   llvm::IRBuilder<> &builder,
   ast::Expression *expr
@@ -444,4 +446,13 @@ llvm::Value *stela::generateExpr(
   Visitor visitor{ctx, builder};
   expr->accept(visitor);
   return visitor.value;
+}
+
+llvm::Value *stela::generateValueExpr(
+  gen::Ctx ctx,
+  llvm::IRBuilder<> &builder,
+  ast::Expression *expr
+) {
+  Visitor visitor{ctx, builder};
+  return visitor.visitValue(expr);
 }

@@ -316,7 +316,7 @@ struct FuncParam final : Declaration {
   TypePtr type;
   
   sym::Object *symbol = nullptr;
-  uint32_t index = ~uint32_t{};
+  llvm::Value *llvmAddr = nullptr;
   
   void accept(Visitor &) override;
 };

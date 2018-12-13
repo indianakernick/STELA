@@ -15,7 +15,8 @@
 
 namespace stela {
 
-llvm::Value *generateExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
+llvm::Value *generateAddrExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
+llvm::Value *generateValueExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
 
 }
 

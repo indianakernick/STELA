@@ -98,6 +98,24 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(Function arguments, {
+    ASSERT_SUCCEEDS(R"(
+      func divide(a: real, b: real) -> real {
+        return a / b;
+      }
+    )");
+  });
+  
+  TEST(Ref function arguments, {
+    ASSERT_SUCCEEDS(R"(
+      func swap(a: ref sint, b: ref sint) {
+        let t = a;
+        a = b;
+        b = t;
+      }
+    )");
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

@@ -53,7 +53,7 @@ public:
   void visit(ast::If &fi) override {
     auto *troo = llvm::BasicBlock::Create(getLLVM(), "", func);
     auto *folse = llvm::BasicBlock::Create(getLLVM(), "", func);
-    builder.CreateCondBr(generateExpr(ctx, builder, fi.cond.get()), troo, folse);
+    builder.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
     setCurr(troo);
     fi.body->accept(*this);
     setCurr(folse);
@@ -74,7 +74,7 @@ public:
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      builder.CreateRet(generateExpr(ctx, builder, ret.expr.get()));
+      builder.CreateRet(generateValueExpr(ctx, builder, ret.expr.get()));
     } else {
       builder.CreateRetVoid();
     }
@@ -89,24 +89,29 @@ public:
       builder.CreateBr(cond);
     }
     setCurr(cond);
-    builder.CreateCondBr(generateExpr(ctx, builder, wile.cond.get()), body, done);
+    builder.CreateCondBr(generateValueExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);
   }
   void visit(ast::For &four) override {}
   
-  llvm::Value *insertVar(ast::Type *type, ast::Expression *expr) {
+  llvm::Value *insertAlloca(ast::Type *type) {
     llvm::BasicBlock *entry = &func->getEntryBlock();
-    builder.SetInsertPoint(entry, entry->begin());
+    builder.SetInsertPoint(entry, std::prev(entry->end()));
     llvm::Type *llvmType = generateType(ctx, type);
     llvm::Value *llvmAddr = builder.CreateAlloca(llvmType);
     builder.SetInsertPoint(currBlock);
+    return llvmAddr;
+  }
+  llvm::Value *insertVar(ast::Type *type, ast::Expression *expr) {
+    llvm::Value *llvmAddr = insertAlloca(type);
     if (expr) {
-      builder.CreateStore(generateExpr(ctx, builder, expr), llvmAddr);
+      builder.CreateStore(generateValueExpr(ctx, builder, expr), llvmAddr);
     } else {
       builder.CreateStore(generateZeroExpr(ctx, builder, type), llvmAddr);
     }
     return llvmAddr;
   }
+  
   void visit(ast::Var &var) override {
     var.llvmAddr = insertVar(var.symbol->etype.type.get(), var.expr.get());
   }
@@ -115,18 +120,27 @@ public:
   }
   
   void visit(ast::IncrDecr &assign) override {
-    //llvm::Value *addr = generateExpr(ctx, builder, assign.expr.get());
+    //llvm::Value *addr = generateAddrExpr(ctx, builder, assign.expr.get());
   }
   void visit(ast::Assign &assign) override {
-    llvm::Value *addr = generateExpr(ctx, builder, assign.left.get());
-    llvm::Value *value = generateExpr(ctx, builder, assign.right.get());
+    llvm::Value *addr = generateAddrExpr(ctx, builder, assign.left.get());
+    llvm::Value *value = generateValueExpr(ctx, builder, assign.right.get());
     builder.CreateStore(value, addr);
   }
   void visit(ast::DeclAssign &assign) override {
     assign.llvmAddr = insertVar(assign.symbol->etype.type.get(), assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    generateExpr(ctx, builder, &assign.call);
+    generateAddrExpr(ctx, builder, &assign.call);
+  }
+  
+  void insert(ast::FuncParam &param, const size_t index) {
+    if (param.ref == ast::ParamRef::ref) {
+      param.llvmAddr = func->arg_begin() + index;
+    } else {
+      param.llvmAddr = insertAlloca(param.type.get());
+      builder.CreateStore(func->arg_begin() + index, param.llvmAddr);
+    }
   }
   
 private:
@@ -156,8 +170,16 @@ private:
 
 }
 
-void stela::generateStat(gen::Ctx ctx, llvm::Function *func, ast::Block &block) {
+void stela::generateStat(
+  gen::Ctx ctx,
+  llvm::Function *func,
+  ast::FuncParams &params,
+  ast::Block &block
+) {
   Visitor visitor{ctx, func};
+  for (size_t p = 0; p != params.size(); ++p) {
+    visitor.insert(params[p], p + 1);
+  }
   for (const ast::StatPtr &stat : block.nodes) {
     stat->accept(visitor);
   }

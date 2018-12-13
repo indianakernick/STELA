@@ -30,7 +30,6 @@ ast::Receiver parseReceiver(ParseTokens &tok) {
     return std::nullopt;
   }
   ast::FuncParam param = parseParam(tok);
-  param.index = 0;
   tok.expectOp(")");
   return ast::Receiver{std::move(param)};
 }
@@ -46,7 +45,6 @@ ast::FuncParams stela::parseFuncParams(ParseTokens &tok) {
   ast::FuncParams params;
   do {
     params.push_back(parseParam(tok));
-    params.back().index = static_cast<uint32_t>(params.size());
   } while (tok.expectEitherOp(")", ",") == ",");
   return params;
 }
