@@ -34,12 +34,6 @@ public:
     } else {
       return value;
     }
-    /*
-    while (value->getType()->isPointerTy()) {
-      value = builder.CreateLoad(value);
-    }
-    return value;
-    */
   }
 
   void visit(ast::BinaryExpr &expr) override {
@@ -295,6 +289,11 @@ public:
     llvm::Value *tru = value;
     tern.fals->accept(*this);
     llvm::Value *fals = value;
+    if (tru->getType()->isPointerTy() && !fals->getType()->isPointerTy()) {
+      tru = builder.CreateLoad(tru);
+    } else if (!tru->getType()->isPointerTy() && fals->getType()->isPointerTy()) {
+      fals = builder.CreateLoad(fals);
+    }
     value = builder.CreateSelect(cond, tru, fals);
   }
   /*void visit(ast::Make &make) override {

@@ -298,6 +298,38 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(-5), -1.0);
   });
   
+  TEST(Ternary conditional, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> sint {
+        return val < 0 ? -val : val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(2), 2);
+    ASSERT_EQ(func(1), 1);
+    ASSERT_EQ(func(0), 0);
+    ASSERT_EQ(func(-1), 1);
+    ASSERT_EQ(func(-2), 2);
+  });
+  
+  TEST(Ternary conditional lvalue, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> sint {
+        var a = 2;
+        var b = 4;
+        (val < 0 ? a : b) = val;
+        return a + b;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(3), 5);
+    ASSERT_EQ(func(0), 2);
+    ASSERT_EQ(func(-1), 3);
+    ASSERT_EQ(func(-8), -4);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
