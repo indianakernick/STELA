@@ -24,19 +24,18 @@ public:
     : ctx{ctx} {}
   
   void visit(ast::BtnType &type) override {
-    llvm::LLVMContext &context = getLLVM();
     switch (type.value) {
       case ast::BtnTypeEnum::Void:
-        llvmType = llvm::Type::getVoidTy(context); return;
+        llvmType = llvm::Type::getVoidTy(ctx.llvm); return;
       case ast::BtnTypeEnum::Bool:
       case ast::BtnTypeEnum::Byte:
       case ast::BtnTypeEnum::Char:
-        llvmType = llvm::Type::getInt8Ty(context); return;
+        llvmType = llvm::Type::getInt8Ty(ctx.llvm); return;
       case ast::BtnTypeEnum::Real:
-        llvmType = llvm::Type::getFloatTy(context); return;
+        llvmType = llvm::Type::getFloatTy(ctx.llvm); return;
       case ast::BtnTypeEnum::Sint:
       case ast::BtnTypeEnum::Uint:
-        llvmType = llvm::Type::getInt32Ty(context); return;
+        llvmType = llvm::Type::getInt32Ty(ctx.llvm); return;
     }
     UNREACHABLE();
   }
@@ -58,7 +57,7 @@ public:
     }*/
   }
   void visit(ast::FuncType &type) override {
-    llvmType = llvm::StructType::get(getLLVM(), {
+    llvmType = llvm::StructType::get(ctx.llvm, {
       generateLambSig(ctx, type),
       getCloDataPtr(ctx)
     });
@@ -73,7 +72,7 @@ public:
       field.type->accept(*this);
       elems.push_back(llvmType);
     }
-    llvmType = llvm::StructType::get(getLLVM(), elems);
+    llvmType = llvm::StructType::get(ctx.llvm, elems);
   }
   
   llvm::Type *llvmType = nullptr;
@@ -127,7 +126,7 @@ llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &ty
   if (type.ret) {
     ret = generateType(ctx, type.ret.get());
   } else {
-    ret = llvm::Type::getVoidTy(getLLVM());
+    ret = llvm::Type::getVoidTy(ctx.llvm);
   }
   std::vector<llvm::Type *> params;
   params.push_back(getVoidPtr(ctx));
@@ -156,14 +155,14 @@ std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   return {};
 }
 
-llvm::PointerType *stela::getVoidPtr(gen::Ctx) {
-  return llvm::IntegerType::getInt8PtrTy(getLLVM());
+llvm::PointerType *stela::getVoidPtr(gen::Ctx ctx) {
+  return llvm::IntegerType::getInt8PtrTy(ctx.llvm);
 }
 
 llvm::PointerType *stela::getCloDataPtr(gen::Ctx ctx) {
   llvm::FunctionType *virtualDtor = llvm::FunctionType::get(getVoidPtr(ctx), false);
-  llvm::IntegerType *refCount = llvm::IntegerType::getInt32Ty(getLLVM());
-  llvm::StructType *cloData = llvm::StructType::get(getLLVM(), {virtualDtor, refCount});
+  llvm::IntegerType *refCount = llvm::IntegerType::getInt32Ty(ctx.llvm);
+  llvm::StructType *cloData = llvm::StructType::get(ctx.llvm, {virtualDtor, refCount});
   return llvm::PointerType::get(cloData, 0);
 }
 
@@ -180,9 +179,9 @@ llvm::StructType *stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &
   std::vector<llvm::Type *> types;
   types.reserve(2 + numCaptures);
   types.push_back(llvm::FunctionType::get(getVoidPtr(ctx), false));
-  types.push_back(llvm::IntegerType::getInt32Ty(getLLVM()));
+  types.push_back(llvm::IntegerType::getInt32Ty(ctx.llvm));
   for (const sym::ClosureCap &cap : symbol->captures) {
     types.push_back(generateType(ctx, cap.type.get()));
   }
-  return llvm::StructType::get(getLLVM(), types);
+  return llvm::StructType::get(ctx.llvm, types);
 }

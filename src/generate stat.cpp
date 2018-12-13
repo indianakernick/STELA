@@ -23,16 +23,16 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, func{func}, builder{getLLVM()} {
-    builder.SetInsertPoint(llvm::BasicBlock::Create(getLLVM(), "entry", func));
-    currBlock = llvm::BasicBlock::Create(getLLVM(), "", func);
+    : ctx{ctx}, func{func}, builder{ctx.llvm} {
+    builder.SetInsertPoint(llvm::BasicBlock::Create(ctx.llvm, "entry", func));
+    currBlock = llvm::BasicBlock::Create(ctx.llvm, "", func);
     builder.CreateBr(currBlock);
     builder.SetInsertPoint(currBlock);
   }
 
   /*void ensureCurrBlock() {
     if (!currBlock) {
-      currBlock = llvm::BasicBlock::Create(getLLVM(), "", func);
+      currBlock = llvm::BasicBlock::Create(ctx.llvm, "", func);
       builder.SetInsertPoint(currBlock);
     }
   }*/
@@ -51,8 +51,8 @@ public:
     }
   }
   void visit(ast::If &fi) override {
-    auto *troo = llvm::BasicBlock::Create(getLLVM(), "", func);
-    auto *folse = llvm::BasicBlock::Create(getLLVM(), "", func);
+    auto *troo = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    auto *folse = llvm::BasicBlock::Create(ctx.llvm, "", func);
     builder.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
     setCurr(troo);
     fi.body->accept(*this);
@@ -81,8 +81,8 @@ public:
   }
   void visit(ast::While &wile) override {
     auto *cond = nextEmpty();
-    auto *body = llvm::BasicBlock::Create(getLLVM(), "", func);
-    auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
+    auto *body = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    auto *done = llvm::BasicBlock::Create(ctx.llvm, "", func);
     setCurr(body);
     visitFlow(wile.body.get(), done, cond);
     if (currBlock->empty() || !currBlock->back().isTerminator()) {
@@ -97,9 +97,9 @@ public:
       four.init->accept(*this);
     }
     auto *cond = nextEmpty();
-    auto *body = llvm::BasicBlock::Create(getLLVM(), "", func);
-    auto *incr = llvm::BasicBlock::Create(getLLVM(), "", func);
-    auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
+    auto *body = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    auto *incr = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    auto *done = llvm::BasicBlock::Create(ctx.llvm, "", func);
     setCurr(body);
     visitFlow(four.body.get(), done, incr);
     if (currBlock->empty() || !currBlock->back().isTerminator()) {
@@ -183,7 +183,7 @@ private:
     if (currBlock->empty()) {
       nextBlock = currBlock;
     } else {
-      nextBlock = llvm::BasicBlock::Create(getLLVM(), "", func);
+      nextBlock = llvm::BasicBlock::Create(ctx.llvm, "", func);
       builder.CreateBr(nextBlock);
     }
     return nextBlock;

@@ -339,7 +339,7 @@ public:
   }*/
   void visit(ast::CharLiteral &chr) override {
     value = llvm::ConstantInt::get(
-      llvm::IntegerType::getInt8Ty(getLLVM()),
+      llvm::IntegerType::getInt8Ty(ctx.llvm),
       static_cast<uint64_t>(chr.number),
       true
     );
@@ -363,7 +363,7 @@ public:
     }, num.number);
   }
   void visit(ast::BoolLiteral &bol) override {
-    llvm::Type *boolType = llvm::IntegerType::getInt8Ty(getLLVM());
+    llvm::Type *boolType = llvm::IntegerType::getInt8Ty(ctx.llvm);
     if (bol.value) {
       value = llvm::ConstantInt::get(boolType, 1);
     } else {
