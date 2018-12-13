@@ -492,6 +492,40 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(9), 8);
   });
   
+  TEST(Bool C++ to Stela, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: bool) {
+        if (val == false) {
+          return 0;
+        } else if (val == true) {
+          return 1;
+        } else {
+          return 2;
+        }
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Bool));
+    ASSERT_EQ(func(false), 0);
+    ASSERT_EQ(func(true), 1);
+  });
+  
+  TEST(Bool Stela to C++, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) {
+        if (val == 0) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Bool(Sint));
+    ASSERT_EQ(func(0), false);
+    ASSERT_EQ(func(1), true);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
