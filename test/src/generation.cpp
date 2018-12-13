@@ -116,6 +116,18 @@ TEST_GROUP(Generation, {
     )");
   });
   
+  TEST(For loop, {
+    ASSERT_SUCCEEDS(R"(
+      func multiply(a: uint, b: uint) -> uint {
+        var product = 0u;
+        for (; a != 0u; a = a - 1u) {
+          product = product + b;
+        }
+        return product;
+      }
+    )");
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

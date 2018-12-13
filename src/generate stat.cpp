@@ -92,7 +92,28 @@ public:
     builder.CreateCondBr(generateValueExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);
   }
-  void visit(ast::For &four) override {}
+  void visit(ast::For &four) override {
+    if (four.init) {
+      four.init->accept(*this);
+    }
+    auto *cond = nextEmpty();
+    auto *body = llvm::BasicBlock::Create(getLLVM(), "", func);
+    auto *incr = llvm::BasicBlock::Create(getLLVM(), "", func);
+    auto *done = llvm::BasicBlock::Create(getLLVM(), "", func);
+    setCurr(body);
+    visitFlow(four.body.get(), done, incr);
+    if (currBlock->empty() || !currBlock->back().isTerminator()) {
+      builder.CreateBr(incr);
+    }
+    setCurr(cond);
+    builder.CreateCondBr(generateValueExpr(ctx, builder, four.cond.get()), body, done);
+    setCurr(incr);
+    if (four.incr) {
+      four.incr->accept(*this);
+      builder.CreateBr(cond);
+    }
+    setCurr(done);
+  }
   
   llvm::Value *insertAlloca(ast::Type *type) {
     llvm::BasicBlock *entry = &func->getEntryBlock();
@@ -121,6 +142,7 @@ public:
   
   void visit(ast::IncrDecr &assign) override {
     //llvm::Value *addr = generateAddrExpr(ctx, builder, assign.expr.get());
+    //classifyArrith(assign.expr->exprType.get())
   }
   void visit(ast::Assign &assign) override {
     llvm::Value *addr = generateAddrExpr(ctx, builder, assign.left.get());
