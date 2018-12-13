@@ -11,11 +11,11 @@
 #include <fstream>
 #include <iostream>
 #include "macros.hpp"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <STELA/binding.hpp>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
-#include <STELA/llvm.hpp>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 using namespace stela;
 
@@ -62,36 +62,6 @@ TEST_GROUP(Generation, {
       func fifth(a: real, b: ref byte, c: sint) {}
       
       func (self: ref [struct {v: [sint];}]) sixth(a: ref sint) {}
-    )");
-  });
-  
-  TEST(Identical structs, {
-    ASSERT_SUCCEEDS(R"(
-      func first(param: struct {value: sint;}) {}
-      type Number = sint;
-      func second(param: struct {value: Number;}) {}
-    )");
-  });
-  
-  TEST(Expressions, {
-    ASSERT_SUCCEEDS(R"(
-      func ifs() -> real {
-        if (11 < 14 || 6 == 7) {
-          return 3.0 / 4.0;
-        } else if (11u <= 9u) {
-          return 2.0 * 9.0;
-        } else {
-          return 16.0 + 1.0;
-        }
-      }
-      
-      func wile() -> uint {
-        while (1 == 2) {}
-        while (2 == 1) {
-          return 2u;
-        }
-        return 16u / 3u;
-      }
     )");
   });
   
@@ -163,6 +133,169 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(0), 0);
     ASSERT_EQ(func(-11), -11);
     ASSERT_EQ(func(42), 42);
+  });
+  
+  TEST(Switch with default, {
+    ASSERT_SUCCEEDS(R"(
+      func test(value: sint) -> real {
+        switch (value) {
+          case (0) {
+            return 0.0;
+          }
+          case (1) {
+            return 1.0;
+          }
+          case (2) {
+            return 2.0;
+          }
+          default {
+            return 3.0;
+          }
+        }
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(0), 0.0f);
+    ASSERT_EQ(func(1), 1.0f);
+    ASSERT_EQ(func(2), 2.0f);
+    ASSERT_EQ(func(3), 3.0f);
+    ASSERT_EQ(func(789), 3.0f);
+  });
+  
+  TEST(Switch without default, {
+    ASSERT_SUCCEEDS(R"(
+      func test(value: sint) -> real {
+        let zero = 0;
+        let one = 1;
+        let two = 2;
+        switch (value) {
+          case (zero) return 0.0;
+          case (one) return 1.0;
+          case (two) return 2.0;
+        }
+        return 10.0;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(0), 0.0);
+    ASSERT_EQ(func(1), 1.0);
+    ASSERT_EQ(func(2), 2.0);
+    ASSERT_EQ(func(3), 10.0);
+    ASSERT_EQ(func(-7), 10.0);
+  });
+  
+  TEST(Switch with fallthrough, {
+    ASSERT_SUCCEEDS(R"(
+      func test(value: sint) -> sint {
+        var sum = 0;
+        switch (value) {
+          case (4) {
+            sum = sum + 8;
+            continue;
+          }
+          default {
+            sum = sum - value;
+            break;
+          }
+          case (16) {
+            sum = sum + 2;
+            continue;
+          }
+          case (8) {
+            sum = sum + 4;
+          }
+        }
+        return sum;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(4), 4);
+    ASSERT_EQ(func(8), 4);
+    ASSERT_EQ(func(16), 6);
+    ASSERT_EQ(func(32), -32);
+    ASSERT_EQ(func(0), 0);
+  });
+  
+  TEST(If-else, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> real {
+        if (val < -8) {
+          return -1.0;
+        } else if (val > 8) {
+          return 1.0;
+        } else {
+          return 0.0;
+        }
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(-50), -1.0f);
+    ASSERT_EQ(func(3), 0.0f);
+    ASSERT_EQ(func(22), 1.0f);
+    ASSERT_EQ(func(-8), 0.0f);
+    ASSERT_EQ(func(8), 0.0f);
+  });
+  
+  TEST(If-else no return, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> real {
+        var ret: real;
+        if (val < -8) {
+          ret = -1.0;
+        } else if (val > 8) {
+          ret = 1.0;
+        } else {
+          ret = 0.0;
+        }
+        return ret;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(-50), -1.0f);
+    ASSERT_EQ(func(3), 0.0f);
+    ASSERT_EQ(func(22), 1.0f);
+    ASSERT_EQ(func(-8), 0.0f);
+    ASSERT_EQ(func(8), 0.0f);
+  });
+  
+  TEST(If, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> real {
+        if (val < 0) {
+          return -1.0;
+        }
+        return 1.0;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(2), 1.0);
+    ASSERT_EQ(func(0), 1.0);
+    ASSERT_EQ(func(-1), -1.0);
+    ASSERT_EQ(func(-5), -1.0);
+  });
+  
+  TEST(If no return, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) -> real {
+        var ret = 1.0;
+        if (val < 0) {
+          ret = -1.0;
+        }
+        return ret;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Sint));
+    ASSERT_EQ(func(2), 1.0);
+    ASSERT_EQ(func(0), 1.0);
+    ASSERT_EQ(func(-1), -1.0);
+    ASSERT_EQ(func(-5), -1.0);
   });
   
   /*

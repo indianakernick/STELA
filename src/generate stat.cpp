@@ -44,6 +44,37 @@ public:
     continueBlock = oldContinue;
     breakBlock = oldBrake;
   }
+  void appendBr(llvm::BasicBlock *dest) {
+    if (currBlock->empty() || !currBlock->back().isTerminator()) {
+      builder.CreateBr(dest);
+    }
+  }
+  llvm::BasicBlock *lazyAppendBr(llvm::BasicBlock *dest) {
+    if (currBlock->empty() || !currBlock->back().isTerminator()) {
+      if (!dest) {
+        dest = llvm::BasicBlock::Create(ctx.llvm, "", func);
+      }
+      builder.CreateBr(dest);
+    }
+    return dest;
+  }
+  std::vector<llvm::BasicBlock *> makeBlocks(size_t count) {
+    std::vector<llvm::BasicBlock *> blocks;
+    blocks.reserve(count);
+    while (count--) {
+      blocks.push_back(llvm::BasicBlock::Create(ctx.llvm, "", func));
+    }
+    return blocks;
+  }
+  llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
+    llvm::Value *exprValue = generateValueExpr(ctx, builder, expr);
+    const ArithNumber arith = classifyArith(expr);
+    if (arith == ArithNumber::floating_point) {
+      return builder.CreateFCmpOEQ(value, exprValue);
+    } else {
+      return builder.CreateICmpEQ(value, exprValue);
+    }
+  }
   
   void visit(ast::Block &block) override {
     for (const ast::StatPtr &stat : block.nodes) {
@@ -51,18 +82,137 @@ public:
     }
   }
   void visit(ast::If &fi) override {
+    auto *cond = nextEmpty();
     auto *troo = llvm::BasicBlock::Create(ctx.llvm, "", func);
     auto *folse = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    llvm::BasicBlock *done = nullptr;
+    setCurr(cond);
     builder.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
+    
     setCurr(troo);
     fi.body->accept(*this);
+    done = lazyAppendBr(done);
+    
     setCurr(folse);
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     }
+    done = lazyAppendBr(done);
+    
+    if (done) {
+      setCurr(done);
+    }
+    
+    /*auto *troo = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    auto *folse = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    builder.SetInsertPoint(currBlock);
+    builder.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
+    auto *done = llvm::BasicBlock::Create(ctx.llvm);
+    setCurr(troo);
+    fi.body->accept(*this);
+    appendBr(done);
+    setCurr(folse);
+    if (fi.elseBody) {
+      fi.elseBody->accept(*this);
+    }
+    appendBr(done);
+    setCurr(done);*/
   }
   void visit(ast::Switch &swich) override {
+    /*
     
+    switch (expr) {
+      case (case_expr_0) {
+        // do stuff 0
+      }
+      default {
+        // do stuff 2
+      }
+      case (case_expr_1) {
+        // do stuff 1
+      }
+    }
+    
+    const value = expr;
+    
+    check_block_0:
+    if (value == case_expr_0) goto case_block_0; else goto check_block_1;
+    
+    check_block_1:
+    if (value == case_expr_1) goto case_block_2; else goto check_block_2;
+    
+    check_block_2:
+    goto case_block_1
+    
+    case_block_0:
+    // do stuff 0
+    goto done;
+    
+    case_block_1:
+    // do stuff 2
+    goto done;
+    
+    case_block_2:
+    // do stuff 1
+    goto done;
+    
+    done:
+    
+    */
+    llvm::Value *value = generateValueExpr(ctx, builder, swich.expr.get());
+    if (swich.cases.empty()) {
+      return;
+    }
+    
+    std::vector<llvm::BasicBlock *> checkBlocks = makeBlocks(swich.cases.size());
+    std::vector<llvm::BasicBlock *> caseBlocks = makeBlocks(swich.cases.size());
+    llvm::BasicBlock *done = llvm::BasicBlock::Create(ctx.llvm, "", func);
+    size_t defaultIndex = ~size_t{};
+    bool foundDefault = false;
+    builder.CreateBr(checkBlocks[0]);
+    
+    for (size_t c = 0; c != swich.cases.size(); ++c) {
+      ast::Expression *expr = swich.cases[c].expr.get();
+      if (!expr) {
+        defaultIndex = c;
+        foundDefault = true;
+        continue;
+      }
+      const size_t checkIndex = c - foundDefault;
+      const size_t caseIndex = c;
+      
+      setCurr(checkBlocks[checkIndex]);
+      llvm::Value *cond = equalTo(value, expr);
+      
+      llvm::BasicBlock *nextCheck;
+      if (!foundDefault && c == swich.cases.size() - 1) {
+        nextCheck = done;
+      } else {
+        nextCheck = checkBlocks[checkIndex + 1];
+      }
+      
+      builder.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
+    }
+    
+    if (foundDefault) {
+      setCurr(checkBlocks.back());
+      builder.CreateBr(caseBlocks[defaultIndex]);
+    }
+    
+    for (size_t c = 0; c != swich.cases.size(); ++c) {
+      setCurr(caseBlocks[c]);
+      llvm::BasicBlock *nextBlock = nullptr;
+      if (c != swich.cases.size() - 1) {
+        nextBlock = caseBlocks[c + 1];
+      }
+      visitFlow(swich.cases[c].body.get(), done, nextBlock);
+      appendBr(done);
+    }
+    
+    setCurr(done);
+    if (swich.alwaysReturns) {
+      builder.CreateUnreachable();
+    }
   }
   void visit(ast::Break &) override {
     assert(breakBlock);
@@ -85,9 +235,7 @@ public:
     auto *done = llvm::BasicBlock::Create(ctx.llvm, "", func);
     setCurr(body);
     visitFlow(wile.body.get(), done, cond);
-    if (currBlock->empty() || !currBlock->back().isTerminator()) {
-      builder.CreateBr(cond);
-    }
+    appendBr(cond);
     setCurr(cond);
     builder.CreateCondBr(generateValueExpr(ctx, builder, wile.cond.get()), body, done);
     setCurr(done);
@@ -102,9 +250,7 @@ public:
     auto *done = llvm::BasicBlock::Create(ctx.llvm, "", func);
     setCurr(body);
     visitFlow(four.body.get(), done, incr);
-    if (currBlock->empty() || !currBlock->back().isTerminator()) {
-      builder.CreateBr(incr);
-    }
+    appendBr(incr);
     setCurr(cond);
     builder.CreateCondBr(generateValueExpr(ctx, builder, four.cond.get()), body, done);
     setCurr(incr);

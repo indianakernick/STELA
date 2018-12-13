@@ -381,17 +381,6 @@ let Choice_yes = 1;
    * handle lambdas and function pointers
    * produce unused symbol warnings
    * lookup builtin types and builtin functions
-
-## Plans
-
-It might be possible to compile to C before the end of the year.
- 
- - [x] Compile to C++17
- - [ ] Compile to C++14
- - [ ] Compile to C++11
- - [ ] Compile to C11
- - [ ] Expose some of the C standard library
- - [ ] Compile to LLVM IR
  
 ## Building
 

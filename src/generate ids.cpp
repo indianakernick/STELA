@@ -56,9 +56,7 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
-    swich.id = flowID++;
     for (ast::SwitchCase &cse : swich.cases) {
-      cse.id = flowID++;
       if (cse.expr) {
         cse.expr->accept(*this);
       }
@@ -127,7 +125,6 @@ public:
   }
   
 private:
-  uint32_t flowID = 0;
   uint32_t lamID = 0;
 };
 

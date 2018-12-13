@@ -264,7 +264,6 @@ struct SwitchCase final : Statement {
   Loc loc;
   
   Switch *parent = nullptr;
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };
@@ -273,7 +272,8 @@ struct Switch final : Statement {
   ExprPtr expr;
   std::vector<SwitchCase> cases;
   
-  uint32_t id = ~uint32_t{};
+  // @TODO Is there a better way?
+  bool alwaysReturns = false;
   
   void accept(Visitor &) override;
 };

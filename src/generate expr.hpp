@@ -15,6 +15,13 @@
 
 namespace stela {
 
+enum class ArithNumber {
+  signed_int,
+  unsigned_int,
+  floating_point
+};
+ArithNumber classifyArith(ast::Expression *);
+
 llvm::Value *generateAddrExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
 llvm::Value *generateValueExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
 

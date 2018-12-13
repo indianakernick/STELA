@@ -85,10 +85,13 @@ public:
     term = Term::returns;
     if (retCount == totalCases && foundDefault) {
       occurs = Occurs::yes;
+      swich.alwaysReturns = true;
     } else if (maybeRet || retCount != 0) {
       occurs = Occurs::maybe;
+      swich.alwaysReturns = false;
     } else {
       occurs = Occurs::no;
+      swich.alwaysReturns = false;
     }
   }
   void visit(ast::Break &) override {

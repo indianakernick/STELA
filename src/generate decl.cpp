@@ -81,27 +81,6 @@ public:
     str += swich.id;
     str += ": ;\n";
   }
-  void visit(ast::For &four) override {
-    str += "{\n";
-    if (four.init) {
-      four.init->accept(*this);
-    }
-    str += "while (";
-    str += generateExpr(ctx, four.cond.get());
-    str += ") {\n";
-    visitFlow(four, four.body);
-    str += "CONTINUE_LABEL_";
-    str += four.id;
-    str += ": ;\n";
-    if (four.incr) {
-      four.incr->accept(*this);
-    }
-    str += "}\n";
-    str += "BREAK_LABEL_";
-    str += four.id;
-    str += ": ;\n";
-    str += "}\n";
-  }
   */
   void visit(ast::Func &func) override {
     func.llvmFunc = llvm::Function::Create(
@@ -141,29 +120,7 @@ public:
     str += generateExpr(ctx, assign.right.get());
     str += ";\n";
   }
-  void visit(ast::IncrDecr &incr) override {
-    if (incr.incr) {
-      str += "++";
-    } else {
-      str += "--";
-    }
-    str += '(';
-    str += generateExpr(ctx, incr.expr.get());
-    str += ");\n";
-  }
-  void visit(ast::Assign &assign) override {
-    str += generateExpr(ctx, assign.left.get());
-    str += " = ";
-    str += generateExpr(ctx, assign.right.get());
-    str += ";\n";
-  }
-  void visit(ast::DeclAssign &decl) override {
-    appendVar(decl.symbol->etype, decl.id, decl.expr.get());
-  }
-  void visit(ast::CallAssign &call) override {
-    str += generateExpr(ctx, &call.call);
-    str += ";\n";
-  }*/
+  */
   
 private:
   gen::Ctx ctx;

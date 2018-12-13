@@ -42,29 +42,6 @@ public:
     */
   }
 
-  enum class ArithNumber {
-    signed_int,
-    unsigned_int,
-    floating_point
-  };
-  static ArithNumber classifyArith(ast::Expression *expr) {
-    ast::BtnType *type = concreteType<ast::BtnType>(expr->exprType.get());
-    assert(type);
-    switch (type->value) {
-      case ast::BtnTypeEnum::Char:
-      case ast::BtnTypeEnum::Sint:
-        return ArithNumber::signed_int;
-      case ast::BtnTypeEnum::Bool:
-      case ast::BtnTypeEnum::Byte:
-      case ast::BtnTypeEnum::Uint:
-        return ArithNumber::unsigned_int;
-      case ast::BtnTypeEnum::Real:
-        return ArithNumber::floating_point;
-      case ast::BtnTypeEnum::Void: ;
-    }
-    UNREACHABLE();
-  }
-
   void visit(ast::BinaryExpr &expr) override {
     llvm::Value *left = visitValue(expr.left.get());
     llvm::Value *right = visitValue(expr.right.get());
@@ -311,17 +288,16 @@ public:
     }*/
     value = getAddr(ident.definition);
   }
-  /*
+  
   void visit(ast::Ternary &tern) override {
-    str += '(';
-    tern.cond->accept(*this);
-    str += ") ? (";
+    llvm::Value *cond = visitValue(tern.cond.get());
     tern.tru->accept(*this);
-    str += ") : (";
+    llvm::Value *tru = value;
     tern.fals->accept(*this);
-    str += ')';
+    llvm::Value *fals = value;
+    value = builder.CreateSelect(cond, tru, fals);
   }
-  void visit(ast::Make &make) override {
+  /*void visit(ast::Make &make) override {
     str += generateType(ctx, make.type.get());
     str += '(';
     make.expr->accept(*this);
@@ -436,6 +412,24 @@ private:
   llvm::IRBuilder<> &builder;
 };
 
+}
+
+ArithNumber stela::classifyArith(ast::Expression *expr) {
+  ast::BtnType *type = concreteType<ast::BtnType>(expr->exprType.get());
+  assert(type);
+  switch (type->value) {
+    case ast::BtnTypeEnum::Char:
+    case ast::BtnTypeEnum::Sint:
+      return ArithNumber::signed_int;
+    case ast::BtnTypeEnum::Bool:
+    case ast::BtnTypeEnum::Byte:
+    case ast::BtnTypeEnum::Uint:
+      return ArithNumber::unsigned_int;
+    case ast::BtnTypeEnum::Real:
+      return ArithNumber::floating_point;
+    case ast::BtnTypeEnum::Void: ;
+  }
+  UNREACHABLE();
 }
 
 llvm::Value *stela::generateAddrExpr(
