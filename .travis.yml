@@ -10,7 +10,7 @@ notifications:
 matrix:
   include:
   - os: osx
-    osx_image: xcode10.1
+    osx_image: xcode10
     compiler: clang
     install:
     - brew install llvm
