@@ -9,13 +9,6 @@
 #ifndef stela_number_hpp
 #define stela_number_hpp
 
-// @TODO remove when we get MacOS 10.14 on Travis
-#ifdef __APPLE__
-#include <__config>
-#undef _LIBCPP_AVAILABILITY_THROW_BAD_VARIANT_ACCESS
-#define _LIBCPP_AVAILABILITY_THROW_BAD_VARIANT_ACCESS
-#endif
-
 #include <variant>
 #include <cstdint>
 

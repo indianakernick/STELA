@@ -360,9 +360,24 @@ public:
       true
     );
   }
+  
+  // @TODO Use std::visit when we get MacOS 10.14 on Travis
+  template <typename Type, typename Callable, typename Variant>
+  static void visitImpl(Callable &&fn, const Variant &variant) {
+    if (std::holds_alternative<Type>(variant)) {
+      // MacOS 10.13 doesn't have std::get
+      fn(*std::get_if<Type>(&variant));
+    }
+  }
+  
+  template <typename Callable, typename... Types>
+  static void poorMansVisit(Callable &&fn, const std::variant<Types...> &variant) {
+    (visitImpl<Types>(fn, variant), ...);
+  }
+  
   void visit(ast::NumberLiteral &num) override {
     llvm::Type *type = generateType(ctx, num.exprType.get());
-    std::visit([this, type] (auto val) {
+    poorMansVisit([this, type] (auto val) {
       using Type = std::decay_t<decltype(val)>;
       if constexpr (std::is_floating_point_v<Type>) {
         value = llvm::ConstantFP::get(
