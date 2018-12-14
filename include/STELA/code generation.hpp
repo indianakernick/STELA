@@ -15,12 +15,14 @@
 namespace llvm {
 
 class ExecutionEngine;
+class Module;
 
 }
 
 namespace stela {
 
-llvm::ExecutionEngine *generate(const Symbols &, LogSink &);
+std::unique_ptr<llvm::Module> generateIR(const Symbols &, LogSink &);
+llvm::ExecutionEngine *generateCode(std::unique_ptr<llvm::Module>, LogSink &);
 
 }
 

@@ -16,28 +16,30 @@
 #include "optimize module.hpp"
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 
-llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
+std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &sink) {
   Log log{sink, LogCat::generate};
   log.status() << "Generating code" << endlog;
   
   gen::TypeInst inst;
   gen::Ctx ctx {getLLVM(), inst, log};
   generateIDs(syms.decls);
-  auto module = std::make_unique<llvm::Module>("module", ctx.llvm);
+  auto module = std::make_unique<llvm::Module>("", ctx.llvm);
   generateDecl(ctx, module.get(), syms.decls);
   
   std::string str;
   llvm::raw_string_ostream strStream(str);
-  strStream << *module;
-  strStream.flush();
-  log.verbose() << "Compiled IR\n" << str << endlog;
-  
-  str.clear();
   if (llvm::verifyModule(*module, &strStream)) {
     strStream.flush();
     log.error() << str << fatal;
   }
   
+  return module;
+}
+
+llvm::ExecutionEngine *stela::generateCode(std::unique_ptr<llvm::Module> module, LogSink &sink) {
+  Log log{sink, LogCat::generate};
+  
+  std::string str;
   llvm::Module *modulePtr = module.get();
   auto engine = llvm::EngineBuilder(std::move(module))
                 .setErrorStr(&str)
@@ -49,11 +51,6 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   }
   
   optimizeModule(engine->getTargetMachine(), modulePtr);
-  
-  strStream << *modulePtr;
-  strStream.flush();
-  log.verbose() << "Optmized IR\n" << str << endlog;
-  
   engine->finalizeObject();
   
   return engine;

@@ -21,11 +21,27 @@ using namespace stela;
 
 namespace {
 
+llvm::ExecutionEngine *generate(const stela::Symbols &syms, LogSink &log) {
+  std::unique_ptr<llvm::Module> module = stela::generateIR(syms, log);
+  llvm::Module *modulePtr = module.get();
+  std::string str;
+  llvm::raw_string_ostream strStream(str);
+  strStream << *modulePtr;
+  strStream.flush();
+  std::cerr << "Generated IR\n" << str;
+  str.clear();
+  llvm::ExecutionEngine *engine = stela::generateCode(std::move(module), log);
+  strStream << *modulePtr;
+  strStream.flush();
+  std::cerr << "Optimized IR\n" << str;
+  return engine;
+}
+
 llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
   stela::AST ast = stela::createAST(source, log);
   stela::Symbols syms = stela::initModules(log);
   stela::compileModule(syms, ast, log);
-  return stela::generate(syms, log);
+  return generate(syms, log);
 }
 
 template <typename Fun>
