@@ -600,6 +600,52 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(40), 42);
   });
   
+  TEST(Access struct across boundary, {
+    ASSERT_SUCCEEDS(R"(
+      type Structure struct {
+        a: byte;
+        b: byte;
+        c: byte;
+        d: byte;
+        e: real;
+        f: char;
+        g: sint;
+      };
+      
+      func set(s: ref Structure, v: sint) {
+        s.g = v;
+      }
+      func get(s: ref Structure) {
+        return s.g;
+      }
+    )");
+    
+    struct Structure {
+      Byte a;
+      Byte b;
+      Byte c;
+      Byte d;
+      Real e;
+      Char f;
+      Sint g;
+    } s;
+    
+    auto set = GET_FUNC("set", Void(Structure *, Sint));
+    
+    s.g = 0;
+    set(&s, 4);
+    ASSERT_EQ(s.g, 4);
+    set(&s, -100000);
+    ASSERT_EQ(s.g, -100000);
+    
+    auto get = GET_FUNC("get", Sint(Structure *));
+    
+    s.g = 4;
+    ASSERT_EQ(get(&s), 4);
+    s.g = -100000;
+    ASSERT_EQ(get(&s), -100000);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

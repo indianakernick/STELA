@@ -34,53 +34,6 @@ public:
       return type;
     }
   }
-
-  void visit(ast::Switch &swich) override {
-    str += "{\n";
-    str += "const auto v_swh_";
-    str += swich.id;
-    str += " = ";
-    str += generateExpr(ctx, swich.expr.get());
-    str += ";\n";
-    
-    const ast::SwitchCase *defaultCase = nullptr;
-    for (const ast::SwitchCase &cse : swich.cases) {
-      if (!cse.expr) {
-        defaultCase = &cse;
-        continue;
-      }
-      str += "if (v_swh_";
-      str += swich.id;
-      str += " == (";
-      str += generateExpr(ctx, cse.expr.get());
-      str += ")) goto CASE_LABEL_";
-      str += cse.id;
-      str += ";\n";
-    }
-    if (defaultCase) {
-      str += "goto CASE_LABEL_";
-      str += defaultCase->id;
-      str += ";\n";
-    }
-    
-    for (ast::SwitchCase &cse : swich.cases) {
-      str += "CASE_LABEL_";
-      str += cse.id;
-      str += ": ;\n";
-      visitFlow(cse, cse.body);
-      str += "goto BREAK_LABEL_";
-      str += swich.id;
-      str += ";\n";
-      str += "CONTINUE_LABEL_";
-      str += cse.id;
-      str += ": ;\n";
-    }
-    
-    str += "}\n";
-    str += "BREAK_LABEL_";
-    str += swich.id;
-    str += ": ;\n";
-  }
   */
   void visit(ast::Func &func) override {
     func.llvmFunc = llvm::Function::Create(
@@ -110,17 +63,6 @@ public:
   void visit(ast::Let &let) override {
     //appendVar(let.symbol->etype, let.id, let.expr.get());
   }
-  
-  /*
-  void visit(ast::CompAssign &assign) override {
-    str += generateExpr(ctx, assign.left.get());
-    str += ' ';
-    str += opName(assign.oper);
-    str += ' ';
-    str += generateExpr(ctx, assign.right.get());
-    str += ";\n";
-  }
-  */
   
 private:
   gen::Ctx ctx;

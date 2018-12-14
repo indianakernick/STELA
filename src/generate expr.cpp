@@ -204,19 +204,6 @@ public:
       // @TODO get the parameter types of a function pointer
       pushArgs(call.args, {});
       str += ")";
-    } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
-      str += "f_";
-      str += func->id;
-      str += '(';
-      if (func->receiver) {
-        str += '(';
-        assertDownCast<ast::MemberIdent>(call.func.get())->object->accept(*this);
-        str += ')';
-      } else {
-        str += "nullptr";
-      }
-      pushArgs(call.args, func->symbol->params);
-      str += ')';
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       pushBtnFunc(btnFunc->value);
       str += '(';
