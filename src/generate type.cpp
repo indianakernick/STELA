@@ -28,6 +28,7 @@ public:
       case ast::BtnTypeEnum::Void:
         llvmType = llvm::Type::getVoidTy(ctx.llvm); return;
       case ast::BtnTypeEnum::Bool:
+        llvmType = llvm::Type::getInt1Ty(ctx.llvm); return;
       case ast::BtnTypeEnum::Byte:
       case ast::BtnTypeEnum::Char:
         llvmType = llvm::Type::getInt8Ty(ctx.llvm); return;

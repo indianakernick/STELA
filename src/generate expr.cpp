@@ -379,11 +379,11 @@ public:
     }, num.number);
   }
   void visit(ast::BoolLiteral &bol) override {
-    llvm::Type *boolType = llvm::IntegerType::getInt8Ty(ctx.llvm);
+    llvm::Type *boolType = llvm::IntegerType::getInt1Ty(ctx.llvm);
     if (bol.value) {
-      value = llvm::ConstantInt::get(boolType, 1);
+      value = llvm::ConstantInt::getTrue(boolType);
     } else {
-      value = llvm::ConstantInt::get(boolType, 0);
+      value = llvm::ConstantInt::getFalse(boolType);
     }
   }
   /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
