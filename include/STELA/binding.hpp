@@ -19,10 +19,13 @@ class Function;
 template <typename Ret, typename... Params>
 class Function<Ret(Params...)> {
 public:
-  using FnType = __cdecl Ret(void *, Params...);
+  // @TODO find a cross platform way of setting the calling convention
+  // There's a chance that the calling conventions of the C++ compiler and LLVM
+  // will not match
+  using Type = /* __cdecl */ Ret(void *, Params...);
   
   explicit Function(const uint64_t addr)
-    : ptr{reinterpret_cast<FnType *>(addr)} {}
+    : ptr{reinterpret_cast<Type *>(addr)} {}
   
   template <typename... Args>
   Ret operator()(Args... args) {
@@ -30,7 +33,7 @@ public:
   }
   
 private:
-  FnType *ptr;
+  Type *ptr;
 };
 
 }
