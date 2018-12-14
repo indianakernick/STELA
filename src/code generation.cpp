@@ -30,7 +30,7 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
   llvm::raw_string_ostream strStream(str);
   strStream << *module;
   strStream.flush();
-  log.info() << '\n' << str << endlog;
+  log.verbose() << "Compiled IR\n" << str << endlog;
   
   str.clear();
   if (llvm::verifyModule(*module, &strStream)) {
@@ -48,15 +48,12 @@ llvm::ExecutionEngine *stela::generate(const Symbols &syms, LogSink &sink) {
     log.error() << str << fatal;
   }
   
-  optimizeModule(engine, modulePtr);
+  optimizeModule(engine->getTargetMachine(), modulePtr);
   
-  /*strStream << *modulePtr;
+  strStream << *modulePtr;
   strStream.flush();
-  log.info() << '\n' << str << endlog;*/
+  log.verbose() << "Optmized IR\n" << str << endlog;
   
-  if (llvm::TargetMachine *machine = engine->getTargetMachine()) {
-    log.info() << "Generating code for " << machine->getTargetTriple().str() << endlog;
-  }
   engine->finalizeObject();
   
   return engine;

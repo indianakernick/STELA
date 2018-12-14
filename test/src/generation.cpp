@@ -41,7 +41,7 @@ auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
 
 TEST_GROUP(Generation, {
   StreamSink stream;
-  FilterSink log{stream, LogPri::status};
+  FilterSink log{stream, LogPri::verbose};
   
   TEST(Empty source, {
     ASSERT_SUCCEEDS("");

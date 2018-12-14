@@ -1038,6 +1038,10 @@
 					"-lcurses",
 					"-lm",
 					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1115,6 +1119,10 @@
 					"-lcurses",
 					"-lm",
 					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

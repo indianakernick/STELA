@@ -11,14 +11,14 @@
 
 namespace llvm {
 
-class ExecutionEngine;
+class TargetMachine;
 class Module;
 
 }
 
 namespace stela {
 
-void optimizeModule(llvm::ExecutionEngine *, llvm::Module *);
+void optimizeModule(llvm::TargetMachine *, llvm::Module *);
 
 }
 

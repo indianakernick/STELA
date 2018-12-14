@@ -126,7 +126,10 @@ std::streambuf *stela::StreamSink::getBuf(const LogInfo &) {
 
 void stela::StreamSink::writeTail(const LogInfo &) {
   std::ostream stream{buf};
-  stream << std::endl;
+  stream << '\n';
+  #ifndef NDEBUG
+  stream << std::flush;
+  #endif
 }
 
 namespace {
@@ -164,7 +167,10 @@ std::streambuf *stela::ColorSink::getBuf(const LogInfo &) {
 }
 
 void stela::ColorSink::writeTail(const LogInfo &) {
-  std::cerr << con::no_italic << std::endl;
+  std::cerr << con::no_italic << '\n';
+  #ifndef NDEBUG
+  std::cerr << std::flush;
+  #endif
 }
 
 bool stela::NullSink::writeHead(const LogInfo &) {

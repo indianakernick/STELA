@@ -11,7 +11,7 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate stat.hpp"
-#include <llvm/IR/function.h>
+#include <llvm/IR/Function.h>
 #include "generate zero expr.hpp"
 
 using namespace stela;

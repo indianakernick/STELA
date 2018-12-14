@@ -95,7 +95,6 @@ add_library(STELA STATIC
         "src/generate decl.cpp"
         "src/generate decl.hpp"
         "src/gen context.hpp"
-        "src/gen string.hpp"
         "src/type instantiations.cpp"
         "src/type instantiations.hpp"
         "src/generate ids.cpp"
@@ -150,7 +149,7 @@ target_compile_definitions(STELA
         ${LLVM_DEFINITIONS}
 )
 
-llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser)
+llvm_map_components_to_libnames(llvm_libs core native mcjit asmprinter asmparser linker instrumentation vectorize ipo)
 
 target_link_libraries(STELA
         PUBLIC
