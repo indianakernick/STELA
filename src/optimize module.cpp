@@ -55,38 +55,6 @@ std::unique_ptr<Module> getLazyIRFileModule(StringRef, SMDiagnostic &, LLVMConte
 }
 
 void stela::optimizeModule(llvm::TargetMachine *machine, llvm::Module *module) {
-  // @TODO do we need to do this
-  llvm::PassRegistry &registry = *llvm::PassRegistry::getPassRegistry();
-  llvm::initializeCore(registry);
-  llvm::initializeScalarOpts(registry);
-  llvm::initializeVectorization(registry);
-  llvm::initializeIPO(registry);
-  llvm::initializeAnalysis(registry);
-  llvm::initializeTransformUtils(registry);
-  llvm::initializeInstCombine(registry);
-  llvm::initializeAggressiveInstCombine(registry);
-  llvm::initializeInstrumentation(registry);
-  llvm::initializeTarget(registry);
-  llvm::initializeExpandMemCmpPassPass(registry);
-  llvm::initializeScalarizeMaskedMemIntrinPass(registry);
-  llvm::initializeCodeGenPreparePass(registry);
-  llvm::initializeAtomicExpandPass(registry);
-  llvm::initializeRewriteSymbolsLegacyPassPass(registry);
-  llvm::initializeWinEHPreparePass(registry);
-  llvm::initializeDwarfEHPreparePass(registry);
-  llvm::initializeSafeStackLegacyPassPass(registry);
-  llvm::initializeSjLjEHPreparePass(registry);
-  llvm::initializePreISelIntrinsicLoweringLegacyPassPass(registry);
-  llvm::initializeGlobalMergePass(registry);
-  llvm::initializeIndirectBrExpandPassPass(registry);
-  llvm::initializeInterleavedAccessPass(registry);
-  llvm::initializeEntryExitInstrumenterPass(registry);
-  llvm::initializePostInlineEntryExitInstrumenterPass(registry);
-  llvm::initializeUnreachableBlockElimLegacyPassPass(registry);
-  llvm::initializeExpandReductionsPass(registry);
-  llvm::initializeWasmEHPreparePass(registry);
-  llvm::initializeWriteBitcodePassPass(registry);
-
   module->setTargetTriple(machine->getTargetTriple().str());
   module->setDataLayout(machine->createDataLayout());
 

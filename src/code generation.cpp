@@ -14,7 +14,7 @@
 #include "generate decl.hpp"
 #include <llvm/IR/Verifier.h>
 #include "optimize module.hpp"
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/MCJIT.h>
 
 std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &sink) {
   Log log{sink, LogCat::generate};

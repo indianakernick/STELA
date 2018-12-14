@@ -24,18 +24,19 @@ static typing.
 
 ## Examples
 
-Support for compiling to C++ has arrived! However, the resultant program has an empty main function and 
-Stela has no way of accessing the C standard library so you have to tweak compiled programs if you want them to output something.
-That isn't something I'm going to fix because compiling to C++ is just a milestone on my way to JITing with LLVM.
+The LLVM backend is underway. Lambdas and arrays are not supported yet. It's still very experimental.
+Part of the C++ backend is still in the code but commented out.
 
-The CLI is not implemented yet so here is an example of compiling a Stela program to C++. See the **Building** section.
+The CLI is not implemented yet so here is an example of compiling a Stela program to LLVM IR and executing it. See the **Building** section.
 
 ```C++
-#include <fstream>
 #include <iostream>
+#include <STELA/llvm.hpp>
+#include <STELA/binding.hpp>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 int main() {
   const std::string_view source = R"(
@@ -44,38 +45,43 @@ int main() {
     }
   )";
 
-  // Create a log stategy object
-  // ColorLog implements color logging using escape codes
-  // There's also StreamLog which writes to a std::ostream
-  // and NoLog which just does nothing.
-  stela::ColorLog log;
-  // LogPri::status is the lowest logging priority 
-  // so we'll get everything
-  log.pri(stela::LogPri::status);
+  // Create a log sink
+  // ColorSink implements color logging using ANSI escape codes
+  // See STELA/log.hpp for the other sinks
+  stela::ColorSink sink;
   
   // Create an Abstract Syntax Tree from the source code
-  stela::AST ast = stela::createAST(source, log);
+  stela::AST ast = stela::createAST(source, sink);
   // Initialize the builtin types and functions
-  stela::Symbols syms = stela::initModules(log);
+  stela::Symbols syms = stela::initModules(sink);
   // Perform semantic analysis (type checking and all that) on the AST
-  stela::compileModule(syms, ast, log);
+  stela::compileModule(syms, ast, sink);
   
-  // Generate C++ source
-  // The whole program (with all of the modules) is compiled into one
-  // C++ source file
-  std::string cpp = stela::generateCpp(syms, log);
-  std::ofstream file("program.cpp");
-  if (file.is_open()) {
-    file << cpp;
-  } else {
-    std::cout << "Couldn't open output file\n";
-    return 1;
-  }
+  // Make sure LLVM is initialized before you do any code generation
+  stela::initLLVM();
+  
+  // Generate LLVM IR
+  // The whole program (with all of the modules) is compiled to one llvm::Module
+  std::unique_ptr<llvm::Module> module = stela::generateIR(syms, sink);
+  // Create an executable from the LLVM IR
+  llvm::ExecutionEngine *engine = stela::generateCode(std::move(module), sink);
+  
+  // stela::Real is just an alias for float so you can do this if you want
+  // using Signature = float(float, float);
+  using Signature = stela::Real(stela::Real, stela::Real);
+  // There's no type checking yet
+  // We're just blindly reinterpret_casting a pointer
+  stela::Function<Signature> plus{engine->getFunctionAddress("plus")};
+  std::cout << "7 + 9 = " << plus(7.0f, 9.0f) << '\n';
+  
+  stela::quitLLVM();
+  
   return 0;
 }
 ```
 
-Here's some programs you can try out!
+~~Here's some programs you can try out!~~ Currently, only the **Member functions** test can be compiled to LLVM IR.
+The other tests use arrays, lambdas and global variables which are not supported yet.
 
 ### Lambdas
 
@@ -386,6 +392,7 @@ let Choice_yes = 1;
 
 This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. 
 CMake will automatically download Simpleton so you don't have to worry about it.
+Another dependency (that you *do* have to worry about) is LLVM. See the **Install LLVM** section for details.
 
 ```bash
 cd build
@@ -402,3 +409,16 @@ make install
 ```
 
 This will install `lib/libSTELA.a`, `include/STELA` and `bin/stela`.
+
+## Install LLVM
+
+If LLVM is not available with your favorite package manager (`brew`, `apt-get`, `vcpkg`),
+visit the [LLVM Download Page](https://releases.llvm.org/download.html)
+to download the sources or pre-built binaries.
+
+If CMake is unable to find LLVM, set the prefix path to the directory containing `LLVMConfig.cmake`. 
+For example, on MacOS, you might need pass this flag to CMake if you're installing with Homebrew: 
+
+```
+-DCMAKE_PREFIX_PATH=/usr/local/opt/llvm/lib/cmake/llvm
+```

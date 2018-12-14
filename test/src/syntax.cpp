@@ -94,7 +94,7 @@ TEST_GROUP(Syntax, {
   });
   
   TEST(Silent Logger, {
-    std::cout << "Testing silent logger\n";
+    std::cerr << "Testing silent logger\n";
     const char *source = R"(
       ;;;
     
@@ -104,7 +104,7 @@ TEST_GROUP(Syntax, {
       NullSink noLog;
       createAST(source, noLog);
     } catch (FatalError &e) {
-      std::cout << "Should have got nothing but this " << e.what() << " exception\n";
+      std::cerr << "Should have got nothing but this " << e.what() << " exception\n";
     }
   });
   
