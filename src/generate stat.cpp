@@ -10,6 +10,7 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "unreachable.hpp"
 #include "generate expr.hpp"
 #include "generate type.hpp"
 #include <llvm/IR/IRBuilder.h>
@@ -229,9 +230,40 @@ public:
     let.llvmAddr = insertVar(let.symbol->etype.type.get(), let.expr.get());
   }
   
+  static ast::BinOp convert(const ast::AssignOp op) {
+    #define CASE(OP) case ast::AssignOp::OP: return ast::BinOp::OP
+    
+    switch (op) {
+      CASE(add);
+      CASE(sub);
+      CASE(mul);
+      CASE(div);
+      CASE(mod);
+      CASE(pow);
+      CASE(bit_or);
+      CASE(bit_xor);
+      CASE(bit_and);
+      CASE(bit_shl);
+      CASE(bit_shr);
+    }
+    
+    #undef CASE
+    
+    UNREACHABLE();
+  }
+  
+  // @TODO maybe a lowering pass? Lower CompAssign to Assign?
+  void visit(ast::CompAssign &assign) override {
+    auto binExpr = make_retain<ast::BinaryExpr>();
+    binExpr->left = assign.left;
+    binExpr->right = assign.right;
+    binExpr->oper = convert(assign.oper);
+    llvm::Value *value = generateValueExpr(ctx, builder, binExpr.get());
+    llvm::Value *addr = generateAddrExpr(ctx, builder, assign.left.get());
+    builder.CreateStore(value, addr);
+  }
   void visit(ast::IncrDecr &assign) override {
-    //llvm::Value *addr = generateAddrExpr(ctx, builder, assign.expr.get());
-    //classifyArrith(assign.expr->exprType.get())
+    
   }
   void visit(ast::Assign &assign) override {
     llvm::Value *addr = generateAddrExpr(ctx, builder, assign.left.get());

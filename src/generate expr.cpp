@@ -61,14 +61,14 @@ public:
       }                                                                         \
       return
     
-    #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP) \
-      if (arith == ArithNumber::signed_int) { \
-        value = builder.S_OP(left, right); \
-      } else if (arith == ArithNumber::unsigned_int) { \
-        value = builder.U_OP(left, right); \
-      } else { \
-        value = builder.F_OP(left, right); \
-      } \
+    #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
+      if (arith == ArithNumber::signed_int) {                                   \
+        value = builder.S_OP(left, right);                                      \
+      } else if (arith == ArithNumber::unsigned_int) {                          \
+        value = builder.U_OP(left, right);                                      \
+      } else {                                                                  \
+        value = builder.F_OP(left, right);                                      \
+      }                                                                         \
       return
     
     switch (expr.oper) {

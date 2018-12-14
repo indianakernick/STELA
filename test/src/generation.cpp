@@ -542,6 +542,24 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(1), true);
   });
   
+  TEST(Compound assignments, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) {
+        val *= 2;
+        val += 2;
+        val /= 2;
+        return val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(0), 1);
+    ASSERT_EQ(func(1), 2);
+    ASSERT_EQ(func(2), 3);
+    ASSERT_EQ(func(41), 42);
+    ASSERT_EQ(func(-13), -12);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
