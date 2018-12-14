@@ -560,6 +560,46 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(-13), -12);
   });
   
+  TEST(Incr decr assignments, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: sint) {
+        val++;
+        val++;
+        val++;
+        val--;
+        val--;
+        val++;
+        return val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Sint(Sint));
+    ASSERT_EQ(func(0), 2);
+    ASSERT_EQ(func(-2), 0);
+    ASSERT_EQ(func(55), 57);
+    ASSERT_EQ(func(40), 42);
+  });
+  
+  TEST(Incr decr assignments floats, {
+    ASSERT_SUCCEEDS(R"(
+      func test(val: real) {
+        val++;
+        val++;
+        val++;
+        val--;
+        val--;
+        val++;
+        return val;
+      }
+    )");
+    
+    auto func = GET_FUNC("test", Real(Real));
+    ASSERT_EQ(func(0), 2);
+    ASSERT_EQ(func(-2), 0);
+    ASSERT_EQ(func(55), 57);
+    ASSERT_EQ(func(40), 42);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

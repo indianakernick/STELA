@@ -11,6 +11,7 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
+#include "assert down cast.hpp"
 
 namespace llvm {
 
@@ -36,6 +37,11 @@ ast::Type *concreteType(ast::Type *);
 template <typename Concrete>
 Concrete *concreteType(ast::Type *type) {
   return dynamic_cast<Concrete *>(concreteType(type));
+}
+
+template <typename Concrete>
+Concrete *assertConcreteType(ast::Type *type) {
+  return assertDownCast<Concrete>(concreteType(type));
 }
 
 llvm::StructType *generateLambdaCapture(gen::Ctx, const ast::Lambda &);
