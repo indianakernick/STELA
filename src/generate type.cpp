@@ -112,7 +112,7 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) 
   llvm::Type *ret = generateType(ctx, func.ret.get());
   std::vector<llvm::Type *> params;
   if (func.receiver) {
-    params.push_back(convertParam(ctx, convert(func.receiver.value())));
+    params.push_back(convertParam(ctx, convert(*func.receiver)));
   } else {
     params.push_back(getVoidPtr(ctx));
   }

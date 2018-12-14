@@ -291,7 +291,7 @@ void stela::generateStat(
   Visitor visitor{ctx, func};
   // @TODO maybe do parameter insersion in a separate function
   if (rec) {
-    visitor.insert(rec.value(), 0);
+    visitor.insert(*rec, 0);
   }
   for (size_t p = 0; p != params.size(); ++p) {
     visitor.insert(params[p], p + 1);

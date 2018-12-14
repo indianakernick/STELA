@@ -182,7 +182,7 @@ public:
       std::vector<llvm::Value *> args;
       args.reserve(1 + call.args.size());
       if (func->receiver) {
-        const ast::ParamRef ref = func->receiver.value().ref;
+        const ast::ParamRef ref = func->receiver->ref;
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
         args.push_back(visitParam(ref, self));
       } else {
