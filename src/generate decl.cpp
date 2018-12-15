@@ -59,7 +59,7 @@ public:
     
     func.llvmFunc = llvm::Function::Create(
       llvm::FunctionType::get(realRet, realParams, false),
-      llvm::Function::ExternalLinkage,
+      func.external ? llvm::Function::ExternalLinkage : llvm::Function::InternalLinkage,
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );

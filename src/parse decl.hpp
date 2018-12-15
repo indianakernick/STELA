@@ -14,9 +14,9 @@
 
 namespace stela {
 
-ast::DeclPtr parseVar(ParseTokens &);
-ast::DeclPtr parseLet(ParseTokens &);
-ast::DeclPtr parseDecl(ParseTokens &);
+ast::DeclPtr parseVar(ParseTokens &, bool = false);
+ast::DeclPtr parseLet(ParseTokens &, bool = false);
+ast::DeclPtr parseDecl(ParseTokens &, bool = false);
 
 }
 

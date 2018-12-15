@@ -69,13 +69,14 @@ ast::Block stela::parseFuncBody(ParseTokens &tok) {
   return body;
 }
 
-ast::DeclPtr stela::parseFunc(ParseTokens &tok) {
+ast::DeclPtr stela::parseFunc(ParseTokens &tok, const bool external) {
   if (!tok.checkKeyword("func")) {
     return nullptr;
   }
   
   Context ctx = tok.context("in function");
   auto funcNode = make_retain<ast::Func>();
+  funcNode->external = external;
   funcNode->loc = tok.lastLoc();
   funcNode->receiver = parseReceiver(tok);
   funcNode->name = tok.expectID();

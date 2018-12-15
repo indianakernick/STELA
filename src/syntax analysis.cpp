@@ -37,7 +37,7 @@ AST stela::createAST(const Tokens &tokens, LogSink &sink) {
       ast.imports.push_back(tok.expectID());
       tok.expectOp(";");
       tok.extraSemi();
-    } else if (ast::DeclPtr node = parseDecl(tok)) {
+    } else if (ast::DeclPtr node = parseDecl(tok, tok.checkKeyword("extern"))) {
       ast.global.emplace_back(std::move(node));
       tok.extraSemi();
     } else {

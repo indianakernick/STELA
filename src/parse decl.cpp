@@ -15,12 +15,13 @@
 
 using namespace stela;
 
-ast::DeclPtr stela::parseVar(ParseTokens &tok) {
+ast::DeclPtr stela::parseVar(ParseTokens &tok, const bool external) {
   if (!tok.checkKeyword("var")) {
     return nullptr;
   }
   Context ctx = tok.context("in var declaration");
   auto var = make_retain<ast::Var>();
+  var->external = external;
   var->loc = tok.lastLoc();
   var->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -33,12 +34,13 @@ ast::DeclPtr stela::parseVar(ParseTokens &tok) {
   return var;
 }
 
-ast::DeclPtr stela::parseLet(ParseTokens &tok) {
+ast::DeclPtr stela::parseLet(ParseTokens &tok, const bool external) {
   if (!tok.checkKeyword("let")) {
     return nullptr;
   }
   Context ctx = tok.context("in let declaration");
   auto let = make_retain<ast::Let>();
+  let->external = external;
   let->loc = tok.lastLoc();
   let->name = tok.expectID();
   if (tok.checkOp(":")) {
@@ -52,9 +54,12 @@ ast::DeclPtr stela::parseLet(ParseTokens &tok) {
 
 namespace {
 
-ast::DeclPtr parseTypealias(ParseTokens &tok) {
+ast::DeclPtr parseTypealias(ParseTokens &tok, const bool external) {
   if (!tok.checkKeyword("type")) {
     return nullptr;
+  }
+  if (external) {
+    tok.log().error(tok.lastLoc()) << "extern cannot be applied to type alias" << fatal;
   }
   Context ctx = tok.context("in type alias");
   auto aliasNode = make_retain<ast::TypeAlias>();
@@ -68,10 +73,10 @@ ast::DeclPtr parseTypealias(ParseTokens &tok) {
 
 }
 
-ast::DeclPtr stela::parseDecl(ParseTokens &tok) {
-  if (ast::DeclPtr node = parseFunc(tok)) return node;
-  if (ast::DeclPtr node = parseVar(tok)) return node;
-  if (ast::DeclPtr node = parseLet(tok)) return node;
-  if (ast::DeclPtr node = parseTypealias(tok)) return node;
+ast::DeclPtr stela::parseDecl(ParseTokens &tok, const bool external) {
+  if (ast::DeclPtr node = parseFunc(tok, external)) return node;
+  if (ast::DeclPtr node = parseVar(tok, external)) return node;
+  if (ast::DeclPtr node = parseLet(tok, external)) return node;
+  if (ast::DeclPtr node = parseTypealias(tok, external)) return node;
   return nullptr;
 }

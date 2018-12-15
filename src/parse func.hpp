@@ -17,7 +17,7 @@ namespace stela {
 ast::FuncParams parseFuncParams(ParseTokens &);
 ast::TypePtr parseFuncRet(ParseTokens &);
 ast::Block parseFuncBody(ParseTokens &);
-ast::DeclPtr parseFunc(ParseTokens &);
+ast::DeclPtr parseFunc(ParseTokens &, bool);
 
 }
 

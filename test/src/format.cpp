@@ -28,15 +28,16 @@ type Vec3 struct {
   z: real;
 };
 
-let origin = make Vec3 {0.0, 0.0, 0.0};
+extern var number = 0;
+extern let origin = make Vec3 {0.0, 0.0, 0.0};
 let nesting = make sint make real make uint {};
 
 type IntStack [sint];
 
-func (self: ref IntStack) push(value: sint) {
+extern func (self: ref IntStack) push(value: sint) {
   push_back(self, value);
 }
-func (self: ref IntStack) pop() {
+extern func (self: ref IntStack) pop() {
   pop_back(self);
 }
 func (self: ref IntStack) pop_top() -> sint {
@@ -69,7 +70,7 @@ let equal = isEqual;
 
 let ray = ['r', 'a', 'y'];
 
-func sort(array: [sint], pred: func(sint, sint)->bool) {
+extern func sort(array: [sint], pred: func(sint, sint)->bool) {
   // sorting...
 }
 

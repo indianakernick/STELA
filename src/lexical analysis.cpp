@@ -23,7 +23,7 @@ stela::Loc operator+(Utils::LineCol<> lineCol) {
 namespace {
 
 constexpr std::string_view keywords[] = {
-  "func", "ref", "return",
+  "extern", "func", "ref", "return",
   "struct", "true", "false",
   "let", "var", "type", "make",
   "if", "else", "switch", "case", "default",

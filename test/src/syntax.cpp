@@ -543,6 +543,60 @@ TEST_GROUP(Syntax, {
     }
   });
   
+  TEST(Decl - extern, {
+    const char *source = R"(
+      func a() {}
+      var b = 0;
+      let c = 0;
+    
+      extern func d() {}
+      extern var e = 0;
+      extern let f = 0;
+    )";
+    const AST ast = createAST(source, log);
+    ASSERT_EQ(ast.global.size(), 6);
+    
+    auto *a = ASSERT_DOWN_CAST(const Func, ast.global[0]);
+    ASSERT_EQ(a->name, "a");
+    ASSERT_FALSE(a->external);
+    
+    auto *b = ASSERT_DOWN_CAST(const Var, ast.global[1]);
+    ASSERT_EQ(b->name, "b");
+    ASSERT_FALSE(b->external);
+    
+    auto *c = ASSERT_DOWN_CAST(const Let, ast.global[2]);
+    ASSERT_EQ(c->name, "c");
+    ASSERT_FALSE(c->external);
+    
+    auto *d = ASSERT_DOWN_CAST(const Func, ast.global[3]);
+    ASSERT_EQ(d->name, "d");
+    ASSERT_TRUE(d->external);
+    
+    auto *e = ASSERT_DOWN_CAST(const Var, ast.global[4]);
+    ASSERT_EQ(e->name, "e");
+    ASSERT_TRUE(e->external);
+    
+    auto *f = ASSERT_DOWN_CAST(const Let, ast.global[5]);
+    ASSERT_EQ(f->name, "f");
+    ASSERT_TRUE(f->external);
+  });
+  
+  TEST(Decl - extern type, {
+    const char *source = R"(
+      extern type sint;
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
+  TEST(Decl - extern local, {
+    const char *source = R"(
+      func fn() {
+        extern var num = 0;
+      }
+    )";
+    ASSERT_THROWS(createAST(source, log), FatalError);
+  });
+  
   TEST(Decl - global, {
     const char *source = R"(
       module my_awesome_module;

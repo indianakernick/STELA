@@ -231,6 +231,9 @@ public:
   }
   
   void visit(ast::Func &func) override {
+    if (func.external) {
+      pushKey("extern");
+    }
     pushKey("func");
     if (func.receiver) {
       pushOp("(");
@@ -250,6 +253,9 @@ public:
     func.body.accept(*this);
   }
   void visit(ast::Var &var) override {
+    if (var.external) {
+      pushKey("extern");
+    }
     pushKeyName("var", var.name);
     if (var.type) {
       pushOp(":");
@@ -265,6 +271,9 @@ public:
     pushOp(";");
   }
   void visit(ast::Let &let) override {
+    if (let.external) {
+      pushKey("extern");
+    }
     pushKeyName("let", let.name);
     if (let.type) {
       pushOp(":");

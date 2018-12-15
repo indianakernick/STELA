@@ -65,7 +65,7 @@ TEST_GROUP(Generation, {
   
   TEST(Function arguments, {
     ASSERT_SUCCEEDS(R"(
-      func divide(a: real, b: real) -> real {
+      extern func divide(a: real, b: real) -> real {
         return a / b;
       }
     )");
@@ -76,7 +76,7 @@ TEST_GROUP(Generation, {
   
   TEST(Ref function arguments, {
     ASSERT_SUCCEEDS(R"(
-      func swap(a: ref sint, b: ref sint) {
+      extern func swap(a: ref sint, b: ref sint) {
         let t = a;
         a = b;
         b = t;
@@ -92,7 +92,7 @@ TEST_GROUP(Generation, {
   
   TEST(For loop, {
     ASSERT_SUCCEEDS(R"(
-      func multiply(a: uint, b: uint) -> uint {
+      extern func multiply(a: uint, b: uint) -> uint {
         var product = 0u;
         for (; a != 0u; a = a - 1u) {
           product = product + b;
@@ -111,7 +111,7 @@ TEST_GROUP(Generation, {
   
   TEST(Identity, {
     ASSERT_SUCCEEDS(R"(
-      func identity(value: sint) -> sint {
+      extern func identity(value: sint) -> sint {
         return value;
       }
     )");
@@ -124,7 +124,7 @@ TEST_GROUP(Generation, {
   
   TEST(Switch with default, {
     ASSERT_SUCCEEDS(R"(
-      func test(value: sint) -> real {
+      extern func test(value: sint) -> real {
         switch (value) {
           case (0) {
             return 0.0;
@@ -152,7 +152,7 @@ TEST_GROUP(Generation, {
   
   TEST(Switch without default, {
     ASSERT_SUCCEEDS(R"(
-      func test(value: sint) -> real {
+      extern func test(value: sint) -> real {
         let zero = 0;
         let one = 1;
         let two = 2;
@@ -175,7 +175,7 @@ TEST_GROUP(Generation, {
   
   TEST(Switch with fallthrough, {
     ASSERT_SUCCEEDS(R"(
-      func test(value: sint) -> sint {
+      extern func test(value: sint) -> sint {
         var sum = 0;
         switch (value) {
           case (4) {
@@ -208,7 +208,7 @@ TEST_GROUP(Generation, {
   
   TEST(If-else, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> real {
+      extern func test(val: sint) -> real {
         if (val < -8) {
           return -1.0;
         } else if (val > 8) {
@@ -229,7 +229,7 @@ TEST_GROUP(Generation, {
   
   TEST(If-else no return, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> real {
+      extern func test(val: sint) -> real {
         var ret: real;
         if (val < -8) {
           ret = -1.0;
@@ -252,7 +252,7 @@ TEST_GROUP(Generation, {
   
   TEST(If, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> real {
+      extern func test(val: sint) -> real {
         if (val < 0) {
           return -1.0;
         }
@@ -269,7 +269,7 @@ TEST_GROUP(Generation, {
   
   TEST(If no return, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> real {
+      extern func test(val: sint) -> real {
         var ret = 1.0;
         if (val < 0) {
           ret = -1.0;
@@ -287,7 +287,7 @@ TEST_GROUP(Generation, {
   
   TEST(Ternary conditional, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> sint {
+      extern func test(val: sint) -> sint {
         return val < 0 ? -val : val;
       }
     )");
@@ -302,7 +302,7 @@ TEST_GROUP(Generation, {
   
   TEST(Ternary conditional lvalue, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) -> sint {
+      extern func test(val: sint) -> sint {
         var a = 2;
         var b = 4;
         (val < 0 ? a : b) = val;
@@ -331,7 +331,7 @@ TEST_GROUP(Generation, {
         b = t;
       }
       
-      func test(val: sint) {
+      extern func test(val: sint) {
         var a = 4;
         swap(a, val);
         return helper(a, val);
@@ -354,7 +354,7 @@ TEST_GROUP(Generation, {
         return increase(val);
       }
       
-      func test(val: real) {
+      extern func test(val: real) {
         val = val + 4.0;
         increaseMore(val);
         return val;
@@ -381,7 +381,7 @@ TEST_GROUP(Generation, {
         b = t;
       }
     
-      func test(val: sint) {
+      extern func test(val: sint) {
         var a = 4;
         a.swap(val);
         return a.helper(val);
@@ -404,7 +404,7 @@ TEST_GROUP(Generation, {
         return val.increase();
       }
       
-      func test(val: real) {
+      extern func test(val: real) {
         val = val + 4.0;
         val.increaseMore();
         return val;
@@ -419,7 +419,7 @@ TEST_GROUP(Generation, {
   
   TEST(Nested for loop, {
     ASSERT_SUCCEEDS(R"(
-      func test(a: uint, b: uint) -> uint {
+      extern func test(a: uint, b: uint) -> uint {
         var product = 0u;
         for (i := 0u; i != a; i = i + 1u) {
           for (j := 0u; j != b; j = j + 1u) {
@@ -442,7 +442,7 @@ TEST_GROUP(Generation, {
   
   TEST(Nested nested for loop, {
     ASSERT_SUCCEEDS(R"(
-      func test(a: uint, b: uint, c: uint) -> uint {
+      extern func test(a: uint, b: uint, c: uint) -> uint {
         var product = 0u;
         for (i := 0u; i != a; i = i + 1u) {
           for (j := 0u; j != b; j = j + 1u) {
@@ -467,7 +467,7 @@ TEST_GROUP(Generation, {
   
   TEST(Sequential for loop, {
     ASSERT_SUCCEEDS(R"(
-      func test(a: uint, b: uint) -> uint {
+      extern func test(a: uint, b: uint) -> uint {
         var sum = 0u;
         for (i := 0u; i != a; i = i + 1u) {
           sum = sum + 1u;
@@ -489,7 +489,7 @@ TEST_GROUP(Generation, {
   
   TEST(Returning while loop, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) {
+      extern func test(val: sint) {
         while (val > 8) {
           if (val % 2 == 1) {
             val = val - 1;
@@ -510,7 +510,7 @@ TEST_GROUP(Generation, {
   
   TEST(Bool C++ to Stela, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: bool) {
+      extern func test(val: bool) {
         if (val == false) {
           return 0;
         } else if (val == true) {
@@ -528,7 +528,7 @@ TEST_GROUP(Generation, {
   
   TEST(Bool Stela to C++, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) {
+      extern func test(val: sint) {
         if (val == 0) {
           return false;
         } else {
@@ -544,7 +544,7 @@ TEST_GROUP(Generation, {
   
   TEST(Compound assignments, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) {
+      extern func test(val: sint) {
         val *= 2;
         val += 2;
         val /= 2;
@@ -562,7 +562,7 @@ TEST_GROUP(Generation, {
   
   TEST(Incr decr assignments, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: sint) {
+      extern func test(val: sint) {
         val++;
         val++;
         val++;
@@ -582,7 +582,7 @@ TEST_GROUP(Generation, {
   
   TEST(Incr decr assignments floats, {
     ASSERT_SUCCEEDS(R"(
-      func test(val: real) {
+      extern func test(val: real) {
         val++;
         val++;
         val++;
@@ -612,20 +612,20 @@ TEST_GROUP(Generation, {
         g: sint;
       };
       
-      func set(s: ref Structure, v: sint) {
+      extern func set(s: ref Structure, v: sint) {
         s.g = v;
       }
-      func get(s: ref Structure) {
+      extern func get(s: ref Structure) {
         return s.g;
       }
-      func get_val(s: Structure) {
+      extern func get_val(s: Structure) {
         return s.g;
       }
       func identity_impl(s: Structure) {
         let temp = s;
         return temp;
       }
-      func identity(s: Structure) {
+      extern func identity(s: Structure) {
         return identity_impl(s);
       }
     )");

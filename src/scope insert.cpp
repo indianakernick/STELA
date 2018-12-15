@@ -102,6 +102,7 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
     ctx.log.error(func.loc) << "Functions must appear at global scope" << fatal;
   }
   auto funcSym = std::make_unique<sym::Func>();
+  funcSym->referenced = func.external;
   func.symbol = funcSym.get();
   funcSym->loc = func.loc;
   if (func.receiver) {

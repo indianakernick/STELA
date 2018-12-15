@@ -329,6 +329,7 @@ struct Func final : Declaration {
   FuncParams params;
   TypePtr ret;
   Block body;
+  bool external = false;
   
   sym::Func *symbol = nullptr;
   llvm::Function *llvmFunc = nullptr;
@@ -359,6 +360,7 @@ struct Var final : Declaration {
   Name name;
   TypePtr type;
   ExprPtr expr;
+  bool external = false;
   
   sym::Object *symbol = nullptr;
   llvm::Value *llvmAddr = nullptr;
@@ -370,6 +372,7 @@ struct Let final : Declaration {
   Name name;
   TypePtr type;
   ExprPtr expr;
+  bool external = false;
   
   sym::Object *symbol = nullptr;
   llvm::Value *llvmAddr = nullptr;
