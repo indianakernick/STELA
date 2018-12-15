@@ -10,11 +10,11 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
-#include "generate expr.hpp"
 #include "generate type.hpp"
+#include "generate expr.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
-#include "generate zero expr.hpp"
+#include "expression builder.hpp"
 
 using namespace stela;
 
@@ -23,7 +23,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, builder{func} {}
+    : funcBdr{func}, exprBdr{ctx, funcBdr} {}
 
   void visitFlow(ast::Statement *body, llvm::BasicBlock *brake, llvm::BasicBlock *continu) {
     llvm::BasicBlock *oldBrake = std::exchange(breakBlock, brake);
@@ -33,12 +33,11 @@ public:
     breakBlock = oldBrake;
   }
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
-    llvm::Value *exprValue = generateValueExpr(ctx, builder, expr);
     const ArithNumber arith = classifyArith(expr);
     if (arith == ArithNumber::floating_point) {
-      return builder.ir.CreateFCmpOEQ(value, exprValue);
+      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(expr));
     } else {
-      return builder.ir.CreateICmpEQ(value, exprValue);
+      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(expr));
     }
   }
   
@@ -48,39 +47,39 @@ public:
     }
   }
   void visit(ast::If &fi) override {
-    auto *cond = builder.nextEmpty();
-    auto *troo = builder.makeBlock();
-    auto *folse = builder.makeBlock();
+    auto *cond = funcBdr.nextEmpty();
+    auto *troo = funcBdr.makeBlock();
+    auto *folse = funcBdr.makeBlock();
     llvm::BasicBlock *done = nullptr;
-    builder.setCurr(cond);
-    builder.ir.CreateCondBr(generateValueExpr(ctx, builder, fi.cond.get()), troo, folse);
+    funcBdr.setCurr(cond);
+    exprBdr.condBr(fi.cond.get(), troo, folse);
     
-    builder.setCurr(troo);
+    funcBdr.setCurr(troo);
     fi.body->accept(*this);
-    done = builder.terminateLazy(done);
+    done = funcBdr.terminateLazy(done);
     
-    builder.setCurr(folse);
+    funcBdr.setCurr(folse);
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     }
-    done = builder.terminateLazy(done);
+    done = funcBdr.terminateLazy(done);
     
     if (done) {
-      builder.setCurr(done);
+      funcBdr.setCurr(done);
     }
   }
   void visit(ast::Switch &swich) override {
-    llvm::Value *value = generateValueExpr(ctx, builder, swich.expr.get());
+    llvm::Value *value = exprBdr.value(swich.expr.get());
     if (swich.cases.empty()) {
       return;
     }
     
-    auto checkBlocks = builder.makeBlocks(swich.cases.size());
-    auto caseBlocks = builder.makeBlocks(swich.cases.size());
-    llvm::BasicBlock *done = builder.makeBlock();
+    auto checkBlocks = funcBdr.makeBlocks(swich.cases.size());
+    auto caseBlocks = funcBdr.makeBlocks(swich.cases.size());
+    llvm::BasicBlock *done = funcBdr.makeBlock();
     size_t defaultIndex = ~size_t{};
     bool foundDefault = false;
-    builder.ir.CreateBr(checkBlocks[0]);
+    funcBdr.ir.CreateBr(checkBlocks[0]);
     
     for (size_t c = 0; c != swich.cases.size(); ++c) {
       ast::Expression *expr = swich.cases[c].expr.get();
@@ -92,7 +91,7 @@ public:
       const size_t checkIndex = c - foundDefault;
       const size_t caseIndex = c;
       
-      builder.setCurr(checkBlocks[checkIndex]);
+      funcBdr.setCurr(checkBlocks[checkIndex]);
       llvm::Value *cond = equalTo(value, expr);
       
       llvm::BasicBlock *nextCheck;
@@ -102,129 +101,125 @@ public:
         nextCheck = checkBlocks[checkIndex + 1];
       }
       
-      builder.ir.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
+      funcBdr.ir.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
     }
     
     if (foundDefault) {
-      builder.setCurr(checkBlocks.back());
-      builder.ir.CreateBr(caseBlocks[defaultIndex]);
+      funcBdr.setCurr(checkBlocks.back());
+      funcBdr.ir.CreateBr(caseBlocks[defaultIndex]);
     }
     
     for (size_t c = 0; c != swich.cases.size(); ++c) {
-      builder.setCurr(caseBlocks[c]);
+      funcBdr.setCurr(caseBlocks[c]);
       llvm::BasicBlock *nextBlock = nullptr;
       if (c != swich.cases.size() - 1) {
         nextBlock = caseBlocks[c + 1];
       }
       visitFlow(swich.cases[c].body.get(), done, nextBlock);
-      builder.terminate(done);
+      funcBdr.terminate(done);
     }
     
-    builder.setCurr(done);
+    funcBdr.setCurr(done);
     if (swich.alwaysReturns) {
-      builder.ir.CreateUnreachable();
+      funcBdr.ir.CreateUnreachable();
     }
   }
   void visit(ast::Break &) override {
     assert(breakBlock);
-    builder.ir.CreateBr(breakBlock);
+    funcBdr.ir.CreateBr(breakBlock);
   }
   void visit(ast::Continue &) override {
     assert(continueBlock);
-    builder.ir.CreateBr(continueBlock);
+    funcBdr.ir.CreateBr(continueBlock);
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      llvm::Value *value = generateValueExpr(ctx, builder, ret.expr.get());
+      llvm::Value *value = exprBdr.value(ret.expr.get());
       if (value->getType()->isVoidTy()) {
-        builder.ir.CreateRetVoid();
+        funcBdr.ir.CreateRetVoid();
       } else if (value->getType()->isStructTy()) {
-        builder.ir.CreateStore(value, &builder.args().back());
-        builder.ir.CreateRetVoid();
+        funcBdr.ir.CreateStore(value, &funcBdr.args().back());
+        funcBdr.ir.CreateRetVoid();
       } else {
-        builder.ir.CreateRet(value);
+        funcBdr.ir.CreateRet(value);
       }
     } else {
-      builder.ir.CreateRetVoid();
+      funcBdr.ir.CreateRetVoid();
     }
   }
   void visit(ast::While &wile) override {
-    auto *cond = builder.nextEmpty();
-    auto *body = builder.makeBlock();
-    auto *done = builder.makeBlock();
-    builder.setCurr(body);
+    auto *cond = funcBdr.nextEmpty();
+    auto *body = funcBdr.makeBlock();
+    auto *done = funcBdr.makeBlock();
+    funcBdr.setCurr(body);
     visitFlow(wile.body.get(), done, cond);
-    builder.terminate(cond);
-    builder.setCurr(cond);
-    builder.ir.CreateCondBr(generateValueExpr(ctx, builder, wile.cond.get()), body, done);
-    builder.setCurr(done);
+    funcBdr.terminate(cond);
+    funcBdr.setCurr(cond);
+    exprBdr.condBr(wile.cond.get(), body, done);
+    funcBdr.setCurr(done);
   }
   void visit(ast::For &four) override {
     if (four.init) {
       four.init->accept(*this);
     }
-    auto *cond = builder.nextEmpty();
-    auto *body = builder.makeBlock();
-    auto *incr = builder.makeBlock();
-    auto *done = builder.makeBlock();
-    builder.setCurr(body);
+    auto *cond = funcBdr.nextEmpty();
+    auto *body = funcBdr.makeBlock();
+    auto *incr = funcBdr.makeBlock();
+    auto *done = funcBdr.makeBlock();
+    funcBdr.setCurr(body);
     visitFlow(four.body.get(), done, incr);
-    builder.terminate(incr);
-    builder.setCurr(cond);
-    builder.ir.CreateCondBr(generateValueExpr(ctx, builder, four.cond.get()), body, done);
-    builder.setCurr(incr);
+    funcBdr.terminate(incr);
+    funcBdr.setCurr(cond);
+    exprBdr.condBr(four.cond.get(), body, done);
+    funcBdr.setCurr(incr);
     if (four.incr) {
       four.incr->accept(*this);
-      builder.ir.CreateBr(cond);
+      funcBdr.ir.CreateBr(cond);
     }
-    builder.setCurr(done);
+    funcBdr.setCurr(done);
   }
   
-  llvm::Type *genType(ast::Type *type) {
-    return generateType(ctx, type);
-  }
-  llvm::Value *insertVar(ast::Type *type, ast::Expression *expr) {
+  llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
     if (expr) {
-      return builder.allocStore(genType(type), generateValueExpr(ctx, builder, expr));
+      return funcBdr.allocStore(exprBdr.value(expr));
     } else {
-      return builder.allocStore(genType(type), generateZeroExpr(ctx, builder, type));
+      return funcBdr.allocStore(exprBdr.zero(obj->etype.type.get()));
     }
   }
   
   void visit(ast::Var &var) override {
-    var.llvmAddr = insertVar(var.symbol->etype.type.get(), var.expr.get());
+    var.llvmAddr = insertVar(var.symbol, var.expr.get());
   }
   void visit(ast::Let &let) override {
-    let.llvmAddr = insertVar(let.symbol->etype.type.get(), let.expr.get());
+    let.llvmAddr = insertVar(let.symbol, let.expr.get());
   }
   
   void visit(ast::Assign &assign) override {
-    llvm::Value *addr = generateAddrExpr(ctx, builder, assign.left.get());
-    llvm::Value *value = generateValueExpr(ctx, builder, assign.right.get());
-    builder.ir.CreateStore(value, addr);
+    llvm::Value *addr = exprBdr.addr(assign.left.get());
+    llvm::Value *value = exprBdr.value(assign.right.get());
+    funcBdr.ir.CreateStore(value, addr);
   }
   void visit(ast::DeclAssign &assign) override {
-    assign.llvmAddr = insertVar(assign.symbol->etype.type.get(), assign.expr.get());
+    assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    generateDiscardExpr(ctx, builder, &assign.call);
+    exprBdr.discard(&assign.call);
   }
   
   void insert(ast::FuncParam &param, const size_t index) {
-    llvm::Value *arg = builder.args().begin() + index;
+    llvm::Value *arg = funcBdr.args().begin() + index;
     if (param.ref == ast::ParamRef::ref) {
       param.llvmAddr = arg;
     } else if (arg->getType()->isPointerTy()) {
-      llvm::Value *localCopy = builder.ir.CreateLoad(arg);
-      param.llvmAddr = builder.allocStore(localCopy->getType(), localCopy);
+      param.llvmAddr = funcBdr.allocStore(funcBdr.ir.CreateLoad(arg));
     } else {
-      param.llvmAddr = builder.allocStore(genType(param.type.get()), arg);
+      param.llvmAddr = funcBdr.allocStore(arg);
     }
   }
   
 private:
-  gen::Ctx ctx;
-  FunctionBuilder builder;
+  FuncBuilder funcBdr;
+  ExprBuilder exprBdr;
   llvm::BasicBlock *breakBlock = nullptr;
   llvm::BasicBlock *continueBlock = nullptr;
 };

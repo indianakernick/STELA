@@ -121,6 +121,8 @@ add_library(STELA STATIC
         "src/lower expressions.hpp"
         "src/function builder.cpp"
         "src/function builder.hpp"
+        "src/expression builder.cpp"
+        "src/expression builder.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

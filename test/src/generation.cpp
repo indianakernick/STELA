@@ -508,9 +508,9 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(9), 8);
   });
   
-  TEST(Bool C++ to Stela, {
+  TEST(Bool across boundary, {
     ASSERT_SUCCEEDS(R"(
-      extern func test(val: bool) {
+      extern func set(val: bool) {
         if (val == false) {
           return 0;
         } else if (val == true) {
@@ -519,27 +519,31 @@ TEST_GROUP(Generation, {
           return 2;
         }
       }
-    )");
-    
-    auto func = GET_FUNC("test", Sint(Bool));
-    ASSERT_EQ(func(false), 0);
-    ASSERT_EQ(func(true), 1);
-  });
-  
-  TEST(Bool Stela to C++, {
-    ASSERT_SUCCEEDS(R"(
-      extern func test(val: sint) {
+      
+      extern func get(val: sint) {
         if (val == 0) {
           return false;
         } else {
           return true;
         }
       }
+      
+      extern func not(val: bool) {
+        return !val;
+      }
     )");
     
-    auto func = GET_FUNC("test", Bool(Sint));
-    ASSERT_EQ(func(0), false);
-    ASSERT_EQ(func(1), true);
+    auto set = GET_FUNC("set", Sint(Bool));
+    ASSERT_EQ(set(false), 0);
+    ASSERT_EQ(set(true), 1);
+    
+    auto get = GET_FUNC("get", Bool(Sint));
+    ASSERT_EQ(get(0), false);
+    ASSERT_EQ(get(1), true);
+    
+    auto bool_not = GET_FUNC("not", Bool(Bool));
+    ASSERT_EQ(bool_not(false), true);
+    ASSERT_EQ(bool_not(true), false);
   });
   
   TEST(Compound assignments, {

@@ -22,9 +22,9 @@ enum class ArithNumber {
 };
 ArithNumber classifyArith(ast::Expression *);
 
-llvm::Value *generateAddrExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
-llvm::Value *generateValueExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
-void generateDiscardExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
+llvm::Value *generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+llvm::Value *generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+void generateDiscardExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 
 }
 

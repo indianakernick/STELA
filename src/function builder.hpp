@@ -9,14 +9,13 @@
 #ifndef stela_function_builder_hpp
 #define stela_function_builder_hpp
 
-#include <llvm/IR/Function.h>
 #include <llvm/IR/IRBuilder.h>
 
 namespace stela {
 
-class FunctionBuilder {
+class FuncBuilder {
 public:
-  explicit FunctionBuilder(llvm::Function *);
+  explicit FuncBuilder(llvm::Function *);
   
   /// Set the current block
   void setCurr(llvm::BasicBlock *);
@@ -30,7 +29,7 @@ public:
   /// Insert an alloca instruction in the entry block
   llvm::Value *alloc(llvm::Type *);
   /// Insert an alloca instruction in the entry block and store a value to it
-  llvm::Value *allocStore(llvm::Type *, llvm::Value *);
+  llvm::Value *allocStore(llvm::Value *);
   /// If the current block has not already been terminated,
   /// terminate by branching to the given block
   void terminate(llvm::BasicBlock *);

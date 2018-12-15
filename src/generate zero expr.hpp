@@ -15,7 +15,7 @@
 
 namespace stela {
 
-llvm::Value *generateZeroExpr(gen::Ctx, FunctionBuilder &, ast::Type *);
+llvm::Value *generateZeroExpr(gen::Ctx, FuncBuilder &, ast::Type *);
 
 }
 

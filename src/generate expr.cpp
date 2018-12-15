@@ -23,7 +23,7 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, FunctionBuilder &builder)
+  Visitor(gen::Ctx ctx, FuncBuilder &builder)
     : ctx{ctx}, builder{builder} {}
 
   llvm::Value *visitValue(ast::Expression *expr) {
@@ -36,11 +36,10 @@ public:
   }
   llvm::Value *visitAddr(ast::Expression *expr) {
     expr->accept(*this);
-    llvm::Type *type = value->getType();
-    if (type->isPointerTy()) {
+    if (value->getType()->isPointerTy()) {
       return value;
     } else {
-      return builder.allocStore(type->getPointerElementType(), value);
+      return builder.allocStore(value);
     }
   }
 
@@ -125,7 +124,6 @@ public:
         }
         return;
       case ast::UnOp::bool_not:
-        value = builder.ir.CreateXor(operand, 1); return;
       case ast::UnOp::bit_not:
         value = builder.ir.CreateNot(operand); return;
     }
@@ -467,7 +465,7 @@ public:
 
 private:
   gen::Ctx ctx;
-  FunctionBuilder &builder;
+  FuncBuilder &builder;
 };
 
 }
@@ -492,7 +490,7 @@ ArithNumber stela::classifyArith(ast::Expression *expr) {
 
 llvm::Value *stela::generateAddrExpr(
   gen::Ctx ctx,
-  FunctionBuilder &builder,
+  FuncBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
@@ -501,7 +499,7 @@ llvm::Value *stela::generateAddrExpr(
 
 llvm::Value *stela::generateValueExpr(
   gen::Ctx ctx,
-  FunctionBuilder &builder,
+  FuncBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
@@ -510,7 +508,7 @@ llvm::Value *stela::generateValueExpr(
 
 void stela::generateDiscardExpr(
   gen::Ctx ctx,
-  FunctionBuilder &builder,
+  FuncBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};

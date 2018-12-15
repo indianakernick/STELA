@@ -10,7 +10,7 @@
 
 using namespace stela;
 
-FunctionBuilder::FunctionBuilder(llvm::Function *func)
+FuncBuilder::FuncBuilder(llvm::Function *func)
   : ir{func->getContext()}, func{func} {
   ir.SetInsertPoint(makeBlock("entry"));
   curr = makeBlock();
@@ -18,16 +18,16 @@ FunctionBuilder::FunctionBuilder(llvm::Function *func)
   ir.SetInsertPoint(curr);
 }
 
-void FunctionBuilder::setCurr(llvm::BasicBlock *block) {
+void FuncBuilder::setCurr(llvm::BasicBlock *block) {
   curr = block;
   ir.SetInsertPoint(block);
 }
 
-llvm::BasicBlock *FunctionBuilder::makeBlock(const llvm::Twine &name) {
+llvm::BasicBlock *FuncBuilder::makeBlock(const llvm::Twine &name) {
   return llvm::BasicBlock::Create(func->getContext(), name, func);
 }
 
-std::vector<llvm::BasicBlock *> FunctionBuilder::makeBlocks(size_t count) {
+std::vector<llvm::BasicBlock *> FuncBuilder::makeBlocks(size_t count) {
   std::vector<llvm::BasicBlock *> blocks;
   blocks.reserve(count);
   while (count--) {
@@ -36,7 +36,7 @@ std::vector<llvm::BasicBlock *> FunctionBuilder::makeBlocks(size_t count) {
   return blocks;
 }
 
-llvm::BasicBlock *FunctionBuilder::nextEmpty() {
+llvm::BasicBlock *FuncBuilder::nextEmpty() {
   llvm::BasicBlock *next;
   if (curr->empty()) {
     next = curr;
@@ -47,7 +47,7 @@ llvm::BasicBlock *FunctionBuilder::nextEmpty() {
   return next;
 }
 
-llvm::Value *FunctionBuilder::alloc(llvm::Type *type) {
+llvm::Value *FuncBuilder::alloc(llvm::Type *type) {
   llvm::BasicBlock *entry = &func->getEntryBlock();
   ir.SetInsertPoint(entry, std::prev(entry->end()));
   llvm::Value *addr = ir.CreateAlloca(type);
@@ -55,19 +55,19 @@ llvm::Value *FunctionBuilder::alloc(llvm::Type *type) {
   return addr;
 }
 
-llvm::Value *FunctionBuilder::allocStore(llvm::Type *type, llvm::Value *value) {
-  llvm::Value *addr = alloc(type);
+llvm::Value *FuncBuilder::allocStore(llvm::Value *value) {
+  llvm::Value *addr = alloc(value->getType());
   ir.CreateStore(value, addr);
   return addr;
 }
 
-void FunctionBuilder::terminate(llvm::BasicBlock *dest) {
+void FuncBuilder::terminate(llvm::BasicBlock *dest) {
   if (curr->empty() || !curr->back().isTerminator()) {
     ir.CreateBr(dest);
   }
 }
 
-llvm::BasicBlock *FunctionBuilder::terminateLazy(llvm::BasicBlock *dest) {
+llvm::BasicBlock *FuncBuilder::terminateLazy(llvm::BasicBlock *dest) {
   if (curr->empty() || !curr->back().isTerminator()) {
     if (!dest) {
       dest = makeBlock();
@@ -77,6 +77,6 @@ llvm::BasicBlock *FunctionBuilder::terminateLazy(llvm::BasicBlock *dest) {
   return dest;
 }
 
-llvm::MutableArrayRef<llvm::Argument> FunctionBuilder::args() const {
+llvm::MutableArrayRef<llvm::Argument> FuncBuilder::args() const {
   return {func->arg_begin(), func->arg_end()};
 }

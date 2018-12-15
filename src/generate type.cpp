@@ -107,7 +107,6 @@ llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
 
 }
 
-// @TODO generateFuncSig and generateLambSig are very similar
 llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) {
   llvm::Type *ret = generateType(ctx, func.ret.get());
   std::vector<llvm::Type *> params;
