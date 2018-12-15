@@ -16,6 +16,7 @@
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
 		454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B743F21C0EB4900BB4BD0 /* optimize module.cpp */; };
 		454B744721C3947900BB4BD0 /* lower expressions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744521C3947900BB4BD0 /* lower expressions.cpp */; };
+		454B744A21C4A5B700BB4BD0 /* function builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744821C4A5B700BB4BD0 /* function builder.cpp */; };
 		454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB7FE21AB6E41001A5D78 /* expr lookup.cpp */; };
 		454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80121AB74DE001A5D78 /* expr stack.cpp */; };
 		454EB80621ABD838001A5D78 /* plain format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80521ABD838001A5D78 /* plain format.cpp */; };
@@ -130,6 +131,8 @@
 		454B744221C201A900BB4BD0 /* binding.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = binding.hpp; sourceTree = "<group>"; };
 		454B744521C3947900BB4BD0 /* lower expressions.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lower expressions.cpp"; sourceTree = "<group>"; };
 		454B744621C3947900BB4BD0 /* lower expressions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "lower expressions.hpp"; sourceTree = "<group>"; };
+		454B744821C4A5B700BB4BD0 /* function builder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "function builder.cpp"; sourceTree = "<group>"; };
+		454B744921C4A5B700BB4BD0 /* function builder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "function builder.hpp"; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
 		454EB7FD21A0E837001A5D78 /* context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = context.hpp; sourceTree = "<group>"; };
@@ -355,6 +358,8 @@
 				454B744021C0EB4900BB4BD0 /* optimize module.hpp */,
 				454B744521C3947900BB4BD0 /* lower expressions.cpp */,
 				454B744621C3947900BB4BD0 /* lower expressions.hpp */,
+				454B744821C4A5B700BB4BD0 /* function builder.cpp */,
+				454B744921C4A5B700BB4BD0 /* function builder.hpp */,
 			);
 			name = "Code Generation";
 			sourceTree = "<group>";
@@ -699,6 +704,7 @@
 				45F44361213FC49B00B28F05 /* compare types.cpp in Sources */,
 				4572CA7320F4732C00EA1A56 /* traverse.cpp in Sources */,
 				4572CAA8210EEE6300EA1A56 /* compare params args.cpp in Sources */,
+				454B744A21C4A5B700BB4BD0 /* function builder.cpp in Sources */,
 				4572CA9520FC445200EA1A56 /* builtin symbols.cpp in Sources */,
 				450E329620E89D6100F222F1 /* parse litr.cpp in Sources */,
 				450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */,
@@ -980,10 +986,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
-				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/include",
-					/usr/local/include,
-				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -1061,10 +1064,7 @@
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = (
-					"$(PROJECT_DIR)/include",
-					/usr/local/include,
-				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
 				LIBRARY_SEARCH_PATHS = "";
 				MACOSX_DEPLOYMENT_TARGET = 10.14;
 				OTHER_CPLUSPLUSFLAGS = (

@@ -600,7 +600,7 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(40), 42);
   });
   
-  TEST(Access struct across boundary, {
+  TEST(Structs across boundary, {
     ASSERT_SUCCEEDS(R"(
       type Structure struct {
         a: byte;
@@ -617,6 +617,16 @@ TEST_GROUP(Generation, {
       }
       func get(s: ref Structure) {
         return s.g;
+      }
+      func get_val(s: Structure) {
+        return s.g;
+      }
+      func identity_impl(s: Structure) {
+        let temp = s;
+        return temp;
+      }
+      func identity(s: Structure) {
+        return identity_impl(s);
       }
     )");
     
@@ -644,6 +654,20 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(get(&s), 4);
     s.g = -100000;
     ASSERT_EQ(get(&s), -100000);
+    
+    auto get_val = GET_FUNC("get_val", Sint(Structure *));
+    
+    s.g = 4;
+    ASSERT_EQ(get_val(&s), 4);
+    s.g = -100000;
+    ASSERT_EQ(get_val(&s), -100000);
+    
+    auto identity = GET_FUNC("identity", Structure(Structure));
+    
+    s.g = 4;
+    ASSERT_EQ(identity(s).g, s.g);
+    s.g = -100000;
+    ASSERT_EQ(identity(s).g, s.g);
   });
   
   /*

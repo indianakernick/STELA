@@ -11,7 +11,7 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
-#include <llvm/IR/IRBuilder.h>
+#include "function builder.hpp"
 
 namespace stela {
 
@@ -22,8 +22,9 @@ enum class ArithNumber {
 };
 ArithNumber classifyArith(ast::Expression *);
 
-llvm::Value *generateAddrExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
-llvm::Value *generateValueExpr(gen::Ctx, llvm::IRBuilder<> &, ast::Expression *);
+llvm::Value *generateAddrExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
+llvm::Value *generateValueExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
+void generateDiscardExpr(gen::Ctx, FunctionBuilder &, ast::Expression *);
 
 }
 

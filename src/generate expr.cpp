@@ -14,7 +14,6 @@
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
-#include <llvm/IR/IRBuilder.h>
 #include "assert down cast.hpp"
 #include "generate zero expr.hpp"
 
@@ -24,27 +23,24 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, llvm::IRBuilder<> &builder)
+  Visitor(gen::Ctx ctx, FunctionBuilder &builder)
     : ctx{ctx}, builder{builder} {}
 
   llvm::Value *visitValue(ast::Expression *expr) {
     expr->accept(*this);
     if (value->getType()->isPointerTy()) {
-      return builder.CreateLoad(value);
+      return builder.ir.CreateLoad(value);
     } else {
       return value;
     }
   }
   llvm::Value *visitAddr(ast::Expression *expr) {
     expr->accept(*this);
-    assert(value->getType()->isPointerTy());
-    return value;
-  }
-  llvm::Value *visitParam(const ast::ParamRef ref, ast::Expression *expr) {
-    if (ref == ast::ParamRef::ref) {
-      return visitAddr(expr);
+    llvm::Type *type = value->getType();
+    if (type->isPointerTy()) {
+      return value;
     } else {
-      return visitValue(expr);
+      return builder.allocStore(type->getPointerElementType(), value);
     }
   }
 
@@ -55,35 +51,35 @@ public:
     
     #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
       if (arith == ArithNumber::floating_point) {                               \
-        value = builder.FLOAT_OP(left, right);                                  \
+        value = builder.ir.FLOAT_OP(left, right);                               \
       } else {                                                                  \
-        value = builder.INT_OP(left, right);                                    \
+        value = builder.ir.INT_OP(left, right);                                 \
       }                                                                         \
       return
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
       if (arith == ArithNumber::signed_int) {                                   \
-        value = builder.S_OP(left, right);                                      \
+        value = builder.ir.S_OP(left, right);                                   \
       } else if (arith == ArithNumber::unsigned_int) {                          \
-        value = builder.U_OP(left, right);                                      \
+        value = builder.ir.U_OP(left, right);                                   \
       } else {                                                                  \
-        value = builder.F_OP(left, right);                                      \
+        value = builder.ir.F_OP(left, right);                                   \
       }                                                                         \
       return
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
       case ast::BinOp::bit_or:
-        value = builder.CreateOr(left, right); return;
+        value = builder.ir.CreateOr(left, right); return;
       case ast::BinOp::bit_xor:
-        value = builder.CreateXor(left, right); return;
+        value = builder.ir.CreateXor(left, right); return;
       case ast::BinOp::bool_and:
       case ast::BinOp::bit_and:
-        value = builder.CreateAnd(left, right); return;
+        value = builder.ir.CreateAnd(left, right); return;
       case ast::BinOp::bit_shl:
-        value = builder.CreateShl(left, right); return;
+        value = builder.ir.CreateShl(left, right); return;
       case ast::BinOp::bit_shr:
-        value = builder.CreateLShr(left, right); return;
+        value = builder.ir.CreateLShr(left, right); return;
       case ast::BinOp::eq:
         INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
       case ast::BinOp::ne:
@@ -121,17 +117,17 @@ public:
     switch (expr.oper) {
       case ast::UnOp::neg:
         if (arith == ArithNumber::signed_int) {
-          value = builder.CreateNSWNeg(operand);
+          value = builder.ir.CreateNSWNeg(operand);
         } else if (arith == ArithNumber::unsigned_int) {
-          value = builder.CreateNeg(operand);
+          value = builder.ir.CreateNeg(operand);
         } else {
-          value = builder.CreateFNeg(operand);
+          value = builder.ir.CreateFNeg(operand);
         }
         return;
       case ast::UnOp::bool_not:
-        value = builder.CreateXor(operand, 1); return;
+        value = builder.ir.CreateXor(operand, 1); return;
       case ast::UnOp::bit_not:
-        value = builder.CreateNot(operand); return;
+        value = builder.ir.CreateNot(operand); return;
     }
     UNREACHABLE();
   }
@@ -165,13 +161,23 @@ public:
     UNREACHABLE();
   }
   */
+  llvm::Value *visitParam(const ast::ParamRef ref, ast::Expression *expr, llvm::Type *type) {
+    if (ref == ast::ParamRef::ref) {
+      return visitAddr(expr);
+    } else if (type->isPointerTy()) {
+      return visitAddr(expr);
+    } else {
+      return visitValue(expr);
+    }
+  }
   void pushArgs(
     std::vector<llvm::Value *> &args,
     const ast::FuncArgs &callArgs,
-    const ast::FuncParams &params
+    const ast::FuncParams &params,
+    llvm::ArrayRef<llvm::Type *> paramTypes
   ) {
     for (size_t a = 0; a != callArgs.size(); ++a) {
-      args.push_back(visitParam(params[a].ref, callArgs[a].get()));
+      args.push_back(visitParam(params[a].ref, callArgs[a].get(), paramTypes[a + 1]));
     }
   }
   void visit(ast::FuncCall &call) override {
@@ -181,15 +187,25 @@ public:
     } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
       std::vector<llvm::Value *> args;
       args.reserve(1 + call.args.size());
+      llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
       if (func->receiver) {
         const ast::ParamRef ref = func->receiver->ref;
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
-        args.push_back(visitParam(ref, self));
+        args.push_back(visitParam(ref, self, funcType->getParamType(0)));
       } else {
         args.push_back(llvm::ConstantPointerNull::get(getVoidPtr(ctx)));
       }
-      pushArgs(args, call.args, func->params);
-      value = builder.CreateCall(func->llvmFunc, args);
+      pushArgs(args, call.args, func->params, funcType->params());
+      
+      if (funcType->params().size() == args.size() + 1) {
+        llvm::Type *retType = funcType->params().back()->getPointerElementType();
+        llvm::Value *retAddr = builder.alloc(retType);
+        args.push_back(retAddr);
+        builder.ir.CreateCall(func->llvmFunc, args);
+        value = builder.ir.CreateLoad(retAddr);
+      } else {
+        value = builder.ir.CreateCall(func->llvmFunc, args);
+      }
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       // call a builtin function
       assert(false);
@@ -225,7 +241,7 @@ public:
   
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
-    value = builder.CreateStructGEP(value, mem.index);
+    value = builder.ir.CreateStructGEP(value, mem.index);
   }
   /*
   void visit(ast::Subscript &sub) override {
@@ -318,11 +334,11 @@ public:
     tern.fals->accept(*this);
     llvm::Value *fals = value;
     if (tru->getType()->isPointerTy() && !fals->getType()->isPointerTy()) {
-      tru = builder.CreateLoad(tru);
+      tru = builder.ir.CreateLoad(tru);
     } else if (!tru->getType()->isPointerTy() && fals->getType()->isPointerTy()) {
-      fals = builder.CreateLoad(fals);
+      fals = builder.ir.CreateLoad(fals);
     }
-    value = builder.CreateSelect(cond, tru, fals);
+    value = builder.ir.CreateSelect(cond, tru, fals);
   }
   /*void visit(ast::Make &make) override {
     str += generateType(ctx, make.type.get());
@@ -451,7 +467,7 @@ public:
 
 private:
   gen::Ctx ctx;
-  llvm::IRBuilder<> &builder;
+  FunctionBuilder &builder;
 };
 
 }
@@ -476,19 +492,27 @@ ArithNumber stela::classifyArith(ast::Expression *expr) {
 
 llvm::Value *stela::generateAddrExpr(
   gen::Ctx ctx,
-  llvm::IRBuilder<> &builder,
+  FunctionBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
-  expr->accept(visitor);
-  return visitor.value;
+  return visitor.visitAddr(expr);
 }
 
 llvm::Value *stela::generateValueExpr(
   gen::Ctx ctx,
-  llvm::IRBuilder<> &builder,
+  FunctionBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
   return visitor.visitValue(expr);
+}
+
+void stela::generateDiscardExpr(
+  gen::Ctx ctx,
+  FunctionBuilder &builder,
+  ast::Expression *expr
+) {
+  Visitor visitor{ctx, builder};
+  expr->accept(visitor);
 }

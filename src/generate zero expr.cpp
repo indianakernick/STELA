@@ -18,7 +18,7 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, llvm::IRBuilder<> &builder)
+  Visitor(gen::Ctx ctx, FunctionBuilder &builder)
     : ctx{ctx}, builder{builder} {}
 
   void visit(ast::BtnType &type) override {
@@ -74,12 +74,12 @@ public:
 
 private:
   gen::Ctx ctx;
-  llvm::IRBuilder<> &builder;
+  FunctionBuilder &builder;
 };
 
 }
 
-llvm::Value *stela::generateZeroExpr(gen::Ctx ctx, llvm::IRBuilder<> &builder, ast::Type *type) {
+llvm::Value *stela::generateZeroExpr(gen::Ctx ctx, FunctionBuilder &builder, ast::Type *type) {
   Visitor visitor{ctx, builder};
   type->accept(visitor);
   return visitor.value;

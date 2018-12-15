@@ -100,7 +100,7 @@ ast::ParamType convert(const ast::FuncParam &param) {
 llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
   llvm::Type *paramType = generateType(ctx, param.type.get());
   if (param.ref == ast::ParamRef::ref) {
-    paramType = llvm::PointerType::get(paramType, 0);
+    paramType = paramType->getPointerTo();
   }
   return paramType;
 }

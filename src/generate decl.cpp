@@ -23,26 +23,52 @@ public:
   Visitor(gen::Ctx ctx, llvm::Module *module)
     : ctx{ctx}, module{module} {}
   
-  /*llvm::Type *exprType(const sym::ExprType &etype) {
-    if (etype.type == nullptr) {
-      return getVoidPtr(ctx);
-    } else {
-      llvm::Type *type = generateType(ctx, etype.type.get());
-      if (etype.ref == sym::ValueRef::ref) {
-        return type->getPointerTo();
-      }
-      return type;
-    }
-  }
-  */
   void visit(ast::Func &func) override {
+    std::vector<llvm::AttrBuilder> paramAttrs;
+    llvm::FunctionType *fnType = generateFuncSig(ctx, func);
+    std::vector<llvm::Type *> realParams;
+    llvm::Type *realRet;
+    
+    for (llvm::Type *param : fnType->params()) {
+      if (param->isStructTy()) {
+        realParams.push_back(param->getPointerTo());
+        paramAttrs.push_back({});
+        paramAttrs.back().addAttribute(llvm::Attribute::ReadOnly);
+        paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
+      } else if (param->isPointerTy()) {
+        realParams.push_back(param);
+        paramAttrs.push_back({});
+        paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
+      } else {
+        realParams.push_back(param);
+        paramAttrs.push_back({});
+      }
+    }
+    
+    llvm::Type *ret = fnType->getReturnType();
+    if (ret->isStructTy()) {
+      realParams.push_back(ret->getPointerTo());
+      realRet = llvm::Type::getVoidTy(ctx.llvm);
+      paramAttrs.push_back({});
+      paramAttrs.back().addAttribute(llvm::Attribute::NoAlias);
+      paramAttrs.back().addAttribute(llvm::Attribute::WriteOnly);
+      paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
+    } else {
+      realRet = ret;
+    }
+    
     func.llvmFunc = llvm::Function::Create(
-      generateFuncSig(ctx, func),
+      llvm::FunctionType::get(realRet, realParams, false),
       llvm::Function::ExternalLinkage,
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );
-    func.llvmFunc->setCallingConv(llvm::CallingConv::C);
+    
+    func.llvmFunc->addFnAttr(llvm::Attribute::NoUnwind);
+    for (unsigned p = 0; p != paramAttrs.size(); ++p) {
+      func.llvmFunc->addParamAttrs(p, paramAttrs[p]);
+    }
+    
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }
   void appendVar(const sym::ExprType &etype, const uint32_t id, ast::Expression *expr) {
