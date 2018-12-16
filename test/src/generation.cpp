@@ -795,14 +795,39 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       let five = 5;
       
-      extern func get() {
+      extern func getFive() {
         return five;
+      }
+      
+      type Dir sint;
+      let Dir_up = make Dir 0;
+      let Dir_right = make Dir 1;
+      let Dir_down = make Dir 2;
+      let Dir_left = make Dir 3;
+      
+      extern func classify(dir: Dir) {
+        switch (dir) {
+          case (Dir_up) return 11;
+          case (Dir_right) return 22;
+          case (Dir_down) return 33;
+          case (Dir_left) return 44;
+          default return 0;
+        }
       }
     )");
     
-    auto get = GET_FUNC("get", Sint());
+    auto getFive = GET_FUNC("getFive", Sint());
     
-    ASSERT_EQ(get(), 5);
+    ASSERT_EQ(getFive(), 5);
+    
+    auto classify = GET_FUNC("classify", Sint(Sint));
+    
+    ASSERT_EQ(classify(0), 11);
+    ASSERT_EQ(classify(1), 22);
+    ASSERT_EQ(classify(2), 33);
+    ASSERT_EQ(classify(3), 44);
+    ASSERT_EQ(classify(4), 0);
+    ASSERT_EQ(classify(-100), 0);
   });
   
   /*

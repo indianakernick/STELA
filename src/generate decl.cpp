@@ -76,30 +76,21 @@ public:
     
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }
-  void appendVar(const sym::ExprType &etype, const uint32_t id, ast::Expression *expr) {
-    /*str += exprType(etype);
-    str += "v_";
-    str += id;
-    str += " = ";
-    if (expr) {
-      str += generateExpr(ctx, expr);
-    } else {
-      str += generateZeroExpr(ctx, etype.type.get());
-    }
-    str += ";\n";*/
-  }
-  void visit(ast::Var &var) override {
-    //appendVar(var.symbol->etype, var.id, var.expr.get());
-  }
-  void visit(ast::Let &let) override {
-    ast::Type *type = let.symbol->etype.type.get();
-    let.llvmAddr = new llvm::GlobalVariable{
+  
+  llvm::Value *createGlobalVar(
+    ast::Type *type,
+    const std::string_view name,
+    ast::Expression *expr,
+    const bool external
+  ) {
+    llvm::Type *llvmType = generateType(ctx, type);
+    llvm::Value *llvmAddr = new llvm::GlobalVariable{
       *module,
-      generateType(ctx, type),
+      llvmType,
       false,
-      linkage(let.external),
-      llvm::ConstantInt::get(generateType(ctx, type), 0),
-      llvm::StringRef{let.name.data(), let.name.size()}
+      linkage(external),
+      llvm::UndefValue::get(llvmType),
+      llvm::StringRef{name.data(), name.size()}
     };
     
     llvm::FunctionType *ctorType = llvm::FunctionType::get(
@@ -112,19 +103,43 @@ public:
       module
     );
     ctor->addFnAttr(llvm::Attribute::NoUnwind);
+    ctor->addFnAttr(llvm::Attribute::NoRecurse);
+    ctor->addFnAttr(llvm::Attribute::ReadNone);
     
     FuncBuilder builder(ctor);
-    llvm::Value *init = generateValueExpr(ctx, builder, let.expr.get());
-    builder.ir.CreateStore(init, let.llvmAddr);
-    builder.ir.CreateInvariantStart(
-      let.llvmAddr,
-      llvm::ConstantInt::get(
-        llvm::IntegerType::getInt64Ty(ctx.llvm),
-        let.llvmAddr->getType()->getPrimitiveSizeInBits()
-      )
-    );
+    llvm::Value *init;
+    if (expr) {
+      init = generateValueExpr(ctx, builder, expr);
+    } else {
+      init = generateZeroExpr(ctx, builder, type);
+    }
+    builder.ir.CreateStore(init, llvmAddr);
     builder.ir.CreateRetVoid();
     
+    llvm::Twine fnName = llvm::StringRef{name.data(), name.size()};
+    ctor->setName(fnName + "_ctor");
+    ctors.push_back(ctor);
+    
+    return llvmAddr;
+  }
+  void visit(ast::Var &var) override {
+    var.llvmAddr = createGlobalVar(
+      var.symbol->etype.type.get(), var.name, var.expr.get(), var.external
+    );
+  }
+  void visit(ast::Let &let) override {
+    let.llvmAddr = createGlobalVar(
+      let.symbol->etype.type.get(), let.name, let.expr.get(), let.external
+    );
+  }
+  
+  void writeCtorList() {
+    if (ctors.empty()) {
+      return;
+    }
+    llvm::FunctionType *ctorType = llvm::FunctionType::get(
+      llvm::Type::getVoidTy(ctx.llvm), false
+    );
     llvm::StructType *ctorEntryType = llvm::StructType::get(
       llvm::IntegerType::getInt32Ty(ctx.llvm),
       ctorType->getPointerTo(),
@@ -132,18 +147,22 @@ public:
     );
     llvm::ArrayType *ctorListType = llvm::ArrayType::get(ctorEntryType, 1);
     
-    llvm::Constant *ctorEntry = llvm::ConstantStruct::get(ctorEntryType,
-      llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(ctx.llvm), 2),
-      ctor,
-      llvm::ConstantPointerNull::get(llvm::IntegerType::getInt8PtrTy(ctx.llvm))
-    );
+    std::vector<llvm::Constant *> entries;
+    entries.reserve(ctors.size());
+    for (size_t c = 0; c != ctors.size(); ++c) {
+      entries.push_back(llvm::ConstantStruct::get(ctorEntryType,
+        llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(ctx.llvm), c),
+        ctors[c],
+        llvm::ConstantPointerNull::get(llvm::IntegerType::getInt8PtrTy(ctx.llvm))
+      ));
+    }
     
     new llvm::GlobalVariable{
       *module,
       ctorListType,
       true,
       llvm::Function::AppendingLinkage,
-      llvm::ConstantArray::get(ctorListType, {&ctorEntry, 1}),
+      llvm::ConstantArray::get(ctorListType, entries),
       "llvm.global_ctors"
     };
   }
@@ -151,6 +170,7 @@ public:
 private:
   gen::Ctx ctx;
   llvm::Module *module;
+  std::vector<llvm::Function *> ctors;
 };
 
 }
@@ -160,4 +180,5 @@ void stela::generateDecl(gen::Ctx ctx, llvm::Module *module, const ast::Decls &d
   for (const ast::DeclPtr &decl : decls) {
     decl->accept(visitor);
   }
+  visitor.writeCtorList();
 }
