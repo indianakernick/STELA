@@ -105,8 +105,7 @@ public:
     }
     
     if (foundDefault) {
-      funcBdr.setCurr(checkBlocks.back());
-      funcBdr.ir.CreateBr(caseBlocks[defaultIndex]);
+      funcBdr.link(checkBlocks.back(), caseBlocks[defaultIndex]);
     }
     
     for (size_t c = 0; c != swich.cases.size(); ++c) {

@@ -23,6 +23,12 @@ void FuncBuilder::setCurr(llvm::BasicBlock *block) {
   ir.SetInsertPoint(block);
 }
 
+void FuncBuilder::link(llvm::BasicBlock *from, llvm::BasicBlock *to) {
+  ir.SetInsertPoint(from);
+  ir.CreateBr(to);
+  ir.SetInsertPoint(curr);
+}
+
 llvm::BasicBlock *FuncBuilder::makeBlock(const llvm::Twine &name) {
   return llvm::BasicBlock::Create(func->getContext(), name, func);
 }

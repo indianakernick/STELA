@@ -30,6 +30,7 @@ void addOptPasses(
   builder.Inliner = llvm::createFunctionInliningPass(3, 0, false);
   builder.LoopVectorize = true;
   builder.SLPVectorize = true;
+  builder.NewGVN = true;
   machine->adjustPassManager(builder);
   
   builder.populateFunctionPassManager(fnPasses);

@@ -350,10 +350,8 @@ public:
       fals = builder.ir.CreateLoad(fals);
     }
     
-    builder.setCurr(trooBlock);
-    builder.ir.CreateBr(doneBlock);
-    builder.setCurr(folsBlock);
-    builder.ir.CreateBr(doneBlock);
+    builder.link(trooBlock, doneBlock);
+    builder.link(folsBlock, doneBlock);
     
     builder.setCurr(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(tru->getType(), 2);
