@@ -53,5 +53,7 @@ llvm::ExecutionEngine *stela::generateCode(std::unique_ptr<llvm::Module> module,
   optimizeModule(engine->getTargetMachine(), modulePtr);
   engine->finalizeObject();
   
+  engine->runStaticConstructorsDestructors(false);
+  
   return engine;
 }

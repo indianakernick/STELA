@@ -11,6 +11,7 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate stat.hpp"
+#include "generate expr.hpp"
 #include <llvm/IR/Function.h>
 #include "generate zero expr.hpp"
 
@@ -22,6 +23,10 @@ class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Module *module)
     : ctx{ctx}, module{module} {}
+  
+  llvm::GlobalObject::LinkageTypes linkage(const bool ext) {
+    return ext ? llvm::GlobalObject::ExternalLinkage : llvm::GlobalObject::InternalLinkage;
+  }
   
   void visit(ast::Func &func) override {
     std::vector<llvm::AttrBuilder> paramAttrs;
@@ -59,7 +64,7 @@ public:
     
     func.llvmFunc = llvm::Function::Create(
       llvm::FunctionType::get(realRet, realParams, false),
-      func.external ? llvm::Function::ExternalLinkage : llvm::Function::InternalLinkage,
+      linkage(func.external),
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );
@@ -87,7 +92,60 @@ public:
     //appendVar(var.symbol->etype, var.id, var.expr.get());
   }
   void visit(ast::Let &let) override {
-    //appendVar(let.symbol->etype, let.id, let.expr.get());
+    ast::Type *type = let.symbol->etype.type.get();
+    let.llvmAddr = new llvm::GlobalVariable{
+      *module,
+      generateType(ctx, type),
+      false,
+      linkage(let.external),
+      llvm::ConstantInt::get(generateType(ctx, type), 0),
+      llvm::StringRef{let.name.data(), let.name.size()}
+    };
+    
+    llvm::FunctionType *ctorType = llvm::FunctionType::get(
+      llvm::Type::getVoidTy(ctx.llvm), false
+    );
+    llvm::Function *ctor = llvm::Function::Create(
+      ctorType,
+      llvm::Function::PrivateLinkage,
+      "",
+      module
+    );
+    ctor->addFnAttr(llvm::Attribute::NoUnwind);
+    
+    FuncBuilder builder(ctor);
+    llvm::Value *init = generateValueExpr(ctx, builder, let.expr.get());
+    builder.ir.CreateStore(init, let.llvmAddr);
+    builder.ir.CreateInvariantStart(
+      let.llvmAddr,
+      llvm::ConstantInt::get(
+        llvm::IntegerType::getInt64Ty(ctx.llvm),
+        let.llvmAddr->getType()->getPrimitiveSizeInBits()
+      )
+    );
+    builder.ir.CreateRetVoid();
+    
+    llvm::StructType *ctorEntryType = llvm::StructType::get(
+      llvm::IntegerType::getInt32Ty(ctx.llvm),
+      ctorType->getPointerTo(),
+      llvm::IntegerType::getInt8PtrTy(ctx.llvm)
+    );
+    llvm::ArrayType *ctorListType = llvm::ArrayType::get(ctorEntryType, 1);
+    
+    llvm::Constant *ctorEntry = llvm::ConstantStruct::get(ctorEntryType,
+      llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(ctx.llvm), 2),
+      ctor,
+      llvm::ConstantPointerNull::get(llvm::IntegerType::getInt8PtrTy(ctx.llvm))
+    );
+    
+    new llvm::GlobalVariable{
+      *module,
+      ctorListType,
+      true,
+      llvm::Function::AppendingLinkage,
+      llvm::ConstantArray::get(ctorListType, {&ctorEntry, 1}),
+      "llvm.global_ctors"
+    };
   }
   
 private:

@@ -791,6 +791,20 @@ TEST_GROUP(Generation, {
     // fac(13) overflows uint32_t
   });
   
+  TEST(Global variables, {
+    ASSERT_SUCCEEDS(R"(
+      let five = 5;
+      
+      extern func get() {
+        return five;
+      }
+    )");
+    
+    auto get = GET_FUNC("get", Sint());
+    
+    ASSERT_EQ(get(), 5);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

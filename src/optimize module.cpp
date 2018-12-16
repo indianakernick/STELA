@@ -13,6 +13,7 @@
 #include <llvm/Transforms/IPO.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Target/TargetMachine.h>
+#include <llvm/Transforms/IPO/GlobalDCE.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
@@ -75,6 +76,12 @@ void stela::optimizeModule(llvm::TargetMachine *machine, llvm::Module *module) {
   }
   fnPasses.doFinalization();
 
+  llvm::GlobalDCEPass dce;
+  llvm::ModuleAnalysisManager modMan;
+  dce.run(*module, modMan);
+
   passes.add(llvm::createVerifierPass());
   passes.run(*module);
+  
+  dce.run(*module, modMan);
 }
