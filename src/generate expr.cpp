@@ -326,17 +326,40 @@ public:
   }
   
   void visit(ast::Ternary &tern) override {
-    llvm::Value *cond = visitValue(tern.cond.get());
+    auto *condBlock = builder.nextEmpty();
+    auto *trooBlock = builder.makeBlock();
+    auto *folsBlock = builder.makeBlock();
+    auto *doneBlock = builder.makeBlock();
+    
+    builder.setCurr(condBlock);
+    builder.ir.CreateCondBr(visitValue(tern.cond.get()), trooBlock, folsBlock);
+    
+    builder.setCurr(trooBlock);
     tern.tru->accept(*this);
     llvm::Value *tru = value;
+    
+    builder.setCurr(folsBlock);
     tern.fals->accept(*this);
     llvm::Value *fals = value;
+    
     if (tru->getType()->isPointerTy() && !fals->getType()->isPointerTy()) {
+      builder.setCurr(trooBlock);
       tru = builder.ir.CreateLoad(tru);
     } else if (!tru->getType()->isPointerTy() && fals->getType()->isPointerTy()) {
+      builder.setCurr(folsBlock);
       fals = builder.ir.CreateLoad(fals);
     }
-    value = builder.ir.CreateSelect(cond, tru, fals);
+    
+    builder.setCurr(trooBlock);
+    builder.ir.CreateBr(doneBlock);
+    builder.setCurr(folsBlock);
+    builder.ir.CreateBr(doneBlock);
+    
+    builder.setCurr(doneBlock);
+    llvm::PHINode *phi = builder.ir.CreatePHI(tru->getType(), 2);
+    phi->addIncoming(tru, trooBlock);
+    phi->addIncoming(fals, folsBlock);
+    value = phi;
   }
   void visit(ast::Make &make) override {
     if (!make.cast) {

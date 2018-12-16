@@ -49,16 +49,16 @@ public:
   void visit(ast::If &fi) override {
     auto *cond = funcBdr.nextEmpty();
     auto *troo = funcBdr.makeBlock();
-    auto *folse = funcBdr.makeBlock();
+    auto *fols = funcBdr.makeBlock();
     llvm::BasicBlock *done = nullptr;
     funcBdr.setCurr(cond);
-    exprBdr.condBr(fi.cond.get(), troo, folse);
+    exprBdr.condBr(fi.cond.get(), troo, fols);
     
     funcBdr.setCurr(troo);
     fi.body->accept(*this);
     done = funcBdr.terminateLazy(done);
     
-    funcBdr.setCurr(folse);
+    funcBdr.setCurr(fols);
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     }

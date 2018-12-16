@@ -766,6 +766,31 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(toReal(-9), -9.0f);
   });
   
+  TEST(Recursive function, {
+    ASSERT_SUCCEEDS(R"(
+      extern func fac(n: uint) -> uint {
+        return n == 0u ? 1u : n * fac(n - 1u);
+      }
+    )");
+    
+    auto fac = GET_FUNC("fac", Uint(Uint));
+    
+    ASSERT_EQ(fac(0), 1);
+    ASSERT_EQ(fac(1), 1);
+    ASSERT_EQ(fac(2), 2);
+    ASSERT_EQ(fac(3), 6);
+    ASSERT_EQ(fac(4), 24);
+    ASSERT_EQ(fac(5), 120);
+    ASSERT_EQ(fac(6), 720);
+    ASSERT_EQ(fac(7), 5'040);
+    ASSERT_EQ(fac(8), 40'320);
+    ASSERT_EQ(fac(9), 362'880);
+    ASSERT_EQ(fac(10), 3'628'800);
+    ASSERT_EQ(fac(11), 39'916'800);
+    ASSERT_EQ(fac(12), 479'001'600);
+    // fac(13) overflows uint32_t
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
