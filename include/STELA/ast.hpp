@@ -237,6 +237,8 @@ struct Make final : Expression {
   TypePtr type;
   ExprPtr expr;
   
+  bool cast = false;
+  
   void accept(Visitor &) override;
 };
 

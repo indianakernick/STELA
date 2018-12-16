@@ -674,6 +674,98 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(identity(s).g, s.g);
   });
   
+  TEST(Init struct, {
+    ASSERT_SUCCEEDS(R"(
+      type Structure struct {
+        a: byte;
+        b: byte;
+        c: byte;
+        d: byte;
+        e: real;
+        f: char;
+        g: sint;
+      };
+      
+      extern func zero() {
+        var a: Structure;
+        let b: Structure = {};
+        let c = make Structure {};
+        return a.e + b.e + c.e;
+      }
+      
+      extern func init() {
+        return make Structure {
+          1b,
+          make byte 2,
+          make byte 3b,
+          4b,
+          make real 5,
+          6c,
+          make sint 7u
+        };
+      }
+    )");
+    
+    auto zero = GET_FUNC("zero", Real());
+    
+    ASSERT_EQ(zero(), 0.0f);
+    
+    struct Structure {
+      Byte a;
+      Byte b;
+      Byte c;
+      Byte d;
+      Real e;
+      Char f;
+      Sint g;
+    };
+    
+    auto init = GET_FUNC("init", Structure());
+    
+    Structure s = init();
+    ASSERT_EQ(s.a, 1);
+    ASSERT_EQ(s.b, 2);
+    ASSERT_EQ(s.c, 3);
+    ASSERT_EQ(s.d, 4);
+    ASSERT_EQ(s.e, 5);
+    ASSERT_EQ(s.f, 6);
+    ASSERT_EQ(s.g, 7);
+  });
+  
+  TEST(Casting, {
+    ASSERT_SUCCEEDS(R"(
+      extern func toUint(val: sint) {
+        return make uint val;
+      }
+    
+      extern func toSint(val: real) {
+        return make sint val;
+      }
+      
+      extern func toReal(val: sint) {
+        return make real val;
+      }
+    )");
+    
+    auto toUint = GET_FUNC("toUint", Uint(Sint));
+    
+    ASSERT_EQ(toUint(4), 4);
+    ASSERT_EQ(toUint(100000), 100000);
+    ASSERT_EQ(toUint(-9), Uint(-9));
+    
+    auto toSint = GET_FUNC("toSint", Sint(Real));
+    
+    ASSERT_EQ(toSint(4.0f), 4);
+    ASSERT_EQ(toSint(100.7f), 100);
+    ASSERT_EQ(toSint(-9.4f), -9);
+    
+    auto toReal = GET_FUNC("toReal", Real(Sint));
+    
+    ASSERT_EQ(toReal(4), 4.0f);
+    ASSERT_EQ(toReal(100000), 100000.0f);
+    ASSERT_EQ(toReal(-9), -9.0f);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

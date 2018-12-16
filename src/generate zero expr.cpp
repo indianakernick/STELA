@@ -53,24 +53,17 @@ public:
     type.definition->type->accept(*this);
   }
   void visit(ast::StructType &type) override {
-    /*gen::String strut = generateType(ctx, &type);
-    strut += "{";
-    if (type.fields.empty()) {
-      strut += "}";
-      return;
+    llvm::Type *strut = generateType(ctx, &type);
+    llvm::Value *addr = builder.alloc(strut);
+    for (unsigned f = 0; f != type.fields.size(); ++f) {
+      type.fields[f].type->accept(*this);
+      llvm::Value *fieldAddr = builder.ir.CreateStructGEP(addr, f);
+      builder.ir.CreateStore(value, fieldAddr);
     }
-    type.fields[0].type->accept(*this);
-    strut += str;
-    for (auto f = type.fields.cbegin() + 1; f != type.fields.cend(); ++f) {
-      strut += ", ";
-      f->type->accept(*this);
-      strut += str;
-    }
-    strut += "}";
-    str = std::move(strut);*/
+    value = builder.ir.CreateLoad(addr);
   }
   
-  llvm::Value *value;
+  llvm::Value *value = nullptr;
 
 private:
   gen::Ctx ctx;

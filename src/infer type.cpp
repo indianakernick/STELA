@@ -110,6 +110,7 @@ public:
     if (auto dst = lookupConcrete<ast::BtnType>(ctx, make.type)) {
       if (auto src = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
         if (validCast(dst, src)) {
+          make.cast = true;
           return lkp.setExpr(sym::makeLetVal(make.type));
         }
       }

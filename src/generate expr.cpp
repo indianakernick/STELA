@@ -338,14 +338,43 @@ public:
     }
     value = builder.ir.CreateSelect(cond, tru, fals);
   }
-  /*void visit(ast::Make &make) override {
-    str += generateType(ctx, make.type.get());
-    str += '(';
-    make.expr->accept(*this);
-    str += ')';
+  void visit(ast::Make &make) override {
+    if (!make.cast) {
+      make.expr->accept(*this);
+      return;
+    }
+    llvm::Type *type = generateType(ctx, make.type.get());
+    llvm::Value *srcVal = visitValue(make.expr.get());
+    const ArithNumber dst = classifyArith(make.type.get());
+    const ArithNumber src = classifyArith(make.expr.get());
+    if (src == ArithNumber::signed_int) {
+      if (dst == ArithNumber::signed_int) {
+        value = builder.ir.CreateIntCast(srcVal, type, true);
+      } else if (dst == ArithNumber::unsigned_int) {
+        value = builder.ir.CreateIntCast(srcVal, type, true);
+      } else {
+        value = builder.ir.CreateCast(llvm::Instruction::SIToFP, srcVal, type);
+      }
+    } else if (src == ArithNumber::unsigned_int) {
+      if (dst == ArithNumber::signed_int) {
+        value = builder.ir.CreateIntCast(srcVal, type, false);
+      } else if (dst == ArithNumber::unsigned_int) {
+        value = builder.ir.CreateIntCast(srcVal, type, false);
+      } else {
+        value = builder.ir.CreateCast(llvm::Instruction::UIToFP, srcVal, type);
+      }
+    } else {
+      if (dst == ArithNumber::signed_int) {
+        value = builder.ir.CreateCast(llvm::Instruction::FPToSI, srcVal, type);
+      } else if (dst == ArithNumber::unsigned_int) {
+        value = builder.ir.CreateCast(llvm::Instruction::FPToUI, srcVal, type);
+      } else {
+        value = builder.ir.CreateFPCast(srcVal, type);
+      }
+    }
   }
   
-  void visit(ast::StringLiteral &string) override {
+  /*void visit(ast::StringLiteral &string) override {
     if (string.value.empty()) {
       str += "make_null_string()";
     } else {
@@ -429,16 +458,22 @@ public:
       str += ')';
     }
   }
+  */
   void visit(ast::InitList &list) override {
+    ast::Type *type = list.exprType.get();
     if (list.exprs.empty()) {
-      str += generateZeroExpr(ctx, list.exprType.get());
+      value = generateZeroExpr(ctx, builder, type);
     } else {
-      str += generateType(ctx, list.exprType.get());
-      str += '{';
-      pushExprs(list.exprs);
-      str += '}';
+      llvm::Type *strut = generateType(ctx, type);
+      llvm::Value *addr = builder.alloc(strut);
+      for (unsigned e = 0; e != list.exprs.size(); ++e) {
+        llvm::Value *fieldAddr = builder.ir.CreateStructGEP(addr, e);
+        builder.ir.CreateStore(visitValue(list.exprs[e].get()), fieldAddr);
+      }
+      value = builder.ir.CreateLoad(addr);
     }
   }
+  /*
   void writeCapture(const sym::ClosureCap &cap) {
     if (!writeCapture(cap.index)) {
       writeID(cap.object, cap.type.get(), nullptr);
@@ -461,7 +496,7 @@ public:
     str += "})";
   }*/
 
-  llvm::Value *value;
+  llvm::Value *value = nullptr;
 
 private:
   gen::Ctx ctx;
@@ -470,10 +505,9 @@ private:
 
 }
 
-ArithNumber stela::classifyArith(ast::Expression *expr) {
-  ast::BtnType *type = concreteType<ast::BtnType>(expr->exprType.get());
-  assert(type);
-  switch (type->value) {
+ArithNumber stela::classifyArith(ast::Type *type) {
+  ast::BtnType *btn = assertConcreteType<ast::BtnType>(type);
+  switch (btn->value) {
     case ast::BtnTypeEnum::Char:
     case ast::BtnTypeEnum::Sint:
       return ArithNumber::signed_int;
@@ -486,6 +520,10 @@ ArithNumber stela::classifyArith(ast::Expression *expr) {
     case ast::BtnTypeEnum::Void: ;
   }
   UNREACHABLE();
+}
+
+ArithNumber stela::classifyArith(ast::Expression *expr) {
+  return classifyArith(expr->exprType.get());
 }
 
 llvm::Value *stela::generateAddrExpr(

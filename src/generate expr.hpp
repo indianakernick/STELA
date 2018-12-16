@@ -20,6 +20,7 @@ enum class ArithNumber {
   unsigned_int,
   floating_point
 };
+ArithNumber classifyArith(ast::Type *);
 ArithNumber classifyArith(ast::Expression *);
 
 llvm::Value *generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
