@@ -567,11 +567,12 @@ llvm::Value *stela::generateValueExpr(
   return visitor.visitValue(expr);
 }
 
-void stela::generateDiscardExpr(
+llvm::Value *stela::generateExpr(
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
   expr->accept(visitor);
+  return visitor.value;
 }

@@ -25,7 +25,7 @@ ArithNumber classifyArith(ast::Expression *);
 
 llvm::Value *generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 llvm::Value *generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
-void generateDiscardExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+llvm::Value *generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 
 }
 

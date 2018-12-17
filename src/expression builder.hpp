@@ -25,8 +25,8 @@ public:
   llvm::Value *addr(ast::Expression *);
   /// Get the value of an expression
   llvm::Value *value(ast::Expression *);
-  /// Evaluate a discarded expression
-  void discard(ast::Expression *);
+  /// Evaluate an expression
+  llvm::Value *expr(ast::Expression *);
   
   /// Create a conditional branch instruction
   void condBr(ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);

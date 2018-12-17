@@ -28,8 +28,8 @@ llvm::Value *ExprBuilder::value(ast::Expression *expr) {
   return generateValueExpr(ctx, fn, expr);
 }
 
-void ExprBuilder::discard(ast::Expression *expr) {
-  generateDiscardExpr(ctx, fn, expr);
+llvm::Value *ExprBuilder::expr(ast::Expression *expr) {
+  return generateExpr(ctx, fn, expr);
 }
 
 void ExprBuilder::condBr(

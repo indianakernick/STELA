@@ -9,20 +9,28 @@
 #ifndef stela_type_instantiations_hpp
 #define stela_type_instantiations_hpp
 
-#include <unordered_set>
+#include <unordered_map>
+
+namespace llvm {
+
+class Type;
+class Function;
+class Module;
+
+}
 
 namespace stela::gen {
 
 class TypeInst {
 public:
-  TypeInst();
+  explicit TypeInst(llvm::Module *);
 
-  // return false and insert if not instantiated
-  // return true and dont insert if instantiated
-  
+  /// Get the destructor for an array. Key is a pointer to an array struct
+  llvm::Function *array(llvm::Type *);
   
 private:
-  
+  llvm::Module *module;
+  std::unordered_map<llvm::Type *, llvm::Function *> arrayDtors;
 };
 
 }

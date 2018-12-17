@@ -13,12 +13,22 @@
 #include "symbols.hpp"
 #include "gen context.hpp"
 
+namespace llvm {
+
+class Type;
+class Function;
+class Module;
+
+}
+
 namespace stela {
 
 std::string generateNullFunc(gen::Ctx, const ast::FuncType &);
 std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
+
+llvm::Function *generateArrayDtor(llvm::Module *, llvm::Type *);
 
 }
 

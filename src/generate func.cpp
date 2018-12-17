@@ -9,9 +9,13 @@
 #include "generate func.hpp"
 
 #include "unreachable.hpp"
+#include "type builder.hpp"
 #include "generate type.hpp"
 #include "generate decl.hpp"
+#include <llvm/IR/Function.h>
+#include "reference count.hpp"
 #include "assert down cast.hpp"
+#include "function builder.hpp"
 
 using namespace stela;
 
@@ -134,4 +138,40 @@ std::string stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   ctx.func += func;
   return name;*/
   return {};
+}
+
+llvm::Function *stela::generateArrayDtor(llvm::Module *module, llvm::Type *type) {
+  llvm::LLVMContext &ctx = type->getContext();
+  TypeBuilder typeBdr{ctx};
+  llvm::FunctionType *funcType = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {type},
+    false
+  );
+  llvm::Function *func = llvm::Function::Create(
+    funcType,
+    llvm::Function::InternalLinkage,
+    "array_dtor",
+    module
+  );
+  func->addFnAttr(llvm::Attribute::NoUnwind);
+  func->addFnAttr(llvm::Attribute::AlwaysInline);
+  
+  FuncBuilder funcBdr{func};
+  llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+  ReferenceCount refCount{funcBdr.ir};
+  llvm::Value *array = func->arg_begin();
+  llvm::Value *deleteArray = refCount.decr(array);
+  funcBdr.ir.CreateCondBr(deleteArray, deleteBlock, doneBlock);
+  funcBdr.setCurr(deleteBlock);
+  funcBdr.ir.Insert(llvm::CallInst::CreateFree(
+    func->arg_begin(),
+    funcBdr.ir.GetInsertBlock()
+  ));
+  funcBdr.ir.CreateBr(doneBlock);
+  funcBdr.setCurr(doneBlock);
+  funcBdr.ir.CreateRetVoid();
+  
+  return func;
 }

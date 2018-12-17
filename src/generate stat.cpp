@@ -24,7 +24,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : funcBdr{func}, exprBdr{ctx, funcBdr} {}
+    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr} {}
 
   void visitFlow(ast::Statement *body, llvm::BasicBlock *brake, llvm::BasicBlock *continu) {
     llvm::BasicBlock *oldBrake = std::exchange(breakBlock, brake);
@@ -195,38 +195,33 @@ public:
   }
   
   void visit(ast::Assign &assign) override {
-    llvm::Value *addr = exprBdr.addr(assign.left.get());
-    llvm::Value *value = exprBdr.value(assign.right.get());
     ast::Type *leftType = assign.left->exprType.get();
     if (concreteType<ast::ArrayType>(leftType)) {
-      // This doesn't handle the case where the RHS array is a temporary.
-      // LHS after the assignment will end up with a reference count of 2
-      // because the temporary was not "destroyed".
+      llvm::Value *addr = exprBdr.addr(assign.left.get());
+      llvm::Value *right = exprBdr.expr(assign.right.get());
       ReferenceCount refCount{funcBdr.ir};
-      // addr is  [1 x {i64, i32, i32, T*}*] *
-      // value is [1 x {i64, i32, i32, T*}*]
-      llvm::Value *rightArray = funcBdr.ir.CreateExtractValue(value, {0});
+      const bool rightTemp = !right->getType()->isPointerTy();
+      right = rightTemp ? right : funcBdr.ir.CreateLoad(right);
+      llvm::Value *rightArray = funcBdr.ir.CreateExtractValue(right, {0});
       refCount.incr(rightArray);
       llvm::Value *leftArray = funcBdr.ir.CreateLoad(funcBdr.ir.CreateStructGEP(addr, 0));
-      llvm::Value *deleteLeft = refCount.decr(leftArray);
-      llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
-      llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
-      funcBdr.ir.CreateCondBr(deleteLeft, deleteBlock, doneBlock);
-      funcBdr.setCurr(deleteBlock);
-      funcBdr.ir.Insert(llvm::CallInst::CreateFree(
-        leftArray,
-        funcBdr.ir.GetInsertBlock()
-      ));
-      funcBdr.ir.CreateBr(doneBlock);
-      funcBdr.setCurr(doneBlock);
+      llvm::Function *dtor = ctx.inst.array(leftArray->getType());
+      funcBdr.ir.CreateCall(dtor, {leftArray});
+      if (rightTemp) {
+        funcBdr.ir.CreateCall(dtor, {rightArray});
+      }
+      funcBdr.ir.CreateStore(right, addr);
+    } else {
+      llvm::Value *addr = exprBdr.addr(assign.left.get());
+      llvm::Value *value = exprBdr.value(assign.right.get());
+      funcBdr.ir.CreateStore(value, addr);
     }
-    funcBdr.ir.CreateStore(value, addr);
   }
   void visit(ast::DeclAssign &assign) override {
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    exprBdr.discard(&assign.call);
+    exprBdr.expr(&assign.call);
   }
   
   void insert(ast::FuncParam &param, const size_t index) {
@@ -241,6 +236,7 @@ public:
   }
   
 private:
+  gen::Ctx ctx;
   FuncBuilder funcBdr;
   ExprBuilder exprBdr;
   llvm::BasicBlock *breakBlock = nullptr;
