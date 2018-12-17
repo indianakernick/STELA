@@ -31,10 +31,6 @@ llvm::FunctionType *generateLambSig(gen::Ctx, const ast::FuncType &);
 void assignAttributes(llvm::Function *, const sym::FuncParams &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
-llvm::PointerType *getVoidPtr(gen::Ctx);
-llvm::PointerType *getCloDataPtr(gen::Ctx);
-llvm::StructType *getArrayOf(gen::Ctx, llvm::Type *);
-
 ast::Type *concreteType(ast::Type *);
 
 template <typename Concrete>

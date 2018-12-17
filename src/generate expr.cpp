@@ -11,6 +11,7 @@
 #include "llvm.hpp"
 #include "symbols.hpp"
 #include "unreachable.hpp"
+#include "type builder.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
@@ -24,12 +25,12 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, FuncBuilder &builder)
-    : ctx{ctx}, builder{builder} {}
+    : ctx{ctx}, funcBdr{builder} {}
 
   llvm::Value *visitValue(ast::Expression *expr) {
     expr->accept(*this);
     if (value->getType()->isPointerTy()) {
-      return builder.ir.CreateLoad(value);
+      return funcBdr.ir.CreateLoad(value);
     } else {
       return value;
     }
@@ -39,7 +40,7 @@ public:
     if (value->getType()->isPointerTy()) {
       return value;
     } else {
-      return builder.allocStore(value);
+      return funcBdr.allocStore(value);
     }
   }
 
@@ -50,35 +51,35 @@ public:
     
     #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
       if (arith == ArithNumber::floating_point) {                               \
-        value = builder.ir.FLOAT_OP(left, right);                               \
+        value = funcBdr.ir.FLOAT_OP(left, right);                               \
       } else {                                                                  \
-        value = builder.ir.INT_OP(left, right);                                 \
+        value = funcBdr.ir.INT_OP(left, right);                                 \
       }                                                                         \
       return
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
       if (arith == ArithNumber::signed_int) {                                   \
-        value = builder.ir.S_OP(left, right);                                   \
+        value = funcBdr.ir.S_OP(left, right);                                   \
       } else if (arith == ArithNumber::unsigned_int) {                          \
-        value = builder.ir.U_OP(left, right);                                   \
+        value = funcBdr.ir.U_OP(left, right);                                   \
       } else {                                                                  \
-        value = builder.ir.F_OP(left, right);                                   \
+        value = funcBdr.ir.F_OP(left, right);                                   \
       }                                                                         \
       return
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
       case ast::BinOp::bit_or:
-        value = builder.ir.CreateOr(left, right); return;
+        value = funcBdr.ir.CreateOr(left, right); return;
       case ast::BinOp::bit_xor:
-        value = builder.ir.CreateXor(left, right); return;
+        value = funcBdr.ir.CreateXor(left, right); return;
       case ast::BinOp::bool_and:
       case ast::BinOp::bit_and:
-        value = builder.ir.CreateAnd(left, right); return;
+        value = funcBdr.ir.CreateAnd(left, right); return;
       case ast::BinOp::bit_shl:
-        value = builder.ir.CreateShl(left, right); return;
+        value = funcBdr.ir.CreateShl(left, right); return;
       case ast::BinOp::bit_shr:
-        value = builder.ir.CreateLShr(left, right); return;
+        value = funcBdr.ir.CreateLShr(left, right); return;
       case ast::BinOp::eq:
         INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
       case ast::BinOp::ne:
@@ -116,16 +117,16 @@ public:
     switch (expr.oper) {
       case ast::UnOp::neg:
         if (arith == ArithNumber::signed_int) {
-          value = builder.ir.CreateNSWNeg(operand);
+          value = funcBdr.ir.CreateNSWNeg(operand);
         } else if (arith == ArithNumber::unsigned_int) {
-          value = builder.ir.CreateNeg(operand);
+          value = funcBdr.ir.CreateNeg(operand);
         } else {
-          value = builder.ir.CreateFNeg(operand);
+          value = funcBdr.ir.CreateFNeg(operand);
         }
         return;
       case ast::UnOp::bool_not:
       case ast::UnOp::bit_not:
-        value = builder.ir.CreateNot(operand); return;
+        value = funcBdr.ir.CreateNot(operand); return;
     }
     UNREACHABLE();
   }
@@ -191,18 +192,19 @@ public:
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
         args.push_back(visitParam(ref, self, funcType->getParamType(0)));
       } else {
-        args.push_back(llvm::ConstantPointerNull::get(getVoidPtr(ctx)));
+        TypeBuilder typeBdr{ctx.llvm};
+        args.push_back(typeBdr.nullPtr(typeBdr.voidPtr()));
       }
       pushArgs(args, call.args, func->params, funcType->params());
       
       if (funcType->params().size() == args.size() + 1) {
         llvm::Type *retType = funcType->params().back()->getPointerElementType();
-        llvm::Value *retAddr = builder.alloc(retType);
+        llvm::Value *retAddr = funcBdr.alloc(retType);
         args.push_back(retAddr);
-        builder.ir.CreateCall(func->llvmFunc, args);
-        value = builder.ir.CreateLoad(retAddr);
+        funcBdr.ir.CreateCall(func->llvmFunc, args);
+        value = funcBdr.ir.CreateLoad(retAddr);
       } else {
-        value = builder.ir.CreateCall(func->llvmFunc, args);
+        value = funcBdr.ir.CreateCall(func->llvmFunc, args);
       }
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       // call a builtin function
@@ -239,7 +241,7 @@ public:
   
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
-    value = builder.ir.CreateStructGEP(value, mem.index);
+    value = funcBdr.ir.CreateStructGEP(value, mem.index);
   }
   /*
   void visit(ast::Subscript &sub) override {
@@ -326,35 +328,35 @@ public:
   }
   
   void visit(ast::Ternary &tern) override {
-    auto *condBlock = builder.nextEmpty();
-    auto *trooBlock = builder.makeBlock();
-    auto *folsBlock = builder.makeBlock();
-    auto *doneBlock = builder.makeBlock();
+    auto *condBlock = funcBdr.nextEmpty();
+    auto *trooBlock = funcBdr.makeBlock();
+    auto *folsBlock = funcBdr.makeBlock();
+    auto *doneBlock = funcBdr.makeBlock();
     
-    builder.setCurr(condBlock);
-    builder.ir.CreateCondBr(visitValue(tern.cond.get()), trooBlock, folsBlock);
+    funcBdr.setCurr(condBlock);
+    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()), trooBlock, folsBlock);
     
-    builder.setCurr(trooBlock);
+    funcBdr.setCurr(trooBlock);
     tern.tru->accept(*this);
     llvm::Value *tru = value;
     
-    builder.setCurr(folsBlock);
+    funcBdr.setCurr(folsBlock);
     tern.fals->accept(*this);
     llvm::Value *fals = value;
     
     if (tru->getType()->isPointerTy() && !fals->getType()->isPointerTy()) {
-      builder.setCurr(trooBlock);
-      tru = builder.ir.CreateLoad(tru);
+      funcBdr.setCurr(trooBlock);
+      tru = funcBdr.ir.CreateLoad(tru);
     } else if (!tru->getType()->isPointerTy() && fals->getType()->isPointerTy()) {
-      builder.setCurr(folsBlock);
-      fals = builder.ir.CreateLoad(fals);
+      funcBdr.setCurr(folsBlock);
+      fals = funcBdr.ir.CreateLoad(fals);
     }
     
-    builder.link(trooBlock, doneBlock);
-    builder.link(folsBlock, doneBlock);
+    funcBdr.link(trooBlock, doneBlock);
+    funcBdr.link(folsBlock, doneBlock);
     
-    builder.setCurr(doneBlock);
-    llvm::PHINode *phi = builder.ir.CreatePHI(tru->getType(), 2);
+    funcBdr.setCurr(doneBlock);
+    llvm::PHINode *phi = funcBdr.ir.CreatePHI(tru->getType(), 2);
     phi->addIncoming(tru, trooBlock);
     phi->addIncoming(fals, folsBlock);
     value = phi;
@@ -370,27 +372,27 @@ public:
     const ArithNumber src = classifyArith(make.expr.get());
     if (src == ArithNumber::signed_int) {
       if (dst == ArithNumber::signed_int) {
-        value = builder.ir.CreateIntCast(srcVal, type, true);
+        value = funcBdr.ir.CreateIntCast(srcVal, type, true);
       } else if (dst == ArithNumber::unsigned_int) {
-        value = builder.ir.CreateIntCast(srcVal, type, true);
+        value = funcBdr.ir.CreateIntCast(srcVal, type, true);
       } else {
-        value = builder.ir.CreateCast(llvm::Instruction::SIToFP, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::SIToFP, srcVal, type);
       }
     } else if (src == ArithNumber::unsigned_int) {
       if (dst == ArithNumber::signed_int) {
-        value = builder.ir.CreateIntCast(srcVal, type, false);
+        value = funcBdr.ir.CreateIntCast(srcVal, type, false);
       } else if (dst == ArithNumber::unsigned_int) {
-        value = builder.ir.CreateIntCast(srcVal, type, false);
+        value = funcBdr.ir.CreateIntCast(srcVal, type, false);
       } else {
-        value = builder.ir.CreateCast(llvm::Instruction::UIToFP, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::UIToFP, srcVal, type);
       }
     } else {
       if (dst == ArithNumber::signed_int) {
-        value = builder.ir.CreateCast(llvm::Instruction::FPToSI, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToSI, srcVal, type);
       } else if (dst == ArithNumber::unsigned_int) {
-        value = builder.ir.CreateCast(llvm::Instruction::FPToUI, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToUI, srcVal, type);
       } else {
-        value = builder.ir.CreateFPCast(srcVal, type);
+        value = funcBdr.ir.CreateFPCast(srcVal, type);
       }
     }
   }
@@ -483,15 +485,15 @@ public:
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
     if (list.exprs.empty()) {
-      value = generateZeroExpr(ctx, builder, type);
+      value = generateZeroExpr(ctx, funcBdr, type);
     } else {
       llvm::Type *strut = generateType(ctx, type);
-      llvm::Value *addr = builder.alloc(strut);
+      llvm::Value *addr = funcBdr.alloc(strut);
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
-        llvm::Value *fieldAddr = builder.ir.CreateStructGEP(addr, e);
-        builder.ir.CreateStore(visitValue(list.exprs[e].get()), fieldAddr);
+        llvm::Value *fieldAddr = funcBdr.ir.CreateStructGEP(addr, e);
+        funcBdr.ir.CreateStore(visitValue(list.exprs[e].get()), fieldAddr);
       }
-      value = builder.ir.CreateLoad(addr);
+      value = funcBdr.ir.CreateLoad(addr);
     }
   }
   /*
@@ -521,7 +523,7 @@ public:
 
 private:
   gen::Ctx ctx;
-  FuncBuilder &builder;
+  FuncBuilder &funcBdr;
 };
 
 }

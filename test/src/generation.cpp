@@ -834,7 +834,8 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       extern func test() {
         var a: [real];
-        return a;
+        let b = a;
+        return b;
       }
     )");
     

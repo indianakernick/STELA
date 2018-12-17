@@ -9,6 +9,7 @@
 #include "generate zero expr.hpp"
 
 #include "unreachable.hpp"
+#include "type builder.hpp"
 #include "generate type.hpp"
 #include "generate func.hpp"
 
@@ -19,7 +20,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, FuncBuilder &builder)
-    : ctx{ctx}, builder{builder} {}
+    : ctx{ctx}, funcBdr{builder}, typeBdr{ctx.llvm} {}
 
   void visit(ast::BtnType &type) override {
     llvm::Type *llvmType = generateType(ctx, &type);
@@ -40,24 +41,26 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvm::StructType *arrayType = getArrayOf(ctx, elem);
-    value = builder.ir.Insert(llvm::CallInst::CreateMalloc(
-      builder.ir.GetInsertBlock(),
-      llvm::IntegerType::getInt64Ty(ctx.llvm),
+    llvm::StructType *arrayType = typeBdr.arrayOf(elem);
+    llvm::Value *array = funcBdr.ir.Insert(llvm::CallInst::CreateMalloc(
+      funcBdr.ir.GetInsertBlock(),
+      typeBdr.ref(),
       arrayType,
       llvm::ConstantExpr::getSizeOf(arrayType),
       nullptr, nullptr
     ));
-    llvm::Type *i64 = llvm::IntegerType::getInt64Ty(ctx.llvm);
-    llvm::Type *i32 = llvm::IntegerType::getInt32Ty(ctx.llvm);
-    llvm::Value *ref = builder.ir.CreateStructGEP(value, 0);
-    builder.ir.CreateStore(llvm::ConstantInt::get(i64, 1), ref);
-    llvm::Value *cap = builder.ir.CreateStructGEP(value, 1);
-    builder.ir.CreateStore(llvm::ConstantInt::get(i32, 0), cap);
-    llvm::Value *len = builder.ir.CreateStructGEP(value, 2);
-    builder.ir.CreateStore(llvm::ConstantInt::get(i32, 0), len);
-    llvm::Value *dat = builder.ir.CreateStructGEP(value, 3);
-    builder.ir.CreateStore(llvm::ConstantPointerNull::get(elem->getPointerTo()), dat);
+    
+    llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, 0);
+    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
+    llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, 1);
+    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), cap);
+    llvm::Value *len = funcBdr.ir.CreateStructGEP(array, 2);
+    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), len);
+    llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, 3);
+    funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem), dat);
+    
+    llvm::Type *wrapperType = typeBdr.wrapPtrTo(arrayType);
+    value = funcBdr.ir.CreateInsertValue(llvm::UndefValue::get(wrapperType), array, {0u});
   }
   void visit(ast::FuncType &type) override {
     //str += generateMakeFunc(ctx, type);
@@ -70,20 +73,21 @@ public:
   }
   void visit(ast::StructType &type) override {
     llvm::Type *strut = generateType(ctx, &type);
-    llvm::Value *addr = builder.alloc(strut);
+    llvm::Value *addr = funcBdr.alloc(strut);
     for (unsigned f = 0; f != type.fields.size(); ++f) {
       type.fields[f].type->accept(*this);
-      llvm::Value *fieldAddr = builder.ir.CreateStructGEP(addr, f);
-      builder.ir.CreateStore(value, fieldAddr);
+      llvm::Value *fieldAddr = funcBdr.ir.CreateStructGEP(addr, f);
+      funcBdr.ir.CreateStore(value, fieldAddr);
     }
-    value = builder.ir.CreateLoad(addr);
+    value = funcBdr.ir.CreateLoad(addr);
   }
   
   llvm::Value *value = nullptr;
 
 private:
   gen::Ctx ctx;
-  FuncBuilder &builder;
+  FuncBuilder &funcBdr;
+  TypeBuilder typeBdr;
 };
 
 }

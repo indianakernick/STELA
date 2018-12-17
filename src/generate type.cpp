@@ -12,6 +12,7 @@
 #include "symbols.hpp"
 #include <llvm/IR/Type.h>
 #include "unreachable.hpp"
+#include "type builder.hpp"
 #include <llvm/IR/Function.h>
 #include <llvm/IR/DerivedTypes.h>
 
@@ -22,7 +23,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   explicit Visitor(gen::Ctx ctx)
-    : ctx{ctx} {}
+    : ctx{ctx}, builder{ctx.llvm} {}
   
   void visit(ast::BtnType &type) override {
     switch (type.value) {
@@ -43,12 +44,12 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvmType = llvm::PointerType::get(getArrayOf(ctx, elem), 0);
+    llvmType = llvm::ArrayType::get(builder.arrayOf(elem)->getPointerTo(), 1);
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx.llvm, {
       generateLambSig(ctx, type),
-      getCloDataPtr(ctx)
+      builder.cloData()->getPointerTo()
     });
   }
   void visit(ast::NamedType &type) override {
@@ -68,6 +69,7 @@ public:
   
 private:
   gen::Ctx ctx;
+  TypeBuilder builder;
 };
 
 }
@@ -112,7 +114,8 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) 
   if (func.receiver) {
     params.push_back(convertParam(ctx, convert(*func.receiver)));
   } else {
-    params.push_back(getVoidPtr(ctx));
+    TypeBuilder builder{ctx.llvm};
+    params.push_back(builder.voidPtr());
   }
   for (const ast::FuncParam &param : func.params) {
     params.push_back(convertParam(ctx, convert(param)));
@@ -125,7 +128,8 @@ llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &ty
   llvm::Type *ret = ret = generateType(ctx, type.ret.get());
   LLVMTypes params;
   params.reserve(1 + type.params.size() + 1);
-  params.push_back(getVoidPtr(ctx));
+  TypeBuilder builder{ctx.llvm};
+  params.push_back(builder.voidPtr());
   for (const ast::ParamType &param : type.params) {
     params.push_back(convertParam(ctx, param));
   }
@@ -177,31 +181,6 @@ std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
   return {};
 }
 
-llvm::PointerType *stela::getVoidPtr(gen::Ctx ctx) {
-  return llvm::IntegerType::getInt8PtrTy(ctx.llvm);
-}
-
-llvm::PointerType *stela::getCloDataPtr(gen::Ctx ctx) {
-  llvm::FunctionType *virtualDtor = llvm::FunctionType::get(getVoidPtr(ctx), false);
-  llvm::IntegerType *refCount = llvm::IntegerType::getInt32Ty(ctx.llvm);
-  llvm::StructType *cloData = llvm::StructType::get(ctx.llvm, {virtualDtor, refCount});
-  return llvm::PointerType::get(cloData, 0);
-}
-
-llvm::StructType *stela::getArrayOf(gen::Ctx ctx, llvm::Type *elem) {
-  llvm::Type *elemPtr = elem->getPointerTo();
-  llvm::Type *i64 = llvm::IntegerType::getInt64Ty(ctx.llvm);
-  llvm::Type *i32 = llvm::IntegerType::getInt32Ty(ctx.llvm);
-  llvm::Type *array[4] = {
-    i64,    // reference count
-    i32,    // capacity
-    i32,    // length
-    elemPtr // data
-  };
-  // @TODO do we need to declare the struct packed to ensure i32 are packed?
-  return llvm::StructType::get(ctx.llvm, array, true);
-}
-
 ast::Type *stela::concreteType(ast::Type *type) {
   if (auto *named = dynamic_cast<ast::NamedType *>(type)) {
     return concreteType(named->definition->type.get());
@@ -212,10 +191,11 @@ ast::Type *stela::concreteType(ast::Type *type) {
 llvm::StructType *stela::generateLambdaCapture(gen::Ctx ctx, const ast::Lambda &lambda) {
   sym::Lambda *symbol = lambda.symbol;
   const size_t numCaptures = symbol->captures.size();
+  TypeBuilder builder{ctx.llvm};
   std::vector<llvm::Type *> types;
   types.reserve(2 + numCaptures);
-  types.push_back(llvm::FunctionType::get(getVoidPtr(ctx), false));
-  types.push_back(llvm::IntegerType::getInt32Ty(ctx.llvm));
+  types.push_back(builder.ref());
+  types.push_back(builder.dtor());
   for (const sym::ClosureCap &cap : symbol->captures) {
     types.push_back(generateType(ctx, cap.type.get()));
   }
