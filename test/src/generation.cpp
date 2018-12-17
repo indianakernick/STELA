@@ -625,12 +625,12 @@ TEST_GROUP(Generation, {
       extern func get_val(s: Structure) {
         return s.g;
       }
-      func identity_impl(s: Structure) {
+      func (s: Structure) identity_impl() {
         let temp = s;
         return temp;
       }
       extern func identity(s: Structure) {
-        return identity_impl(s);
+        return s.identity_impl();
       }
     )");
     

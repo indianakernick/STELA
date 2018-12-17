@@ -29,50 +29,14 @@ public:
   }
   
   void visit(ast::Func &func) override {
-    std::vector<llvm::AttrBuilder> paramAttrs;
     llvm::FunctionType *fnType = generateFuncSig(ctx, func);
-    std::vector<llvm::Type *> realParams;
-    llvm::Type *realRet;
-    
-    for (llvm::Type *param : fnType->params()) {
-      if (param->isStructTy()) {
-        realParams.push_back(param->getPointerTo());
-        paramAttrs.push_back({});
-        paramAttrs.back().addAttribute(llvm::Attribute::ReadOnly);
-        paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
-      } else if (param->isPointerTy()) {
-        realParams.push_back(param);
-        paramAttrs.push_back({});
-        paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
-      } else {
-        realParams.push_back(param);
-        paramAttrs.push_back({});
-      }
-    }
-    
-    llvm::Type *ret = fnType->getReturnType();
-    if (ret->isStructTy()) {
-      realParams.push_back(ret->getPointerTo());
-      realRet = llvm::Type::getVoidTy(ctx.llvm);
-      paramAttrs.push_back({});
-      paramAttrs.back().addAttribute(llvm::Attribute::NoAlias);
-      paramAttrs.back().addAttribute(llvm::Attribute::WriteOnly);
-      paramAttrs.back().addAttribute(llvm::Attribute::NonNull);
-    } else {
-      realRet = ret;
-    }
-    
     func.llvmFunc = llvm::Function::Create(
-      llvm::FunctionType::get(realRet, realParams, false),
+      fnType,
       linkage(func.external),
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );
-    
-    func.llvmFunc->addFnAttr(llvm::Attribute::NoUnwind);
-    for (unsigned p = 0; p != paramAttrs.size(); ++p) {
-      func.llvmFunc->addParamAttrs(p, paramAttrs[p]);
-    }
+    assignAttributes(func.llvmFunc, func.symbol->params);
     
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }
@@ -98,7 +62,7 @@ public:
     );
     llvm::Function *ctor = llvm::Function::Create(
       ctorType,
-      llvm::Function::PrivateLinkage,
+      llvm::Function::InternalLinkage,
       "",
       module
     );

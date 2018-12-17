@@ -12,6 +12,7 @@
 #include "symbols.hpp"
 #include <llvm/IR/Type.h>
 #include "unreachable.hpp"
+#include <llvm/IR/Function.h>
 #include <llvm/IR/DerivedTypes.h>
 
 using namespace stela;
@@ -99,17 +100,28 @@ ast::ParamType convert(const ast::FuncParam &param) {
 
 llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
   llvm::Type *paramType = generateType(ctx, param.type.get());
-  if (param.ref == ast::ParamRef::ref) {
+  if (param.ref == ast::ParamRef::ref || paramType->isStructTy()) {
     paramType = paramType->getPointerTo();
   }
   return paramType;
+}
+
+using LLVMTypes = std::vector<llvm::Type *>;
+
+llvm::Type *pushRet(gen::Ctx ctx, llvm::Type *ret, LLVMTypes &params) {
+  if (ret->isStructTy()) {
+    params.push_back(ret->getPointerTo());
+    ret = llvm::Type::getVoidTy(ctx.llvm);
+  }
+  return ret;
 }
 
 }
 
 llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) {
   llvm::Type *ret = generateType(ctx, func.ret.get());
-  std::vector<llvm::Type *> params;
+  LLVMTypes params;
+  params.reserve(1 + func.params.size() + 1);
   if (func.receiver) {
     params.push_back(convertParam(ctx, convert(*func.receiver)));
   } else {
@@ -118,22 +130,45 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) 
   for (const ast::FuncParam &param : func.params) {
     params.push_back(convertParam(ctx, convert(param)));
   }
+  ret = pushRet(ctx, ret, params);
   return llvm::FunctionType::get(ret, params, false);
 }
 
 llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &type) {
-  llvm::Type *ret;
-  if (type.ret) {
-    ret = generateType(ctx, type.ret.get());
-  } else {
-    ret = llvm::Type::getVoidTy(ctx.llvm);
-  }
-  std::vector<llvm::Type *> params;
+  llvm::Type *ret = ret = generateType(ctx, type.ret.get());
+  LLVMTypes params;
+  params.reserve(1 + type.params.size() + 1);
   params.push_back(getVoidPtr(ctx));
   for (const ast::ParamType &param : type.params) {
     params.push_back(convertParam(ctx, param));
   }
+  ret = pushRet(ctx, ret, params);
   return llvm::FunctionType::get(ret, params, false);
+}
+
+void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params) {
+  llvm::FunctionType *type = func->getFunctionType();
+  const unsigned numParams = type->getNumParams();
+  const unsigned retParam = numParams > params.size() ? numParams - 1 : 0;
+  for (unsigned p = 0; p != numParams; ++p) {
+    llvm::Type *paramType = type->getParamType(p);
+    if (paramType->isPointerTy()) {
+      func->addParamAttr(p, llvm::Attribute::NonNull);
+      func->addParamAttr(p, llvm::Attribute::NoCapture);
+      if (p == retParam) continue;
+      if (params[p].ref == sym::ValueRef::ref) continue;
+      if (paramType->getPointerElementType()->isStructTy()) {
+        func->addParamAttr(p, llvm::Attribute::ReadOnly);
+        // @TODO can we be sure that pointers to byval structs won't be aliased?
+        func->addParamAttr(p, llvm::Attribute::NoAlias);
+      }
+    }
+  }
+  if (retParam) {
+    func->addParamAttr(retParam, llvm::Attribute::NoAlias);
+    func->addParamAttr(retParam, llvm::Attribute::WriteOnly);
+  }
+  func->addFnAttr(llvm::Attribute::NoUnwind);
 }
 
 std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {

@@ -10,6 +10,7 @@
 #define stela_generate_type_hpp
 
 #include "ast.hpp"
+#include "symbols.hpp"
 #include "gen context.hpp"
 #include "assert down cast.hpp"
 
@@ -27,6 +28,7 @@ namespace stela {
 llvm::Type *generateType(gen::Ctx, ast::Type *);
 llvm::FunctionType *generateFuncSig(gen::Ctx, const ast::Func &);
 llvm::FunctionType *generateLambSig(gen::Ctx, const ast::FuncType &);
+void assignAttributes(llvm::Function *, const sym::FuncParams &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
 llvm::PointerType *getVoidPtr(gen::Ctx);
