@@ -42,21 +42,8 @@ public:
     UNREACHABLE();
   }
   void visit(ast::ArrayType &type) override {
-    // @TODO placeholder
-    llvmType = generateType(ctx, type.elem.get())->getPointerTo();
-    /*type.elem->accept(*this);
-    gen::String elem = std::move(name);
-    name = "t_arr_";
-    name += elem.size();
-    name += '_';
-    name += elem;
-    if (ctx.inst.arrayNotInst(name)) {
-      ctx.type += "typedef Array<";
-      ctx.type += elem;
-      ctx.type += "> ";
-      ctx.type += name;
-      ctx.type += ";\n";
-    }*/
+    llvm::Type *elem = generateType(ctx, type.elem.get());
+    llvmType = llvm::PointerType::get(getArrayOf(ctx, elem), 0);
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx.llvm, {
@@ -199,6 +186,20 @@ llvm::PointerType *stela::getCloDataPtr(gen::Ctx ctx) {
   llvm::IntegerType *refCount = llvm::IntegerType::getInt32Ty(ctx.llvm);
   llvm::StructType *cloData = llvm::StructType::get(ctx.llvm, {virtualDtor, refCount});
   return llvm::PointerType::get(cloData, 0);
+}
+
+llvm::StructType *stela::getArrayOf(gen::Ctx ctx, llvm::Type *elem) {
+  llvm::Type *elemPtr = elem->getPointerTo();
+  llvm::Type *i64 = llvm::IntegerType::getInt64Ty(ctx.llvm);
+  llvm::Type *i32 = llvm::IntegerType::getInt32Ty(ctx.llvm);
+  llvm::Type *array[4] = {
+    i64,    // reference count
+    i32,    // capacity
+    i32,    // length
+    elemPtr // data
+  };
+  // @TODO do we need to declare the struct packed to ensure i32 are packed?
+  return llvm::StructType::get(ctx.llvm, array, true);
 }
 
 ast::Type *stela::concreteType(ast::Type *type) {

@@ -39,9 +39,25 @@ public:
     }
   }
   void visit(ast::ArrayType &type) override {
-    //str = "make_null_array<";
-    //str += generateType(ctx, type.elem.get());
-    //str += ">()";
+    llvm::Type *elem = generateType(ctx, type.elem.get());
+    llvm::StructType *arrayType = getArrayOf(ctx, elem);
+    value = builder.ir.Insert(llvm::CallInst::CreateMalloc(
+      builder.ir.GetInsertBlock(),
+      llvm::IntegerType::getInt64Ty(ctx.llvm),
+      arrayType,
+      llvm::ConstantExpr::getSizeOf(arrayType),
+      nullptr, nullptr
+    ));
+    llvm::Type *i64 = llvm::IntegerType::getInt64Ty(ctx.llvm);
+    llvm::Type *i32 = llvm::IntegerType::getInt32Ty(ctx.llvm);
+    llvm::Value *ref = builder.ir.CreateStructGEP(value, 0);
+    builder.ir.CreateStore(llvm::ConstantInt::get(i64, 1), ref);
+    llvm::Value *cap = builder.ir.CreateStructGEP(value, 1);
+    builder.ir.CreateStore(llvm::ConstantInt::get(i32, 0), cap);
+    llvm::Value *len = builder.ir.CreateStructGEP(value, 2);
+    builder.ir.CreateStore(llvm::ConstantInt::get(i32, 0), len);
+    llvm::Value *dat = builder.ir.CreateStructGEP(value, 3);
+    builder.ir.CreateStore(llvm::ConstantPointerNull::get(elem->getPointerTo()), dat);
   }
   void visit(ast::FuncType &type) override {
     //str += generateMakeFunc(ctx, type);

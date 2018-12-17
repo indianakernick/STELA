@@ -830,6 +830,33 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(classify(-100), 0);
   });
   
+  TEST(Arrays, {
+    ASSERT_SUCCEEDS(R"(
+      extern func test() {
+        var a: [real];
+        return a;
+      }
+    )");
+    
+    struct Array {
+      uint64_t ref;
+      Uint cap;
+      Uint len;
+      Real *dat;
+    };
+    
+    auto test = GET_FUNC("test", Array *());
+    
+    Array *array = test();
+    ASSERT_TRUE(array);
+    ASSERT_EQ(array->ref, 1);
+    ASSERT_EQ(array->cap, 0);
+    ASSERT_EQ(array->len, 0);
+    ASSERT_EQ(array->dat, nullptr);
+    
+    std::free(array);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
