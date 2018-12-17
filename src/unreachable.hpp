@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_unreachable_hpp
-#define engine_unreachable_hpp
+#ifndef stela_unreachable_hpp
+#define stela_unreachable_hpp
 
 #if defined(TEST_COVERAGE)
 

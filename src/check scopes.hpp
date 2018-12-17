@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_check_scopes_hpp
-#define engine_check_scopes_hpp
+#ifndef stela_check_scopes_hpp
+#define stela_check_scopes_hpp
 
 #include "symbols.hpp"
 #include "log output.hpp"

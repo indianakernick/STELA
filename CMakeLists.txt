@@ -125,6 +125,8 @@ add_library(STELA STATIC
         "src/expression builder.cpp"
         "src/type builder.cpp"
         "src/type builder.hpp"
+        "src/reference count.cpp"
+        "src/reference count.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

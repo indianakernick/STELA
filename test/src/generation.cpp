@@ -834,7 +834,8 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       extern func test() {
         var a: [real];
-        let b = a;
+        var b: [real];
+        a = b;
         return b;
       }
     )");
@@ -850,7 +851,7 @@ TEST_GROUP(Generation, {
     
     Array *array = test();
     ASSERT_TRUE(array);
-    ASSERT_EQ(array->ref, 1);
+    ASSERT_EQ(array->ref, 2);
     ASSERT_EQ(array->cap, 0);
     ASSERT_EQ(array->len, 0);
     ASSERT_EQ(array->dat, nullptr);

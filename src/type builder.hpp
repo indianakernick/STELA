@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_type_builder_hpp
-#define engine_type_builder_hpp
+#ifndef stela_type_builder_hpp
+#define stela_type_builder_hpp
 
 namespace llvm {
 

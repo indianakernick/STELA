@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_plain_format_hpp
-#define engine_plain_format_hpp
+#ifndef stela_plain_format_hpp
+#define stela_plain_format_hpp
 
 #include <string>
 #include <iosfwd>

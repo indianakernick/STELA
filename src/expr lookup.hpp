@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_expr_lookup_hpp
-#define engine_expr_lookup_hpp
+#ifndef stela_expr_lookup_hpp
+#define stela_expr_lookup_hpp
 
 #include "ast.hpp"
 #include "context.hpp"

@@ -6,8 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#ifndef engine_expr_stack_hpp
-#define engine_expr_stack_hpp
+#ifndef stela_expr_stack_hpp
+#define stela_expr_stack_hpp
 
 #include "symbols.hpp"
 

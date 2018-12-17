@@ -12,6 +12,7 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
+#include "reference count.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
 #include "expression builder.hpp"
@@ -196,6 +197,29 @@ public:
   void visit(ast::Assign &assign) override {
     llvm::Value *addr = exprBdr.addr(assign.left.get());
     llvm::Value *value = exprBdr.value(assign.right.get());
+    ast::Type *leftType = assign.left->exprType.get();
+    if (concreteType<ast::ArrayType>(leftType)) {
+      // This doesn't handle the case where the RHS array is a temporary.
+      // LHS after the assignment will end up with a reference count of 2
+      // because the temporary was not "destroyed".
+      ReferenceCount refCount{funcBdr.ir};
+      // addr is  [1 x {i64, i32, i32, T*}*] *
+      // value is [1 x {i64, i32, i32, T*}*]
+      llvm::Value *rightArray = funcBdr.ir.CreateExtractValue(value, {0});
+      refCount.incr(rightArray);
+      llvm::Value *leftArray = funcBdr.ir.CreateLoad(funcBdr.ir.CreateStructGEP(addr, 0));
+      llvm::Value *deleteLeft = refCount.decr(leftArray);
+      llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
+      llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+      funcBdr.ir.CreateCondBr(deleteLeft, deleteBlock, doneBlock);
+      funcBdr.setCurr(deleteBlock);
+      funcBdr.ir.Insert(llvm::CallInst::CreateFree(
+        leftArray,
+        funcBdr.ir.GetInsertBlock()
+      ));
+      funcBdr.ir.CreateBr(doneBlock);
+      funcBdr.setCurr(doneBlock);
+    }
     funcBdr.ir.CreateStore(value, addr);
   }
   void visit(ast::DeclAssign &assign) override {
