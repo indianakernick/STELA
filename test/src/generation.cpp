@@ -102,11 +102,11 @@ TEST_GROUP(Generation, {
     )");
     
     auto func = GET_FUNC("multiply", Uint(Uint, Uint));
-    ASSERT_EQ(func(0, 0), 0);
-    ASSERT_EQ(func(5, 0), 0);
-    ASSERT_EQ(func(0, 5), 0);
-    ASSERT_EQ(func(3, 4), 12);
-    ASSERT_EQ(func(6, 6), 36);
+    ASSERT_EQ(func(0u, 0u), 0u);
+    ASSERT_EQ(func(5u, 0u), 0u);
+    ASSERT_EQ(func(0u, 5u), 0u);
+    ASSERT_EQ(func(3u, 4u), 12u);
+    ASSERT_EQ(func(6u, 6u), 36u);
   });
   
   TEST(Identity, {
@@ -431,13 +431,13 @@ TEST_GROUP(Generation, {
     )");
     
     auto func = GET_FUNC("test", Uint(Uint, Uint));
-    ASSERT_EQ(func(0, 0), 0);
-    ASSERT_EQ(func(0, 4), 0);
-    ASSERT_EQ(func(4, 0), 0);
-    ASSERT_EQ(func(1, 1), 1);
-    ASSERT_EQ(func(3, 4), 12);
-    ASSERT_EQ(func(6, 6), 36);
-    ASSERT_EQ(func(9, 5), 45);
+    ASSERT_EQ(func(0u, 0u), 0u);
+    ASSERT_EQ(func(0u, 4u), 0u);
+    ASSERT_EQ(func(4u, 0u), 0u);
+    ASSERT_EQ(func(1u, 1u), 1u);
+    ASSERT_EQ(func(3u, 4u), 12u);
+    ASSERT_EQ(func(6u, 6u), 36u);
+    ASSERT_EQ(func(9u, 5u), 45u);
   });
   
   TEST(Nested nested for loop, {
@@ -456,13 +456,13 @@ TEST_GROUP(Generation, {
     )");
     
     auto func = GET_FUNC("test", Uint(Uint, Uint, Uint));
-    ASSERT_EQ(func(0, 0, 0), 0);
-    ASSERT_EQ(func(0, 0, 4), 0);
-    ASSERT_EQ(func(0, 5, 0), 0);
-    ASSERT_EQ(func(6, 0, 0), 0);
-    ASSERT_EQ(func(2, 2, 2), 8);
-    ASSERT_EQ(func(2, 4, 8), 64);
-    ASSERT_EQ(func(1, 1, 1), 1);
+    ASSERT_EQ(func(0u, 0u, 0u), 0u);
+    ASSERT_EQ(func(0u, 0u, 4u), 0u);
+    ASSERT_EQ(func(0u, 5u, 0u), 0u);
+    ASSERT_EQ(func(6u, 0u, 0u), 0u);
+    ASSERT_EQ(func(2u, 2u, 2u), 8u);
+    ASSERT_EQ(func(2u, 4u, 8u), 64u);
+    ASSERT_EQ(func(1u, 1u, 1u), 1u);
   });
   
   TEST(Sequential for loop, {
@@ -480,11 +480,11 @@ TEST_GROUP(Generation, {
     )");
     
     auto func = GET_FUNC("test", Uint(Uint, Uint));
-    ASSERT_EQ(func(0, 0), 0);
-    ASSERT_EQ(func(0, 4), 4);
-    ASSERT_EQ(func(5, 0), 5);
-    ASSERT_EQ(func(9, 10), 19);
-    ASSERT_EQ(func(12000, 321), 12321);
+    ASSERT_EQ(func(0u, 0u), 0u);
+    ASSERT_EQ(func(0u, 4u), 4u);
+    ASSERT_EQ(func(5u, 0u), 5u);
+    ASSERT_EQ(func(9u, 10u), 19u);
+    ASSERT_EQ(func(12000u, 321u), 12321u);
   });
   
   TEST(Returning while loop, {
@@ -775,19 +775,19 @@ TEST_GROUP(Generation, {
     
     auto fac = GET_FUNC("fac", Uint(Uint));
     
-    ASSERT_EQ(fac(0), 1);
-    ASSERT_EQ(fac(1), 1);
-    ASSERT_EQ(fac(2), 2);
-    ASSERT_EQ(fac(3), 6);
-    ASSERT_EQ(fac(4), 24);
-    ASSERT_EQ(fac(5), 120);
-    ASSERT_EQ(fac(6), 720);
-    ASSERT_EQ(fac(7), 5'040);
-    ASSERT_EQ(fac(8), 40'320);
-    ASSERT_EQ(fac(9), 362'880);
-    ASSERT_EQ(fac(10), 3'628'800);
-    ASSERT_EQ(fac(11), 39'916'800);
-    ASSERT_EQ(fac(12), 479'001'600);
+    ASSERT_EQ(fac(0u), 1u);
+    ASSERT_EQ(fac(1u), 1u);
+    ASSERT_EQ(fac(2u), 2u);
+    ASSERT_EQ(fac(3u), 6u);
+    ASSERT_EQ(fac(4u), 24u);
+    ASSERT_EQ(fac(5u), 120u);
+    ASSERT_EQ(fac(6u), 720u);
+    ASSERT_EQ(fac(7u), 5'040u);
+    ASSERT_EQ(fac(8u), 40'320u);
+    ASSERT_EQ(fac(9u), 362'880u);
+    ASSERT_EQ(fac(10u), 3'628'800u);
+    ASSERT_EQ(fac(11u), 39'916'800u);
+    ASSERT_EQ(fac(12u), 479'001'600u);
     // fac(13) overflows uint32_t
   });
   
@@ -830,32 +830,40 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(classify(-100), 0);
   });
   
-  TEST(Arrays, {
+  TEST(Arrays across boundary, {
     ASSERT_SUCCEEDS(R"(
-      extern func test() {
+      extern func get() {
         var a: [real];
         a = make [real] {};
         return a;
       }
+      
+      extern func identity(a: [real]) {
+        return a;
+      }
     )");
     
-    struct Array {
-      uint64_t ref;
-      Uint cap;
-      Uint len;
-      Real *dat;
-    };
+    auto get = GET_FUNC("get", Array<Real>());
     
-    auto test = GET_FUNC("test", Array *());
-    
-    Array *array = test();
+    Array<Real> array = get();
     ASSERT_TRUE(array);
-    ASSERT_EQ(array->ref, 1);
+    ASSERT_EQ(array.use_count(), 1);
     ASSERT_EQ(array->cap, 0);
     ASSERT_EQ(array->len, 0);
     ASSERT_EQ(array->dat, nullptr);
     
-    std::free(array);
+    auto identity = GET_FUNC("identity", Array<Real>(Array<Real>));
+    
+    Array<Real> orig = make_retain<ArrayStorage<Real>>();
+    Array<Real> copy = identity(orig);
+    ASSERT_TRUE(orig);
+    ASSERT_TRUE(copy);
+    ASSERT_EQ(orig.get(), copy.get());
+    ASSERT_EQ(orig.use_count(), 2);
+    
+    Array<Real> same = identity(make_retain<ArrayStorage<Real>>());
+    ASSERT_TRUE(same);
+    ASSERT_EQ(same.use_count(), 1);
   });
   
   /*

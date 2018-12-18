@@ -571,9 +571,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 45BBA3F020D63E3D006108C1 /* Build configuration list for PBXNativeTarget "STELA" */;
 			buildPhases = (
+				45BBA40820D6431B006108C1 /* ShellScript */,
 				45BBA3E820D63E3D006108C1 /* Sources */,
 				45BBA3E920D63E3D006108C1 /* Frameworks */,
-				45BBA40820D6431B006108C1 /* ShellScript */,
 				45BBA40920D65331006108C1 /* Copy Files */,
 			);
 			buildRules = (
@@ -664,7 +664,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		45BBA40820D6431B006108C1 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputPaths = (
@@ -675,7 +675,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/bash;
-			shellScript = "INSTALL_DIR=/usr/local/include/STELA\nrm -dfR $INSTALL_DIR\nmkdir $INSTALL_DIR\ncp -RpX \"$PROJECT_DIR/include/STELA/\" $INSTALL_DIR\n";
+			shellScript = "# INSTALL_DIR=/usr/local/include/STELA\n# rm -dfR $INSTALL_DIR\n# mkdir $INSTALL_DIR\n# cp -RpX \"$PROJECT_DIR/include/STELA/\" $INSTALL_DIR\n";
 		};
 		45BBA43C20D7AFE9006108C1 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -914,7 +914,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = QY44MADGVC;
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
+				HEADER_SEARCH_PATHS = (
+					$PROJECT_DIR/include/STELA,
+					$PROJECT_DIR/include,
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -961,7 +964,10 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = $PROJECT_DIR/include/STELA;
+				HEADER_SEARCH_PATHS = (
+					$PROJECT_DIR/include/STELA,
+					$PROJECT_DIR/include,
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

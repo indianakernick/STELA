@@ -85,3 +85,15 @@ deal with user types void *
 functional switch
 clean up () in switch
 use google test and maybe google benchmark
+
+
+newArraySize is constant so this is just nullptr
+newArraySize is always a constant!!!
+OK to delete ArrayStorage when dat == nullptr as long as len == 0
+
+if (newArraySize == 0) {
+  return nullptr;
+} else {
+  return malloc(newArraySize * sizeof(Elem));
+}
+

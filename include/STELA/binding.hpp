@@ -11,8 +11,73 @@
 
 #include "number.hpp"
 #include <type_traits>
+#include "retain ptr.hpp"
 
 namespace stela {
+
+template <typename Elem>
+struct ArrayStorage : ref_count {
+  ArrayStorage()
+    : ref_count{} {}
+
+  // uint64_t ref
+  Uint cap = 0;
+  Uint len = 0;
+  Elem *dat = nullptr;
+};
+
+template <typename Elem>
+using Array = retain_ptr<ArrayStorage<Elem>>;
+
+template <typename T>
+struct pass_traits {
+  using type = std::conditional_t<
+    std::is_class_v<T>,
+    const T *,
+    T
+  >;
+  
+  static type unwrap(const T &arg) noexcept {
+    if constexpr (std::is_class_v<T>) {
+      static_assert(
+        std::is_trivially_copyable_v<T>,
+        "Only trivially copyable classes can be passed-by-value"
+      );
+      return &arg;
+    } else {
+      return arg;
+    }
+  }
+  static T wrap(type arg) noexcept {
+    return arg;
+  }
+  
+  static constexpr bool param_ret = std::is_class_v<T>;
+};
+
+template <>
+struct pass_traits<void> {
+  using type = void;
+  static constexpr bool param_ret = false;
+};
+
+template <typename Elem>
+struct pass_traits<retain_ptr<ArrayStorage<Elem>>> {
+  using type = ArrayStorage<Elem> *;
+  
+  static type unwrap(const Array<Elem> &arg) noexcept {
+    Array<Elem> copy = arg;
+    return copy.detach();
+  }
+  static type unwrap(Array<Elem> &&arg) noexcept {
+    return arg.detach();
+  }
+  static Array<Elem> wrap(type arg) noexcept {
+    return retain_ptr{arg};
+  }
+  
+  static constexpr bool param_ret = false;
+};
 
 /// A wrapper around a compiled stela function. Acts as an ABI adapter to call
 /// Stela functions using the Stela ABI
@@ -21,49 +86,41 @@ class Function;
 
 template <typename Ret, typename... Params>
 class Function<Ret(Params...)> {
-  template <typename Type>
-  using ConvertParam = std::conditional_t<
-    std::is_class_v<Type>,
-    const Type *,
-    Type
-  >;
-  
   template <typename Arg>
-  static auto convertArg(Arg &arg) noexcept {
-    if constexpr (std::is_class_v<Arg>) {
-      static_assert(
-        std::is_trivially_copyable_v<Arg>,
-        "Only trivially copyable classes can be passed-by-value"
-      );
-      return &arg;
-    } else {
-      return arg;
-    }
+  static inline auto unwrap(Arg &&arg) noexcept {
+    return pass_traits<std::decay_t<Arg>>::unwrap(std::forward<Arg>(arg));
   }
+  
+  template <typename Param>
+  using pass_type = typename pass_traits<Param>::type;
 
 public:
-  using Type = std::conditional_t<
-    std::is_class_v<Ret>,
-    void(void *, ConvertParam<Params>..., Ret *) noexcept,
-    Ret(void *, ConvertParam<Params>...) noexcept
+  static constexpr bool param_ret = pass_traits<Ret>::param_ret;
+
+  using type = std::conditional_t<
+    param_ret,
+    void(void *, pass_type<Params>..., Ret *) noexcept,
+    pass_type<Ret>(void *, pass_type<Params>...) noexcept
   >;
   
   explicit Function(const uint64_t addr)
-    : ptr{reinterpret_cast<Type *>(addr)} {}
+    : ptr{reinterpret_cast<type *>(addr)} {}
   
   template <typename... Args>
-  inline Ret operator()(const Args &... args) noexcept {
-    if constexpr (std::is_class_v<Ret>) {
+  inline Ret operator()(Args &&... args) noexcept {
+    if constexpr (param_ret) {
       Ret ret;
-      ptr(nullptr, convertArg(args)..., &ret);
+      ptr(nullptr, unwrap(std::forward<Args>(args))..., &ret);
       return ret;
+    } else if constexpr (std::is_void_v<Ret>) {
+      ptr(nullptr, unwrap(std::forward<Args>(args))...);
     } else {
-      return ptr(nullptr, convertArg(args)...);
+      return pass_traits<Ret>::wrap(ptr(nullptr, unwrap(std::forward<Args>(args))...));
     }
   }
   
 private:
-  Type *ptr;
+  type *ptr;
 };
 
 }

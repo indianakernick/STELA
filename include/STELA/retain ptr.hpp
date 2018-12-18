@@ -9,9 +9,11 @@
 #ifndef stela_retain_ptr_hpp
 #define stela_retain_ptr_hpp
 
+#include <new>
 #include <cstdint>
 #include <utility>
 #include <cassert>
+#include <cstdlib>
 
 /* LCOV_EXCL_START */
 
@@ -28,7 +30,7 @@ protected:
   ref_count() = default;
 
 private:
-  uint32_t count = 1;
+  uint64_t count = 1;
 };
 
 struct retain_t {};
@@ -138,7 +140,7 @@ public:
     return ptr != nullptr;
   }
   
-  uint32_t use_count() const noexcept {
+  uint64_t use_count() const noexcept {
     if (ptr) {
       ref_count *const refPtr = ptr;
       return refPtr->count;
@@ -213,7 +215,7 @@ private:
   void incr() const noexcept {
     if (ptr) {
       ref_count *const refPtr = ptr;
-      assert(refPtr->count != ~uint32_t{});
+      assert(refPtr->count != ~uint64_t{});
       ++refPtr->count;
     }
   }
@@ -223,7 +225,7 @@ private:
       ref_count *const refPtr = ptr;
       assert(refPtr->count != 0);
       if (--refPtr->count == 0) {
-        delete ptr;
+        std::free(ptr);
       }
     }
   }
@@ -242,7 +244,9 @@ void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
 
 template <typename T, typename... Args>
 retain_ptr<T> make_retain(Args &&... args) noexcept {
-  return retain_ptr<T>{new T {std::forward<Args>(args)...}};
+  T *ptr = static_cast<T *>(std::malloc(sizeof(T)));
+  new (ptr) T{std::forward<Args>(args)...};
+  return retain_ptr<T>{ptr};
 }
 
 template <typename Dst, typename Src>
