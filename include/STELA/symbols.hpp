@@ -87,19 +87,11 @@ inline ExprType memberType(const ExprType &obj, const ast::TypePtr &mem) {
   return {mem, obj.mut, obj.ref};
 }
 
-inline ExprType makeLetVal(const ast::TypePtr &type) {
-  return {type, ValueMut::let, ValueRef::val};
-}
-
-inline ExprType makeLetVal(ast::TypePtr &&type) {
+inline ExprType makeLetVal(ast::TypePtr type) {
   return {std::move(type), ValueMut::let, ValueRef::val};
 }
 
-inline ExprType makeVarVal(const ast::TypePtr &type) {
-  return {type, ValueMut::var, ValueRef::val};
-}
-
-inline ExprType makeVarVal(ast::TypePtr &&type) {
+inline ExprType makeVarVal(ast::TypePtr type) {
   return {std::move(type), ValueMut::var, ValueRef::val};
 }
 
