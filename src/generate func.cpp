@@ -140,38 +140,91 @@ std::string stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   return {};
 }
 
-llvm::Function *stela::generateArrayDtor(llvm::Module *module, llvm::Type *type) {
-  llvm::LLVMContext &ctx = type->getContext();
-  TypeBuilder typeBdr{ctx};
-  llvm::FunctionType *funcType = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
-    {type},
-    false
-  );
+namespace {
+
+llvm::Function *makeInternalFunc(
+  llvm::Module *module,
+  llvm::FunctionType *type,
+  const llvm::Twine &name
+) {
   llvm::Function *func = llvm::Function::Create(
-    funcType,
+    type,
     llvm::Function::InternalLinkage,
-    "array_dtor",
+    name,
     module
   );
   func->addFnAttr(llvm::Attribute::NoUnwind);
   func->addFnAttr(llvm::Attribute::AlwaysInline);
-  
+  return func;
+}
+
+llvm::FunctionType *dtorFor(llvm::Type *type) {
+  return llvm::FunctionType::get(
+    llvm::Type::getVoidTy(type->getContext()),
+    {type},
+    false
+  );
+}
+
+llvm::FunctionType *defCtorFor(llvm::Type *type) {
+  return llvm::FunctionType::get(type, {}, false);
+}
+
+llvm::Value *wrapPtr(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
+  TypeBuilder typeBdr{ir.getContext()};
+  llvm::Value *undef = llvm::UndefValue::get(typeBdr.wrap(ptr->getType()));
+  return ir.CreateInsertValue(undef, ptr, {0u});
+}
+
+}
+
+llvm::Function *stela::generateArrayDtor(llvm::Module *module, llvm::Type *type) {
+  llvm::Function *func = makeInternalFunc(module, dtorFor(type), "array_dtor");
   FuncBuilder funcBdr{func};
   llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
   llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
   ReferenceCount refCount{funcBdr.ir};
-  llvm::Value *array = func->arg_begin();
+  llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
+  // Decrement reference count
   llvm::Value *deleteArray = refCount.decr(array);
+  // If reference count reached zero...
   funcBdr.ir.CreateCondBr(deleteArray, deleteBlock, doneBlock);
   funcBdr.setCurr(deleteBlock);
-  funcBdr.ir.Insert(llvm::CallInst::CreateFree(
-    func->arg_begin(),
-    funcBdr.ir.GetInsertBlock()
-  ));
+  // Deallocate
+  funcBdr.callFree(array);
   funcBdr.ir.CreateBr(doneBlock);
   funcBdr.setCurr(doneBlock);
   funcBdr.ir.CreateRetVoid();
-  
+  return func;
+}
+
+
+
+
+// this wrapping and unwrapping is kind of confusing. Sort it out
+
+
+
+
+
+llvm::Function *stela::generateArrayDefCtor(llvm::Module *module, llvm::Type *type) {
+  llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
+  FuncBuilder funcBdr{func};
+  TypeBuilder typeBdr{type->getContext()};
+  llvm::Type *arrayPtrType = type->getArrayElementType();
+  llvm::Type *arrayStructType = arrayPtrType->getPointerElementType();
+  llvm::Value *array = funcBdr.callMalloc(arrayStructType);
+
+  llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, 0);
+  funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
+  llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, 1);
+  funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), cap);
+  llvm::Value *len = funcBdr.ir.CreateStructGEP(array, 2);
+  funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), len);
+  llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, 3);
+  llvm::Type *elem = arrayStructType->getStructElementType(3);
+  funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem->getPointerElementType()), dat);
+
+  funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
   return func;
 }

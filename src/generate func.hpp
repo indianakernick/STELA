@@ -29,6 +29,7 @@ std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
 llvm::Function *generateArrayDtor(llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayDefCtor(llvm::Module *, llvm::Type *);
 
 }
 

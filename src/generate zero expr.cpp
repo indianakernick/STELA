@@ -41,26 +41,9 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvm::StructType *arrayType = typeBdr.arrayOf(elem);
-    llvm::Value *array = funcBdr.ir.Insert(llvm::CallInst::CreateMalloc(
-      funcBdr.ir.GetInsertBlock(),
-      typeBdr.ref(),
-      arrayType,
-      llvm::ConstantExpr::getSizeOf(arrayType),
-      nullptr, nullptr
-    ));
-    
-    llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, 0);
-    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
-    llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, 1);
-    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), cap);
-    llvm::Value *len = funcBdr.ir.CreateStructGEP(array, 2);
-    funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), len);
-    llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, 3);
-    funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem), dat);
-    
-    llvm::Type *wrapperType = typeBdr.wrapPtrTo(arrayType);
-    value = funcBdr.ir.CreateInsertValue(llvm::UndefValue::get(wrapperType), array, {0u});
+    llvm::ArrayType *arrayType = typeBdr.wrapPtrToArrayOf(elem);
+    llvm::Function *defCtor = ctx.inst.arrayDefCtor(arrayType);
+    value = funcBdr.ir.CreateCall(defCtor, {});
   }
   void visit(ast::FuncType &type) override {
     //str += generateMakeFunc(ctx, type);

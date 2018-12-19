@@ -45,6 +45,11 @@ public:
   /// Get the function arguments
   llvm::MutableArrayRef<llvm::Argument> args() const;
   
+  /// Make a call to malloc
+  llvm::Value *callMalloc(llvm::Type *, uint64_t = 1);
+  /// Make a call to free
+  void callFree(llvm::Value *);
+  
   llvm::IRBuilder<> ir;
   
 private:

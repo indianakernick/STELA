@@ -24,13 +24,21 @@ namespace stela::gen {
 class TypeInst {
 public:
   explicit TypeInst(llvm::Module *);
-
-  /// Get the destructor for an array. Key is a pointer to an array struct
-  llvm::Function *array(llvm::Type *);
+  
+  /// Get the destructor for an array
+  llvm::Function *arrayDtor(llvm::Type *);
+  /// Get the default constructor for an array
+  llvm::Function *arrayDefCtor(llvm::Type *);
   
 private:
+  using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
+  using MakeFunc = llvm::Function *(llvm::Module *, llvm::Type *);
+
   llvm::Module *module;
-  std::unordered_map<llvm::Type *, llvm::Function *> arrayDtors;
+  FuncMap arrayDtors;
+  FuncMap arrayDefCtors;
+  
+  llvm::Function *getCached(FuncMap &, MakeFunc *, llvm::Type *);
 };
 
 }

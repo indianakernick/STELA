@@ -73,11 +73,8 @@ the other?
 --------------------------------------------------------------------------------
 
 think about the rules for function overloading and shadowing. Overload across modules?
-might need to rename builtin functions to make them less ambiguous. Maybe prefix with arr_
 manually manage reference count
 manually instantiate builtin functions
-pointers instead of references
-remove the null parameters from non-member functions that aren't used in pointers
 should mutability be part of the type system properly? What we have now just lets use make variables constant
 maybe a move keyword that does a similar job to std::move
 remove the power operator **
@@ -85,7 +82,13 @@ deal with user types void *
 functional switch
 clean up () in switch
 use google test and maybe google benchmark
-
+maybe remove () from a few places
+cache some stuff in the AST. Benchmark
+consider using ORC
+maybe make semicolons optional
+help optimizer with switch on global let
+annotate AST with calls to ctor, dtor, etc
+trivially relocatable optimizations
 
 newArraySize is constant so this is just nullptr
 newArraySize is always a constant!!!

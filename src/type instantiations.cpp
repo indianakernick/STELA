@@ -15,26 +15,23 @@ using namespace stela;
 gen::TypeInst::TypeInst(llvm::Module *module)
   : module{module} {
   arrayDtors.reserve(32);
+  arrayDefCtors.reserve(32);
 }
 
-namespace {
-
-/*
-bool notInst(std::unordered_set<gen::String> &set, const gen::String &string) {
-  // second is true if string was inserted
-  // if string was inserted, type was not instantiated
-  return set.insert(string.dup()).second;
-}
-*/
-
+llvm::Function *gen::TypeInst::arrayDtor(llvm::Type *type) {
+  return getCached(arrayDtors, generateArrayDtor, type);
 }
 
-llvm::Function *gen::TypeInst::array(llvm::Type *type) {
-  auto iter = arrayDtors.find(type);
-  if (iter == arrayDtors.end()) {
-    llvm::Function *dtor = generateArrayDtor(module, type);
-    arrayDtors.insert({type, dtor});
-    return dtor;
+llvm::Function *gen::TypeInst::arrayDefCtor(llvm::Type *type) {
+  return getCached(arrayDefCtors, generateArrayDefCtor, type);
+}
+
+llvm::Function *gen::TypeInst::getCached(FuncMap &map, MakeFunc *make, llvm::Type *type) {
+  const auto iter = map.find(type);
+  if (iter == map.end()) {
+    llvm::Function *func = make(module, type);
+    map.insert({type, func});
+    return func;
   } else {
     return iter->second;
   }

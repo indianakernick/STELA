@@ -48,6 +48,9 @@ public:
   llvm::ArrayType *wrap(llvm::Type *) const;
   /// Wrap a pointer to a type in an array of size 1
   llvm::ArrayType *wrapPtrTo(llvm::Type *) const;
+  /// Wrap a pointer to an array of a type in an array of size 1
+  llvm::ArrayType *wrapPtrToArrayOf(llvm::Type *) const;
+  
   
 private:
   llvm::LLVMContext &ctx;

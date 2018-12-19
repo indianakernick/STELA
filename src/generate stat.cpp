@@ -202,13 +202,12 @@ public:
       ReferenceCount refCount{funcBdr.ir};
       const bool rightTemp = !right->getType()->isPointerTy();
       right = rightTemp ? right : funcBdr.ir.CreateLoad(right);
-      llvm::Value *rightArray = funcBdr.ir.CreateExtractValue(right, {0});
-      refCount.incr(rightArray);
-      llvm::Value *leftArray = funcBdr.ir.CreateLoad(funcBdr.ir.CreateStructGEP(addr, 0));
-      llvm::Function *dtor = ctx.inst.array(leftArray->getType());
-      funcBdr.ir.CreateCall(dtor, {leftArray});
+      refCount.incr(funcBdr.ir.CreateExtractValue(right, {0}));
+      llvm::Value *left = funcBdr.ir.CreateLoad(addr);
+      llvm::Function *dtor = ctx.inst.arrayDtor(left->getType());
+      funcBdr.ir.CreateCall(dtor, {left});
       if (rightTemp) {
-        funcBdr.ir.CreateCall(dtor, {rightArray});
+        funcBdr.ir.CreateCall(dtor, {right});
       }
       funcBdr.ir.CreateStore(right, addr);
     } else {

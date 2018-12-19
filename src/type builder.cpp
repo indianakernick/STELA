@@ -63,3 +63,7 @@ llvm::ArrayType *TypeBuilder::wrap(llvm::Type *type) const {
 llvm::ArrayType *TypeBuilder::wrapPtrTo(llvm::Type *type) const {
   return wrap(type->getPointerTo());
 }
+
+llvm::ArrayType *TypeBuilder::wrapPtrToArrayOf(llvm::Type *elem) const {
+  return wrapPtrTo(arrayOf(elem));
+}

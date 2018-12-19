@@ -86,3 +86,22 @@ llvm::BasicBlock *FuncBuilder::terminateLazy(llvm::BasicBlock *dest) {
 llvm::MutableArrayRef<llvm::Argument> FuncBuilder::args() const {
   return {func->arg_begin(), func->arg_end()};
 }
+
+llvm::Value *FuncBuilder::callMalloc(llvm::Type *type, const uint64_t elems) {
+  llvm::Type *i64 = llvm::IntegerType::getInt64Ty(type->getContext());
+  return ir.Insert(llvm::CallInst::CreateMalloc(
+    ir.GetInsertBlock(),
+    i64,
+    type,
+    llvm::ConstantExpr::getSizeOf(type),
+    llvm::ConstantInt::get(i64, elems),
+    nullptr
+  ));
+}
+
+void FuncBuilder::callFree(llvm::Value *ptr) {
+  ir.Insert(llvm::CallInst::CreateFree(
+    ptr,
+    ir.GetInsertBlock()
+  ));
+}
