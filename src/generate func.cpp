@@ -149,7 +149,7 @@ llvm::Function *makeInternalFunc(
 ) {
   llvm::Function *func = llvm::Function::Create(
     type,
-    llvm::Function::InternalLinkage,
+    llvm::Function::ExternalLinkage, // @TODO temporary. So functions aren't removed
     name,
     module
   );
@@ -168,6 +168,18 @@ llvm::FunctionType *dtorFor(llvm::Type *type) {
 
 llvm::FunctionType *defCtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(type, {}, false);
+}
+
+llvm::FunctionType *copCtorFor(llvm::Type *type) {
+  return llvm::FunctionType::get(type, {type}, false);
+}
+
+llvm::FunctionType *copAsgnFor(llvm::Type *type) {
+  return llvm::FunctionType::get(
+    llvm::Type::getVoidTy(type->getContext()),
+    {type->getPointerTo(), type},
+    false
+  );
 }
 
 llvm::Value *wrapPtr(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
@@ -215,6 +227,13 @@ llvm::Function *stela::generateArrayDefCtor(llvm::Module *module, llvm::Type *ty
   llvm::Type *arrayStructType = arrayPtrType->getPointerElementType();
   llvm::Value *array = funcBdr.callMalloc(arrayStructType);
 
+  /*
+  ref = 1
+  cap = 0
+  len = 0
+  dat = null
+  */
+
   llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, 0);
   funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, 1);
@@ -226,5 +245,44 @@ llvm::Function *stela::generateArrayDefCtor(llvm::Module *module, llvm::Type *ty
   funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem->getPointerElementType()), dat);
 
   funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
+  return func;
+}
+
+llvm::Function *stela::generateArrayCopCtor(llvm::Module *module, llvm::Type *type) {
+  llvm::Function *func = makeInternalFunc(module, copCtorFor(type), "array_cop_ctor");
+  FuncBuilder funcBdr{func};
+  ReferenceCount refCount{funcBdr.ir};
+  
+  /*
+  increment other
+  return other
+  */
+  
+  llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
+  refCount.incr(array);
+  funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
+  return func;
+}
+
+llvm::Function *stela::generateArrayCopAsgn(llvm::Module *module, llvm::Type *type) {
+  llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
+  FuncBuilder funcBdr{func};
+  ReferenceCount refCount{funcBdr.ir};
+ 
+  /*
+  increment right
+  decrement left
+  copy right to left
+  */
+  
+  llvm::Value *right = funcBdr.ir.CreateExtractValue(func->arg_begin() + 1, {0});
+  refCount.incr(right);
+  llvm::Value *leftPtr = func->arg_begin();
+  llvm::Value *leftWrapper = funcBdr.ir.CreateLoad(leftPtr);
+  llvm::Value *left = funcBdr.ir.CreateExtractValue(leftWrapper, {0});
+  refCount.decr(left);
+  funcBdr.ir.CreateStore(func->arg_begin() + 1, leftPtr);
+  
+  funcBdr.ir.CreateRetVoid();
   return func;
 }

@@ -199,17 +199,15 @@ public:
     if (concreteType<ast::ArrayType>(leftType)) {
       llvm::Value *addr = exprBdr.addr(assign.left.get());
       llvm::Value *right = exprBdr.expr(assign.right.get());
-      ReferenceCount refCount{funcBdr.ir};
-      const bool rightTemp = !right->getType()->isPointerTy();
-      right = rightTemp ? right : funcBdr.ir.CreateLoad(right);
-      refCount.incr(funcBdr.ir.CreateExtractValue(right, {0}));
-      llvm::Value *left = funcBdr.ir.CreateLoad(addr);
-      llvm::Function *dtor = ctx.inst.arrayDtor(left->getType());
-      funcBdr.ir.CreateCall(dtor, {left});
-      if (rightTemp) {
-        funcBdr.ir.CreateCall(dtor, {right});
+      llvm::Type *wrapperType = addr->getType()->getPointerElementType();
+      if (right->getType()->isPointerTy()) {
+        llvm::Function *copAsgn = ctx.inst.arrayCopAsgn(wrapperType);
+        funcBdr.ir.CreateCall(copAsgn, {addr, funcBdr.ir.CreateLoad(right)});
+      } else {
+        llvm::Function *dtor = ctx.inst.arrayDtor(wrapperType);
+        funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(addr)});
+        funcBdr.ir.CreateStore(right, addr);
       }
-      funcBdr.ir.CreateStore(right, addr);
     } else {
       llvm::Value *addr = exprBdr.addr(assign.left.get());
       llvm::Value *value = exprBdr.value(assign.right.get());

@@ -26,6 +26,14 @@ llvm::Function *gen::TypeInst::arrayDefCtor(llvm::Type *type) {
   return getCached(arrayDefCtors, generateArrayDefCtor, type);
 }
 
+llvm::Function *gen::TypeInst::arrayCopCtor(llvm::Type *type) {
+  return getCached(arrayCopCtors, generateArrayCopCtor, type);
+}
+
+llvm::Function *gen::TypeInst::arrayCopAsgn(llvm::Type *type) {
+  return getCached(arrayCopAsgns, generateArrayCopAsgn, type);
+}
+
 llvm::Function *gen::TypeInst::getCached(FuncMap &map, MakeFunc *make, llvm::Type *type) {
   const auto iter = map.find(type);
   if (iter == map.end()) {

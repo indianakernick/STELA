@@ -29,6 +29,10 @@ public:
   llvm::Function *arrayDtor(llvm::Type *);
   /// Get the default constructor for an array
   llvm::Function *arrayDefCtor(llvm::Type *);
+  /// Get the copy constructor for an array
+  llvm::Function *arrayCopCtor(llvm::Type *);
+  /// Get the copy assignment function for an array
+  llvm::Function *arrayCopAsgn(llvm::Type *);
   
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
@@ -37,6 +41,8 @@ private:
   llvm::Module *module;
   FuncMap arrayDtors;
   FuncMap arrayDefCtors;
+  FuncMap arrayCopCtors;
+  FuncMap arrayCopAsgns;
   
   llvm::Function *getCached(FuncMap &, MakeFunc *, llvm::Type *);
 };

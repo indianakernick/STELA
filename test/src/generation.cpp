@@ -835,6 +835,7 @@ TEST_GROUP(Generation, {
       extern func get() {
         var a: [real];
         a = make [real] {};
+        a = a;
         return a;
       }
       
