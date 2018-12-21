@@ -28,6 +28,9 @@ public:
   /// Evaluate an expression
   llvm::Value *expr(ast::Expression *);
   
+  /// Ensure that the given value is not a pointer
+  llvm::Value *value(llvm::Value *);
+  
   /// Create a conditional branch instruction
   void condBr(ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);
 

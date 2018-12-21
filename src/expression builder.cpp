@@ -32,6 +32,14 @@ llvm::Value *ExprBuilder::expr(ast::Expression *expr) {
   return generateExpr(ctx, fn, expr);
 }
 
+llvm::Value *ExprBuilder::value(llvm::Value *value) {
+  if (value->getType()->isPointerTy()) {
+    return fn.ir.CreateLoad(value);
+  } else {
+    return value;
+  }
+}
+
 void ExprBuilder::condBr(
   ast::Expression *cond,
   llvm::BasicBlock *troo,

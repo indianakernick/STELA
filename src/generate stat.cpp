@@ -193,25 +193,41 @@ public:
     let.llvmAddr = insertVar(let.symbol, let.expr.get());
   }
   
-  void visit(ast::Assign &assign) override {
-    ast::Type *leftType = assign.left->exprType.get();
-    if (concreteType<ast::ArrayType>(leftType)) {
-      llvm::Value *addr = exprBdr.addr(assign.left.get());
-      llvm::Value *right = exprBdr.expr(assign.right.get());
-      llvm::Type *wrapperType = addr->getType()->getPointerElementType();
+  void doAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
+    if (concreteType<ast::ArrayType>(type)) {
+      llvm::Type *wrapperType = left->getType()->getPointerElementType();
       if (right->getType()->isPointerTy()) {
         llvm::Function *copAsgn = ctx.inst.arrayCopAsgn(wrapperType);
-        funcBdr.ir.CreateCall(copAsgn, {addr, funcBdr.ir.CreateLoad(right)});
+        funcBdr.ir.CreateCall(copAsgn, {left, funcBdr.ir.CreateLoad(right)});
       } else {
         llvm::Function *dtor = ctx.inst.arrayDtor(wrapperType);
-        funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(addr)});
-        funcBdr.ir.CreateStore(right, addr);
+        funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(left)});
+        funcBdr.ir.CreateStore(right, left);
+      }
+    } else if (ast::StructType *strut = concreteType<ast::StructType>(type)) {
+      llvm::Type *structType = left->getType()->getPointerElementType();
+      const unsigned members = structType->getNumContainedTypes();
+      const bool isPointer = right->getType()->isPointerTy();
+      for (unsigned m = 0; m != members; ++m) {
+        llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(left, m);
+        llvm::Value *src;
+        if (isPointer) {
+          src = funcBdr.ir.CreateStructGEP(right, m);
+        } else {
+          src = funcBdr.ir.CreateExtractValue(right, {m});
+        }
+        doAssign(strut->fields[m].type.get(), dstPtr, src);
       }
     } else {
-      llvm::Value *addr = exprBdr.addr(assign.left.get());
-      llvm::Value *value = exprBdr.value(assign.right.get());
-      funcBdr.ir.CreateStore(value, addr);
+      funcBdr.ir.CreateStore(exprBdr.value(right), left);
     }
+  }
+  
+  void visit(ast::Assign &assign) override {
+    ast::Type *type = assign.left->exprType.get();
+    llvm::Value *left = exprBdr.addr(assign.left.get());
+    llvm::Value *right = exprBdr.expr(assign.right.get());
+    doAssign(type, left, right);
   }
   void visit(ast::DeclAssign &assign) override {
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());

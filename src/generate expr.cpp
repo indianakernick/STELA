@@ -241,7 +241,11 @@ public:
   
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
-    value = funcBdr.ir.CreateStructGEP(value, mem.index);
+    if (value->getType()->isPointerTy()) {
+      value = funcBdr.ir.CreateStructGEP(value, mem.index);
+    } else {
+      value = funcBdr.ir.CreateExtractValue(value, {mem.index});
+    }
   }
   /*
   void visit(ast::Subscript &sub) override {

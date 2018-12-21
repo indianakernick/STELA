@@ -690,7 +690,7 @@ TEST_GROUP(Generation, {
         var a: Structure;
         let b: Structure = {};
         let c = make Structure {};
-        return a.e + b.e + c.e;
+        return a.e + b.e + c.e + (make Structure {}).e;
       }
       
       extern func init() {
@@ -865,6 +865,29 @@ TEST_GROUP(Generation, {
     Array<Real> same = identity(make_retain<ArrayStorage<Real>>());
     ASSERT_TRUE(same);
     ASSERT_EQ(same.use_count(), 1);
+  });
+  
+  TEST(Assign structs, {
+    ASSERT_SUCCEEDS(R"(
+      type S struct {
+        m: [real];
+      };
+      
+      extern func get() {
+        var s = make S {};
+        s = make S {};
+        return s.m;
+      }
+    )");
+    
+    auto get = GET_FUNC("get", Array<Real>());
+    
+    Array<Real> array = get();
+    ASSERT_TRUE(array);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->cap, 0);
+    ASSERT_EQ(array->len, 0);
+    ASSERT_EQ(array->dat, nullptr);
   });
   
   /*
