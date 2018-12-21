@@ -12,7 +12,6 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
-#include "reference count.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
 #include "expression builder.hpp"

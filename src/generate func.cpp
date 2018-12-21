@@ -13,7 +13,6 @@
 #include "generate type.hpp"
 #include "generate decl.hpp"
 #include <llvm/IR/Function.h>
-#include "reference count.hpp"
 #include "assert down cast.hpp"
 #include "function builder.hpp"
 
@@ -188,6 +187,27 @@ llvm::Value *wrapPtr(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
   return ir.CreateInsertValue(undef, ptr, {0u});
 }
 
+llvm::Constant *constantFor(llvm::Value *val, const uint64_t value) {
+  return llvm::ConstantInt::get(val->getType(), value);
+}
+
+void refIncr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
+  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, 0);
+  llvm::Value *value = ir.CreateLoad(refPtr);
+  llvm::Constant *one = constantFor(value, 1);
+  llvm::Value *added = ir.CreateAdd(value, one);
+  ir.CreateStore(added, refPtr);
+}
+
+llvm::Value *refDecr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
+  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, 0);
+  llvm::Value *value = ir.CreateLoad(refPtr);
+  llvm::Constant *one = constantFor(value, 1);
+  llvm::Value *subed = ir.CreateSub(value, one);
+  ir.CreateStore(subed, refPtr);
+  return ir.CreateICmpEQ(subed, constantFor(value, 0));
+}
+
 }
 
 llvm::Function *stela::generateArrayDtor(llvm::Module *module, llvm::Type *type) {
@@ -195,10 +215,9 @@ llvm::Function *stela::generateArrayDtor(llvm::Module *module, llvm::Type *type)
   FuncBuilder funcBdr{func};
   llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
   llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
-  ReferenceCount refCount{funcBdr.ir};
   llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
   // Decrement reference count
-  llvm::Value *deleteArray = refCount.decr(array);
+  llvm::Value *deleteArray = refDecr(funcBdr.ir, array);
   // If reference count reached zero...
   funcBdr.ir.CreateCondBr(deleteArray, deleteBlock, doneBlock);
   funcBdr.setCurr(deleteBlock);
@@ -251,7 +270,6 @@ llvm::Function *stela::generateArrayDefCtor(llvm::Module *module, llvm::Type *ty
 llvm::Function *stela::generateArrayCopCtor(llvm::Module *module, llvm::Type *type) {
   llvm::Function *func = makeInternalFunc(module, copCtorFor(type), "array_cop_ctor");
   FuncBuilder funcBdr{func};
-  ReferenceCount refCount{funcBdr.ir};
   
   /*
   increment other
@@ -259,7 +277,7 @@ llvm::Function *stela::generateArrayCopCtor(llvm::Module *module, llvm::Type *ty
   */
   
   llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
-  refCount.incr(array);
+  refIncr(funcBdr.ir, array);
   funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
   return func;
 }
@@ -267,8 +285,7 @@ llvm::Function *stela::generateArrayCopCtor(llvm::Module *module, llvm::Type *ty
 llvm::Function *stela::generateArrayCopAsgn(llvm::Module *module, llvm::Type *type) {
   llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
   FuncBuilder funcBdr{func};
-  ReferenceCount refCount{funcBdr.ir};
- 
+  
   /*
   increment right
   decrement left
@@ -276,11 +293,11 @@ llvm::Function *stela::generateArrayCopAsgn(llvm::Module *module, llvm::Type *ty
   */
   
   llvm::Value *right = funcBdr.ir.CreateExtractValue(func->arg_begin() + 1, {0});
-  refCount.incr(right);
+  refIncr(funcBdr.ir, right);
   llvm::Value *leftPtr = func->arg_begin();
   llvm::Value *leftWrapper = funcBdr.ir.CreateLoad(leftPtr);
   llvm::Value *left = funcBdr.ir.CreateExtractValue(leftWrapper, {0});
-  refCount.decr(left);
+  refDecr(funcBdr.ir, left);
   funcBdr.ir.CreateStore(func->arg_begin() + 1, leftPtr);
   
   funcBdr.ir.CreateRetVoid();

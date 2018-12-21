@@ -100,3 +100,8 @@ if (newArraySize == 0) {
   return malloc(newArraySize * sizeof(Elem));
 }
 
+This is could be part of the standard library
+func (self: sint) to_string() -> [char]
+
+Do we really need to call copy constructors when passing arrays to functions?
+Find a scenario where not calling the constructor would be a problem
