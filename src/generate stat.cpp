@@ -25,6 +25,13 @@ public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
     : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr} {}
 
+  struct Object {
+    llvm::Value *addr;
+    ast::Type *type;
+  };
+  using Scope = std::vector<Object>;
+  using ScopeStack = std::vector<Scope>;
+
   void visitFlow(ast::Statement *body, llvm::BasicBlock *brake, llvm::BasicBlock *continu) {
     llvm::BasicBlock *oldBrake = std::exchange(breakBlock, brake);
     llvm::BasicBlock *oldContinue = std::exchange(continueBlock, continu);
@@ -42,9 +49,11 @@ public:
   }
   
   void visit(ast::Block &block) override {
+    enterScope();
     for (const ast::StatPtr &stat : block.nodes) {
       stat->accept(*this);
     }
+    leaveScope();
   }
   void visit(ast::If &fi) override {
     auto *cond = funcBdr.nextEmpty();
@@ -123,17 +132,31 @@ public:
       funcBdr.ir.CreateUnreachable();
     }
   }
+  void visit(ast::Terminate &) override {
+    destroy(scopes.size() - 1);
+  }
   void visit(ast::Break &) override {
     assert(breakBlock);
+    destroy(breakIndex);
     funcBdr.ir.CreateBr(breakBlock);
   }
   void visit(ast::Continue &) override {
     assert(continueBlock);
+    destroy(continueIndex);
     funcBdr.ir.CreateBr(continueBlock);
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      llvm::Value *value = exprBdr.value(ret.expr.get());
+      llvm::Value *value = exprBdr.expr(ret.expr.get());
+      llvm::Type *type = value->getType();
+      if (type->isPointerTy()) {
+        llvm::Value *retPtr = funcBdr.alloc(type->getPointerElementType());
+        llvm::Value *zero = exprBdr.zero(ret.expr->exprType.get());
+        funcBdr.ir.CreateStore(zero, retPtr);
+        doAssign(ret.expr->exprType.get(), retPtr, value);
+        value = funcBdr.ir.CreateLoad(retPtr);
+      }
+      destroy(0);
       if (value->getType()->isVoidTy()) {
         funcBdr.ir.CreateRetVoid();
       } else if (value->getType()->isStructTy()) {
@@ -143,6 +166,7 @@ public:
         funcBdr.ir.CreateRet(value);
       }
     } else {
+      destroy(0);
       funcBdr.ir.CreateRetVoid();
     }
   }
@@ -179,11 +203,16 @@ public:
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
+    llvm::Value *addr;
+    ast::Type *type = obj->etype.type.get();
+    // @TODO maybe call lifetime.start
     if (expr) {
-      return funcBdr.allocStore(exprBdr.value(expr));
+      addr = funcBdr.allocStore(exprBdr.value(expr));
     } else {
-      return funcBdr.allocStore(exprBdr.zero(obj->etype.type.get()));
+      addr = funcBdr.allocStore(exprBdr.zero(type));
     }
+    pushObj({addr, type});
+    return addr;
   }
   
   void visit(ast::Var &var) override {
@@ -222,6 +251,28 @@ public:
       funcBdr.ir.CreateStore(exprBdr.value(right), left);
     }
   }
+  void destroy(const Object object) {
+    if (concreteType<ast::ArrayType>(object.type)) {
+      llvm::Type *wrapperType = object.addr->getType()->getPointerElementType();
+      llvm::Function *dtor = ctx.inst.arrayDtor(wrapperType);
+      funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(object.addr)});
+    } else if (ast::StructType *strut = concreteType<ast::StructType>(object.type)) {
+      llvm::Type *structType = object.addr->getType()->getPointerElementType();
+      const unsigned members = structType->getNumContainedTypes();
+      for (unsigned m = 0; m != members; ++m) {
+        llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(object.addr, m);
+        destroy({memPtr, strut->fields[m].type.get()});
+      }
+    }
+    // @TODO maybe call lifetime.end
+  }
+  void destroy(const size_t index) {
+    for (size_t i = scopes.size() - 1; i != index - 1; --i) {
+      for (const Object obj : scopes[i]) {
+        destroy(obj);
+      }
+    }
+  }
   
   void visit(ast::Assign &assign) override {
     ast::Type *type = assign.left->exprType.get();
@@ -245,6 +296,19 @@ public:
     } else {
       param.llvmAddr = funcBdr.allocStore(arg);
     }
+    if (param.ref == ast::ParamRef::val) {
+      pushObj({param.llvmAddr, param.type.get()});
+    }
+  }
+  
+  void enterScope() {
+    scopes.push_back({});
+  }
+  void leaveScope() {
+    scopes.pop_back();
+  }
+  void pushObj(const Object object) {
+    scopes.back().push_back(object);
   }
   
 private:
@@ -253,6 +317,9 @@ private:
   ExprBuilder exprBdr;
   llvm::BasicBlock *breakBlock = nullptr;
   llvm::BasicBlock *continueBlock = nullptr;
+  size_t breakIndex = 0;
+  size_t continueIndex = 0;
+  ScopeStack scopes;
 };
 
 }
@@ -266,6 +333,7 @@ void stela::generateStat(
 ) {
   lowerExpressions(block);
   Visitor visitor{ctx, func};
+  visitor.enterScope();
   // @TODO maybe do parameter insersion in a separate function
   if (rec) {
     visitor.insert(*rec, 0);
@@ -276,4 +344,5 @@ void stela::generateStat(
   for (const ast::StatPtr &stat : block.nodes) {
     stat->accept(visitor);
   }
+  visitor.leaveScope();
 }

@@ -49,7 +49,7 @@
 		45816F4821AFA16700712CA3 /* builtin code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4621AFA16700712CA3 /* builtin code.cpp */; };
 		45816F4B21B0B6A700712CA3 /* generate decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4921B0B6A700712CA3 /* generate decl.cpp */; };
 		45816F4E21B0BF9500712CA3 /* generate type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4C21B0BF9500712CA3 /* generate type.cpp */; };
-		45816F5321B1049300712CA3 /* type instantiations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5221B1049300712CA3 /* type instantiations.cpp */; };
+		45816F5321B1049300712CA3 /* func instantiations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5221B1049300712CA3 /* func instantiations.cpp */; };
 		45816F5621B128EC00712CA3 /* generate ids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5421B128EC00712CA3 /* generate ids.cpp */; };
 		45816F5921B1E68700712CA3 /* generate expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5721B1E68700712CA3 /* generate expr.cpp */; };
 		45816F5C21B2685300712CA3 /* generate zero expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5A21B2685300712CA3 /* generate zero expr.cpp */; };
@@ -59,6 +59,7 @@
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		45C7FADF21C74D9100995B7D /* type builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FADD21C74D9100995B7D /* type builder.cpp */; };
+		45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */; };
 		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1B20DE72D400CC3289 /* log output.cpp */; };
@@ -203,8 +204,8 @@
 		45816F4C21B0BF9500712CA3 /* generate type.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate type.cpp"; sourceTree = "<group>"; };
 		45816F4D21B0BF9500712CA3 /* generate type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate type.hpp"; sourceTree = "<group>"; };
 		45816F4F21B0EBE100712CA3 /* gen context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen context.hpp"; sourceTree = "<group>"; };
-		45816F5121B1032500712CA3 /* type instantiations.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "type instantiations.hpp"; sourceTree = "<group>"; };
-		45816F5221B1049300712CA3 /* type instantiations.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "type instantiations.cpp"; sourceTree = "<group>"; };
+		45816F5121B1032500712CA3 /* func instantiations.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "func instantiations.hpp"; sourceTree = "<group>"; };
+		45816F5221B1049300712CA3 /* func instantiations.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "func instantiations.cpp"; sourceTree = "<group>"; };
 		45816F5421B128EC00712CA3 /* generate ids.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate ids.cpp"; sourceTree = "<group>"; };
 		45816F5521B128EC00712CA3 /* generate ids.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate ids.hpp"; sourceTree = "<group>"; };
 		45816F5721B1E68700712CA3 /* generate expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate expr.cpp"; sourceTree = "<group>"; };
@@ -224,6 +225,8 @@
 		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C7FADD21C74D9100995B7D /* type builder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "type builder.cpp"; sourceTree = "<group>"; };
 		45C7FADE21C74D9100995B7D /* type builder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "type builder.hpp"; sourceTree = "<group>"; };
+		45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lifetime exprs.cpp"; sourceTree = "<group>"; };
+		45C7FAE421D1F3CA00995B7D /* lifetime exprs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "lifetime exprs.hpp"; sourceTree = "<group>"; };
 		45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "syntax analysis.cpp"; sourceTree = "<group>"; };
 		45EE9C1020DCF14F00CC3289 /* log.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = log.cpp; sourceTree = "<group>"; };
 		45EE9C1B20DE72D400CC3289 /* log output.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "log output.cpp"; sourceTree = "<group>"; };
@@ -353,8 +356,8 @@
 				45816F5721B1E68700712CA3 /* generate expr.cpp */,
 				45816F5821B1E68700712CA3 /* generate expr.hpp */,
 				45816F4F21B0EBE100712CA3 /* gen context.hpp */,
-				45816F5221B1049300712CA3 /* type instantiations.cpp */,
-				45816F5121B1032500712CA3 /* type instantiations.hpp */,
+				45816F5221B1049300712CA3 /* func instantiations.cpp */,
+				45816F5121B1032500712CA3 /* func instantiations.hpp */,
 				45816F5421B128EC00712CA3 /* generate ids.cpp */,
 				45816F5521B128EC00712CA3 /* generate ids.hpp */,
 				45816F5A21B2685300712CA3 /* generate zero expr.cpp */,
@@ -370,6 +373,8 @@
 				454B744C21C5B59B00BB4BD0 /* expression builder.hpp */,
 				45C7FADD21C74D9100995B7D /* type builder.cpp */,
 				45C7FADE21C74D9100995B7D /* type builder.hpp */,
+				45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */,
+				45C7FAE421D1F3CA00995B7D /* lifetime exprs.hpp */,
 			);
 			name = "Code Generation";
 			sourceTree = "<group>";
@@ -704,7 +709,7 @@
 				450E329520E89D6100F222F1 /* parse decl.cpp in Sources */,
 				45F4435E213F898300B28F05 /* parse asgn.cpp in Sources */,
 				4572CA8920FB25EE00EA1A56 /* html format.cpp in Sources */,
-				45816F5321B1049300712CA3 /* type instantiations.cpp in Sources */,
+				45816F5321B1049300712CA3 /* func instantiations.cpp in Sources */,
 				45816F4221AF64F100712CA3 /* code generation.cpp in Sources */,
 				4572CA8C20FB33CF00EA1A56 /* scope manager.cpp in Sources */,
 				45816F5C21B2685300712CA3 /* generate zero expr.cpp in Sources */,
@@ -724,6 +729,7 @@
 				454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */,
 				45C7FADF21C74D9100995B7D /* type builder.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
+				45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */,
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,
 				4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */,
 				454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */,

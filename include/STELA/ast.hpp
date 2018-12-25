@@ -280,6 +280,10 @@ struct Switch final : Statement {
   void accept(Visitor &) override;
 };
 
+struct Terminate final : Statement {
+  void accept(Visitor &) override;
+};
+
 struct Break final : Statement {
   void accept(Visitor &) override;
 };
@@ -528,6 +532,7 @@ public:
   virtual void visit(Block &) {}
   virtual void visit(If &) {}
   virtual void visit(Switch &) {}
+  virtual void visit(Terminate &) {}
   virtual void visit(Break &) {}
   virtual void visit(Continue &) {}
   virtual void visit(Return &) {}

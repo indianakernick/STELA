@@ -95,8 +95,8 @@ add_library(STELA STATIC
         "src/generate decl.cpp"
         "src/generate decl.hpp"
         "src/gen context.hpp"
-        "src/type instantiations.cpp"
-        "src/type instantiations.hpp"
+        "src/func instantiations.cpp"
+        "src/func instantiations.hpp"
         "src/generate ids.cpp"
         "src/generate ids.hpp"
         "src/generate expr.cpp"
@@ -125,6 +125,8 @@ add_library(STELA STATIC
         "src/expression builder.cpp"
         "src/type builder.cpp"
         "src/type builder.hpp"
+        "src/lifetime exprs.cpp"
+        "src/lifetime exprs.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

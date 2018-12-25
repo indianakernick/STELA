@@ -21,7 +21,7 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   log.status() << "Generating code" << endlog;
   
   auto module = std::make_unique<llvm::Module>("", getLLVM());
-  gen::TypeInst inst{module.get()};
+  gen::FuncInst inst{module.get()};
   gen::Ctx ctx {module->getContext(), inst, log};
   generateIDs(syms.decls);
   generateDecl(ctx, module.get(), syms.decls);

@@ -834,8 +834,9 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       extern func get() {
         var a: [real];
-        a = make [real] {};
+        var b = make [real] {};
         a = a;
+        a = b;
         return a;
       }
       

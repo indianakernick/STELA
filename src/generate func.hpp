@@ -23,15 +23,23 @@ class Module;
 
 namespace stela {
 
+namespace gen {
+
+class FuncInst;
+
+}
+
 std::string generateNullFunc(gen::Ctx, const ast::FuncType &);
 std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
-llvm::Function *generateArrayDtor(llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayDefCtor(llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayCopCtor(llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayCopAsgn(llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayDtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayCopAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayMovCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
 
 }
 

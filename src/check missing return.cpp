@@ -39,6 +39,9 @@ public:
     if (maybeLeave) {
       occurs = Occurs::maybe;
     }
+    if (occurs != Occurs::yes) {
+      block.nodes.push_back(make_retain<ast::Terminate>());
+    }
   }
   void visit(ast::If &fi) override {
     fi.body->accept(*this);

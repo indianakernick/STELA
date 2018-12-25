@@ -10,7 +10,7 @@
 #define stela_gen_context_hpp
 
 #include "log output.hpp"
-#include "type instantiations.hpp"
+#include "func instantiations.hpp"
 
 namespace llvm {
 
@@ -22,7 +22,7 @@ namespace stela::gen {
 
 struct Ctx {
   llvm::LLVMContext &llvm;
-  TypeInst &inst;
+  FuncInst &inst;
   Log &log;
 };
 

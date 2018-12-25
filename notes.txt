@@ -105,3 +105,24 @@ func (self: sint) to_string() -> [char]
 
 Do we really need to call copy constructors when passing arrays to functions?
 Find a scenario where not calling the constructor would be a problem
+
+Lifetimes begin in declarations in blocks
+Lifetimes end at the end of blocks
+continue, break and return end the lifetimes of objects in multiple blocks
+
+Each block should have a list of objects that are created in that block
+These objects must be destroyed when control exits that block
+This list will be used to generate code for breaks, returns and continues
+
+A stack of lists of elements
+Creating a new block pushes onto the stack
+Creating a new variable pushes onto the list at the top of the stack
+
+statement at the end of non-terminated blocks?
+inserted by the check missing return thing
+
+destroy before branching
+store stack index in jump statements
+for loops have multiple scopes
+don't pop from the stack when destroying. Iterate
+pop from the stack when changing scope
