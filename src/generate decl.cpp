@@ -13,7 +13,7 @@
 #include "generate stat.hpp"
 #include "generate expr.hpp"
 #include <llvm/IR/Function.h>
-#include "generate zero expr.hpp"
+#include "lifetime exprs.hpp"
 
 using namespace stela;
 
@@ -70,14 +70,13 @@ public:
     ctor->addFnAttr(llvm::Attribute::NoRecurse);
     ctor->addFnAttr(llvm::Attribute::ReadNone);
     
-    FuncBuilder builder(ctor);
-    llvm::Value *init;
+    FuncBuilder builder{ctor};
     if (expr) {
-      init = generateValueExpr(ctx, builder, expr);
+      builder.ir.CreateStore(generateValueExpr(ctx, builder, expr), llvmAddr);
     } else {
-      init = generateZeroExpr(ctx, builder, type);
+      LifetimeExpr lifetime{ctx, builder.ir};
+      lifetime.defConstruct(type, llvmAddr);
     }
-    builder.ir.CreateStore(init, llvmAddr);
     builder.ir.CreateRetVoid();
     
     llvm::Twine fnName = llvm::StringRef{name.data(), name.size()};

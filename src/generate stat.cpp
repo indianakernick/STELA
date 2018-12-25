@@ -12,6 +12,7 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
+#include "lifetime exprs.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
 #include "expression builder.hpp"
@@ -23,7 +24,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr} {}
+    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr}, lifetime{ctx, funcBdr.ir} {}
 
   struct Object {
     llvm::Value *addr;
@@ -151,9 +152,7 @@ public:
       llvm::Type *type = value->getType();
       if (type->isPointerTy()) {
         llvm::Value *retPtr = funcBdr.alloc(type->getPointerElementType());
-        llvm::Value *zero = exprBdr.zero(ret.expr->exprType.get());
-        funcBdr.ir.CreateStore(zero, retPtr);
-        doAssign(ret.expr->exprType.get(), retPtr, value);
+        lifetime.moveConstruct(ret.expr->exprType.get(), retPtr, value);
         value = funcBdr.ir.CreateLoad(retPtr);
       }
       destroy(0);
@@ -203,13 +202,12 @@ public:
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
-    llvm::Value *addr;
     ast::Type *type = obj->etype.type.get();
-    // @TODO maybe call lifetime.start
+    llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      addr = funcBdr.allocStore(exprBdr.value(expr));
+      lifetime.relocate(type, addr, exprBdr.addr(expr));
     } else {
-      addr = funcBdr.allocStore(exprBdr.zero(type));
+      lifetime.defConstruct(type, addr);
     }
     pushObj({addr, type});
     return addr;
@@ -223,48 +221,16 @@ public:
   }
   
   void doAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
-    if (concreteType<ast::ArrayType>(type)) {
-      llvm::Type *wrapperType = left->getType()->getPointerElementType();
-      if (right->getType()->isPointerTy()) {
-        llvm::Function *copAsgn = ctx.inst.arrayCopAsgn(wrapperType);
-        funcBdr.ir.CreateCall(copAsgn, {left, funcBdr.ir.CreateLoad(right)});
-      } else {
-        llvm::Function *dtor = ctx.inst.arrayDtor(wrapperType);
-        funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(left)});
-        funcBdr.ir.CreateStore(right, left);
-      }
-    } else if (ast::StructType *strut = concreteType<ast::StructType>(type)) {
-      llvm::Type *structType = left->getType()->getPointerElementType();
-      const unsigned members = structType->getNumContainedTypes();
-      const bool isPointer = right->getType()->isPointerTy();
-      for (unsigned m = 0; m != members; ++m) {
-        llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(left, m);
-        llvm::Value *src;
-        if (isPointer) {
-          src = funcBdr.ir.CreateStructGEP(right, m);
-        } else {
-          src = funcBdr.ir.CreateExtractValue(right, {m});
-        }
-        doAssign(strut->fields[m].type.get(), dstPtr, src);
-      }
+    if (right->getType()->isPointerTy()) {
+      lifetime.copyAssign(type, left, right);
     } else {
-      funcBdr.ir.CreateStore(exprBdr.value(right), left);
+      llvm::Value *rightPtr = exprBdr.addr(right);
+      lifetime.moveAssign(type, left, rightPtr);
+      lifetime.destroy(type, rightPtr);
     }
   }
   void destroy(const Object object) {
-    if (concreteType<ast::ArrayType>(object.type)) {
-      llvm::Type *wrapperType = object.addr->getType()->getPointerElementType();
-      llvm::Function *dtor = ctx.inst.arrayDtor(wrapperType);
-      funcBdr.ir.CreateCall(dtor, {funcBdr.ir.CreateLoad(object.addr)});
-    } else if (ast::StructType *strut = concreteType<ast::StructType>(object.type)) {
-      llvm::Type *structType = object.addr->getType()->getPointerElementType();
-      const unsigned members = structType->getNumContainedTypes();
-      for (unsigned m = 0; m != members; ++m) {
-        llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(object.addr, m);
-        destroy({memPtr, strut->fields[m].type.get()});
-      }
-    }
-    // @TODO maybe call lifetime.end
+    lifetime.destroy(object.type, object.addr);
   }
   void destroy(const size_t index) {
     for (size_t i = scopes.size() - 1; i != index - 1; --i) {
@@ -320,6 +286,7 @@ private:
   size_t breakIndex = 0;
   size_t continueIndex = 0;
   ScopeStack scopes;
+  LifetimeExpr lifetime;
 };
 
 }

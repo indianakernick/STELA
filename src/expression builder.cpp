@@ -9,16 +9,11 @@
 #include "expression builder.hpp"
 
 #include "generate expr.hpp"
-#include "generate zero expr.hpp"
 
 using namespace stela;
 
 ExprBuilder::ExprBuilder(gen::Ctx ctx, FuncBuilder &fn)
   : ctx{ctx}, fn{fn} {}
-
-llvm::Value *ExprBuilder::zero(ast::Type *type) {
-  return generateZeroExpr(ctx, fn, type);
-}
 
 llvm::Value *ExprBuilder::addr(ast::Expression *expr) {
   return generateAddrExpr(ctx, fn, expr);
@@ -30,6 +25,14 @@ llvm::Value *ExprBuilder::value(ast::Expression *expr) {
 
 llvm::Value *ExprBuilder::expr(ast::Expression *expr) {
   return generateExpr(ctx, fn, expr);
+}
+
+llvm::Value *ExprBuilder::addr(llvm::Value *value) {
+  if (value->getType()->isPointerTy()) {
+    return value;
+  } else {
+    return fn.allocStore(value);
+  }
 }
 
 llvm::Value *ExprBuilder::value(llvm::Value *value) {

@@ -31,8 +31,6 @@ llvm::Function *gen::FuncInst::arrayCopCtor(llvm::Type *type) {
 }
 
 llvm::Function *gen::FuncInst::arrayCopAsgn(llvm::Type *type) {
-  arrayMovCtor(type);
-  arrayMovAsgn(type);
   return getCached(arrayCopAsgns, generateArrayCopAsgn, type);
 }
 

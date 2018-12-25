@@ -29,6 +29,7 @@ public:
   void moveConstruct(ast::Type *, llvm::Value *, llvm::Value *);
   void copyAssign(ast::Type *, llvm::Value *, llvm::Value *);
   void moveAssign(ast::Type *, llvm::Value *, llvm::Value *);
+  void relocate(ast::Type *, llvm::Value *, llvm::Value *);
   void destroy(ast::Type *, llvm::Value *);
 
 private:

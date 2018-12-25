@@ -167,7 +167,11 @@ llvm::FunctionType *dtorFor(llvm::Type *type) {
 }
 
 llvm::FunctionType *defCtorFor(llvm::Type *type) {
-  return llvm::FunctionType::get(type, {}, false);
+  return llvm::FunctionType::get(
+    llvm::Type::getVoidTy(type->getContext()),
+    {type->getPointerTo()},
+    false
+  );
 }
 
 llvm::FunctionType *copCtorFor(llvm::Type *type) {
@@ -294,8 +298,9 @@ llvm::Function *stela::generateArrayDefCtor(
   llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, 3);
   llvm::Type *elem = arrayStructType->getStructElementType(3);
   funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem->getPointerElementType()), dat);
-
-  funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
+  funcBdr.ir.CreateStore(wrapPtr(funcBdr.ir, array), func->arg_begin());
+  
+  funcBdr.ir.CreateRetVoid();
   return func;
 }
 
@@ -317,7 +322,7 @@ llvm::Function *stela::generateArrayCopCtor(
 }
 
 llvm::Function *stela::generateArrayCopAsgn(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+  gen::FuncInst &, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
   FuncBuilder funcBdr{func};

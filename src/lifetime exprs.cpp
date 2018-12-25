@@ -10,7 +10,6 @@
 
 #include "unreachable.hpp"
 #include "generate type.hpp"
-#include "generate zero expr.hpp"
 
 using namespace stela;
 
@@ -22,7 +21,7 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   llvm::Type *objType = obj->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
     llvm::Function *defCtor = ctx.inst.arrayDefCtor(objType);
-    ir.CreateStore(ir.CreateCall(defCtor, {}), obj);
+    ir.CreateCall(defCtor, {obj});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = objType->getNumContainedTypes();
     for (unsigned m = 0; m != members; ++m) {
@@ -49,10 +48,15 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
         UNREACHABLE();
     }
     ir.CreateStore(value, obj);
+  } else if (dynamic_cast<ast::FuncType *>(concrete)) {
+    //str += generateMakeFunc(ctx, type);
+    //str += "(&";
+    //str += generateNullFunc(ctx, type);
+    //str += ")";
+    assert(false);
   } else {
     assert(false);
   }
-  ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -73,7 +77,6 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
-  ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -94,7 +97,6 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
-  ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
@@ -138,6 +140,16 @@ void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   }
 }
 
+void LifetimeExpr::relocate(ast::Type *, llvm::Value *obj, llvm::Value *other) {
+  /*
+  if (type is not trivally relocatable) {
+    moveConstruct(type, obj, other);
+    destroy(type, other);
+  }
+  */
+  ir.CreateStore(ir.CreateLoad(other), obj);
+}
+
 void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
@@ -155,5 +167,4 @@ void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   } else {
     assert(false);
   }
-  ir.CreateLifetimeEnd(obj);
 }

@@ -15,8 +15,8 @@
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
+#include "lifetime exprs.hpp"
 #include "assert down cast.hpp"
-#include "generate zero expr.hpp"
 
 using namespace stela;
 
@@ -488,17 +488,17 @@ public:
   */
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
+    llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (list.exprs.empty()) {
-      value = generateZeroExpr(ctx, funcBdr, type);
+      LifetimeExpr lifetime{ctx, funcBdr.ir};
+      lifetime.defConstruct(type, addr);
     } else {
-      llvm::Type *strut = generateType(ctx, type);
-      llvm::Value *addr = funcBdr.alloc(strut);
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
         llvm::Value *fieldAddr = funcBdr.ir.CreateStructGEP(addr, e);
         funcBdr.ir.CreateStore(visitValue(list.exprs[e].get()), fieldAddr);
       }
-      value = funcBdr.ir.CreateLoad(addr);
     }
+    value = funcBdr.ir.CreateLoad(addr);
   }
   /*
   void writeCapture(const sym::ClosureCap &cap) {

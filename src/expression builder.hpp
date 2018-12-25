@@ -28,6 +28,8 @@ public:
   /// Evaluate an expression
   llvm::Value *expr(ast::Expression *);
   
+  /// Ensure that the given value is a pointer
+  llvm::Value *addr(llvm::Value *);
   /// Ensure that the given value is not a pointer
   llvm::Value *value(llvm::Value *);
   
