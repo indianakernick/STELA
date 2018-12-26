@@ -60,6 +60,8 @@ llvm::Function *generateArrayCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type
 llvm::Function *generateArrayCopAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayMovCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayIdxS(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *generateArrayIdxU(gen::FuncInst &, llvm::Module *, llvm::Type *);
 
 }
 

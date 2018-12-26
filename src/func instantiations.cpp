@@ -42,6 +42,14 @@ llvm::Function *gen::FuncInst::arrayMovAsgn(llvm::Type *type) {
   return getCached(arrayMovAsgns, generateArrayMovAsgn, type);
 }
 
+llvm::Function *gen::FuncInst::arrayIdxS(llvm::Type *type) {
+  return getCached(arrayIdxSs, generateArrayIdxS, type);
+}
+
+llvm::Function *gen::FuncInst::arrayIdxU(llvm::Type *type) {
+  return getCached(arrayIdxUs, generateArrayIdxU, type);
+}
+
 llvm::Function *gen::FuncInst::panic() {
   if (!panicFn) {
     panicFn = generatePanic(module);

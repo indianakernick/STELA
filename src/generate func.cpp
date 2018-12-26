@@ -142,6 +142,11 @@ std::string stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
 
 namespace {
 
+constexpr size_t array_idx_ref = 0;
+constexpr size_t array_idx_cap = 1;
+constexpr size_t array_idx_len = 2;
+constexpr size_t array_idx_dat = 3;
+
 llvm::Function *makeInternalFunc(
   llvm::Module *module,
   llvm::FunctionType *type,
@@ -231,7 +236,7 @@ void setNull(llvm::IRBuilder<> &ir, llvm::Value *ptrToPtr) {
 }
 
 void refIncr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
-  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, 0);
+  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, array_idx_ref);
   llvm::Value *value = ir.CreateLoad(refPtr);
   llvm::Constant *one = constantFor(value, 1);
   llvm::Value *added = ir.CreateAdd(value, one);
@@ -239,7 +244,7 @@ void refIncr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
 }
 
 llvm::Value *refDecr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
-  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, 0);
+  llvm::Value *refPtr = ir.CreateStructGEP(objPtr, array_idx_ref);
   llvm::Value *value = ir.CreateLoad(refPtr);
   llvm::Constant *one = constantFor(value, 1);
   llvm::Value *subed = ir.CreateSub(value, one);
@@ -257,6 +262,26 @@ void resetArray(gen::FuncInst &inst, FuncBuilder &funcBdr, llvm::Value *array, l
   // Deallocate
   funcBdr.callFree(inst.free(), array);
   funcBdr.ir.CreateBr(doneBlock);
+}
+
+void likely(llvm::BranchInst *branch) {
+  llvm::LLVMContext &ctx = branch->getContext();
+  llvm::IntegerType *i32 = llvm::IntegerType::getInt32Ty(ctx);
+  // likely to be not null
+  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2000);
+  llvm::Metadata *trueMeta = llvm::ConstantAsMetadata::get(trueWeight);
+  // unlikely to be null
+  llvm::ConstantInt *falseWeight = llvm::ConstantInt::get(i32, 1);
+  llvm::Metadata *falseMeta = llvm::ConstantAsMetadata::get(falseWeight);
+  llvm::MDTuple *tuple = llvm::MDNode::get(ctx, {
+    llvm::MDString::get(ctx, "branch_weights"), trueMeta, falseMeta
+  });
+  branch->setMetadata("prof", tuple);
+}
+
+void callPanic(llvm::IRBuilder<> &ir, llvm::Function *panic, std::string_view message) {
+  ir.CreateCall(panic, ir.CreateGlobalStringPtr({message.data(), message.size()}));
+  ir.CreateUnreachable();
 }
 
 }
@@ -302,7 +327,7 @@ llvm::Function *stela::generatePanic(llvm::Module *module) {
   FuncBuilder funcBdr{panic};
   funcBdr.ir.CreateCall(puts, panic->arg_begin());
   funcBdr.ir.CreateCall(exit, llvm::ConstantInt::get(intTy, EXIT_FAILURE));
-  funcBdr.ir.CreateRetVoid();
+  funcBdr.ir.CreateUnreachable();
   
   return panic;
 }
@@ -327,25 +352,12 @@ llvm::Function *stela::generateAlloc(gen::FuncInst &inst, llvm::Module *module) 
   llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
   llvm::Value *ptr = funcBdr.ir.CreateCall(malloc, alloc->arg_begin());
   llvm::Value *isNotNull = funcBdr.ir.CreateIsNotNull(ptr);
-  llvm::BranchInst *branch = funcBdr.ir.CreateCondBr(isNotNull, okBlock, errorBlock);
-  
-  llvm::IntegerType *i32 = llvm::IntegerType::getInt32Ty(ctx);
-  // likely to be not null
-  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2000);
-  llvm::Metadata *trueMeta = llvm::ConstantAsMetadata::get(trueWeight);
-  // unlikely to be null
-  llvm::ConstantInt *falseWeight = llvm::ConstantInt::get(i32, 1);
-  llvm::Metadata *falseMeta = llvm::ConstantAsMetadata::get(falseWeight);
-  llvm::MDTuple *tuple = llvm::MDNode::get(ctx, {
-    llvm::MDString::get(ctx, "branch_weights"), trueMeta, falseMeta
-  });
-  branch->setMetadata("prof", tuple);
+  likely(funcBdr.ir.CreateCondBr(isNotNull, okBlock, errorBlock));
   
   funcBdr.setCurr(okBlock);
   funcBdr.ir.CreateRet(ptr);
   funcBdr.setCurr(errorBlock);
-  funcBdr.ir.CreateCall(panic, {funcBdr.ir.CreateGlobalStringPtr("Out of memory")});
-  funcBdr.ir.CreateUnreachable();
+  callPanic(funcBdr.ir, panic, "Out of memory");
   
   return alloc;
 }
@@ -389,6 +401,9 @@ llvm::Function *stela::generateArrayDtor(
 llvm::Function *stela::generateArrayDefCtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
+  generateArrayIdxS(inst, module, type);
+  generateArrayIdxU(inst, module, type);
+
   llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
   FuncBuilder funcBdr{func};
   TypeBuilder typeBdr{type->getContext()};
@@ -403,14 +418,14 @@ llvm::Function *stela::generateArrayDefCtor(
   dat = null
   */
 
-  llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, 0);
+  llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, array_idx_ref);
   funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
-  llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, 1);
+  llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
   funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), cap);
-  llvm::Value *len = funcBdr.ir.CreateStructGEP(array, 2);
+  llvm::Value *len = funcBdr.ir.CreateStructGEP(array, array_idx_len);
   funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.len(), 0), len);
-  llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, 3);
-  llvm::Type *elem = arrayStructType->getStructElementType(3);
+  llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
+  llvm::Type *elem = arrayStructType->getStructElementType(array_idx_dat);
   funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem->getPointerElementType()), dat);
   funcBdr.ir.CreateStore(wrapPtr(funcBdr.ir, array), func->arg_begin());
   
@@ -491,4 +506,73 @@ llvm::Function *stela::generateArrayMovAsgn(
   
   funcBdr.ir.CreateRetVoid();
   return func;
+}
+
+namespace {
+
+using BoundsChecker = llvm::Value *(llvm::IRBuilder<> &, llvm::Value *, llvm::Value *);
+
+llvm::Function *generateArrayIdx(
+  gen::FuncInst &inst,
+  llvm::Module *module,
+  llvm::Type *type,
+  BoundsChecker *checkBounds,
+  const llvm::Twine &name
+) {
+  llvm::Type *arrayStructPtr = type->getArrayElementType();
+  llvm::Type *arrayStruct = arrayStructPtr->getPointerElementType();
+  llvm::Type *elemPtr = arrayStruct->getStructElementType(array_idx_dat);
+  llvm::Type *i32 = llvm::Type::getInt32Ty(type->getContext());
+  llvm::Type *sizeTy = getType<size_t>(type->getContext());
+  llvm::FunctionType *fnType = llvm::FunctionType::get(elemPtr, {type, i32}, false);
+  llvm::Function *func = makeInternalFunc(module, fnType, name);
+  FuncBuilder funcBdr{func};
+  
+  llvm::BasicBlock *okBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
+  llvm::Value *arrayPtr = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
+  llvm::Value *size = funcBdr.ir.CreateLoad(
+    funcBdr.ir.CreateStructGEP(arrayPtr, array_idx_len)
+  );
+  llvm::Value *inBounds = checkBounds(funcBdr.ir, func->arg_begin() + 1, size);
+  likely(funcBdr.ir.CreateCondBr(inBounds, okBlock, errorBlock));
+  
+  funcBdr.setCurr(okBlock);
+  llvm::Value *idx = funcBdr.ir.CreateIntCast(func->arg_begin() + 1, sizeTy, false);
+  llvm::Value *data = funcBdr.ir.CreateLoad(
+    funcBdr.ir.CreateStructGEP(arrayPtr, array_idx_dat)
+  );
+  llvm::Value *elem = funcBdr.ir.CreateInBoundsGEP(elemPtr->getPointerElementType(), data, idx);
+  funcBdr.ir.CreateRet(elem);
+  
+  funcBdr.setCurr(errorBlock);
+  callPanic(funcBdr.ir, inst.panic(), "Index out of bounds");
+  
+  return func;
+}
+
+llvm::Value *checkSignedBounds(llvm::IRBuilder<> &ir, llvm::Value *index, llvm::Value *size) {
+  llvm::Type *i32 = llvm::Type::getInt32Ty(ir.getContext());
+  llvm::Value *zero = llvm::ConstantInt::get(i32, 0, true);
+  llvm::Value *aboveZero = ir.CreateICmpSGE(index, zero);
+  llvm::Value *belowSize = ir.CreateICmpSLT(index, size);
+  return ir.CreateAnd(aboveZero, belowSize);
+}
+
+llvm::Value *checkUnsignedBounds(llvm::IRBuilder<> &ir, llvm::Value *index, llvm::Value *size) {
+  return ir.CreateICmpULT(index, size);
+}
+
+}
+
+llvm::Function *stela::generateArrayIdxS(
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+) {
+  return generateArrayIdx(inst, module, type, checkSignedBounds, "array_idx_s");
+}
+
+llvm::Function *stela::generateArrayIdxU(
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+) {
+  return generateArrayIdx(inst, module, type, checkUnsignedBounds, "array_idx_u");
 }

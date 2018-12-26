@@ -37,6 +37,10 @@ public:
   llvm::Function *arrayMovCtor(llvm::Type *);
   /// Get the move assignment function for an array
   llvm::Function *arrayMovAsgn(llvm::Type *);
+  /// Get the signed indexing function for an array
+  llvm::Function *arrayIdxS(llvm::Type *);
+  /// Get the unsigned indexing function for an array
+  llvm::Function *arrayIdxU(llvm::Type *);
   
   /// Get the panic function
   llvm::Function *panic();
@@ -56,6 +60,8 @@ private:
   FuncMap arrayCopAsgns;
   FuncMap arrayMovCtors;
   FuncMap arrayMovAsgns;
+  FuncMap arrayIdxSs;
+  FuncMap arrayIdxUs;
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;
   llvm::Function *freeFn = nullptr;
