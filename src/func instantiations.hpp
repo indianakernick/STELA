@@ -42,6 +42,8 @@ public:
   llvm::Function *panic();
   /// Get the memory allocation function
   llvm::Function *alloc();
+  /// Get the memory deallocation function
+  llvm::Function *free();
   
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
@@ -56,6 +58,7 @@ private:
   FuncMap arrayMovAsgns;
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;
+  llvm::Function *freeFn = nullptr;
   
   llvm::Function *getCached(FuncMap &, MakeFunc *, llvm::Type *);
 };

@@ -18,6 +18,9 @@ namespace llvm {
 class Type;
 class Function;
 class Module;
+class LLVMContext;
+class IntegerType;
+class PointerType;
 
 }
 
@@ -34,8 +37,22 @@ std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
+template <size_t Size>
+llvm::IntegerType *getSizedType(llvm::LLVMContext &);
+
+template <typename Int>
+llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
+  return getSizedType<sizeof(Int)>(ctx);
+}
+
+template <typename Int>
+llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
+  return getType<Int>(ctx)->getPointerTo();
+}
+
 llvm::Function *generatePanic(llvm::Module *);
 llvm::Function *generateAlloc(gen::FuncInst &, llvm::Module *);
+llvm::Function *generateFree(llvm::Module *);
 
 llvm::Function *generateArrayDtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);

@@ -56,6 +56,13 @@ llvm::Function *gen::FuncInst::alloc() {
   return allocFn;
 }
 
+llvm::Function *gen::FuncInst::free() {
+  if (!freeFn) {
+    freeFn = generateFree(module);
+  }
+  return freeFn;
+}
+
 llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeFunc *make, llvm::Type *type) {
   const auto iter = map.find(type);
   if (iter == map.end()) {

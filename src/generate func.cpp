@@ -247,7 +247,7 @@ llvm::Value *refDecr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
   return ir.CreateICmpEQ(subed, constantFor(value, 0));
 }
 
-void resetArray(stela::FuncBuilder &funcBdr, llvm::Value *array, llvm::BasicBlock *doneBlock) {
+void resetArray(gen::FuncInst &inst, FuncBuilder &funcBdr, llvm::Value *array, llvm::BasicBlock *doneBlock) {
   llvm::BasicBlock *deleteBlock = funcBdr.makeBlock();
   // Decrement reference count
   llvm::Value *deleteArray = refDecr(funcBdr.ir, array);
@@ -255,43 +255,30 @@ void resetArray(stela::FuncBuilder &funcBdr, llvm::Value *array, llvm::BasicBloc
   funcBdr.ir.CreateCondBr(deleteArray, deleteBlock, doneBlock);
   funcBdr.setCurr(deleteBlock);
   // Deallocate
-  funcBdr.callFree(array);
+  funcBdr.callFree(inst.free(), array);
   funcBdr.ir.CreateBr(doneBlock);
 }
 
-template <size_t Size>
-llvm::IntegerType *getTypeImpl(llvm::LLVMContext &);
+}
 
 template <>
-llvm::IntegerType *getTypeImpl<1>(llvm::LLVMContext &ctx) {
+llvm::IntegerType *stela::getSizedType<1>(llvm::LLVMContext &ctx) {
   return llvm::IntegerType::getInt8Ty(ctx);
 }
 
 template <>
-llvm::IntegerType *getTypeImpl<2>(llvm::LLVMContext &ctx) {
+llvm::IntegerType *stela::getSizedType<2>(llvm::LLVMContext &ctx) {
   return llvm::IntegerType::getInt16Ty(ctx);
 }
 
 template <>
-llvm::IntegerType *getTypeImpl<4>(llvm::LLVMContext &ctx) {
+llvm::IntegerType *stela::getSizedType<4>(llvm::LLVMContext &ctx) {
   return llvm::IntegerType::getInt32Ty(ctx);
 }
 
 template <>
-llvm::IntegerType *getTypeImpl<8>(llvm::LLVMContext &ctx) {
+llvm::IntegerType *stela::getSizedType<8>(llvm::LLVMContext &ctx) {
   return llvm::IntegerType::getInt64Ty(ctx);
-}
-
-template <typename Int>
-llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
-  return getTypeImpl<sizeof(Int)>(ctx);
-}
-
-template <typename Int>
-llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
-  return getType<Int>(ctx)->getPointerTo();
-}
-
 }
 
 llvm::Function *stela::generatePanic(llvm::Module *module) {
@@ -328,7 +315,7 @@ llvm::Function *stela::generateAlloc(gen::FuncInst &inst, llvm::Module *module) 
   llvm::FunctionType *mallocType = llvm::FunctionType::get(memTy, {sizeTy}, false);
   llvm::FunctionType *allocType = mallocType;
   
-  llvm::Function *malloc = declareCFunc(module, mallocType, "fake_malloc");
+  llvm::Function *malloc = declareCFunc(module, mallocType, "malloc");
   llvm::Function *panic = inst.panic();
   llvm::Function *alloc = makeInternalFunc(module, allocType, "alloc");
   malloc->addAttribute(0, llvm::Attribute::NoAlias);
@@ -363,8 +350,18 @@ llvm::Function *stela::generateAlloc(gen::FuncInst &inst, llvm::Module *module) 
   return alloc;
 }
 
+llvm::Function *stela::generateFree(llvm::Module *module) {
+  llvm::LLVMContext &ctx = module->getContext();
+  llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
+  llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
+  llvm::FunctionType *freeType = llvm::FunctionType::get(voidTy, {memTy}, false);
+  llvm::Function *free = declareCFunc(module, freeType, "free");
+  free->addParamAttr(0, llvm::Attribute::NoCapture);
+  return free;
+}
+
 llvm::Function *stela::generateArrayDtor(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, dtorFor(type), "array_dtor");
   FuncBuilder funcBdr{func};
@@ -373,7 +370,7 @@ llvm::Function *stela::generateArrayDtor(
   llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
   funcBdr.ir.CreateCondBr(funcBdr.ir.CreateIsNull(array), doneBlock, decrBlock);
   funcBdr.setCurr(decrBlock);
-  resetArray(funcBdr, array, doneBlock);
+  resetArray(inst, funcBdr, array, doneBlock);
   funcBdr.setCurr(doneBlock);
   funcBdr.ir.CreateRetVoid();
   return func;
@@ -390,14 +387,14 @@ llvm::Function *stela::generateArrayDtor(
 
 
 llvm::Function *stela::generateArrayDefCtor(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
   FuncBuilder funcBdr{func};
   TypeBuilder typeBdr{type->getContext()};
   llvm::Type *arrayPtrType = type->getArrayElementType();
   llvm::Type *arrayStructType = arrayPtrType->getPointerElementType();
-  llvm::Value *array = funcBdr.callMalloc(arrayStructType);
+  llvm::Value *array = funcBdr.callAlloc(inst.alloc(), arrayStructType);
 
   /*
   ref = 1
@@ -439,7 +436,7 @@ llvm::Function *stela::generateArrayCopCtor(
 }
 
 llvm::Function *stela::generateArrayCopAsgn(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
   FuncBuilder funcBdr{func};
@@ -455,7 +452,7 @@ llvm::Function *stela::generateArrayCopAsgn(
   refIncr(funcBdr.ir, right);
   llvm::Value *leftPtr = func->arg_begin();
   llvm::Value *leftWrapper = funcBdr.ir.CreateLoad(leftPtr);
-  resetArray(funcBdr, funcBdr.ir.CreateExtractValue(leftWrapper, {0}), block);
+  resetArray(inst, funcBdr, funcBdr.ir.CreateExtractValue(leftWrapper, {0}), block);
   funcBdr.setCurr(block);
   funcBdr.ir.CreateStore(func->arg_begin() + 1, leftPtr);
   
@@ -479,14 +476,14 @@ llvm::Function *stela::generateArrayMovCtor(
 }
 
 llvm::Function *stela::generateArrayMovAsgn(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, movAsgnFor(type), "array_mov_asgn");
   FuncBuilder funcBdr{func};
   
   llvm::BasicBlock *block = funcBdr.makeBlock();
   llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
-  resetArray(funcBdr, funcBdr.ir.CreateLoad(leftPtr), block);
+  resetArray(inst, funcBdr, funcBdr.ir.CreateLoad(leftPtr), block);
   funcBdr.setCurr(block);
   llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
   funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
