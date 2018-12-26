@@ -21,6 +21,13 @@ using namespace stela;
 
 namespace {
 
+struct FlowData {
+  llvm::BasicBlock *breakBlock = nullptr;
+  llvm::BasicBlock *continueBlock = nullptr;
+  size_t breakIndex = 0;
+  size_t continueIndex = 0;
+};
+
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
@@ -33,12 +40,10 @@ public:
   using Scope = std::vector<Object>;
   using ScopeStack = std::vector<Scope>;
 
-  void visitFlow(ast::Statement *body, llvm::BasicBlock *brake, llvm::BasicBlock *continu) {
-    llvm::BasicBlock *oldBrake = std::exchange(breakBlock, brake);
-    llvm::BasicBlock *oldContinue = std::exchange(continueBlock, continu);
+  void visitFlow(ast::Statement *body, const FlowData newFlow) {
+    FlowData oldFlow = std::exchange(flow, newFlow);
     body->accept(*this);
-    continueBlock = oldContinue;
-    breakBlock = oldBrake;
+    flow = oldFlow;
   }
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
     const ArithNumber arith = classifyArith(expr);
@@ -124,7 +129,7 @@ public:
       if (c != swich.cases.size() - 1) {
         nextBlock = caseBlocks[c + 1];
       }
-      visitFlow(swich.cases[c].body.get(), done, nextBlock);
+      visitFlow(swich.cases[c].body.get(), {done, nextBlock});
       funcBdr.terminate(done);
     }
     
@@ -137,14 +142,14 @@ public:
     destroy(scopes.size() - 1);
   }
   void visit(ast::Break &) override {
-    assert(breakBlock);
-    destroy(breakIndex);
-    funcBdr.ir.CreateBr(breakBlock);
+    assert(flow.breakBlock);
+    destroy(flow.breakIndex);
+    funcBdr.ir.CreateBr(flow.breakBlock);
   }
   void visit(ast::Continue &) override {
-    assert(continueBlock);
-    destroy(continueIndex);
-    funcBdr.ir.CreateBr(continueBlock);
+    assert(flow.continueBlock);
+    destroy(flow.continueIndex);
+    funcBdr.ir.CreateBr(flow.continueBlock);
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
@@ -174,7 +179,7 @@ public:
     auto *body = funcBdr.makeBlock();
     auto *done = funcBdr.makeBlock();
     funcBdr.setCurr(body);
-    visitFlow(wile.body.get(), done, cond);
+    visitFlow(wile.body.get(), {done, cond});
     funcBdr.terminate(cond);
     funcBdr.setCurr(cond);
     exprBdr.condBr(wile.cond.get(), body, done);
@@ -189,7 +194,7 @@ public:
     auto *incr = funcBdr.makeBlock();
     auto *done = funcBdr.makeBlock();
     funcBdr.setCurr(body);
-    visitFlow(four.body.get(), done, incr);
+    visitFlow(four.body.get(), {done, incr});
     funcBdr.terminate(incr);
     funcBdr.setCurr(cond);
     exprBdr.condBr(four.cond.get(), body, done);
@@ -281,10 +286,7 @@ private:
   gen::Ctx ctx;
   FuncBuilder funcBdr;
   ExprBuilder exprBdr;
-  llvm::BasicBlock *breakBlock = nullptr;
-  llvm::BasicBlock *continueBlock = nullptr;
-  size_t breakIndex = 0;
-  size_t continueIndex = 0;
+  FlowData flow;
   ScopeStack scopes;
   LifetimeExpr lifetime;
 };
