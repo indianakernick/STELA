@@ -247,14 +247,35 @@ public:
       value = funcBdr.ir.CreateExtractValue(value, {mem.index});
     }
   }
-  /*
+  
   void visit(ast::Subscript &sub) override {
-    str += "index(";
     sub.object->accept(*this);
-    str += ", ";
-    sub.index->accept(*this);
-    str += ')';
+    llvm::Value *object = value;
+    llvm::Value *index = visitValue(sub.index.get());
+    ast::BtnType *indexType = concreteType<ast::BtnType>(sub.index->exprType.get());
+    
+    llvm::Type *arrayType;
+    if (object->getType()->isPointerTy()) {
+      arrayType = object->getType()->getPointerElementType();
+    } else {
+      arrayType = object->getType();
+    }
+    
+    llvm::Function *indexFn;
+    if (indexType->value == ast::BtnTypeEnum::Sint) {
+      indexFn = ctx.inst.arrayIdxS(arrayType);
+    } else {
+      indexFn = ctx.inst.arrayIdxU(arrayType);
+    }
+    
+    if (object->getType()->isPointerTy()) {
+      llvm::Value *array = funcBdr.ir.CreateLoad(object);
+      value = funcBdr.ir.CreateCall(indexFn, {array, index});
+    } else {
+      value = funcBdr.ir.CreateLoad(funcBdr.ir.CreateCall(indexFn, {object, index}));
+    }
   }
+  /*
   void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
     // @TODO this function is too big. Chop, chop!
     assert(definition);

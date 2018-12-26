@@ -401,9 +401,6 @@ llvm::Function *stela::generateArrayDtor(
 llvm::Function *stela::generateArrayDefCtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
-  generateArrayIdxS(inst, module, type);
-  generateArrayIdxU(inst, module, type);
-
   llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
   FuncBuilder funcBdr{func};
   TypeBuilder typeBdr{type->getContext()};

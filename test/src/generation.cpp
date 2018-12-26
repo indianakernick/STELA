@@ -843,6 +843,14 @@ TEST_GROUP(Generation, {
       extern func identity(a: [real]) {
         return a;
       }
+      
+      extern func setFirst(a: [real], val: real) {
+        a[0] = val;
+      }
+      
+      extern func getFirst(a: [real]) {
+        return a[0];
+      }
     )");
     
     auto get = GET_FUNC("get", Array<Real>());
@@ -866,6 +874,32 @@ TEST_GROUP(Generation, {
     Array<Real> same = identity(make_retain<ArrayStorage<Real>>());
     ASSERT_TRUE(same);
     ASSERT_EQ(same.use_count(), 1);
+  
+    auto setFirst = GET_FUNC("setFirst", Void(Array<Real>, Real));
+  
+    Array<Real> array1 = make_retain<ArrayStorage<Real>>();
+    array1->cap = 1;
+    array1->len = 1;
+    array1->dat = new Real;
+  
+    setFirst(array1, 11.5f);
+    ASSERT_EQ(array1.use_count(), 1);
+    ASSERT_EQ(array1->cap, 1);
+    ASSERT_EQ(array1->len, 1);
+    ASSERT_TRUE(array1->dat);
+    ASSERT_EQ(array1->dat[0], 11.5f);
+    
+    auto getFirst = GET_FUNC("getFirst", Real(Array<Real>));
+    
+    const Real first = getFirst(array1);
+    ASSERT_EQ(array1.use_count(), 1);
+    ASSERT_EQ(array1->cap, 1);
+    ASSERT_EQ(array1->len, 1);
+    ASSERT_TRUE(array1->dat);
+    ASSERT_EQ(array1->dat[0], 11.5f);
+    ASSERT_EQ(first, 11.5f);
+    
+    delete array1->dat;
   });
   
   TEST(Assign structs, {

@@ -173,6 +173,9 @@ void stela::checkMissingRet(sym::Ctx ctx, ast::Block &body, const ast::TypePtr &
     retVoid = btnType->value == ast::BtnTypeEnum::Void;
   }
   if (retVoid && (visitor.noReturn() || visitor.maybeReturn())) {
+    if (!body.nodes.empty() && dynamic_cast<ast::Terminate *>(body.nodes.back().get())) {
+      body.nodes.pop_back();
+    }
     body.nodes.push_back(make_retain<ast::Return>());
     return;
   }
