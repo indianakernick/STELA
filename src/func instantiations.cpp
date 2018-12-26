@@ -42,6 +42,20 @@ llvm::Function *gen::FuncInst::arrayMovAsgn(llvm::Type *type) {
   return getCached(arrayMovAsgns, generateArrayMovAsgn, type);
 }
 
+llvm::Function *gen::FuncInst::panic() {
+  if (!panicFn) {
+    panicFn = generatePanic(module);
+  }
+  return panicFn;
+}
+
+llvm::Function *gen::FuncInst::alloc() {
+  if (!allocFn) {
+    allocFn = generateAlloc(*this, module);
+  }
+  return allocFn;
+}
+
 llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeFunc *make, llvm::Type *type) {
   const auto iter = map.find(type);
   if (iter == map.end()) {

@@ -57,6 +57,7 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   } else {
     assert(false);
   }
+  // ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -77,6 +78,7 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
+  // ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -97,6 +99,7 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
+  // ir.CreateLifetimeStart(obj);
 }
 
 void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
@@ -167,4 +170,5 @@ void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   } else {
     assert(false);
   }
+  // ir.CreateLifetimeEnd(obj);
 }

@@ -158,6 +158,21 @@ llvm::Function *makeInternalFunc(
   return func;
 }
 
+llvm::Function *declareCFunc(
+  llvm::Module *module,
+  llvm::FunctionType *type,
+  const llvm::Twine &name
+) {
+  llvm::Function *func = llvm::Function::Create(
+    type,
+    llvm::Function::ExternalLinkage,
+    name,
+    module
+  );
+  func->addFnAttr(llvm::Attribute::NoUnwind);
+  return func;
+}
+
 llvm::FunctionType *dtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(
     llvm::Type::getVoidTy(type->getContext()),
@@ -244,6 +259,108 @@ void resetArray(stela::FuncBuilder &funcBdr, llvm::Value *array, llvm::BasicBloc
   funcBdr.ir.CreateBr(doneBlock);
 }
 
+template <size_t Size>
+llvm::IntegerType *getTypeImpl(llvm::LLVMContext &);
+
+template <>
+llvm::IntegerType *getTypeImpl<1>(llvm::LLVMContext &ctx) {
+  return llvm::IntegerType::getInt8Ty(ctx);
+}
+
+template <>
+llvm::IntegerType *getTypeImpl<2>(llvm::LLVMContext &ctx) {
+  return llvm::IntegerType::getInt16Ty(ctx);
+}
+
+template <>
+llvm::IntegerType *getTypeImpl<4>(llvm::LLVMContext &ctx) {
+  return llvm::IntegerType::getInt32Ty(ctx);
+}
+
+template <>
+llvm::IntegerType *getTypeImpl<8>(llvm::LLVMContext &ctx) {
+  return llvm::IntegerType::getInt64Ty(ctx);
+}
+
+template <typename Int>
+llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
+  return getTypeImpl<sizeof(Int)>(ctx);
+}
+
+template <typename Int>
+llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
+  return getType<Int>(ctx)->getPointerTo();
+}
+
+}
+
+llvm::Function *stela::generatePanic(llvm::Module *module) {
+  llvm::LLVMContext &ctx = module->getContext();
+  
+  llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
+  llvm::Type *strTy = getTypePtr<char>(ctx);
+  llvm::Type *intTy = getType<int>(ctx);
+  llvm::FunctionType *putsType = llvm::FunctionType::get(intTy, {strTy}, false);
+  llvm::FunctionType *exitType = llvm::FunctionType::get(voidTy, {intTy}, false);
+  llvm::FunctionType *panicType = llvm::FunctionType::get(voidTy, {strTy}, false);
+  
+  llvm::Function *puts = declareCFunc(module, putsType, "puts");
+  llvm::Function *exit = declareCFunc(module, exitType, "exit");
+  llvm::Function *panic = makeInternalFunc(module, panicType, "panic");
+  puts->addParamAttr(0, llvm::Attribute::ReadOnly);
+  puts->addParamAttr(0, llvm::Attribute::NoCapture);
+  exit->addFnAttr(llvm::Attribute::NoReturn);
+  panic->addFnAttr(llvm::Attribute::NoReturn);
+  
+  FuncBuilder funcBdr{panic};
+  funcBdr.ir.CreateCall(puts, panic->arg_begin());
+  funcBdr.ir.CreateCall(exit, llvm::ConstantInt::get(intTy, EXIT_FAILURE));
+  funcBdr.ir.CreateRetVoid();
+  
+  return panic;
+}
+
+llvm::Function *stela::generateAlloc(gen::FuncInst &inst, llvm::Module *module) {
+  llvm::LLVMContext &ctx = module->getContext();
+  
+  llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
+  llvm::Type *sizeTy = getType<size_t>(ctx);
+  llvm::FunctionType *mallocType = llvm::FunctionType::get(memTy, {sizeTy}, false);
+  llvm::FunctionType *allocType = mallocType;
+  
+  llvm::Function *malloc = declareCFunc(module, mallocType, "fake_malloc");
+  llvm::Function *panic = inst.panic();
+  llvm::Function *alloc = makeInternalFunc(module, allocType, "alloc");
+  malloc->addAttribute(0, llvm::Attribute::NoAlias);
+  malloc->addFnAttr(llvm::Attribute::NoUnwind);
+  alloc->addAttribute(0, llvm::Attribute::NoAlias);
+  
+  FuncBuilder funcBdr{alloc};
+  llvm::BasicBlock *okBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
+  llvm::Value *ptr = funcBdr.ir.CreateCall(malloc, alloc->arg_begin());
+  llvm::Value *isNotNull = funcBdr.ir.CreateIsNotNull(ptr);
+  llvm::BranchInst *branch = funcBdr.ir.CreateCondBr(isNotNull, okBlock, errorBlock);
+  
+  llvm::IntegerType *i32 = llvm::IntegerType::getInt32Ty(ctx);
+  // likely to be not null
+  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2000);
+  llvm::Metadata *trueMeta = llvm::ConstantAsMetadata::get(trueWeight);
+  // unlikely to be null
+  llvm::ConstantInt *falseWeight = llvm::ConstantInt::get(i32, 1);
+  llvm::Metadata *falseMeta = llvm::ConstantAsMetadata::get(falseWeight);
+  llvm::MDTuple *tuple = llvm::MDNode::get(ctx, {
+    llvm::MDString::get(ctx, "branch_weights"), trueMeta, falseMeta
+  });
+  branch->setMetadata("prof", tuple);
+  
+  funcBdr.setCurr(okBlock);
+  funcBdr.ir.CreateRet(ptr);
+  funcBdr.setCurr(errorBlock);
+  funcBdr.ir.CreateCall(panic, {funcBdr.ir.CreateGlobalStringPtr("Out of memory")});
+  funcBdr.ir.CreateUnreachable();
+  
+  return alloc;
 }
 
 llvm::Function *stela::generateArrayDtor(

@@ -38,6 +38,11 @@ public:
   /// Get the move assignment function for an array
   llvm::Function *arrayMovAsgn(llvm::Type *);
   
+  /// Get the panic function
+  llvm::Function *panic();
+  /// Get the memory allocation function
+  llvm::Function *alloc();
+  
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
   using MakeFunc = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *);
@@ -49,7 +54,8 @@ private:
   FuncMap arrayCopAsgns;
   FuncMap arrayMovCtors;
   FuncMap arrayMovAsgns;
-  
+  llvm::Function *panicFn = nullptr;
+  llvm::Function *allocFn = nullptr;
   
   llvm::Function *getCached(FuncMap &, MakeFunc *, llvm::Type *);
 };

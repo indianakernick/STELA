@@ -34,6 +34,9 @@ std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
+llvm::Function *generatePanic(llvm::Module *);
+llvm::Function *generateAlloc(gen::FuncInst &, llvm::Module *);
+
 llvm::Function *generateArrayDtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
