@@ -16,22 +16,6 @@ using namespace stela;
 
 namespace {
 
-// @TODO we'll need to use this to determine how to call and return
-enum class TypeCat {
-  /// Primitive types like integers and floats.
-  /// Default constructor just sets to 0. Destructor does nothing.
-  /// Other special functions just copy
-  trivially_copyable,
-  /// Arrays and closures.
-  /// Requires calls to special functions but can be relocated.
-  /// Moving and then destroying is the same as copying
-  trivially_relocatable,
-  /// Structs and some user types.
-  /// Requires calls to special functions.
-  /// Passed to functions by pointer and returned by pointer.
-  nontrivial
-};
-
 class Visitor final : public ast::Visitor {
 public:
   void visit(ast::BtnType &) override {
@@ -54,12 +38,12 @@ public:
   TypeCat cat;
 };
 
-TypeCat classifyType(ast::Type *type) {
+}
+
+TypeCat stela::classifyType(ast::Type *type) {
   Visitor visitor;
   type->accept(visitor);
   return visitor.cat;
-}
-
 }
 
 LifetimeExpr::LifetimeExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
