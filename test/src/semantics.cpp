@@ -1989,11 +1989,23 @@ TEST_GROUP(Semantics, {
     )");
   });
   
-  TEST(Assign to return, {
+  TEST(Assign to function return, {
     ASSERT_FAILS(R"(
       func getFive() {
         return 5;
       }
+      
+      func test() {
+        getFive() = 11;
+      }
+    )");
+  });
+  
+  TEST(Assign to lambda return, {
+    ASSERT_FAILS(R"(
+      let getFive = func() {
+        return 5;
+      };
       
       func test() {
         getFive() = 11;

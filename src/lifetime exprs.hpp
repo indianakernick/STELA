@@ -29,11 +29,11 @@ class FuncInst;
 enum class TypeCat {
   /// Primitive types like integers and floats.
   /// Default constructor just sets to 0. Destructor does nothing.
-  /// Other special functions just copy
+  /// Other special functions just copy.
   trivially_copyable,
   /// Arrays and closures.
   /// Requires calls to special functions but can be relocated.
-  /// Moving and then destroying is the same as copying
+  /// Moving and then destroying is the same as copying.
   trivially_relocatable,
   /// Structs and some user types.
   /// Requires calls to special functions.

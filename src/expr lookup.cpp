@@ -113,7 +113,7 @@ ast::Declaration *ExprLookup::lookupFunc(const sym::FuncParams &args, const Loc 
       ctx.log.error(loc) << "No matching call to function object" << fatal;
     }
     assert(func->ret);
-    stack.pushExpr(convert(ctx, func->ret, ast::ParamRef::val));
+    stack.pushExpr(convertNullable(ctx, func->ret, ast::ParamRef::val));
     return nullptr;
   }
   UNREACHABLE();

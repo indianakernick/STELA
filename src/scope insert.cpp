@@ -70,18 +70,15 @@ sym::FuncParams convertParams(
 sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
   assert(type);
   validateType(ctx, type);
-  return {
-    type,
-    sym::ValueMut::var,
-    convertRef(ref)
-  };
+  return {type, sym::ValueMut::var, convertRef(ref)};
 }
 
 sym::ExprType stela::convertNullable(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
   if (type == nullptr) {
     return {nullptr, sym::ValueMut::let, convertRef(ref)};
   } else {
-    return convert(ctx, type, ref);
+    validateType(ctx, type);
+    return {type, sym::ValueMut::let, convertRef(ref)};
   }
 }
 
