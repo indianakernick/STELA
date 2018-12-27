@@ -10,17 +10,66 @@
 
 #include "unreachable.hpp"
 #include "generate type.hpp"
+#include "func instantiations.hpp"
 
 using namespace stela;
 
-LifetimeExpr::LifetimeExpr(gen::Ctx ctx, llvm::IRBuilder<> &ir)
-  : ctx{ctx}, ir{ir} {}
+namespace {
+
+// @TODO we'll need to use this to determine how to call and return
+enum class TypeCat {
+  /// Primitive types like integers and floats.
+  /// Default constructor just sets to 0. Destructor does nothing.
+  /// Other special functions just copy
+  trivially_copyable,
+  /// Arrays and closures.
+  /// Requires calls to special functions but can be relocated.
+  /// Moving and then destroying is the same as copying
+  trivially_relocatable,
+  /// Structs and some user types.
+  /// Requires calls to special functions.
+  /// Passed to functions by pointer and returned by pointer.
+  nontrivial
+};
+
+class Visitor final : public ast::Visitor {
+public:
+  void visit(ast::BtnType &) override {
+    cat = TypeCat::trivially_copyable;
+  }
+  void visit(ast::ArrayType &) override {
+    cat = TypeCat::trivially_relocatable;
+  }
+  void visit(ast::FuncType &) override {
+    cat = TypeCat::trivially_relocatable;
+  }
+  void visit(ast::NamedType &name) override {
+    name.definition->type->accept(*this);
+  }
+  void visit(ast::StructType &) override {
+    cat = TypeCat::nontrivial;
+  }
+  // @TODO check for user types
+
+  TypeCat cat;
+};
+
+TypeCat classifyType(ast::Type *type) {
+  Visitor visitor;
+  type->accept(visitor);
+  return visitor.cat;
+}
+
+}
+
+LifetimeExpr::LifetimeExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
+  : inst{inst}, ir{ir} {}
 
 void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *defCtor = ctx.inst.arrayDefCtor(objType);
+    llvm::Function *defCtor = inst.arrayDefCtor(objType);
     ir.CreateCall(defCtor, {obj});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = objType->getNumContainedTypes();
@@ -64,7 +113,7 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copCtor = ctx.inst.arrayCopCtor(objType);
+    llvm::Function *copCtor = inst.arrayCopCtor(objType);
     ir.CreateStore(ir.CreateCall(copCtor, {ir.CreateLoad(other)}), obj);
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = objType->getNumContainedTypes();
@@ -85,7 +134,7 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movCtor = ctx.inst.arrayMovCtor(objType);
+    llvm::Function *movCtor = inst.arrayMovCtor(objType);
     ir.CreateCall(movCtor, {obj, other});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = objType->getNumContainedTypes();
@@ -107,7 +156,7 @@ void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   llvm::Type *leftType = left->getType()->getPointerElementType();
   // @TODO visitor?
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copAsgn = ctx.inst.arrayCopAsgn(leftType);
+    llvm::Function *copAsgn = inst.arrayCopAsgn(leftType);
     ir.CreateCall(copAsgn, {left, ir.CreateLoad(right)});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = leftType->getNumContainedTypes();
@@ -127,7 +176,7 @@ void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   ast::Type *concrete = concreteType(type);
   llvm::Type *leftType = left->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movAsgn = ctx.inst.arrayMovAsgn(leftType);
+    llvm::Function *movAsgn = inst.arrayMovAsgn(leftType);
     ir.CreateCall(movAsgn, {left, right});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = leftType->getNumContainedTypes();
@@ -143,21 +192,21 @@ void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   }
 }
 
-void LifetimeExpr::relocate(ast::Type *, llvm::Value *obj, llvm::Value *other) {
-  /*
-  if (type is not trivally relocatable) {
+void LifetimeExpr::relocate(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
+  const TypeCat category = classifyType(type);
+  if (category == TypeCat::nontrivial) {
     moveConstruct(type, obj, other);
     destroy(type, other);
+  } else {
+    ir.CreateStore(ir.CreateLoad(other), obj);
   }
-  */
-  ir.CreateStore(ir.CreateLoad(other), obj);
 }
 
 void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
   if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *dtor = ctx.inst.arrayDtor(objType);
+    llvm::Function *dtor = inst.arrayDtor(objType);
     ir.CreateCall(dtor, {ir.CreateLoad(obj)});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
     const unsigned members = objType->getNumContainedTypes();

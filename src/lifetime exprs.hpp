@@ -9,7 +9,6 @@
 #ifndef engine_lifetime_exprs_hpp
 #define engine_lifetime_exprs_hpp
 
-#include "gen context.hpp"
 #include <llvm/IR/IRBuilder.h>
 
 namespace stela {
@@ -20,9 +19,15 @@ struct Type;
 
 }
 
+namespace gen {
+
+class FuncInst;
+
+}
+
 class LifetimeExpr {
 public:
-  LifetimeExpr(gen::Ctx, llvm::IRBuilder<> &);
+  LifetimeExpr(gen::FuncInst &, llvm::IRBuilder<> &);
 
   void defConstruct(ast::Type *, llvm::Value *);
   void copyConstruct(ast::Type *, llvm::Value *, llvm::Value *);
@@ -33,7 +38,7 @@ public:
   void destroy(ast::Type *, llvm::Value *);
 
 private:
-  gen::Ctx ctx;
+  gen::FuncInst &inst;
   llvm::IRBuilder<> &ir;
 };
 

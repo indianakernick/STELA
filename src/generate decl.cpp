@@ -74,7 +74,7 @@ public:
     if (expr) {
       builder.ir.CreateStore(generateValueExpr(ctx, builder, expr), llvmAddr);
     } else {
-      LifetimeExpr lifetime{ctx, builder.ir};
+      LifetimeExpr lifetime{ctx.inst, builder.ir};
       lifetime.defConstruct(type, llvmAddr);
     }
     builder.ir.CreateRetVoid();

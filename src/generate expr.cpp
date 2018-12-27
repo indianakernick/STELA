@@ -511,7 +511,7 @@ public:
     ast::Type *type = list.exprType.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (list.exprs.empty()) {
-      LifetimeExpr lifetime{ctx, funcBdr.ir};
+      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
       lifetime.defConstruct(type, addr);
     } else {
       for (unsigned e = 0; e != list.exprs.size(); ++e) {

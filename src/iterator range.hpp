@@ -71,6 +71,11 @@ constexpr auto citer_range(Container &c) noexcept {
   return detail::make_iter_range(std::cbegin(c), std::cend(c));
 }
 
+template <typename Container>
+constexpr auto rev_range(Container &c) noexcept {
+  return detail::Range{std::rbegin(c), std::rend(c)};
+}
+
 }
 
 #endif

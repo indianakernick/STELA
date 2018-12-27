@@ -12,6 +12,7 @@
 #include "symbols.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
+#include "iterator range.hpp"
 #include "lifetime exprs.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
@@ -31,7 +32,7 @@ struct FlowData {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr}, lifetime{ctx, funcBdr.ir} {}
+    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
 
   struct Object {
     llvm::Value *addr;
@@ -89,6 +90,7 @@ public:
       return;
     }
     
+    const size_t scopeIndex = scopes.size();
     auto checkBlocks = funcBdr.makeBlocks(swich.cases.size());
     auto caseBlocks = funcBdr.makeBlocks(swich.cases.size());
     llvm::BasicBlock *done = funcBdr.makeBlock();
@@ -129,7 +131,9 @@ public:
       if (c != swich.cases.size() - 1) {
         nextBlock = caseBlocks[c + 1];
       }
-      visitFlow(swich.cases[c].body.get(), {done, nextBlock});
+      enterScope();
+      visitFlow(swich.cases[c].body.get(), {done, nextBlock, scopeIndex, scopeIndex});
+      leaveScope();
       funcBdr.terminate(done);
     }
     
@@ -210,7 +214,12 @@ public:
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      lifetime.relocate(type, addr, exprBdr.addr(expr));
+      llvm::Value *llvmExpr = exprBdr.expr(expr);
+      if (llvmExpr->getType()->isPointerTy()) {
+        lifetime.copyConstruct(type, addr, llvmExpr);
+      } else {
+        lifetime.moveConstruct(type, addr, exprBdr.addr(llvmExpr));
+      }
     } else {
       lifetime.defConstruct(type, addr);
     }
@@ -239,7 +248,7 @@ public:
   }
   void destroy(const size_t index) {
     for (size_t i = scopes.size() - 1; i != index - 1; --i) {
-      for (const Object obj : scopes[i]) {
+      for (const Object obj : rev_range(scopes[i])) {
         destroy(obj);
       }
     }
