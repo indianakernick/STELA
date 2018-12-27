@@ -973,6 +973,46 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(d.use_count(), 1);
   });
   
+  TEST(Destructors in while, {
+    ASSERT_SUCCEEDS(R"(
+      extern func get_1_ref(val: sint) {
+        var array: [real];
+        while (val < 10) {
+          if (val == -1) {
+            let retain = array;
+            break;
+          }
+          let retain0 = array;
+          if (val % 2 == 0) {
+            val++;
+            continue;
+          }
+          let retain1 = array;
+          val *= 2;
+        }
+        return array;
+      }
+    )");
+    
+    auto get = GET_FUNC("get_1_ref", Array<Real>(Sint));
+    
+    Array<Real> a = get(-1);
+    ASSERT_TRUE(a);
+    ASSERT_EQ(a.use_count(), 1);
+    
+    Array<Real> b = get(0);
+    ASSERT_TRUE(b);
+    ASSERT_EQ(b.use_count(), 1);
+    
+    Array<Real> c = get(5);
+    ASSERT_TRUE(c);
+    ASSERT_EQ(c.use_count(), 1);
+    
+    Array<Real> d = get(10);
+    ASSERT_TRUE(d);
+    ASSERT_EQ(d.use_count(), 1);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

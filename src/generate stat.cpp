@@ -182,8 +182,11 @@ public:
     auto *cond = funcBdr.nextEmpty();
     auto *body = funcBdr.makeBlock();
     auto *done = funcBdr.makeBlock();
+    const size_t scopeIndex = scopes.size();
     funcBdr.setCurr(body);
-    visitFlow(wile.body.get(), {done, cond});
+    enterScope();
+    visitFlow(wile.body.get(), {done, cond, scopeIndex, scopeIndex});
+    leaveScope();
     funcBdr.terminate(cond);
     funcBdr.setCurr(cond);
     exprBdr.condBr(wile.cond.get(), body, done);
