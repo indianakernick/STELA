@@ -25,8 +25,7 @@ namespace {
 struct FlowData {
   llvm::BasicBlock *breakBlock = nullptr;
   llvm::BasicBlock *continueBlock = nullptr;
-  size_t breakIndex = 0;
-  size_t continueIndex = 0;
+  size_t scopeIndex = 0;
 };
 
 class Visitor final : public ast::Visitor {
@@ -132,7 +131,7 @@ public:
         nextBlock = caseBlocks[c + 1];
       }
       enterScope();
-      visitFlow(swich.cases[c].body.get(), {done, nextBlock, scopeIndex, scopeIndex});
+      visitFlow(swich.cases[c].body.get(), {done, nextBlock, scopeIndex});
       leaveScope();
       funcBdr.terminate(done);
     }
@@ -147,12 +146,12 @@ public:
   }
   void visit(ast::Break &) override {
     assert(flow.breakBlock);
-    destroy(flow.breakIndex);
+    destroy(flow.scopeIndex);
     funcBdr.ir.CreateBr(flow.breakBlock);
   }
   void visit(ast::Continue &) override {
     assert(flow.continueBlock);
-    destroy(flow.continueIndex);
+    destroy(flow.scopeIndex);
     funcBdr.ir.CreateBr(flow.continueBlock);
   }
   void visit(ast::Return &ret) override {
@@ -184,7 +183,7 @@ public:
     auto *done = funcBdr.makeBlock();
     funcBdr.setCurr(body);
     const size_t scopeIndex = enterScope();
-    visitFlow(wile.body.get(), {done, cond, scopeIndex, scopeIndex});
+    visitFlow(wile.body.get(), {done, cond, scopeIndex});
     leaveScope();
     funcBdr.terminate(cond);
     funcBdr.setCurr(cond);
@@ -202,7 +201,7 @@ public:
     auto *done = funcBdr.makeBlock();
     funcBdr.setCurr(body);
     const size_t innerIndex = enterScope();
-    visitFlow(four.body.get(), {done, incr, innerIndex, innerIndex});
+    visitFlow(four.body.get(), {done, incr, innerIndex});
     leaveScope();
     funcBdr.terminate(incr);
     funcBdr.setCurr(cond);

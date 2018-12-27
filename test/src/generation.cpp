@@ -1026,7 +1026,9 @@ TEST_GROUP(Generation, {
           if (val % 2 == 0) {
             continue;
           }
-          let retain3 = retain1;
+          {
+            let retain3 = retain1;
+          }
           val = val * 2 - 1;
         }
         return array;
