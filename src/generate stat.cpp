@@ -182,9 +182,8 @@ public:
     auto *cond = funcBdr.nextEmpty();
     auto *body = funcBdr.makeBlock();
     auto *done = funcBdr.makeBlock();
-    const size_t scopeIndex = scopes.size();
     funcBdr.setCurr(body);
-    enterScope();
+    const size_t scopeIndex = enterScope();
     visitFlow(wile.body.get(), {done, cond, scopeIndex, scopeIndex});
     leaveScope();
     funcBdr.terminate(cond);
@@ -193,6 +192,7 @@ public:
     funcBdr.setCurr(done);
   }
   void visit(ast::For &four) override {
+    const size_t outerIndex = enterScope();
     if (four.init) {
       four.init->accept(*this);
     }
@@ -201,7 +201,9 @@ public:
     auto *incr = funcBdr.makeBlock();
     auto *done = funcBdr.makeBlock();
     funcBdr.setCurr(body);
-    visitFlow(four.body.get(), {done, incr});
+    const size_t innerIndex = enterScope();
+    visitFlow(four.body.get(), {done, incr, innerIndex, innerIndex});
+    leaveScope();
     funcBdr.terminate(incr);
     funcBdr.setCurr(cond);
     exprBdr.condBr(four.cond.get(), body, done);
@@ -211,6 +213,8 @@ public:
       funcBdr.ir.CreateBr(cond);
     }
     funcBdr.setCurr(done);
+    destroy(outerIndex);
+    leaveScope();
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
@@ -284,8 +288,10 @@ public:
     }
   }
   
-  void enterScope() {
+  size_t enterScope() {
+    const size_t index = scopes.size();
     scopes.push_back({});
+    return index;
   }
   void leaveScope() {
     scopes.pop_back();
