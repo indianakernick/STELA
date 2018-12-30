@@ -10,13 +10,13 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "categories.hpp"
 #include "unreachable.hpp"
 #include "type builder.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
 #include "lifetime exprs.hpp"
-#include "assert down cast.hpp"
 
 using namespace stela;
 
@@ -27,59 +27,61 @@ public:
   Visitor(gen::Ctx ctx, FuncBuilder &builder)
     : ctx{ctx}, funcBdr{builder} {}
 
-  llvm::Value *visitValue(ast::Expression *expr) {
+  gen::Expr visitValue(ast::Expression *expr) {
+    // @FIXME check value category
     expr->accept(*this);
     if (value->getType()->isPointerTy()) {
-      return funcBdr.ir.CreateLoad(value);
+      return {funcBdr.ir.CreateLoad(value), cat};
     } else {
-      return value;
+      return {value, cat};
     }
   }
-  llvm::Value *visitAddr(ast::Expression *expr) {
+  gen::Expr visitAddr(ast::Expression *expr) {
+    // @FIXME check value category
     expr->accept(*this);
     if (value->getType()->isPointerTy()) {
-      return value;
+      return {value, cat};
     } else {
-      return funcBdr.allocStore(value);
+      return {funcBdr.allocStore(value), cat};
     }
   }
 
   void visit(ast::BinaryExpr &expr) override {
-    llvm::Value *left = visitValue(expr.left.get());
-    llvm::Value *right = visitValue(expr.right.get());
-    const ArithNumber arith = classifyArith(expr.left.get());
+    gen::Expr left = visitValue(expr.left.get());
+    gen::Expr right = visitValue(expr.right.get());
+    const ArithCat arith = classifyArith(expr.left.get());
     
     #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
-      if (arith == ArithNumber::floating_point) {                               \
-        value = funcBdr.ir.FLOAT_OP(left, right);                               \
+      if (arith == ArithCat::floating_point) {                                  \
+        value = funcBdr.ir.FLOAT_OP(left.obj, right.obj);                       \
       } else {                                                                  \
-        value = funcBdr.ir.INT_OP(left, right);                                 \
+        value = funcBdr.ir.INT_OP(left.obj, right.obj);                         \
       }                                                                         \
-      return
+      break
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
-      if (arith == ArithNumber::signed_int) {                                   \
-        value = funcBdr.ir.S_OP(left, right);                                   \
-      } else if (arith == ArithNumber::unsigned_int) {                          \
-        value = funcBdr.ir.U_OP(left, right);                                   \
+      if (arith == ArithCat::signed_int) {                                      \
+        value = funcBdr.ir.S_OP(left.obj, right.obj);                           \
+      } else if (arith == ArithCat::unsigned_int) {                             \
+        value = funcBdr.ir.U_OP(left.obj, right.obj);                           \
       } else {                                                                  \
-        value = funcBdr.ir.F_OP(left, right);                                   \
+        value = funcBdr.ir.F_OP(left.obj, right.obj);                           \
       }                                                                         \
-      return
+      break
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
       case ast::BinOp::bit_or:
-        value = funcBdr.ir.CreateOr(left, right); return;
+        value = funcBdr.ir.CreateOr(left.obj, right.obj); break;
       case ast::BinOp::bit_xor:
-        value = funcBdr.ir.CreateXor(left, right); return;
+        value = funcBdr.ir.CreateXor(left.obj, right.obj); break;
       case ast::BinOp::bool_and:
       case ast::BinOp::bit_and:
-        value = funcBdr.ir.CreateAnd(left, right); return;
+        value = funcBdr.ir.CreateAnd(left.obj, right.obj); break;
       case ast::BinOp::bit_shl:
-        value = funcBdr.ir.CreateShl(left, right); return;
+        value = funcBdr.ir.CreateShl(left.obj, right.obj); break;
       case ast::BinOp::bit_shr:
-        value = funcBdr.ir.CreateLShr(left, right); return;
+        value = funcBdr.ir.CreateLShr(left.obj, right.obj); break;
       case ast::BinOp::eq:
         INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
       case ast::BinOp::ne:
@@ -104,31 +106,34 @@ public:
         SIGNED_UNSIGNED_FLOAT_OP(CreateSRem, CreateURem, CreateFRem);
       case ast::BinOp::pow:
         assert(false);
+      default: UNREACHABLE();
     }
-    UNREACHABLE();
     
     #undef SIGNED_UNSIGNED_FLOAT_OP
     #undef INT_FLOAT_OP
+    
+    cat = ValueCat::prvalue;
   }
   void visit(ast::UnaryExpr &expr) override {
-    llvm::Value *operand = visitValue(expr.expr.get());
-    const ArithNumber arith = classifyArith(expr.expr.get());
+    gen::Expr operand = visitValue(expr.expr.get());
+    const ArithCat arith = classifyArith(expr.expr.get());
     
     switch (expr.oper) {
       case ast::UnOp::neg:
-        if (arith == ArithNumber::signed_int) {
-          value = funcBdr.ir.CreateNSWNeg(operand);
-        } else if (arith == ArithNumber::unsigned_int) {
-          value = funcBdr.ir.CreateNeg(operand);
+        if (arith == ArithCat::signed_int) {
+          value = funcBdr.ir.CreateNSWNeg(operand.obj);
+        } else if (arith == ArithCat::unsigned_int) {
+          value = funcBdr.ir.CreateNeg(operand.obj);
         } else {
-          value = funcBdr.ir.CreateFNeg(operand);
+          value = funcBdr.ir.CreateFNeg(operand.obj);
         }
-        return;
+        break;
       case ast::UnOp::bool_not:
       case ast::UnOp::bit_not:
-        value = funcBdr.ir.CreateNot(operand); return;
+        value = funcBdr.ir.CreateNot(operand.obj); break;
+      default: UNREACHABLE();
     }
-    UNREACHABLE();
+    cat = ValueCat::prvalue;
   }
   
   /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
@@ -160,23 +165,65 @@ public:
     UNREACHABLE();
   }
   */
-  llvm::Value *visitParam(const ast::ParamRef ref, ast::Expression *expr, llvm::Type *type) {
-    if (ref == ast::ParamRef::ref) {
-      return visitAddr(expr);
-    } else if (type->isPointerTy()) {
-      return visitAddr(expr);
-    } else {
-      return visitValue(expr);
+  llvm::Value *visitParam(const ast::FuncParam &param, ast::Expression *expr, llvm::Value **destroy) {
+    expr->accept(*this);
+    if (param.ref == ast::ParamRef::ref) {
+      assert(cat == ValueCat::lvalue);
+      return value;
+    }
+    const TypeCat typeCat = classifyType(param.type.get());
+    // destroy arguments at the call site
+    if (typeCat == TypeCat::trivially_copyable) {
+      if (cat == ValueCat::lvalue || cat == ValueCat::xvalue) {
+        return funcBdr.ir.CreateLoad(value);
+      } else { // prvalue
+        return value;
+      }
+    } else if (typeCat == TypeCat::trivially_relocatable) {
+      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
+      if (cat == ValueCat::lvalue) {
+        // @FIXME remove
+        value = value->getType()->isPointerTy() ? value : funcBdr.allocStore(value);
+        llvm::Value *addr = funcBdr.alloc(value->getType()->getPointerElementType());
+        lifetime.copyConstruct(param.type.get(), addr, value);
+        *destroy = addr;
+        return addr;
+      } else if (cat == ValueCat::xvalue) {
+        llvm::Value *addr = funcBdr.alloc(value->getType()->getPointerElementType());
+        lifetime.moveConstruct(param.type.get(), addr, value);
+        *destroy = addr;
+        return addr;
+      } else { // prvalue
+        llvm::Value *addr = funcBdr.alloc(value->getType());
+        lifetime.moveConstruct(param.type.get(), addr, funcBdr.allocStore(value));
+        *destroy = addr;
+        return addr;
+      }
+    } else { // nontrivial
+      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
+      // @FIXME remove
+      value = value->getType()->isPointerTy() ? value : funcBdr.allocStore(value);
+      llvm::Value *addr = funcBdr.alloc(value->getType()->getPointerElementType());
+      if (cat == ValueCat::lvalue) {
+        lifetime.copyConstruct(param.type.get(), addr, value);
+      } else if (cat == ValueCat::xvalue) {
+        lifetime.moveConstruct(param.type.get(), addr, value);
+      } else { // prvalue
+        lifetime.moveConstruct(param.type.get(), addr, value);
+        lifetime.destroy(param.type.get(), value);
+      }
+      *destroy = addr;
+      return addr;
     }
   }
   void pushArgs(
     std::vector<llvm::Value *> &args,
     const ast::FuncArgs &callArgs,
     const ast::FuncParams &params,
-    llvm::ArrayRef<llvm::Type *> paramTypes
+    std::vector<llvm::Value *> &destroyList
   ) {
     for (size_t a = 0; a != callArgs.size(); ++a) {
-      args.push_back(visitParam(params[a].ref, callArgs[a].get(), paramTypes[a + 1]));
+      args.push_back(visitParam(params[a], callArgs[a].get(), &destroyList[a + 1]));
     }
   }
   void visit(ast::FuncCall &call) override {
@@ -187,15 +234,16 @@ public:
       std::vector<llvm::Value *> args;
       args.reserve(1 + call.args.size());
       llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
+      std::vector<llvm::Value *> destroyList;
+      destroyList.resize(1 + call.args.size(), nullptr);
       if (func->receiver) {
-        const ast::ParamRef ref = func->receiver->ref;
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
-        args.push_back(visitParam(ref, self, funcType->getParamType(0)));
+        args.push_back(visitParam(*func->receiver, self, &destroyList[0]));
       } else {
         TypeBuilder typeBdr{ctx.llvm};
-        args.push_back(typeBdr.nullPtr(typeBdr.voidPtr()));
+        args.push_back(llvm::UndefValue::get(typeBdr.voidPtr()));
       }
-      pushArgs(args, call.args, func->params, funcType->params());
+      pushArgs(args, call.args, func->params, destroyList);
       
       if (funcType->params().size() == args.size() + 1) {
         llvm::Type *retType = funcType->params().back()->getPointerElementType();
@@ -206,10 +254,21 @@ public:
       } else {
         value = funcBdr.ir.CreateCall(func->llvmFunc, args);
       }
+      
+      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
+      if (destroyList[0]) {
+        lifetime.destroy(func->receiver->type.get(), destroyList[0]);
+      }
+      for (size_t a = 1; a != destroyList.size(); ++a) {
+        if (destroyList[a]) {
+          lifetime.destroy(func->params[a - 1].type.get(), destroyList[a]);
+        }
+      }
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       // call a builtin function
       assert(false);
     }
+    cat = ValueCat::prvalue;
     /*if (call.definition == nullptr) {
       call.func->accept(*this);
       gen::String func = std::move(str);
@@ -241,21 +300,35 @@ public:
   
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
+    const ValueCat objectCat = cat;
     if (value->getType()->isPointerTy()) {
+      // @FIXME structs are always pointers
       value = funcBdr.ir.CreateStructGEP(value, mem.index);
     } else {
       value = funcBdr.ir.CreateExtractValue(value, {mem.index});
+    }
+    
+    if (objectCat == ValueCat::lvalue) {
+      cat = ValueCat::lvalue;
+    } else if (objectCat == ValueCat::xvalue) {
+      cat = ValueCat::xvalue;
+    } else if (objectCat == ValueCat::prvalue) {
+      // @FIXME prvalue is materialized to an xvalue
+      // add this object to a list of destructors for the expression
+      cat = ValueCat::xvalue;
     }
   }
   
   void visit(ast::Subscript &sub) override {
     sub.object->accept(*this);
     llvm::Value *object = value;
-    llvm::Value *index = visitValue(sub.index.get());
+    const ValueCat objectCat = cat;
+    gen::Expr index = visitValue(sub.index.get());
     ast::BtnType *indexType = concreteType<ast::BtnType>(sub.index->exprType.get());
     
     llvm::Type *arrayType;
     if (object->getType()->isPointerTy()) {
+      // @FIXME arrays are always pointers
       arrayType = object->getType()->getPointerElementType();
     } else {
       arrayType = object->getType();
@@ -269,10 +342,21 @@ public:
     }
     
     if (object->getType()->isPointerTy()) {
+      // @FIXME arrays are always poitners
       llvm::Value *array = funcBdr.ir.CreateLoad(object);
-      value = funcBdr.ir.CreateCall(indexFn, {array, index});
+      value = funcBdr.ir.CreateCall(indexFn, {array, index.obj});
     } else {
-      value = funcBdr.ir.CreateLoad(funcBdr.ir.CreateCall(indexFn, {object, index}));
+      value = funcBdr.ir.CreateLoad(funcBdr.ir.CreateCall(indexFn, {object, index.obj}));
+    }
+    
+    if (objectCat == ValueCat::lvalue) {
+      cat = ValueCat::lvalue;
+    } else if (objectCat == ValueCat::xvalue) {
+      cat = ValueCat::xvalue;
+    } else if (objectCat == ValueCat::prvalue) {
+      // @FIXME prvalue is materialized to an xvalue
+      // add this object to a list of destructors for the expression
+      cat = ValueCat::xvalue;
     }
   }
   /*
@@ -350,6 +434,8 @@ public:
       writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
     }*/
     value = getAddr(ident.definition);
+    cat = ValueCat::lvalue;
+    assert(value->getType()->isPointerTy());
   }
   
   void visit(ast::Ternary &tern) override {
@@ -359,16 +445,19 @@ public:
     auto *doneBlock = funcBdr.makeBlock();
     
     funcBdr.setCurr(condBlock);
-    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()), trooBlock, folsBlock);
+    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
     
     funcBdr.setCurr(trooBlock);
     tern.tru->accept(*this);
     llvm::Value *tru = value;
+    const ValueCat trueCat = cat;
     
     funcBdr.setCurr(folsBlock);
     tern.fals->accept(*this);
     llvm::Value *fals = value;
+    const ValueCat falseCat = cat;
     
+    // @FIXME check value category
     if (tru->getType()->isPointerTy() && !fals->getType()->isPointerTy()) {
       funcBdr.setCurr(trooBlock);
       tru = funcBdr.ir.CreateLoad(tru);
@@ -385,6 +474,12 @@ public:
     phi->addIncoming(tru, trooBlock);
     phi->addIncoming(fals, folsBlock);
     value = phi;
+    
+    if (trueCat == ValueCat::lvalue && falseCat == ValueCat::lvalue) {
+      cat = ValueCat::lvalue;
+    } else {
+      cat = ValueCat::prvalue;
+    }
   }
   void visit(ast::Make &make) override {
     if (!make.cast) {
@@ -392,34 +487,35 @@ public:
       return;
     }
     llvm::Type *type = generateType(ctx, make.type.get());
-    llvm::Value *srcVal = visitValue(make.expr.get());
-    const ArithNumber dst = classifyArith(make.type.get());
-    const ArithNumber src = classifyArith(make.expr.get());
-    if (src == ArithNumber::signed_int) {
-      if (dst == ArithNumber::signed_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal, type, true);
-      } else if (dst == ArithNumber::unsigned_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal, type, true);
+    gen::Expr srcVal = visitValue(make.expr.get());
+    const ArithCat dst = classifyArith(make.type.get());
+    const ArithCat src = classifyArith(make.expr.get());
+    if (src == ArithCat::signed_int) {
+      if (dst == ArithCat::signed_int) {
+        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, true);
+      } else if (dst == ArithCat::unsigned_int) {
+        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, true);
       } else {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::SIToFP, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::SIToFP, srcVal.obj, type);
       }
-    } else if (src == ArithNumber::unsigned_int) {
-      if (dst == ArithNumber::signed_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal, type, false);
-      } else if (dst == ArithNumber::unsigned_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal, type, false);
+    } else if (src == ArithCat::unsigned_int) {
+      if (dst == ArithCat::signed_int) {
+        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, false);
+      } else if (dst == ArithCat::unsigned_int) {
+        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, false);
       } else {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::UIToFP, srcVal, type);
+        value = funcBdr.ir.CreateCast(llvm::Instruction::UIToFP, srcVal.obj, type);
       }
     } else {
-      if (dst == ArithNumber::signed_int) {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToSI, srcVal, type);
-      } else if (dst == ArithNumber::unsigned_int) {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToUI, srcVal, type);
+      if (dst == ArithCat::signed_int) {
+        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToSI, srcVal.obj, type);
+      } else if (dst == ArithCat::unsigned_int) {
+        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToUI, srcVal.obj, type);
       } else {
-        value = funcBdr.ir.CreateFPCast(srcVal, type);
+        value = funcBdr.ir.CreateFPCast(srcVal.obj, type);
       }
     }
+    cat = ValueCat::prvalue;
   }
   
   /*void visit(ast::StringLiteral &string) override {
@@ -437,6 +533,7 @@ public:
       static_cast<uint64_t>(chr.number),
       true
     );
+    cat = ValueCat::prvalue;
   }
   
   // @TODO Use std::visit when we get MacOS 10.14 on Travis
@@ -470,6 +567,7 @@ public:
         );
       }
     }, num.number);
+    cat = ValueCat::prvalue;
   }
   void visit(ast::BoolLiteral &bol) override {
     llvm::Type *boolType = llvm::IntegerType::getInt1Ty(ctx.llvm);
@@ -478,6 +576,7 @@ public:
     } else {
       value = llvm::ConstantInt::getFalse(boolType);
     }
+    cat = ValueCat::prvalue;
   }
   /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
     if (exprs.empty()) {
@@ -516,10 +615,11 @@ public:
     } else {
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
         llvm::Value *fieldAddr = funcBdr.ir.CreateStructGEP(addr, e);
-        funcBdr.ir.CreateStore(visitValue(list.exprs[e].get()), fieldAddr);
+        funcBdr.ir.CreateStore(visitValue(list.exprs[e].get()).obj, fieldAddr);
       }
     }
     value = funcBdr.ir.CreateLoad(addr);
+    cat = ValueCat::prvalue;
   }
   /*
   void writeCapture(const sym::ClosureCap &cap) {
@@ -528,6 +628,8 @@ public:
     }
   }
   void visit(ast::Lambda &lambda) override {
+    // prvalue
+  
     str += generateMakeLam(ctx, lambda);
     str += "({";
     sym::Lambda *symbol = lambda.symbol;
@@ -545,6 +647,7 @@ public:
   }*/
 
   llvm::Value *value = nullptr;
+  ValueCat cat;
 
 private:
   gen::Ctx ctx;
@@ -553,28 +656,7 @@ private:
 
 }
 
-ArithNumber stela::classifyArith(ast::Type *type) {
-  ast::BtnType *btn = assertConcreteType<ast::BtnType>(type);
-  switch (btn->value) {
-    case ast::BtnTypeEnum::Char:
-    case ast::BtnTypeEnum::Sint:
-      return ArithNumber::signed_int;
-    case ast::BtnTypeEnum::Bool:
-    case ast::BtnTypeEnum::Byte:
-    case ast::BtnTypeEnum::Uint:
-      return ArithNumber::unsigned_int;
-    case ast::BtnTypeEnum::Real:
-      return ArithNumber::floating_point;
-    case ast::BtnTypeEnum::Void: ;
-  }
-  UNREACHABLE();
-}
-
-ArithNumber stela::classifyArith(ast::Expression *expr) {
-  return classifyArith(expr->exprType.get());
-}
-
-llvm::Value *stela::generateAddrExpr(
+gen::Expr stela::generateAddrExpr(
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr
@@ -583,7 +665,7 @@ llvm::Value *stela::generateAddrExpr(
   return visitor.visitAddr(expr);
 }
 
-llvm::Value *stela::generateValueExpr(
+gen::Expr stela::generateValueExpr(
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr
@@ -592,12 +674,12 @@ llvm::Value *stela::generateValueExpr(
   return visitor.visitValue(expr);
 }
 
-llvm::Value *stela::generateExpr(
+gen::Expr stela::generateExpr(
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr
 ) {
   Visitor visitor{ctx, builder};
   expr->accept(visitor);
-  return visitor.value;
+  return {visitor.value, visitor.cat};
 }

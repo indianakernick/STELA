@@ -8,26 +8,25 @@
 
 #include "expression builder.hpp"
 
-#include "generate expr.hpp"
-
 using namespace stela;
 
 ExprBuilder::ExprBuilder(gen::Ctx ctx, FuncBuilder &fn)
   : ctx{ctx}, fn{fn} {}
 
-llvm::Value *ExprBuilder::addr(ast::Expression *expr) {
+gen::Expr ExprBuilder::addr(ast::Expression *expr) {
   return generateAddrExpr(ctx, fn, expr);
 }
 
-llvm::Value *ExprBuilder::value(ast::Expression *expr) {
+gen::Expr ExprBuilder::value(ast::Expression *expr) {
   return generateValueExpr(ctx, fn, expr);
 }
 
-llvm::Value *ExprBuilder::expr(ast::Expression *expr) {
+gen::Expr ExprBuilder::expr(ast::Expression *expr) {
   return generateExpr(ctx, fn, expr);
 }
 
 llvm::Value *ExprBuilder::addr(llvm::Value *value) {
+  // @FIXME remove or use value categories
   if (value->getType()->isPointerTy()) {
     return value;
   } else {
@@ -36,6 +35,7 @@ llvm::Value *ExprBuilder::addr(llvm::Value *value) {
 }
 
 llvm::Value *ExprBuilder::value(llvm::Value *value) {
+  // @FIXME remove or use value categories
   if (value->getType()->isPointerTy()) {
     return fn.ir.CreateLoad(value);
   } else {
@@ -48,5 +48,5 @@ void ExprBuilder::condBr(
   llvm::BasicBlock *troo,
   llvm::BasicBlock *folse
 ) {
-  fn.ir.CreateCondBr(value(cond), troo, folse);
+  fn.ir.CreateCondBr(value(cond).obj, troo, folse);
 }

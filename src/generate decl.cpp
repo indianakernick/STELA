@@ -72,7 +72,7 @@ public:
     
     FuncBuilder builder{ctor};
     if (expr) {
-      builder.ir.CreateStore(generateValueExpr(ctx, builder, expr), llvmAddr);
+      builder.ir.CreateStore(generateValueExpr(ctx, builder, expr).obj, llvmAddr);
     } else {
       LifetimeExpr lifetime{ctx.inst, builder.ir};
       lifetime.defConstruct(type, llvmAddr);

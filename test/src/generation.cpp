@@ -864,23 +864,24 @@ TEST_GROUP(Generation, {
     
     auto identity = GET_FUNC("identity", Array<Real>(Array<Real>));
     
-    Array<Real> orig = make_retain<ArrayStorage<Real>>();
+    Array<Real> orig = makeArray<Real>();
     Array<Real> copy = identity(orig);
     ASSERT_TRUE(orig);
     ASSERT_TRUE(copy);
     ASSERT_EQ(orig.get(), copy.get());
     ASSERT_EQ(orig.use_count(), 2);
     
-    Array<Real> same = identity(make_retain<ArrayStorage<Real>>());
+    Array<Real> same = identity(makeArray<Real>());
     ASSERT_TRUE(same);
     ASSERT_EQ(same.use_count(), 1);
   
     auto setFirst = GET_FUNC("setFirst", Void(Array<Real>, Real));
   
-    Array<Real> array1 = make_retain<ArrayStorage<Real>>();
+    Array<Real> array1 = makeArray<Real>();
     array1->cap = 1;
     array1->len = 1;
     array1->dat = new Real;
+    ASSERT_EQ(array1.use_count(), 1);
   
     setFirst(array1, 11.5f);
     ASSERT_EQ(array1.use_count(), 1);
@@ -1052,6 +1053,120 @@ TEST_GROUP(Generation, {
     Array<Real> d = get(10);
     ASSERT_TRUE(d);
     ASSERT_EQ(d.use_count(), 1);
+  });
+  
+  TEST(Modify local struct, {
+    ASSERT_SUCCEEDS(R"(
+      type Struct struct {
+        i: sint;
+      };
+      
+      extern func modifyLocal(s: Struct) {
+        s.i++;
+        return s.i;
+      }
+      
+      extern func modify(s: Struct) {
+        return modifyLocal(s);
+      }
+    )");
+    
+    struct Struct {
+      Sint i;
+    };
+    
+    auto modify = GET_FUNC("modify", Sint(Struct));
+    
+    Struct s;
+    s.i = 11;
+    const Sint newVal = modify(s);
+    ASSERT_EQ(s.i, 11);
+    ASSERT_EQ(newVal, 12);
+  });
+  
+  TEST(Pass array to function, {
+    ASSERT_SUCCEEDS(R"(
+      extern func identityImpl(a: [real]) {
+        return a;
+      }
+      
+      extern func identity(a: [real]) {
+        return identityImpl(a);
+      }
+      
+      extern func get1_r() {
+        return identity(make [real] {});
+      }
+      
+      extern func get1_l() {
+        var a: [real];
+        return identity(a);
+      }
+    )");
+    
+    auto identity = GET_FUNC("identity", Array<Real>(Array<Real>));
+    
+    Array<Real> a = makeArray<Real>();
+    Array<Real> ret = identity(a);
+    ASSERT_TRUE(a);
+    ASSERT_TRUE(ret);
+    ASSERT_EQ(a.get(), ret.get());
+    ASSERT_EQ(a.use_count(), 2);
+    
+    ASSERT_EQ(identity(makeArray<Real>()).use_count(), 1);
+    
+    auto get1_r = GET_FUNC("get1_r", Array<Real>());
+    
+    Array<Real> ref1_r = get1_r();
+    ASSERT_TRUE(ref1_r);
+    ASSERT_EQ(ref1_r.use_count(), 1);
+    
+    auto get1_l = GET_FUNC("get1_l", Array<Real>());
+    
+    Array<Real> ref1_l = get1_l();
+    ASSERT_TRUE(ref1_l);
+    ASSERT_EQ(ref1_l.use_count(), 1);
+  });
+  
+  TEST(Pass struct to function, {
+    ASSERT_SUCCEEDS(R"(
+      type S struct {
+        m: [real];
+      };
+      
+      extern func identityImpl(s: S) {
+        return s;
+      }
+      
+      extern func identity(s: S) {
+        return identityImpl(s);
+      }
+      
+      extern func get1() {
+        return identity(make S {});
+      }
+    )");
+    
+    struct S {
+      Array<Real> m;
+    };
+    
+    auto identity = GET_FUNC("identity", S(S));
+    
+    S s = {makeArray<Real>()};
+    S ret = identity(s);
+    ASSERT_EQ(s.m.get(), ret.m.get());
+    ASSERT_EQ(s.m.use_count(), 2);
+    
+    S one = identity(S{makeArray<Real>()});
+    ASSERT_TRUE(one.m);
+    ASSERT_EQ(one.m.use_count(), 1);
+    
+    auto get1 = GET_FUNC("get1", S());
+    
+    S ref1 = get1();
+    ASSERT_TRUE(ref1.m);
+    ASSERT_EQ(ref1.m.use_count(), 1);
   });
   
   /*

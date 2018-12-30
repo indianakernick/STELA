@@ -126,3 +126,11 @@ store stack index in jump statements
 for loops have multiple scopes
 don't pop from the stack when destroying. Iterate
 pop from the stack when changing scope
+
+
+
+
+
+
+
+USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE

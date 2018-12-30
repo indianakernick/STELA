@@ -10,6 +10,7 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "categories.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
 #include "iterator range.hpp"
@@ -46,11 +47,11 @@ public:
     flow = oldFlow;
   }
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
-    const ArithNumber arith = classifyArith(expr);
-    if (arith == ArithNumber::floating_point) {
-      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(expr));
+    const ArithCat arith = classifyArith(expr);
+    if (arith == ArithCat::floating_point) {
+      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(expr).obj);
     } else {
-      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(expr));
+      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(expr).obj);
     }
   }
   
@@ -84,7 +85,7 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
-    llvm::Value *value = exprBdr.value(swich.expr.get());
+    gen::Expr value = exprBdr.value(swich.expr.get());
     if (swich.cases.empty()) {
       return;
     }
@@ -108,7 +109,7 @@ public:
       const size_t caseIndex = c;
       
       funcBdr.setCurr(checkBlocks[checkIndex]);
-      llvm::Value *cond = equalTo(value, expr);
+      llvm::Value *cond = equalTo(value.obj, expr);
       
       llvm::BasicBlock *nextCheck;
       if (!foundDefault && c == swich.cases.size() - 1) {
@@ -155,22 +156,25 @@ public:
     funcBdr.ir.CreateBr(flow.continueBlock);
   }
   void visit(ast::Return &ret) override {
+    // @FIXME refactor
+    // consider the case where a reference parameter is returned
+    // we have to copy from reference paramters rather than move
     if (ret.expr) {
-      llvm::Value *value = exprBdr.expr(ret.expr.get());
-      llvm::Type *type = value->getType();
-      if (type->isPointerTy()) {
+      gen::Expr value = exprBdr.expr(ret.expr.get());
+      llvm::Type *type = value.obj->getType();
+      if (value.cat == ValueCat::lvalue || value.cat == ValueCat::xvalue) {
         llvm::Value *retPtr = funcBdr.alloc(type->getPointerElementType());
-        lifetime.moveConstruct(ret.expr->exprType.get(), retPtr, value);
-        value = funcBdr.ir.CreateLoad(retPtr);
+        lifetime.moveConstruct(ret.expr->exprType.get(), retPtr, value.obj);
+        value.obj = funcBdr.ir.CreateLoad(retPtr);
       }
       destroy(0);
-      if (value->getType()->isVoidTy()) {
+      if (value.obj->getType()->isVoidTy()) {
         funcBdr.ir.CreateRetVoid();
-      } else if (value->getType()->isStructTy()) {
-        funcBdr.ir.CreateStore(value, &funcBdr.args().back());
+      } else if (classifyType(ret.expr->exprType.get()) != TypeCat::trivially_copyable) {
+        funcBdr.ir.CreateStore(value.obj, &funcBdr.args().back());
         funcBdr.ir.CreateRetVoid();
       } else {
-        funcBdr.ir.CreateRet(value);
+        funcBdr.ir.CreateRet(value.obj);
       }
     } else {
       destroy(0);
@@ -217,14 +221,15 @@ public:
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
+    // @FIXME refactor
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      llvm::Value *llvmExpr = exprBdr.expr(expr);
-      if (llvmExpr->getType()->isPointerTy()) {
-        lifetime.copyConstruct(type, addr, llvmExpr);
+      gen::Expr llvmExpr = exprBdr.expr(expr);
+      if (llvmExpr.obj->getType()->isPointerTy()) {
+        lifetime.copyConstruct(type, addr, llvmExpr.obj);
       } else {
-        lifetime.moveConstruct(type, addr, exprBdr.addr(llvmExpr));
+        lifetime.moveConstruct(type, addr, exprBdr.addr(llvmExpr.obj));
       }
     } else {
       lifetime.defConstruct(type, addr);
@@ -240,12 +245,13 @@ public:
     let.llvmAddr = insertVar(let.symbol, let.expr.get());
   }
   
-  void doAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
-    if (right->getType()->isPointerTy()) {
-      lifetime.copyAssign(type, left, right);
+  void doAssign(ast::Type *type, gen::Expr left, gen::Expr right) {
+    // @FIXME refactor
+    if (right.obj->getType()->isPointerTy()) {
+      lifetime.copyAssign(type, left.obj, right.obj);
     } else {
-      llvm::Value *rightPtr = exprBdr.addr(right);
-      lifetime.moveAssign(type, left, rightPtr);
+      llvm::Value *rightPtr = exprBdr.addr(right.obj);
+      lifetime.moveAssign(type, left.obj, rightPtr);
       lifetime.destroy(type, rightPtr);
     }
   }
@@ -262,8 +268,8 @@ public:
   
   void visit(ast::Assign &assign) override {
     ast::Type *type = assign.left->exprType.get();
-    llvm::Value *left = exprBdr.addr(assign.left.get());
-    llvm::Value *right = exprBdr.expr(assign.right.get());
+    gen::Expr left = exprBdr.addr(assign.left.get());
+    gen::Expr right = exprBdr.expr(assign.right.get());
     doAssign(type, left, right);
   }
   void visit(ast::DeclAssign &assign) override {
@@ -277,13 +283,12 @@ public:
     llvm::Value *arg = funcBdr.args().begin() + index;
     if (param.ref == ast::ParamRef::ref) {
       param.llvmAddr = arg;
-    } else if (arg->getType()->isPointerTy()) {
-      param.llvmAddr = funcBdr.allocStore(funcBdr.ir.CreateLoad(arg));
     } else {
-      param.llvmAddr = funcBdr.allocStore(arg);
-    }
-    if (param.ref == ast::ParamRef::val) {
-      pushObj({param.llvmAddr, param.type.get()});
+      if (classifyType(param.type.get()) == TypeCat::trivially_copyable) {
+        param.llvmAddr = funcBdr.allocStore(arg);
+      } else { // trivially_relocatable or nontrivial
+        param.llvmAddr = arg;
+      }
     }
   }
   

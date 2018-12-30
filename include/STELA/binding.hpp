@@ -9,6 +9,7 @@
 #ifndef stela_binding_hpp
 #define stela_binding_hpp
 
+#include <tuple>
 #include "number.hpp"
 #include <type_traits>
 #include "retain ptr.hpp"
@@ -29,54 +30,93 @@ struct ArrayStorage : ref_count {
 template <typename Elem>
 using Array = retain_ptr<ArrayStorage<Elem>>;
 
+template <typename Elem>
+Array<Elem> makeArray() {
+  return make_retain<ArrayStorage<Elem>>();
+}
+
+/// Classes
 template <typename T>
 struct pass_traits {
-  using type = std::conditional_t<
-    std::is_class_v<T>,
-    const T *,
-    T
-  >;
+  using type = const T *;
   
   static type unwrap(const T &arg) noexcept {
-    if constexpr (std::is_class_v<T>) {
-      static_assert(
-        std::is_trivially_copyable_v<T>,
-        "Only trivially copyable classes can be passed-by-value"
-      );
-      return &arg;
-    } else {
-      return arg;
-    }
+    return &arg;
   }
-  static T wrap(type arg) noexcept {
+  
+  static constexpr bool nontrivial = true;
+};
+
+/// References
+template <typename T>
+struct pass_traits<T &> {
+  using type = T *;
+  
+  static type unwrap(T &arg) noexcept {
+    return &arg;
+  }
+  
+  static T &wrap(type arg) noexcept {
+    return *arg;
+  }
+  
+  static constexpr bool nontrivial = false;
+};
+
+/// Pointers
+template <typename T>
+struct pass_traits<T *> {
+  using type = T *;
+  
+  static type unwrap(T *arg) noexcept {
     return arg;
   }
   
-  static constexpr bool param_ret = std::is_class_v<T>;
+  static T *wrap(type arg) noexcept {
+    return arg;
+  }
+  
+  static constexpr bool nontrivial = false;
 };
+
+// @TODO maybe there's some way we can partially specialize based on a trait?
+#define PASS_PRIMITIVE(TYPE)                                                    \
+  template <>                                                                   \
+  struct pass_traits<TYPE> {                                                    \
+    using type = TYPE;                                                          \
+    static type unwrap(TYPE arg) noexcept {                                     \
+      return arg;                                                               \
+    }                                                                           \
+    static TYPE wrap(type arg) noexcept {                                       \
+      return arg;                                                               \
+    }                                                                           \
+    static constexpr bool nontrivial = false;                                   \
+  }
+
+PASS_PRIMITIVE(Bool);
+PASS_PRIMITIVE(Byte);
+PASS_PRIMITIVE(Char);
+PASS_PRIMITIVE(Real);
+PASS_PRIMITIVE(Sint);
+PASS_PRIMITIVE(Uint);
+
+#undef PASS_PRIMITIVE
 
 template <>
 struct pass_traits<void> {
   using type = void;
-  static constexpr bool param_ret = false;
+  static constexpr bool nontrivial = false;
 };
 
 template <typename Elem>
-struct pass_traits<retain_ptr<ArrayStorage<Elem>>> {
-  using type = ArrayStorage<Elem> *;
+struct pass_traits<Array<Elem>> {
+  using type = ArrayStorage<Elem> *const *;
   
   static type unwrap(const Array<Elem> &arg) noexcept {
-    Array<Elem> copy = arg;
-    return copy.detach();
-  }
-  static type unwrap(Array<Elem> &&arg) noexcept {
-    return arg.detach();
-  }
-  static Array<Elem> wrap(type arg) noexcept {
-    return retain_ptr{arg};
+    return reinterpret_cast<ArrayStorage<Elem> *const *>(&arg);
   }
   
-  static constexpr bool param_ret = false;
+  static constexpr bool nontrivial = true;
 };
 
 /// A wrapper around a compiled stela function. Acts as an ABI adapter to call
@@ -86,16 +126,32 @@ class Function;
 
 template <typename Ret, typename... Params>
 class Function<Ret(Params...)> {
-  template <typename Arg>
-  static inline auto unwrap(Arg &&arg) noexcept {
-    return pass_traits<std::decay_t<Arg>>::unwrap(std::forward<Arg>(arg));
+  template <typename Param, size_t Index, typename Tuple>
+  static inline auto unwrap(const Tuple &params) noexcept {
+    return pass_traits<Param>::unwrap(std::get<Index>(params));
   }
   
   template <typename Param>
   using pass_type = typename pass_traits<Param>::type;
 
+  template <typename Tuple, size_t... Indicies>
+  inline Ret call(const Tuple &params, std::index_sequence<Indicies...>) noexcept {
+    if constexpr (param_ret) {
+      std::aligned_storage_t<sizeof(Ret), alignof(Ret)> retStorage;
+      Ret *retPtr = reinterpret_cast<Ret *>(&retStorage);
+      ptr(nullptr, unwrap<Params, Indicies>(params)..., retPtr);
+      Ret retObj{std::move(*retPtr)};
+      retPtr->~Ret();
+      return retObj;
+    } else if constexpr (std::is_void_v<Ret>) {
+      ptr(nullptr, unwrap<Params, Indicies>(params)...);
+    } else {
+      return pass_traits<Ret>::wrap(ptr(nullptr, unwrap<Params, Indicies>(params)...));
+    }
+  }
+
 public:
-  static constexpr bool param_ret = pass_traits<Ret>::param_ret;
+  static constexpr bool param_ret = pass_traits<Ret>::nontrivial;
 
   using type = std::conditional_t<
     param_ret,
@@ -103,20 +159,14 @@ public:
     pass_type<Ret>(void *, pass_type<Params>...) noexcept
   >;
   
-  explicit Function(const uint64_t addr)
+  explicit Function(const uint64_t addr) noexcept
     : ptr{reinterpret_cast<type *>(addr)} {}
   
   template <typename... Args>
   inline Ret operator()(Args &&... args) noexcept {
-    if constexpr (param_ret) {
-      Ret ret;
-      ptr(nullptr, unwrap(std::forward<Args>(args))..., &ret);
-      return ret;
-    } else if constexpr (std::is_void_v<Ret>) {
-      ptr(nullptr, unwrap(std::forward<Args>(args))...);
-    } else {
-      return pass_traits<Ret>::wrap(ptr(nullptr, unwrap(std::forward<Args>(args))...));
-    }
+    std::tuple<Params...> params{std::forward<Args>(args)...};
+    using Indicies = std::index_sequence_for<Params...>;
+    return call(params, Indicies{});
   }
   
 private:

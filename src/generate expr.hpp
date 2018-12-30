@@ -10,22 +10,24 @@
 #define stela_generate_expr_hpp
 
 #include "ast.hpp"
+#include "categories.hpp"
 #include "gen context.hpp"
 #include "function builder.hpp"
 
 namespace stela {
 
-enum class ArithNumber {
-  signed_int,
-  unsigned_int,
-  floating_point
-};
-ArithNumber classifyArith(ast::Type *);
-ArithNumber classifyArith(ast::Expression *);
+namespace gen {
 
-llvm::Value *generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
-llvm::Value *generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
-llvm::Value *generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+struct Expr {
+  llvm::Value *obj;
+  ValueCat cat;
+};
+
+}
+
+gen::Expr generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+gen::Expr generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+gen::Expr generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 
 }
 

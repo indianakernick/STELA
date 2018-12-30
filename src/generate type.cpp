@@ -10,6 +10,7 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "categories.hpp"
 #include <llvm/IR/Type.h>
 #include "unreachable.hpp"
 #include "type builder.hpp"
@@ -44,7 +45,7 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvmType = llvm::ArrayType::get(builder.arrayOf(elem)->getPointerTo(), 1);
+    llvmType = builder.wrapPtrToArrayOf(elem);
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx.llvm, {
@@ -88,8 +89,9 @@ ast::ParamType convert(const ast::FuncParam &param) {
 }
 
 llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
+  TypeCat typeCat = classifyType(param.type.get());
   llvm::Type *paramType = generateType(ctx, param.type.get());
-  if (param.ref == ast::ParamRef::ref || paramType->isStructTy()) {
+  if (param.ref == ast::ParamRef::ref || typeCat != TypeCat::trivially_copyable) {
     paramType = paramType->getPointerTo();
   }
   return paramType;
@@ -97,10 +99,10 @@ llvm::Type *convertParam(gen::Ctx ctx, const ast::ParamType &param) {
 
 using LLVMTypes = std::vector<llvm::Type *>;
 
-llvm::Type *pushRet(gen::Ctx ctx, llvm::Type *ret, LLVMTypes &params) {
-  if (ret->isStructTy()) {
+llvm::Type *pushRet(ast::Type *retType, llvm::Type *ret, LLVMTypes &params) {
+  if (classifyType(retType) != TypeCat::trivially_copyable) {
     params.push_back(ret->getPointerTo());
-    ret = llvm::Type::getVoidTy(ctx.llvm);
+    ret = llvm::Type::getVoidTy(ret->getContext());
   }
   return ret;
 }
@@ -120,7 +122,7 @@ llvm::FunctionType *stela::generateFuncSig(gen::Ctx ctx, const ast::Func &func) 
   for (const ast::FuncParam &param : func.params) {
     params.push_back(convertParam(ctx, convert(param)));
   }
-  ret = pushRet(ctx, ret, params);
+  ret = pushRet(func.ret.get(), ret, params);
   return llvm::FunctionType::get(ret, params, false);
 }
 
@@ -133,11 +135,12 @@ llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &ty
   for (const ast::ParamType &param : type.params) {
     params.push_back(convertParam(ctx, param));
   }
-  ret = pushRet(ctx, ret, params);
+  ret = pushRet(type.ret.get(), ret, params);
   return llvm::FunctionType::get(ret, params, false);
 }
 
 void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params) {
+  // @FIXME might need refactoring
   llvm::FunctionType *type = func->getFunctionType();
   const unsigned numParams = type->getNumParams();
   const unsigned retParam = numParams > params.size() ? numParams - 1 : 0;
@@ -146,11 +149,7 @@ void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params
     if (paramType->isPointerTy()) {
       func->addParamAttr(p, llvm::Attribute::NonNull);
       func->addParamAttr(p, llvm::Attribute::NoCapture);
-      if (p == retParam) continue;
-      if (params[p].ref == sym::ValueRef::ref) continue;
-      if (paramType->getPointerElementType()->isStructTy()) {
-        func->addParamAttr(p, llvm::Attribute::ReadOnly);
-        // @TODO can we be sure that pointers to byval structs won't be aliased?
+      if (p != retParam && params[p].ref != sym::ValueRef::ref) {
         func->addParamAttr(p, llvm::Attribute::NoAlias);
       }
     }

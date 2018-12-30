@@ -239,7 +239,7 @@ void refIncr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
   llvm::Value *refPtr = ir.CreateStructGEP(objPtr, array_idx_ref);
   llvm::Value *value = ir.CreateLoad(refPtr);
   llvm::Constant *one = constantFor(value, 1);
-  llvm::Value *added = ir.CreateAdd(value, one);
+  llvm::Value *added = ir.CreateNSWAdd(value, one);
   ir.CreateStore(added, refPtr);
 }
 
@@ -247,7 +247,7 @@ llvm::Value *refDecr(llvm::IRBuilder<> &ir, llvm::Value *objPtr) {
   llvm::Value *refPtr = ir.CreateStructGEP(objPtr, array_idx_ref);
   llvm::Value *value = ir.CreateLoad(refPtr);
   llvm::Constant *one = constantFor(value, 1);
-  llvm::Value *subed = ir.CreateSub(value, one);
+  llvm::Value *subed = ir.CreateNSWSub(value, one);
   ir.CreateStore(subed, refPtr);
   return ir.CreateICmpEQ(subed, constantFor(value, 0));
 }
@@ -372,6 +372,7 @@ llvm::Function *stela::generateFree(llvm::Module *module) {
   return free;
 }
 
+// @FIXME pointer parameter
 llvm::Function *stela::generateArrayDtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
@@ -430,6 +431,7 @@ llvm::Function *stela::generateArrayDefCtor(
   return func;
 }
 
+// @FIXME two pointer parameters
 llvm::Function *stela::generateArrayCopCtor(
   gen::FuncInst &, llvm::Module *module, llvm::Type *type
 ) {

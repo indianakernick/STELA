@@ -11,6 +11,7 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
+#include "generate expr.hpp"
 #include "function builder.hpp"
 
 namespace stela {
@@ -19,14 +20,12 @@ class ExprBuilder {
 public:
   ExprBuilder(gen::Ctx, FuncBuilder &);
   
-  /// Generate a zero value for a type
-  llvm::Value *zero(ast::Type *);
   /// Get the address of an expression
-  llvm::Value *addr(ast::Expression *);
+  gen::Expr addr(ast::Expression *);
   /// Get the value of an expression
-  llvm::Value *value(ast::Expression *);
+  gen::Expr value(ast::Expression *);
   /// Evaluate an expression
-  llvm::Value *expr(ast::Expression *);
+  gen::Expr expr(ast::Expression *);
   
   /// Ensure that the given value is a pointer
   llvm::Value *addr(llvm::Value *);
