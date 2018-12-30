@@ -317,6 +317,31 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(func(-8), -4);
   });
   
+  TEST(Ternary conditional nontrivial, {
+    ASSERT_SUCCEEDS(R"(
+      extern func select(identity: bool, array: [real]) {
+        return identity ? array : make [real] {};
+      }
+    )");
+    
+    auto select = GET_FUNC("select", Array<Real>(Bool, Array<Real>));
+    
+    Array<Real> array = makeArray<Real>();
+    Array<Real> sameArray = select(true, array);
+    ASSERT_TRUE(array);
+    ASSERT_TRUE(sameArray);
+    ASSERT_EQ(array, sameArray);
+    ASSERT_EQ(array.use_count(), 2);
+    
+    Array<Real> array2 = makeArray<Real>();
+    Array<Real> diffArray = select(false, array2);
+    ASSERT_TRUE(array2);
+    ASSERT_TRUE(diffArray);
+    ASSERT_NE(array2, diffArray);
+    ASSERT_EQ(array2.use_count(), 1);
+    ASSERT_EQ(diffArray.use_count(), 1);
+  });
+  
   TEST(Function call, {
     ASSERT_SUCCEEDS(R"(
       func helper(a: sint) {

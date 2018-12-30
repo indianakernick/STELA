@@ -20,17 +20,10 @@ class ExprBuilder {
 public:
   ExprBuilder(gen::Ctx, FuncBuilder &);
   
-  /// Get the address of an expression
-  gen::Expr addr(ast::Expression *);
   /// Get the value of an expression
   gen::Expr value(ast::Expression *);
   /// Evaluate an expression
   gen::Expr expr(ast::Expression *);
-  
-  /// Ensure that the given value is a pointer
-  llvm::Value *addr(llvm::Value *);
-  /// Ensure that the given value is not a pointer
-  llvm::Value *value(llvm::Value *);
   
   /// Create a conditional branch instruction
   void condBr(ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);

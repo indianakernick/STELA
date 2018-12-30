@@ -59,7 +59,7 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   } else {
     assert(false);
   }
-  // ir.CreateLifetimeStart(obj);
+  // startLife(obj)
 }
 
 void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -80,7 +80,7 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
-  // ir.CreateLifetimeStart(obj);
+  // startLife(obj)
 }
 
 void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
@@ -101,7 +101,7 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else {
     assert(false);
   }
-  // ir.CreateLifetimeStart(obj);
+  // startLife(obj)
 }
 
 void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
@@ -172,5 +172,66 @@ void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   } else {
     assert(false);
   }
-  // ir.CreateLifetimeEnd(obj);
+  // endLife(obj)
+}
+
+void LifetimeExpr::construct(ast::Type *type, llvm::Value *obj, gen::Expr other) {
+  const TypeCat cat = classifyType(type);
+  if (cat == TypeCat::trivially_copyable) {
+    if (glvalue(other.cat)) {
+      ir.CreateStore(ir.CreateLoad(other.obj), obj);
+    } else {
+      ir.CreateStore(other.obj, obj);
+    }
+    // startLife(obj);
+  } else { // trivially_relocatable or nontrivial
+    if (other.cat == ValueCat::lvalue) {
+      copyConstruct(type, obj, other.obj);
+    } else if (other.cat == ValueCat::xvalue) {
+      moveConstruct(type, obj, other.obj);
+    } else { // prvalue
+      moveConstruct(type, obj, other.obj);
+      destroy(type, other.obj);
+    }
+  }
+}
+
+void LifetimeExpr::assign(ast::Type *type, llvm::Value *left, gen::Expr right) {
+  const TypeCat cat = classifyType(type);
+  if (cat == TypeCat::trivially_copyable) {
+    if (glvalue(right.cat)) {
+      ir.CreateStore(ir.CreateLoad(right.obj), left);
+    } else {
+      ir.CreateStore(right.obj, left);
+    }
+  } else {
+    if (right.cat == ValueCat::lvalue) {
+      copyAssign(type, left, right.obj);
+    } else if (right.cat == ValueCat::xvalue) {
+      moveAssign(type, left, right.obj);
+    } else { // prvalue
+      moveAssign(type, left, right.obj);
+      destroy(type, right.obj);
+    }
+  }
+}
+
+llvm::ConstantInt *LifetimeExpr::objectSize(llvm::Value *addr) {
+  assert(addr->getType()->isPointerTy());
+  llvm::Type *objType = addr->getType()->getPointerElementType();
+  llvm::Constant *size = llvm::ConstantExpr::getSizeOf(objType);
+  // @TODO find a way to convert llvm::Constant to llvm::ConstantInt
+  // or call llvm.lifetime directly
+  
+  // I thought llvm.lifetime would allow for optimization but it seems
+  // to prevent them in some cases
+  return llvm::dyn_cast<llvm::ConstantInt>(size);
+}
+
+void LifetimeExpr::startLife(llvm::Value *addr) {
+  ir.CreateLifetimeStart(addr, objectSize(addr));
+}
+
+void LifetimeExpr::endLife(llvm::Value *addr) {
+  ir.CreateLifetimeEnd(addr, objectSize(addr));
 }

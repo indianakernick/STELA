@@ -25,7 +25,6 @@ struct Expr {
 
 }
 
-gen::Expr generateAddrExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 gen::Expr generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 gen::Expr generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
 

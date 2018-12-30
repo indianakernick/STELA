@@ -155,27 +155,40 @@ public:
     destroy(flow.scopeIndex);
     funcBdr.ir.CreateBr(flow.continueBlock);
   }
+  llvm::Value *createReturnObject(ast::Type *type, const gen::Expr evalExpr, const TypeCat cat) {
+    llvm::Value *retObj;
+    if (cat == TypeCat::trivially_copyable) {
+      if (glvalue(evalExpr.cat)) {
+        retObj = funcBdr.ir.CreateLoad(evalExpr.obj);
+      } else { // prvalue
+        retObj = evalExpr.obj;
+      }
+    } else { // trivially_relocatable or nontrivial
+      retObj = funcBdr.alloc(evalExpr.obj->getType()->getPointerElementType());
+      // @TODO RVO
+      // move from an lvalue if it's lifetime ends after the function returns
+      lifetime.construct(type, retObj, evalExpr);
+    }
+    return retObj;
+  }
+  void returnObject(llvm::Value *retObj, const TypeCat cat) {
+    if (retObj->getType()->isVoidTy()) {
+      funcBdr.ir.CreateRetVoid();
+    } else if (cat == TypeCat::trivially_copyable) {
+      funcBdr.ir.CreateRet(retObj);
+    } else { // trivially_relocatable or nontrivial
+      funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(retObj), &funcBdr.args().back());
+      funcBdr.ir.CreateRetVoid();
+    }
+  }
   void visit(ast::Return &ret) override {
-    // @FIXME refactor
-    // consider the case where a reference parameter is returned
-    // we have to copy from reference paramters rather than move
     if (ret.expr) {
-      gen::Expr value = exprBdr.expr(ret.expr.get());
-      llvm::Type *type = value.obj->getType();
-      if (value.cat == ValueCat::lvalue || value.cat == ValueCat::xvalue) {
-        llvm::Value *retPtr = funcBdr.alloc(type->getPointerElementType());
-        lifetime.moveConstruct(ret.expr->exprType.get(), retPtr, value.obj);
-        value.obj = funcBdr.ir.CreateLoad(retPtr);
-      }
+      gen::Expr evalExpr = exprBdr.expr(ret.expr.get());
+      ast::Type *retType = ret.expr->exprType.get();
+      const TypeCat cat = classifyType(retType);
+      llvm::Value *retObj = createReturnObject(retType, evalExpr, cat);
       destroy(0);
-      if (value.obj->getType()->isVoidTy()) {
-        funcBdr.ir.CreateRetVoid();
-      } else if (classifyType(ret.expr->exprType.get()) != TypeCat::trivially_copyable) {
-        funcBdr.ir.CreateStore(value.obj, &funcBdr.args().back());
-        funcBdr.ir.CreateRetVoid();
-      } else {
-        funcBdr.ir.CreateRet(value.obj);
-      }
+      returnObject(retObj, cat);
     } else {
       destroy(0);
       funcBdr.ir.CreateRetVoid();
@@ -221,16 +234,10 @@ public:
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
-    // @FIXME refactor
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      gen::Expr llvmExpr = exprBdr.expr(expr);
-      if (llvmExpr.obj->getType()->isPointerTy()) {
-        lifetime.copyConstruct(type, addr, llvmExpr.obj);
-      } else {
-        lifetime.moveConstruct(type, addr, exprBdr.addr(llvmExpr.obj));
-      }
+      lifetime.construct(type, addr, exprBdr.expr(expr));
     } else {
       lifetime.defConstruct(type, addr);
     }
@@ -245,16 +252,6 @@ public:
     let.llvmAddr = insertVar(let.symbol, let.expr.get());
   }
   
-  void doAssign(ast::Type *type, gen::Expr left, gen::Expr right) {
-    // @FIXME refactor
-    if (right.obj->getType()->isPointerTy()) {
-      lifetime.copyAssign(type, left.obj, right.obj);
-    } else {
-      llvm::Value *rightPtr = exprBdr.addr(right.obj);
-      lifetime.moveAssign(type, left.obj, rightPtr);
-      lifetime.destroy(type, rightPtr);
-    }
-  }
   void destroy(const Object object) {
     lifetime.destroy(object.type, object.addr);
   }
@@ -268,9 +265,10 @@ public:
   
   void visit(ast::Assign &assign) override {
     ast::Type *type = assign.left->exprType.get();
-    gen::Expr left = exprBdr.addr(assign.left.get());
+    gen::Expr left = exprBdr.expr(assign.left.get());
     gen::Expr right = exprBdr.expr(assign.right.get());
-    doAssign(type, left, right);
+    assert(glvalue(left.cat));
+    lifetime.assign(type, left.obj, right);
   }
   void visit(ast::DeclAssign &assign) override {
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());

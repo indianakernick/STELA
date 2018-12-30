@@ -71,10 +71,10 @@ public:
     ctor->addFnAttr(llvm::Attribute::ReadNone);
     
     FuncBuilder builder{ctor};
+    LifetimeExpr lifetime{ctx.inst, builder.ir};
     if (expr) {
-      builder.ir.CreateStore(generateValueExpr(ctx, builder, expr).obj, llvmAddr);
+      lifetime.construct(type, llvmAddr, generateExpr(ctx, builder, expr));
     } else {
-      LifetimeExpr lifetime{ctx.inst, builder.ir};
       lifetime.defConstruct(type, llvmAddr);
     }
     builder.ir.CreateRetVoid();

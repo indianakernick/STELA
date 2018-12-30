@@ -45,8 +45,6 @@ enum class TypeCat {
 
 TypeCat classifyType(ast::Type *);
 
-// @TODO maybe add functions to check for glvalues and rvalues
-
 enum class ValueCat {
   /// Has an address.
   /// Can be assigned to.
@@ -63,13 +61,21 @@ enum class ValueCat {
   /// Destroyed at end of expression.
   xvalue,
   
-  /// Has an address only if type is nontrivial.
+  /// Has an address only if type is not trivially copyable
   /// Cannot be assigned to.
   /// Can be moved from.
   /// Can be relocated from.
   /// Destroyed after being relocated.
   prvalue
 };
+
+inline bool glvalue(const ValueCat cat) {
+  return cat == ValueCat::lvalue || cat == ValueCat::xvalue;
+}
+
+inline bool rvalue(const ValueCat cat) {
+  return cat == ValueCat::xvalue || cat == ValueCat::prvalue;
+}
 
 enum class ArithCat {
   /// Char, Sint

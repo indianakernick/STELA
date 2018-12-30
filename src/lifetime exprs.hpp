@@ -9,6 +9,7 @@
 #ifndef stela_lifetime_exprs_hpp
 #define stela_lifetime_exprs_hpp
 
+#include "generate expr.hpp" // @FIXME move gen::Expr
 #include <llvm/IR/IRBuilder.h>
 
 namespace stela {
@@ -36,10 +37,17 @@ public:
   void moveAssign(ast::Type *, llvm::Value *, llvm::Value *);
   void relocate(ast::Type *, llvm::Value *, llvm::Value *);
   void destroy(ast::Type *, llvm::Value *);
+  
+  void construct(ast::Type *, llvm::Value *, gen::Expr);
+  void assign(ast::Type *, llvm::Value *, gen::Expr);
 
 private:
   gen::FuncInst &inst;
   llvm::IRBuilder<> &ir;
+  
+  llvm::ConstantInt *objectSize(llvm::Value *);
+  void startLife(llvm::Value *);
+  void endLife(llvm::Value *);
 };
 
 }
