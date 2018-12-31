@@ -874,7 +874,7 @@ TEST_GROUP(Generation, {
       }
       
       extern func getFirst(a: [real]) {
-        return a[0];
+        return a[0u];
       }
     )");
     

@@ -181,32 +181,16 @@ llvm::Function *declareCFunc(
 llvm::FunctionType *dtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(
     llvm::Type::getVoidTy(type->getContext()),
-    {type},
-    false
-  );
-}
-
-llvm::FunctionType *defCtorFor(llvm::Type *type) {
-  return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(type->getContext()),
     {type->getPointerTo()},
     false
   );
 }
 
+llvm::FunctionType *defCtorFor(llvm::Type *type) {
+  return dtorFor(type);
+}
+
 llvm::FunctionType *copCtorFor(llvm::Type *type) {
-  return llvm::FunctionType::get(type, {type}, false);
-}
-
-llvm::FunctionType *copAsgnFor(llvm::Type *type) {
-  return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(type->getContext()),
-    {type->getPointerTo(), type},
-    false
-  );
-}
-
-llvm::FunctionType *movCtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(
     llvm::Type::getVoidTy(type->getContext()),
     {type->getPointerTo(), type->getPointerTo()},
@@ -214,8 +198,16 @@ llvm::FunctionType *movCtorFor(llvm::Type *type) {
   );
 }
 
+llvm::FunctionType *copAsgnFor(llvm::Type *type) {
+  return copCtorFor(type);
+}
+
+llvm::FunctionType *movCtorFor(llvm::Type *type) {
+  return copCtorFor(type);
+}
+
 llvm::FunctionType *movAsgnFor(llvm::Type *type) {
-  return movCtorFor(type);
+  return copCtorFor(type);
 }
 
 llvm::Value *wrapPtr(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
@@ -372,7 +364,6 @@ llvm::Function *stela::generateFree(llvm::Module *module) {
   return free;
 }
 
-// @FIXME pointer parameter
 llvm::Function *stela::generateArrayDtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
@@ -380,7 +371,8 @@ llvm::Function *stela::generateArrayDtor(
   FuncBuilder funcBdr{func};
   llvm::BasicBlock *decrBlock = funcBdr.makeBlock();
   llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
-  llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
+  llvm::Value *arrayPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
   funcBdr.ir.CreateCondBr(funcBdr.ir.CreateIsNull(array), doneBlock, decrBlock);
   funcBdr.setCurr(decrBlock);
   resetArray(inst, funcBdr, array, doneBlock);
@@ -431,7 +423,6 @@ llvm::Function *stela::generateArrayDefCtor(
   return func;
 }
 
-// @FIXME two pointer parameters
 llvm::Function *stela::generateArrayCopCtor(
   gen::FuncInst &, llvm::Module *module, llvm::Type *type
 ) {
@@ -440,12 +431,15 @@ llvm::Function *stela::generateArrayCopCtor(
   
   /*
   increment other
-  return other
+  obj = other
   */
   
-  llvm::Value *array = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
-  refIncr(funcBdr.ir, array);
-  funcBdr.ir.CreateRet(wrapPtr(funcBdr.ir, array));
+  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
+  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
+  refIncr(funcBdr.ir, right);
+  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  funcBdr.ir.CreateStore(right, leftPtr);
+  funcBdr.ir.CreateRetVoid();
   return func;
 }
 
@@ -458,17 +452,18 @@ llvm::Function *stela::generateArrayCopAsgn(
   /*
   increment right
   decrement left
-  copy right to left
+  left = right
   */
   
   llvm::BasicBlock *block = funcBdr.makeBlock();
-  llvm::Value *right = funcBdr.ir.CreateExtractValue(func->arg_begin() + 1, {0});
+  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
+  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
   refIncr(funcBdr.ir, right);
-  llvm::Value *leftPtr = func->arg_begin();
-  llvm::Value *leftWrapper = funcBdr.ir.CreateLoad(leftPtr);
-  resetArray(inst, funcBdr, funcBdr.ir.CreateExtractValue(leftWrapper, {0}), block);
+  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
+  resetArray(inst, funcBdr, left, block);
   funcBdr.setCurr(block);
-  funcBdr.ir.CreateStore(func->arg_begin() + 1, leftPtr);
+  funcBdr.ir.CreateStore(right, leftPtr);
   
   funcBdr.ir.CreateRetVoid();
   return func;
@@ -479,6 +474,11 @@ llvm::Function *stela::generateArrayMovCtor(
 ) {
   llvm::Function *func = makeInternalFunc(module, movCtorFor(type), "array_mov_ctor");
   FuncBuilder funcBdr{func};
+
+  /*
+  obj = other
+  other = null
+  */
 
   llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
   llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
@@ -494,6 +494,12 @@ llvm::Function *stela::generateArrayMovAsgn(
 ) {
   llvm::Function *func = makeInternalFunc(module, movAsgnFor(type), "array_mov_asgn");
   FuncBuilder funcBdr{func};
+  
+  /*
+  decrement left
+  left = right
+  right = null
+  */
   
   llvm::BasicBlock *block = funcBdr.makeBlock();
   llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
@@ -511,6 +517,7 @@ namespace {
 
 using BoundsChecker = llvm::Value *(llvm::IRBuilder<> &, llvm::Value *, llvm::Value *);
 
+// @FIXME pointer parameter
 llvm::Function *generateArrayIdx(
   gen::FuncInst &inst,
   llvm::Module *module,
@@ -523,15 +530,20 @@ llvm::Function *generateArrayIdx(
   llvm::Type *elemPtr = arrayStruct->getStructElementType(array_idx_dat);
   llvm::Type *i32 = llvm::Type::getInt32Ty(type->getContext());
   llvm::Type *sizeTy = getType<size_t>(type->getContext());
-  llvm::FunctionType *fnType = llvm::FunctionType::get(elemPtr, {type, i32}, false);
+  llvm::FunctionType *fnType = llvm::FunctionType::get(
+    elemPtr,
+    {type->getPointerTo(), i32},
+    false
+  );
   llvm::Function *func = makeInternalFunc(module, fnType, name);
   FuncBuilder funcBdr{func};
   
   llvm::BasicBlock *okBlock = funcBdr.makeBlock();
   llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
-  llvm::Value *arrayPtr = funcBdr.ir.CreateExtractValue(func->arg_begin(), {0});
+  llvm::Value *arrayPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
   llvm::Value *size = funcBdr.ir.CreateLoad(
-    funcBdr.ir.CreateStructGEP(arrayPtr, array_idx_len)
+    funcBdr.ir.CreateStructGEP(array, array_idx_len)
   );
   llvm::Value *inBounds = checkBounds(funcBdr.ir, func->arg_begin() + 1, size);
   likely(funcBdr.ir.CreateCondBr(inBounds, okBlock, errorBlock));
@@ -539,7 +551,7 @@ llvm::Function *generateArrayIdx(
   funcBdr.setCurr(okBlock);
   llvm::Value *idx = funcBdr.ir.CreateIntCast(func->arg_begin() + 1, sizeTy, false);
   llvm::Value *data = funcBdr.ir.CreateLoad(
-    funcBdr.ir.CreateStructGEP(arrayPtr, array_idx_dat)
+    funcBdr.ir.CreateStructGEP(array, array_idx_dat)
   );
   llvm::Value *elem = funcBdr.ir.CreateInBoundsGEP(elemPtr->getPointerElementType(), data, idx);
   funcBdr.ir.CreateRet(elem);

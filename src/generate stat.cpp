@@ -164,9 +164,11 @@ public:
         retObj = evalExpr.obj;
       }
     } else { // trivially_relocatable or nontrivial
-      retObj = funcBdr.alloc(evalExpr.obj->getType()->getPointerElementType());
+      retObj = &funcBdr.args().back();
       // @TODO RVO
-      // move from an lvalue if it's lifetime ends after the function returns
+      // move from an lvalue if it's lifetime ends after the function returns.
+      // if there is one object that is always returned from a function,
+      //   treat the return pointer as an lvalue of that object
       lifetime.construct(type, retObj, evalExpr);
     }
     return retObj;
@@ -177,7 +179,6 @@ public:
     } else if (cat == TypeCat::trivially_copyable) {
       funcBdr.ir.CreateRet(retObj);
     } else { // trivially_relocatable or nontrivial
-      funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(retObj), &funcBdr.args().back());
       funcBdr.ir.CreateRetVoid();
     }
   }

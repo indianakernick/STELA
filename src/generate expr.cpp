@@ -292,9 +292,7 @@ public:
     } else {
       indexFn = ctx.inst.arrayIdxU(arrayType);
     }
-    
-    llvm::Value *array = funcBdr.ir.CreateLoad(object);
-    value = funcBdr.ir.CreateCall(indexFn, {array, index.obj});
+    value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
     
     if (objectCat == ValueCat::lvalue) {
       cat = ValueCat::lvalue;
