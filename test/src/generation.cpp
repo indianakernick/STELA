@@ -1226,7 +1226,7 @@ TEST_GROUP(Generation, {
       }
       
       extern func defaultCtorTemp() {
-        let temp = make [real] {};
+        let temp = defaultCtorRet();
         return temp;
       }
     )");
@@ -1242,6 +1242,22 @@ TEST_GROUP(Generation, {
     Array<Real> b = defaultCtorTemp();
     ASSERT_TRUE(b);
     ASSERT_EQ(b.use_count(), 1);
+  });
+  
+  TEST(Non-trivial global variable, {
+    ASSERT_SUCCEEDS(R"(
+      var array: [real];
+      
+      extern func getGlobalArray() {
+        return array;
+      }
+    )");
+    
+    auto getGlobalArray = GET_FUNC("getGlobalArray", Array<Real>());
+    
+    Array<Real> a = getGlobalArray();
+    ASSERT_TRUE(a);
+    ASSERT_EQ(a.use_count(), 2);
   });
   
   /*

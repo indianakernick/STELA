@@ -41,6 +41,30 @@ public:
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }
   
+  llvm::Twine ctorName(const llvm::StringRef &objName) {
+    return llvm::Twine{objName, "_ctor"};
+  }
+  llvm::Twine dtorName(const llvm::StringRef &objName) {
+    return llvm::Twine{objName, "_dtor"};
+  }
+  llvm::FunctionType *ctorDtorSig() {
+    return llvm::FunctionType::get(
+      llvm::Type::getVoidTy(ctx.llvm), false
+    );
+  }
+  llvm::Function *makeCtorDtor(const llvm::Twine &name) {
+    llvm::Function *func = llvm::Function::Create(
+      ctorDtorSig(),
+      llvm::Function::InternalLinkage,
+      name,
+      module
+    );
+    func->addFnAttr(llvm::Attribute::NoUnwind);
+    func->addFnAttr(llvm::Attribute::NoRecurse);
+    func->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
+    return func;
+  }
+  
   llvm::Value *createGlobalVar(
     ast::Type *type,
     const std::string_view name,
@@ -56,32 +80,27 @@ public:
       llvm::UndefValue::get(llvmType),
       llvm::StringRef{name.data(), name.size()}
     };
+    llvm::StringRef nameRef{name.data(), name.size()};
     
-    llvm::FunctionType *ctorType = llvm::FunctionType::get(
-      llvm::Type::getVoidTy(ctx.llvm), false
-    );
-    llvm::Function *ctor = llvm::Function::Create(
-      ctorType,
-      llvm::Function::InternalLinkage,
-      "",
-      module
-    );
-    ctor->addFnAttr(llvm::Attribute::NoUnwind);
-    ctor->addFnAttr(llvm::Attribute::NoRecurse);
+    llvm::Function *ctor = makeCtorDtor(ctorName(nameRef));
     ctor->addFnAttr(llvm::Attribute::ReadNone);
-    
-    FuncBuilder builder{ctor};
-    LifetimeExpr lifetime{ctx.inst, builder.ir};
+    FuncBuilder ctorBuilder{ctor};
     if (expr) {
-      generateExpr(ctx, builder, expr, llvmAddr);
+      generateExpr(ctx, ctorBuilder, expr, llvmAddr);
     } else {
+      LifetimeExpr lifetime{ctx.inst, ctorBuilder.ir};
       lifetime.defConstruct(type, llvmAddr);
     }
-    builder.ir.CreateRetVoid();
-    
-    llvm::Twine fnName = llvm::StringRef{name.data(), name.size()};
-    ctor->setName(fnName + "_ctor");
+    ctorBuilder.ir.CreateRetVoid();
     ctors.push_back(ctor);
+    
+    llvm::Function *dtor = makeCtorDtor(dtorName(nameRef));
+    dtor->addFnAttr(llvm::Attribute::ReadOnly);
+    FuncBuilder dtorBuilder{dtor};
+    LifetimeExpr lifetime{ctx.inst, dtorBuilder.ir};
+    lifetime.destroy(type, llvmAddr);
+    dtorBuilder.ir.CreateRetVoid();
+    dtors.push_back(dtor);
     
     return llvmAddr;
   }
@@ -96,44 +115,56 @@ public:
     );
   }
   
+  llvm::StructType *getEntryType() {
+    return llvm::StructType::get(
+      llvm::IntegerType::getInt32Ty(ctx.llvm),
+      ctorDtorSig()->getPointerTo()
+    );
+  }
+  std::vector<llvm::Constant *> createEntries(
+    const std::vector<llvm::Function *> &funcs,
+    llvm::StructType *entryType
+  ) {
+    std::vector<llvm::Constant *> ctorEntries;
+    ctorEntries.reserve(funcs.size());
+    for (size_t c = 0; c != funcs.size(); ++c) {
+      ctorEntries.push_back(llvm::ConstantStruct::get(entryType,
+        llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(ctx.llvm), c),
+        funcs[c]
+      ));
+    }
+    return ctorEntries;
+  }
+  void createListVar(
+    const std::vector<llvm::Constant *> &entries,
+    llvm::ArrayType *listType,
+    const llvm::Twine &name
+  ) {
+    new llvm::GlobalVariable{
+      *module,
+      listType,
+      false,
+      llvm::Function::AppendingLinkage,
+      llvm::ConstantArray::get(listType, entries),
+      name
+    };
+  }
+  
   void writeCtorList() {
     if (ctors.empty()) {
       return;
     }
-    llvm::FunctionType *ctorType = llvm::FunctionType::get(
-      llvm::Type::getVoidTy(ctx.llvm), false
-    );
-    llvm::StructType *ctorEntryType = llvm::StructType::get(
-      llvm::IntegerType::getInt32Ty(ctx.llvm),
-      ctorType->getPointerTo(),
-      llvm::IntegerType::getInt8PtrTy(ctx.llvm)
-    );
-    llvm::ArrayType *ctorListType = llvm::ArrayType::get(ctorEntryType, 1);
-    
-    std::vector<llvm::Constant *> entries;
-    entries.reserve(ctors.size());
-    for (size_t c = 0; c != ctors.size(); ++c) {
-      entries.push_back(llvm::ConstantStruct::get(ctorEntryType,
-        llvm::ConstantInt::get(llvm::IntegerType::getInt32Ty(ctx.llvm), c),
-        ctors[c],
-        llvm::ConstantPointerNull::get(llvm::IntegerType::getInt8PtrTy(ctx.llvm))
-      ));
-    }
-    
-    new llvm::GlobalVariable{
-      *module,
-      ctorListType,
-      true,
-      llvm::Function::AppendingLinkage,
-      llvm::ConstantArray::get(ctorListType, entries),
-      "llvm.global_ctors"
-    };
+    llvm::StructType *entryType = getEntryType();
+    llvm::ArrayType *listType = llvm::ArrayType::get(entryType, ctors.size());
+    createListVar(createEntries(ctors, entryType), listType, "llvm.global_ctors");
+    createListVar(createEntries(dtors, entryType), listType, "llvm.global_dtors");
   }
   
 private:
   gen::Ctx ctx;
   llvm::Module *module;
   std::vector<llvm::Function *> ctors;
+  std::vector<llvm::Function *> dtors;
 };
 
 }
