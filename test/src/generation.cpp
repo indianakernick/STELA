@@ -322,24 +322,49 @@ TEST_GROUP(Generation, {
       extern func select(identity: bool, array: [real]) {
         return identity ? array : make [real] {};
       }
+      
+      extern func selectTemp(identity: bool, array: [real]) {
+        var temp = make [real] {};
+        temp = identity ? array : make [real] {};
+        return temp;
+      }
     )");
     
     auto select = GET_FUNC("select", Array<Real>(Bool, Array<Real>));
+    {
+      Array<Real> array = makeArray<Real>();
+      Array<Real> sameArray = select(true, array);
+      ASSERT_TRUE(array);
+      ASSERT_TRUE(sameArray);
+      ASSERT_EQ(array, sameArray);
+      ASSERT_EQ(array.use_count(), 2);
+      
+      Array<Real> array2 = makeArray<Real>();
+      Array<Real> diffArray = select(false, array2);
+      ASSERT_TRUE(array2);
+      ASSERT_TRUE(diffArray);
+      ASSERT_NE(array2, diffArray);
+      ASSERT_EQ(array2.use_count(), 1);
+      ASSERT_EQ(diffArray.use_count(), 1);
+    }
     
-    Array<Real> array = makeArray<Real>();
-    Array<Real> sameArray = select(true, array);
-    ASSERT_TRUE(array);
-    ASSERT_TRUE(sameArray);
-    ASSERT_EQ(array, sameArray);
-    ASSERT_EQ(array.use_count(), 2);
-    
-    Array<Real> array2 = makeArray<Real>();
-    Array<Real> diffArray = select(false, array2);
-    ASSERT_TRUE(array2);
-    ASSERT_TRUE(diffArray);
-    ASSERT_NE(array2, diffArray);
-    ASSERT_EQ(array2.use_count(), 1);
-    ASSERT_EQ(diffArray.use_count(), 1);
+    auto selectTemp = GET_FUNC("selectTemp", Array<Real>(Bool, Array<Real>));
+    {
+      Array<Real> array = makeArray<Real>();
+      Array<Real> sameArray = selectTemp(true, array);
+      ASSERT_TRUE(array);
+      ASSERT_TRUE(sameArray);
+      ASSERT_EQ(array, sameArray);
+      ASSERT_EQ(array.use_count(), 2);
+      
+      Array<Real> array2 = makeArray<Real>();
+      Array<Real> diffArray = selectTemp(false, array2);
+      ASSERT_TRUE(array2);
+      ASSERT_TRUE(diffArray);
+      ASSERT_NE(array2, diffArray);
+      ASSERT_EQ(array2.use_count(), 1);
+      ASSERT_EQ(diffArray.use_count(), 1);
+    }
   });
   
   TEST(Function call, {
@@ -1192,6 +1217,31 @@ TEST_GROUP(Generation, {
     S ref1 = get1();
     ASSERT_TRUE(ref1.m);
     ASSERT_EQ(ref1.m.use_count(), 1);
+  });
+  
+  TEST(Copy elision, {
+    ASSERT_SUCCEEDS(R"(
+      extern func defaultCtorRet() {
+        return make [real] {};
+      }
+      
+      extern func defaultCtorTemp() {
+        let temp = make [real] {};
+        return temp;
+      }
+    )");
+    
+    auto defaultCtorRet = GET_FUNC("defaultCtorRet", Array<Real>());
+    
+    Array<Real> a = defaultCtorRet();
+    ASSERT_TRUE(a);
+    ASSERT_EQ(a.use_count(), 1);
+    
+    auto defaultCtorTemp = GET_FUNC("defaultCtorTemp", Array<Real>());
+    
+    Array<Real> b = defaultCtorTemp();
+    ASSERT_TRUE(b);
+    ASSERT_EQ(b.use_count(), 1);
   });
   
   /*

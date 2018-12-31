@@ -46,6 +46,7 @@ public:
     body->accept(*this);
     flow = oldFlow;
   }
+  // @TODO equality for structs and arrays
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
     const ArithCat arith = classifyArith(expr);
     if (arith == ArithCat::floating_point) {
@@ -155,9 +156,10 @@ public:
     destroy(flow.scopeIndex);
     funcBdr.ir.CreateBr(flow.continueBlock);
   }
-  llvm::Value *createReturnObject(ast::Type *type, const gen::Expr evalExpr, const TypeCat cat) {
+  llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
     llvm::Value *retObj;
     if (cat == TypeCat::trivially_copyable) {
+      gen::Expr evalExpr = exprBdr.expr(expr, nullptr);
       if (glvalue(evalExpr.cat)) {
         retObj = funcBdr.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
@@ -165,11 +167,11 @@ public:
       }
     } else { // trivially_relocatable or nontrivial
       retObj = &funcBdr.args().back();
-      // @TODO RVO
-      // move from an lvalue if it's lifetime ends after the function returns.
+      // @TODO NRVO
       // if there is one object that is always returned from a function,
       //   treat the return pointer as an lvalue of that object
-      lifetime.construct(type, retObj, evalExpr);
+      // move from an lvalue if it's lifetime ends after the function returns.
+      exprBdr.expr(expr, retObj);
     }
     return retObj;
   }
@@ -184,10 +186,8 @@ public:
   }
   void visit(ast::Return &ret) override {
     if (ret.expr) {
-      gen::Expr evalExpr = exprBdr.expr(ret.expr.get());
-      ast::Type *retType = ret.expr->exprType.get();
-      const TypeCat cat = classifyType(retType);
-      llvm::Value *retObj = createReturnObject(retType, evalExpr, cat);
+      const TypeCat cat = classifyType(ret.expr->exprType.get());
+      llvm::Value *retObj = createReturnObject(ret.expr.get(), cat);
       destroy(0);
       returnObject(retObj, cat);
     } else {
@@ -238,7 +238,7 @@ public:
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      lifetime.construct(type, addr, exprBdr.expr(expr));
+      exprBdr.expr(expr, addr);
     } else {
       lifetime.defConstruct(type, addr);
     }
@@ -266,8 +266,8 @@ public:
   
   void visit(ast::Assign &assign) override {
     ast::Type *type = assign.left->exprType.get();
-    gen::Expr left = exprBdr.expr(assign.left.get());
-    gen::Expr right = exprBdr.expr(assign.right.get());
+    gen::Expr left = exprBdr.expr(assign.left.get(), nullptr);
+    gen::Expr right = exprBdr.expr(assign.right.get(), nullptr);
     assert(glvalue(left.cat));
     lifetime.assign(type, left.obj, right);
   }
@@ -275,7 +275,7 @@ public:
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    exprBdr.expr(&assign.call);
+    exprBdr.expr(&assign.call, nullptr);
   }
   
   void insert(ast::FuncParam &param, const size_t index) {

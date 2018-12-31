@@ -23,7 +23,7 @@ public:
   /// Get the value of an expression
   gen::Expr value(ast::Expression *);
   /// Evaluate an expression
-  gen::Expr expr(ast::Expression *);
+  gen::Expr expr(ast::Expression *, llvm::Value *);
   
   /// Create a conditional branch instruction
   void condBr(ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);

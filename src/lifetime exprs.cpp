@@ -224,7 +224,7 @@ llvm::ConstantInt *LifetimeExpr::objectSize(llvm::Value *addr) {
   // or call llvm.lifetime directly
   
   // I thought llvm.lifetime would allow for optimization but it seems
-  // to prevent them in some cases
+  // to prevent it in some cases
   return llvm::dyn_cast<llvm::ConstantInt>(size);
 }
 

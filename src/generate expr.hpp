@@ -26,7 +26,7 @@ struct Expr {
 }
 
 gen::Expr generateValueExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
-gen::Expr generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *);
+gen::Expr generateExpr(gen::Ctx, FuncBuilder &, ast::Expression *, llvm::Value *);
 
 }
 

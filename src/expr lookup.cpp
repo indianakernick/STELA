@@ -225,11 +225,14 @@ void ExprLookup::lookupIdent(ast::Identifier &ident) {
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
     object->referenced = true;
     ident.definition = object->node.get();
+    sym::ExprType etype;
     if (lambdaCapture(ident, object, scope, currentScope)) {
-      stack.pushExpr(sym::makeVarVal(object->etype.type));
+      etype = sym::makeVarVal(object->etype.type);
     } else {
-      stack.pushExpr(object->etype);
+      etype = object->etype;
     }
+    stack.pushExpr(etype);
+    ident.exprType = etype.type;
     return;
   }
   if (dynamic_cast<sym::Func *>(symbol)) {

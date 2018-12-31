@@ -16,7 +16,7 @@ using namespace stela;
 
 namespace {
 
-// OH FOR FUCK SAKE! I'VE BEEN WAITING FOR STD::FROM_CHARS FOR SO LONG!
+// OH FOR FUCK SAKE! I'VE BEEN WAITING FOR STD::FROM_CHARS SINCE 2016!
 // @TODO refactor this when we get std::from_chars
 
 struct from_chars_result {

@@ -73,7 +73,7 @@ public:
     FuncBuilder builder{ctor};
     LifetimeExpr lifetime{ctx.inst, builder.ir};
     if (expr) {
-      lifetime.construct(type, llvmAddr, generateExpr(ctx, builder, expr));
+      generateExpr(ctx, builder, expr, llvmAddr);
     } else {
       lifetime.defConstruct(type, llvmAddr);
     }

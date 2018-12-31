@@ -16,7 +16,7 @@ using namespace stela;
 
 namespace {
 
-class Visitor final : public ast::Visitor {
+class TypeVisitor final : public ast::Visitor {
 public:
   void visit(ast::BtnType &) override {
     cat = TypeCat::trivially_copyable;
@@ -31,6 +31,12 @@ public:
     name.definition->type->accept(*this);
   }
   void visit(ast::StructType &) override {
+    // @TODO some structs can be trivially copyable
+    // if the struct can fit in a register and
+    // all of its members are trivially copyable then
+    //   the struct is trivially copyable
+    // otherwise
+    //   the struct is nontrivial
     cat = TypeCat::nontrivial;
   }
   // @TODO check for user types
@@ -38,12 +44,89 @@ public:
   TypeCat cat;
 };
 
+class ValueVisitor final : public ast::Visitor {
+public:
+  void visit(ast::BinaryExpr &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::UnaryExpr &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::FuncCall &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::MemberIdent &mem) override {
+    mem.object->accept(*this);
+    if (cat == ValueCat::prvalue) {
+      cat = ValueCat::xvalue;
+    }
+  }
+  void visit(ast::Subscript &sub) override {
+    sub.object->accept(*this);
+    if (cat == ValueCat::prvalue) {
+      cat = ValueCat::xvalue;
+    }
+  }
+  void visit(ast::Identifier &) override {
+    cat = ValueCat::lvalue;
+  }
+  void visit(ast::Ternary &tern) override {
+    tern.tru->accept(*this);
+    const ValueCat trueCat = cat;
+    tern.fals->accept(*this);
+    const ValueCat falsCat = cat;
+    if (trueCat == ValueCat::lvalue && falsCat == ValueCat::lvalue) {
+      cat = ValueCat::lvalue;
+    } else {
+      cat = ValueCat::prvalue;
+    }
+  }
+  void visit(ast::Make &make) override {
+    if (make.cast) {
+      cat = ValueCat::prvalue;
+    } else {
+      make.expr->accept(*this);
+    }
+  }
+  
+  void visit(ast::StringLiteral &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::CharLiteral &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::NumberLiteral &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::BoolLiteral &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::ArrayLiteral &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::InitList &) override {
+    cat = ValueCat::prvalue;
+  }
+  void visit(ast::Lambda &) override {
+    cat = ValueCat::prvalue;
+  }
+  
+  ValueCat cat;
+};
+
 }
 
 TypeCat stela::classifyType(ast::Type *type) {
   assert(type);
-  Visitor visitor;
+  TypeVisitor visitor;
   type->accept(visitor);
+  return visitor.cat;
+}
+
+ValueCat stela::classifyValue(ast::Expression *expr) {
+  assert(expr);
+  ValueVisitor visitor;
+  expr->accept(visitor);
   return visitor.cat;
 }
 

@@ -24,24 +24,28 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, FuncBuilder &builder)
-    : ctx{ctx}, funcBdr{builder} {}
+  Visitor(gen::Ctx ctx, FuncBuilder &funcBdr)
+    : ctx{ctx}, funcBdr{funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
 
   gen::Expr visitValue(ast::Expression *expr) {
     assert(classifyType(expr->exprType.get()) == TypeCat::trivially_copyable);
+    result = nullptr;
     expr->accept(*this);
+    const ValueCat cat = classifyValue(expr);
     if (glvalue(cat)) {
       return {funcBdr.ir.CreateLoad(value), cat};
     } else {
       return {value, cat};
     }
   }
-  gen::Expr visitExpr(ast::Expression *expr) {
+  gen::Expr visitExpr(ast::Expression *expr, llvm::Value *resultAddr) {
+    result = resultAddr;
     expr->accept(*this);
-    return {value, cat};
+    return {value, classifyValue(expr)};
   }
 
   void visit(ast::BinaryExpr &expr) override {
+    llvm::Value *resultAddr = result;
     gen::Expr left = visitValue(expr.left.get());
     gen::Expr right = visitValue(expr.right.get());
     const ArithCat arith = classifyArith(expr.left.get());
@@ -77,6 +81,7 @@ public:
         value = funcBdr.ir.CreateShl(left.obj, right.obj); break;
       case ast::BinOp::bit_shr:
         value = funcBdr.ir.CreateLShr(left.obj, right.obj); break;
+      // @TODO define comparison expressions for structs and arrays
       case ast::BinOp::eq:
         INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
       case ast::BinOp::ne:
@@ -107,9 +112,10 @@ public:
     #undef SIGNED_UNSIGNED_FLOAT_OP
     #undef INT_FLOAT_OP
     
-    cat = ValueCat::prvalue;
+    storeValueAsResult(resultAddr);
   }
   void visit(ast::UnaryExpr &expr) override {
+    llvm::Value *resultAddr = result;
     gen::Expr operand = visitValue(expr.expr.get());
     const ArithCat arith = classifyArith(expr.expr.get());
     
@@ -128,7 +134,7 @@ public:
         value = funcBdr.ir.CreateNot(operand.obj); break;
       default: UNREACHABLE();
     }
-    cat = ValueCat::prvalue;
+    storeValueAsResult(resultAddr);
   }
   
   /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
@@ -161,23 +167,22 @@ public:
   }
   */
   llvm::Value *visitParam(const ast::FuncParam &param, ast::Expression *expr, llvm::Value **destroy) {
-    const gen::Expr evalExpr = visitExpr(expr);
     if (param.ref == ast::ParamRef::ref) {
+      const gen::Expr evalExpr = visitExpr(expr, nullptr);
       assert(evalExpr.cat == ValueCat::lvalue);
       return evalExpr.obj;
     }
-    // @TODO how similar is this to createTemp for ast::Ternary?
     const TypeCat typeCat = classifyType(param.type.get());
     if (typeCat == TypeCat::trivially_copyable) {
+      const gen::Expr evalExpr = visitExpr(expr, nullptr);
       if (evalExpr.cat == ValueCat::lvalue || evalExpr.cat == ValueCat::xvalue) {
         return funcBdr.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
         return evalExpr.obj;
       }
     } else { // trivially_relocatable or nontrivial
-      llvm::Value *addr = funcBdr.alloc(evalExpr.obj->getType()->getPointerElementType());
-      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
-      lifetime.construct(param.type.get(), addr, evalExpr);
+      llvm::Value *addr = funcBdr.alloc(generateType(ctx, param.type.get()));
+      visitExpr(expr, addr);
       *destroy = addr;
       return addr;
     }
@@ -197,6 +202,7 @@ public:
       // call a function pointer
       assert(false);
     } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
+      llvm::Value *resultAddr = result;
       std::vector<llvm::Value *> args;
       args.reserve(1 + call.args.size());
       llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
@@ -212,16 +218,22 @@ public:
       pushArgs(args, call.args, func->params, destroyList);
       
       if (funcType->params().size() == args.size() + 1) {
-        llvm::Type *retType = funcType->params().back()->getPointerElementType();
-        llvm::Value *retAddr = funcBdr.alloc(retType);
-        args.push_back(retAddr);
-        funcBdr.ir.CreateCall(func->llvmFunc, args);
-        value = retAddr;
+        if (resultAddr) {
+          args.push_back(resultAddr);
+          funcBdr.ir.CreateCall(func->llvmFunc, args);
+          value = nullptr;
+        } else {
+          llvm::Type *retType = funcType->params().back()->getPointerElementType();
+          llvm::Value *retAddr = funcBdr.alloc(retType);
+          args.push_back(retAddr);
+          funcBdr.ir.CreateCall(func->llvmFunc, args);
+          value = retAddr;
+        }
       } else {
         value = funcBdr.ir.CreateCall(func->llvmFunc, args);
+        constructResultFromValue(resultAddr, &call);
       }
       
-      LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
       if (destroyList[0]) {
         lifetime.destroy(func->receiver->type.get(), destroyList[0]);
       }
@@ -234,7 +246,6 @@ public:
       // call a builtin function
       assert(false);
     }
-    cat = ValueCat::prvalue;
     /*if (call.definition == nullptr) {
       call.func->accept(*this);
       gen::String func = std::move(str);
@@ -265,23 +276,21 @@ public:
   }
   
   void visit(ast::MemberIdent &mem) override {
-    const gen::Expr object = visitExpr(mem.object.get());
+    llvm::Value *resultAddr = result;
+    const gen::Expr object = visitExpr(mem.object.get(), nullptr);
     value = funcBdr.ir.CreateStructGEP(object.obj, mem.index);
-    if (object.cat == ValueCat::lvalue) {
-      cat = ValueCat::lvalue;
-    } else if (object.cat == ValueCat::xvalue) {
-      cat = ValueCat::xvalue;
-    } else if (object.cat == ValueCat::prvalue) {
+    if (classifyValue(mem.object.get()) == ValueCat::prvalue) {
       // @FIXME prvalue is materialized to an xvalue
       // add this object to a list of destructors for the expression
-      cat = ValueCat::xvalue;
+      // a temporary becomes the result object of the prvalue
     }
+    constructResultFromValue(resultAddr, &mem);
   }
   
   void visit(ast::Subscript &sub) override {
+    llvm::Value *resultAddr = result;
     sub.object->accept(*this);
     llvm::Value *object = value;
-    const ValueCat objectCat = cat;
     gen::Expr index = visitValue(sub.index.get());
     ast::BtnType *indexType = concreteType<ast::BtnType>(sub.index->exprType.get());
     
@@ -294,15 +303,13 @@ public:
     }
     value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
     
-    if (objectCat == ValueCat::lvalue) {
-      cat = ValueCat::lvalue;
-    } else if (objectCat == ValueCat::xvalue) {
-      cat = ValueCat::xvalue;
-    } else if (objectCat == ValueCat::prvalue) {
+    if (classifyValue(sub.object.get()) == ValueCat::prvalue) {
       // @FIXME prvalue is materialized to an xvalue
       // add this object to a list of destructors for the expression
-      cat = ValueCat::xvalue;
+      // a temporary becomes the result object of the prvalue
     }
+    
+    constructResultFromValue(resultAddr, &sub);
   }
   /*
   void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
@@ -379,26 +386,14 @@ public:
       writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
     }*/
     value = getAddr(ident.definition);
-    cat = ValueCat::lvalue;
     assert(value->getType()->isPointerTy());
-  }
-  
-  llvm::Value *createTemp(ast::Type *type, const gen::Expr expr) {
-    if (glvalue(expr.cat)) {
-      if (classifyType(type) == TypeCat::trivially_copyable) {
-        return funcBdr.ir.CreateLoad(expr.obj);
-      } else {
-        llvm::Value *addr = funcBdr.alloc(expr.obj->getType()->getPointerElementType());
-        LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
-        lifetime.construct(type, addr, expr);
-        return addr;
-      }
-    } else {
-      return expr.obj;
+    if (result) {
+      lifetime.construct(ident.exprType.get(), result, {value, ValueCat::lvalue});
+      value = nullptr;
     }
   }
   
-  void visit(ast::Ternary &tern) override {
+  void ternaryInit(llvm::Value *resultAddr, ast::Ternary &tern) {
     auto *condBlock = funcBdr.nextEmpty();
     auto *trooBlock = funcBdr.makeBlock();
     auto *folsBlock = funcBdr.makeBlock();
@@ -408,29 +403,72 @@ public:
     funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
     
     funcBdr.setCurr(trooBlock);
-    gen::Expr tru = visitExpr(tern.tru.get());
+    visitExpr(tern.tru.get(), resultAddr);
     
     funcBdr.setCurr(folsBlock);
-    gen::Expr fals = visitExpr(tern.fals.get());
+    visitExpr(tern.fals.get(), resultAddr);
     
-    if (tru.cat == ValueCat::lvalue && fals.cat == ValueCat::lvalue) {
-      cat = ValueCat::lvalue;
-    } else {
-      cat = ValueCat::prvalue;
+    funcBdr.link(trooBlock, doneBlock);
+    funcBdr.link(folsBlock, doneBlock);
+    
+    funcBdr.setCurr(doneBlock);
+    value = nullptr;
+  }
+  void ternaryExpr(ast::Ternary &tern) {
+    auto *condBlock = funcBdr.nextEmpty();
+    auto *trooBlock = funcBdr.makeBlock();
+    auto *folsBlock = funcBdr.makeBlock();
+    auto *doneBlock = funcBdr.makeBlock();
+    
+    funcBdr.setCurr(condBlock);
+    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
+    
+    gen::Expr tru{nullptr, {}};
+    gen::Expr fals{nullptr, {}};
+    const ValueCat truCat = classifyValue(tern.tru.get());
+    const ValueCat falsCat = classifyValue(tern.fals.get());
+    
+    if (truCat == ValueCat::lvalue && falsCat == ValueCat::lvalue) {
       funcBdr.setCurr(trooBlock);
-      tru.obj = createTemp(tern.tru->exprType.get(), tru);
+      tru = visitExpr(tern.tru.get(), nullptr);
       funcBdr.setCurr(folsBlock);
-      fals.obj = createTemp(tern.fals->exprType.get(), fals);
+      fals = visitExpr(tern.fals.get(), nullptr);
+    } else {
+      if (classifyType(tern.exprType.get()) == TypeCat::trivially_copyable) {
+        funcBdr.setCurr(trooBlock);
+        tru = visitValue(tern.tru.get());
+        funcBdr.setCurr(folsBlock);
+        fals = visitValue(tern.fals.get());
+      } else {
+        llvm::Value *addr = funcBdr.alloc(generateType(ctx, tern.exprType.get()));
+        funcBdr.setCurr(trooBlock);
+        visitExpr(tern.tru.get(), addr);
+        funcBdr.setCurr(folsBlock);
+        visitExpr(tern.fals.get(), addr);
+        value = addr;
+      }
     }
     
     funcBdr.link(trooBlock, doneBlock);
     funcBdr.link(folsBlock, doneBlock);
     
     funcBdr.setCurr(doneBlock);
-    llvm::PHINode *phi = funcBdr.ir.CreatePHI(tru.obj->getType(), 2);
-    phi->addIncoming(tru.obj, trooBlock);
-    phi->addIncoming(fals.obj, folsBlock);
-    value = phi;
+    if (tru.obj) {
+      assert(fals.obj);
+      llvm::PHINode *phi = funcBdr.ir.CreatePHI(tru.obj->getType(), 2);
+      phi->addIncoming(tru.obj, trooBlock);
+      phi->addIncoming(fals.obj, folsBlock);
+      value = phi;
+    }
+  }
+  
+  void visit(ast::Ternary &tern) override {
+    // @FIXME refactor
+    if (result) {
+      ternaryInit(result, tern);
+    } else {
+      ternaryExpr(tern);
+    }
   }
   void visit(ast::Make &make) override {
     if (!make.cast) {
@@ -438,6 +476,7 @@ public:
       return;
     }
     llvm::Type *type = generateType(ctx, make.type.get());
+    llvm::Value *resultAddr = result;
     gen::Expr srcVal = visitValue(make.expr.get());
     const ArithCat dst = classifyArith(make.type.get());
     const ArithCat src = classifyArith(make.expr.get());
@@ -466,7 +505,7 @@ public:
         value = funcBdr.ir.CreateFPCast(srcVal.obj, type);
       }
     }
-    cat = ValueCat::prvalue;
+    storeValueAsResult(resultAddr);
   }
   
   /*void visit(ast::StringLiteral &string) override {
@@ -484,7 +523,7 @@ public:
       static_cast<uint64_t>(chr.number),
       true
     );
-    cat = ValueCat::prvalue;
+    storeValueAsResult(result);
   }
   
   // @TODO Use std::visit when we get MacOS 10.14 on Travis
@@ -518,7 +557,7 @@ public:
         );
       }
     }, num.number);
-    cat = ValueCat::prvalue;
+    storeValueAsResult(result);
   }
   void visit(ast::BoolLiteral &bol) override {
     llvm::Type *boolType = llvm::IntegerType::getInt1Ty(ctx.llvm);
@@ -527,7 +566,7 @@ public:
     } else {
       value = llvm::ConstantInt::getFalse(boolType);
     }
-    cat = ValueCat::prvalue;
+    storeValueAsResult(result);
   }
   /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
     if (exprs.empty()) {
@@ -559,24 +598,26 @@ public:
   */
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
-    llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
-    LifetimeExpr lifetime{ctx.inst, funcBdr.ir};
+    llvm::Value *resultAddr = result;
+    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx, type));
     if (list.exprs.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
-        llvm::Value *fieldAddr = funcBdr.ir.CreateStructGEP(addr, e);
-        ast::Expression *fieldExpr = list.exprs[e].get();
-        ast::Type *fieldType = fieldExpr->exprType.get();
-        lifetime.construct(fieldType, fieldAddr, visitExpr(fieldExpr));
+        visitExpr(list.exprs[e].get(), funcBdr.ir.CreateStructGEP(addr, e));
       }
     }
-    if (classifyType(type) == TypeCat::trivially_copyable) {
-      value = funcBdr.ir.CreateLoad(addr);
+    if (resultAddr) {
+      value = nullptr;
     } else {
-      value = addr;
+      if (classifyType(type) == TypeCat::trivially_copyable) {
+        // @TODO don't do this loading and storing for trivially copyable types
+        // maybe something like lifetime.defValue
+        value = funcBdr.ir.CreateLoad(addr);
+      } else {
+        value = addr;
+      }
     }
-    cat = ValueCat::prvalue;
   }
   /*
   void writeCapture(const sym::ClosureCap &cap) {
@@ -603,12 +644,28 @@ public:
     str += "})";
   }*/
 
-  llvm::Value *value = nullptr;
-  ValueCat cat;
-
 private:
   gen::Ctx ctx;
   FuncBuilder &funcBdr;
+  LifetimeExpr lifetime;
+  llvm::Value *value = nullptr;
+  llvm::Value *result = nullptr;
+  
+  void storeValueAsResult(llvm::Value *resultAddr) {
+    if (resultAddr) {
+      // @TODO start the lifetime of the result object
+      // maybe call lifetime.construct or lifetime.startLife
+      funcBdr.ir.CreateStore(value, resultAddr);
+      value = nullptr;
+    }
+  }
+  void constructResultFromValue(llvm::Value *resultAddr, ast::Expression *expr) {
+    if (resultAddr) {
+      gen::Expr other{value, classifyValue(expr)};
+      lifetime.construct(expr->exprType.get(), resultAddr, other);
+      value = nullptr;
+    }
+  }
 };
 
 }
@@ -625,8 +682,9 @@ gen::Expr stela::generateValueExpr(
 gen::Expr stela::generateExpr(
   gen::Ctx ctx,
   FuncBuilder &builder,
-  ast::Expression *expr
+  ast::Expression *expr,
+  llvm::Value *result
 ) {
   Visitor visitor{ctx, builder};
-  return visitor.visitExpr(expr);
+  return visitor.visitExpr(expr, result);
 }

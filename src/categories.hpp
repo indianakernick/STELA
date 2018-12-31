@@ -77,6 +77,8 @@ inline bool rvalue(const ValueCat cat) {
   return cat == ValueCat::xvalue || cat == ValueCat::prvalue;
 }
 
+ValueCat classifyValue(ast::Expression *);
+
 enum class ArithCat {
   /// Char, Sint
   signed_int,

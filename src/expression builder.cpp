@@ -17,8 +17,8 @@ gen::Expr ExprBuilder::value(ast::Expression *expr) {
   return generateValueExpr(ctx, fn, expr);
 }
 
-gen::Expr ExprBuilder::expr(ast::Expression *expr) {
-  return generateExpr(ctx, fn, expr);
+gen::Expr ExprBuilder::expr(ast::Expression *expr, llvm::Value *result) {
+  return generateExpr(ctx, fn, expr, result);
 }
 
 void ExprBuilder::condBr(

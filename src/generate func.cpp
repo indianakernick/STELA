@@ -517,7 +517,6 @@ namespace {
 
 using BoundsChecker = llvm::Value *(llvm::IRBuilder<> &, llvm::Value *, llvm::Value *);
 
-// @FIXME pointer parameter
 llvm::Function *generateArrayIdx(
   gen::FuncInst &inst,
   llvm::Module *module,
