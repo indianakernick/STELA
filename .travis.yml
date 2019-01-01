@@ -42,6 +42,8 @@ matrix:
     env:
     - COMPILER=g++-7
     - DEFINITION="-DTEST_COVERAGE=YES"
+    - FLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+    - LINK_FLAGS="-O0 --coverage"
     install:
     - pip install --user cpp-coveralls
     after_success:
@@ -49,6 +51,8 @@ matrix:
 
 before_install:
 - export CXX=${COMPILER}
+- export CXXFLAGS=${FLAGS}
+- export LDFLAGS=${LINK_FLAGS}
 
 script:
 - cd build
