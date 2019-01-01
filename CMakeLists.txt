@@ -169,6 +169,10 @@ target_compile_features(STELA
         cxx_std_17
 )
 
+if(TEST_COVERAGE)
+        set(CMAKE_CXX_FLAGS "-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline")
+endif()
+
 include(CheckIPOSupported)
 check_ipo_supported(RESULT result)
 if(result)
