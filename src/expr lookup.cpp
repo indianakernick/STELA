@@ -123,28 +123,29 @@ void ExprLookup::member(const sym::Name &name) {
   stack.pushMember(name);
 }
 
-uint32_t ExprLookup::lookupMember(const Loc loc) {
+void ExprLookup::lookupMember(ast::MemberIdent &mem) {
   if (stack.memVarExpr(ExprKind::expr)) {
     ast::TypePtr type = stack.popExpr().type;
     ast::TypePtr concType = lookupConcreteType(ctx, type);
     const sym::Name name = stack.popMember();
     if (compareTypes(ctx, concType, ctx.btn.Void)) {
-      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
+      ctx.log.error(mem.loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(concType)) {
       for (size_t f = 0; f != strut->fields.size(); ++f) {
         const ast::Field &field = strut->fields[f];
         if (field.name == name) {
           stack.pushMemberExpr(field.type);
-          return static_cast<uint32_t>(f);
+          mem.index = static_cast<uint32_t>(f);
+          mem.exprType = field.type;
+          return;
         }
       }
-      ctx.log.error(loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
+      ctx.log.error(mem.loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
     } else {
-      ctx.log.error(loc) << "Cannot access field \"" << name << "\" of " << typeDesc(type) << fatal;
+      ctx.log.error(mem.loc) << "Cannot access field \"" << name << "\" of " << typeDesc(type) << fatal;
     }
   }
-  return ~uint32_t{};
 }
 
 namespace {
@@ -225,14 +226,12 @@ void ExprLookup::lookupIdent(ast::Identifier &ident) {
   if (auto *object = dynamic_cast<sym::Object *>(symbol)) {
     object->referenced = true;
     ident.definition = object->node.get();
-    sym::ExprType etype;
     if (lambdaCapture(ident, object, scope, currentScope)) {
-      etype = sym::makeVarVal(object->etype.type);
+      stack.pushExpr(sym::makeVarVal(object->etype.type));
     } else {
-      etype = object->etype;
+      stack.pushExpr(object->etype);
     }
-    stack.pushExpr(etype);
-    ident.exprType = etype.type;
+    ident.exprType = object->etype.type;
     return;
   }
   if (dynamic_cast<sym::Func *>(symbol)) {
@@ -265,6 +264,10 @@ void ExprLookup::enterSubExpr() {
 
 sym::ExprType ExprLookup::leaveSubExpr() {
   return stack.leaveSubExpr();
+}
+
+ast::TypePtr ExprLookup::topType() const {
+  return stack.topType();
 }
 
 void ExprLookup::expected(const ast::TypePtr &type) {

@@ -35,6 +35,7 @@ public:
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
+          bin.exprType = retType;
           lkp.setExpr(sym::makeLetVal(std::move(retType)));
           return;
         }
@@ -47,6 +48,7 @@ public:
     sym::ExprType etype = visitExprCheck(un.expr, expType);
     if (auto builtin = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
       if (validOp(un.oper, builtin)) {
+        un.exprType = etype.type;
         lkp.setExpr(sym::makeLetVal(std::move(etype.type)));
         return;
       }
@@ -67,11 +69,12 @@ public:
     lkp.call();
     call.func->accept(*this);
     call.definition = lkp.lookupFunc(argTypes(call.args), call.loc);
+    call.exprType = lkp.topType();
   }
   void visit(ast::MemberIdent &mem) override {
     lkp.member(sym::Name{mem.member});
     mem.object->accept(*this);
-    mem.index = lkp.lookupMember(mem.loc);
+    lkp.lookupMember(mem);
   }
   void visit(ast::Subscript &sub) override {
     const sym::ExprType obj = visitExprCheck(sub.object);
@@ -79,7 +82,8 @@ public:
     if (auto builtinIdx = lookupConcrete<ast::BtnType>(ctx, idx.type)) {
       if (validSubscript(builtinIdx)) {
         if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
-          lkp.setExpr(sym::memberType(obj, lookupStrongType(ctx, array->elem)));
+          sub.exprType = lookupStrongType(ctx, array->elem);
+          lkp.setExpr(sym::memberType(obj, sub.exprType));
           return;
         }
         ctx.log.error(sub.object->loc) << "Subscripted value is not an array" << fatal;
@@ -102,11 +106,13 @@ public:
     etype.type = troo.type;
     etype.mut = sym::common(troo.mut, fols.mut);
     etype.ref = sym::common(troo.ref, fols.ref);
+    tern.exprType = etype.type;
     lkp.setExpr(etype);
   }
   void visit(ast::Make &make) override {
     validateType(ctx, make.type);
     const sym::ExprType etype = visitExprNoCheckBool(make.expr, make.type);
+    make.exprType = etype.type;
     if (auto dst = lookupConcrete<ast::BtnType>(ctx, make.type)) {
       if (auto src = lookupConcrete<ast::BtnType>(ctx, etype.type)) {
         if (validCast(dst, src)) {
@@ -122,8 +128,9 @@ public:
       << " from " << typeDesc(etype.type) << fatal;
   }
   
-  void visit(ast::StringLiteral &) override {
+  void visit(ast::StringLiteral &str) override {
     // @TODO deal with \n \t and others
+    str.exprType = ctx.btn.string;
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
   void visit(ast::CharLiteral &chr) override {
@@ -131,6 +138,7 @@ public:
       // @TODO deal with \n \t and others
       chr.value = chr.literal[0];
     }
+    chr.exprType = ctx.btn.Char;
     lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }
   void visit(ast::NumberLiteral &n) override {
@@ -147,9 +155,11 @@ public:
     } else if (std::holds_alternative<Uint>(n.value)) {
       type = ctx.btn.Uint;
     }
+    n.exprType = type;
     lkp.setExpr(sym::makeLetVal(std::move(type)));
   }
-  void visit(ast::BoolLiteral &) override {
+  void visit(ast::BoolLiteral &bol) override {
+    bol.exprType = ctx.btn.Bool;
     lkp.setExpr(sym::makeLetVal(ctx.btn.Bool));
   }
   void visit(ast::ArrayLiteral &arr) override {
@@ -183,6 +193,7 @@ public:
     auto array = make_retain<ast::ArrayType>();
     array->loc = arr.loc;
     array->elem = std::move(elem);
+    arr.exprType = array;
     lkp.setExpr(sym::makeLetVal(std::move(array)));
   }
   void visit(ast::InitList &list) override {
@@ -205,6 +216,7 @@ public:
         ctx.log.error(list.loc) << "Initializer list can only initialize structs" << fatal;
       }
     }
+    list.exprType = expected;
     lkp.setExpr(sym::makeLetVal(std::move(expected)));
   }
   void visit(ast::Lambda &lam) override {
@@ -226,9 +238,7 @@ public:
     expected = type;
     expr->accept(*this);
     expected = std::move(oldExpected);
-    sym::ExprType etype = lkp.leaveSubExpr();
-    expr->exprType = etype.type;
-    return etype;
+    return lkp.leaveSubExpr();
   }
 
   bool convertibleToBool(const ast::TypePtr &type) {

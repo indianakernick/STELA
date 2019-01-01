@@ -79,7 +79,7 @@ public:
     //   push expr
   
   void member(const sym::Name &);
-  uint32_t lookupMember(Loc);
+  void lookupMember(ast::MemberIdent &);
     // memVarExpr(expr)
     //   pop expr
     //   pop member
@@ -102,6 +102,7 @@ public:
   void setExpr(sym::ExprType);
   void enterSubExpr();
   sym::ExprType leaveSubExpr();
+  ast::TypePtr topType() const;
   
   void expected(const ast::TypePtr &);
   

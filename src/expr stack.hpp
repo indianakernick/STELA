@@ -48,6 +48,7 @@ public:
   void setExpr(sym::ExprType);
   void enterSubExpr();
   sym::ExprType leaveSubExpr();
+  ast::TypePtr topType() const;
   
 private:
   struct Expr {

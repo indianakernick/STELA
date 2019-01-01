@@ -24,8 +24,8 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, FuncBuilder &funcBdr)
-    : ctx{ctx}, funcBdr{funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
+  Visitor(Scope &temps, gen::Ctx ctx, FuncBuilder &funcBdr)
+    : temps{temps}, ctx{ctx}, funcBdr{funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
 
   gen::Expr visitValue(ast::Expression *expr) {
     assert(classifyType(expr->exprType.get()) == TypeCat::trivially_copyable);
@@ -272,22 +272,28 @@ public:
     }*/
   }
   
+  llvm::Value *materialize(ast::Expression *expr) {
+    if (classifyValue(expr) == ValueCat::prvalue) {
+      ast::Type *type = expr->exprType.get();
+      llvm::Value *object = funcBdr.alloc(generateType(ctx, type));
+      visitExpr(expr, object);
+      temps.push_back({object, type});
+      return object;
+    } else {
+      return visitExpr(expr, nullptr).obj;
+    }
+  }
+  
   void visit(ast::MemberIdent &mem) override {
     llvm::Value *resultAddr = result;
-    const gen::Expr object = visitExpr(mem.object.get(), nullptr);
-    value = funcBdr.ir.CreateStructGEP(object.obj, mem.index);
-    if (classifyValue(mem.object.get()) == ValueCat::prvalue) {
-      // @FIXME prvalue is materialized to an xvalue
-      // add this object to a list of destructors for the expression
-      // a temporary becomes the result object of the prvalue
-    }
+    llvm::Value *object = materialize(mem.object.get());
+    value = funcBdr.ir.CreateStructGEP(object, mem.index);
     constructResultFromValue(resultAddr, &mem);
   }
   
   void visit(ast::Subscript &sub) override {
     llvm::Value *resultAddr = result;
-    sub.object->accept(*this);
-    llvm::Value *object = value;
+    llvm::Value *object = materialize(sub.object.get());
     gen::Expr index = visitValue(sub.index.get());
     ast::BtnType *indexType = concreteType<ast::BtnType>(sub.index->exprType.get());
     
@@ -299,12 +305,6 @@ public:
       indexFn = ctx.inst.arrayIdxU(arrayType);
     }
     value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
-    
-    if (classifyValue(sub.object.get()) == ValueCat::prvalue) {
-      // @FIXME prvalue is materialized to an xvalue
-      // add this object to a list of destructors for the expression
-      // a temporary becomes the result object of the prvalue
-    }
     
     constructResultFromValue(resultAddr, &sub);
   }
@@ -610,6 +610,7 @@ public:
   }*/
 
 private:
+  Scope &temps;
   gen::Ctx ctx;
   FuncBuilder &funcBdr;
   LifetimeExpr lifetime;
@@ -636,20 +637,22 @@ private:
 }
 
 gen::Expr stela::generateValueExpr(
+  Scope &temps,
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr
 ) {
-  Visitor visitor{ctx, builder};
+  Visitor visitor{temps, ctx, builder};
   return visitor.visitValue(expr);
 }
 
 gen::Expr stela::generateExpr(
+  Scope &temps,
   gen::Ctx ctx,
   FuncBuilder &builder,
   ast::Expression *expr,
   llvm::Value *result
 ) {
-  Visitor visitor{ctx, builder};
+  Visitor visitor{temps, ctx, builder};
   return visitor.visitExpr(expr, result);
 }

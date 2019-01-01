@@ -122,6 +122,11 @@ sym::ExprType ExprStack::leaveSubExpr() {
   return std::exchange(exprType, sym::null_type);
 }
 
+ast::TypePtr ExprStack::topType() const {
+  assert(top() == ExprKind::expr);
+  return exprType.type;
+}
+
 void ExprStack::pop([[maybe_unused]] const ExprKind kind) {
   assert(top() == kind);
   exprs.pop_back();

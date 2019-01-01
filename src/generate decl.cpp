@@ -14,6 +14,7 @@
 #include "generate expr.hpp"
 #include <llvm/IR/Function.h>
 #include "lifetime exprs.hpp"
+#include "iterator range.hpp"
 
 using namespace stela;
 
@@ -85,11 +86,15 @@ public:
     llvm::Function *ctor = makeCtorDtor(ctorName(nameRef));
     ctor->addFnAttr(llvm::Attribute::ReadNone);
     FuncBuilder ctorBuilder{ctor};
+    LifetimeExpr ctorLife{ctx.inst, ctorBuilder.ir};
     if (expr) {
-      generateExpr(ctx, ctorBuilder, expr, llvmAddr);
+      Scope temps;
+      generateExpr(temps, ctx, ctorBuilder, expr, llvmAddr);
+      for (const Object obj : rev_range(temps)) {
+        ctorLife.destroy(obj.type, obj.addr);
+      }
     } else {
-      LifetimeExpr lifetime{ctx.inst, ctorBuilder.ir};
-      lifetime.defConstruct(type, llvmAddr);
+      ctorLife.defConstruct(type, llvmAddr);
     }
     ctorBuilder.ir.CreateRetVoid();
     ctors.push_back(ctor);
@@ -97,8 +102,8 @@ public:
     llvm::Function *dtor = makeCtorDtor(dtorName(nameRef));
     dtor->addFnAttr(llvm::Attribute::ReadOnly);
     FuncBuilder dtorBuilder{dtor};
-    LifetimeExpr lifetime{ctx.inst, dtorBuilder.ir};
-    lifetime.destroy(type, llvmAddr);
+    LifetimeExpr dtorLife{ctx.inst, dtorBuilder.ir};
+    dtorLife.destroy(type, llvmAddr);
     dtorBuilder.ir.CreateRetVoid();
     dtors.push_back(dtor);
     

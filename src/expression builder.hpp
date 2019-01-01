@@ -21,12 +21,14 @@ public:
   ExprBuilder(gen::Ctx, FuncBuilder &);
   
   /// Get the value of an expression
-  gen::Expr value(ast::Expression *);
+  gen::Expr value(Scope &, ast::Expression *);
   /// Evaluate an expression
-  gen::Expr expr(ast::Expression *, llvm::Value *);
+  void expr(Scope &, ast::Expression *, llvm::Value *);
+  /// Evaluate an expression
+  gen::Expr expr(Scope &, ast::Expression *);
   
   /// Create a conditional branch instruction
-  void condBr(ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);
+  void condBr(Scope &, ast::Expression *, llvm::BasicBlock *, llvm::BasicBlock *);
 
 private:
   gen::Ctx ctx;

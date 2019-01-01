@@ -1260,6 +1260,56 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(a.use_count(), 2);
   });
   
+  TEST(Access materialized struct member, {
+    ASSERT_SUCCEEDS(R"(
+      type Inner struct {
+        arr: [real];
+      };
+      type Outer struct {
+        inn: Inner;
+      };
+      
+      extern func returnX() {
+        return (make Outer {}).inn.arr;
+      }
+      
+      extern func constructFromX() {
+        let temp = (make Outer {}).inn.arr;
+        return temp;
+      }
+      
+      extern func assignFromX() {
+        var temp: [real];
+        temp = (make Outer {}).inn.arr;
+        return temp;
+      }
+      
+      extern func constructTempFromX() {
+        return make Outer {make Inner {(make Outer {}).inn.arr}};
+      }
+    )");
+    
+    auto returnX = GET_FUNC("returnX", Array<Real>());
+    Array<Real> a = returnX();
+    ASSERT_TRUE(a);
+    ASSERT_EQ(a.use_count(), 1);
+    
+    auto constructFromX = GET_FUNC("constructFromX", Array<Real>());
+    Array<Real> b = constructFromX();
+    ASSERT_TRUE(b);
+    ASSERT_EQ(b.use_count(), 1);
+    
+    auto assignFromX = GET_FUNC("assignFromX", Array<Real>());
+    Array<Real> c = assignFromX();
+    ASSERT_TRUE(c);
+    ASSERT_EQ(c.use_count(), 1);
+    
+    auto constructTempFromX = GET_FUNC("constructTempFromX", Array<Real>());
+    Array<Real> d = constructTempFromX();
+    ASSERT_TRUE(d);
+    ASSERT_EQ(d.use_count(), 1);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

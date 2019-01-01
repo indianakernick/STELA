@@ -34,11 +34,6 @@ public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
     : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
 
-  struct Object {
-    llvm::Value *addr;
-    ast::Type *type;
-  };
-  using Scope = std::vector<Object>;
   using ScopeStack = std::vector<Scope>;
 
   void visitFlow(ast::Statement *body, const FlowData newFlow) {
@@ -50,9 +45,9 @@ public:
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
     const ArithCat arith = classifyArith(expr);
     if (arith == ArithCat::floating_point) {
-      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(expr).obj);
+      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(scopes.back(), expr).obj);
     } else {
-      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(expr).obj);
+      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(scopes.back(), expr).obj);
     }
   }
   
@@ -69,7 +64,7 @@ public:
     auto *fols = funcBdr.makeBlock();
     llvm::BasicBlock *done = nullptr;
     funcBdr.setCurr(cond);
-    exprBdr.condBr(fi.cond.get(), troo, fols);
+    exprBdr.condBr(scopes.back(), fi.cond.get(), troo, fols);
     
     funcBdr.setCurr(troo);
     fi.body->accept(*this);
@@ -86,7 +81,7 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
-    gen::Expr value = exprBdr.value(swich.expr.get());
+    gen::Expr value = exprBdr.value(scopes.back(), swich.expr.get());
     if (swich.cases.empty()) {
       return;
     }
@@ -159,7 +154,7 @@ public:
   llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
     llvm::Value *retObj;
     if (cat == TypeCat::trivially_copyable) {
-      gen::Expr evalExpr = exprBdr.expr(expr, nullptr);
+      gen::Expr evalExpr = exprBdr.expr(scopes.back(), expr);
       if (glvalue(evalExpr.cat)) {
         retObj = funcBdr.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
@@ -171,7 +166,7 @@ public:
       // if there is one object that is always returned from a function,
       //   treat the return pointer as an lvalue of that object
       // move from an lvalue if it's lifetime ends after the function returns.
-      exprBdr.expr(expr, retObj);
+      exprBdr.expr(scopes.back(), expr, retObj);
     }
     return retObj;
   }
@@ -205,7 +200,7 @@ public:
     leaveScope();
     funcBdr.terminate(cond);
     funcBdr.setCurr(cond);
-    exprBdr.condBr(wile.cond.get(), body, done);
+    exprBdr.condBr(scopes.back(), wile.cond.get(), body, done);
     funcBdr.setCurr(done);
   }
   void visit(ast::For &four) override {
@@ -223,7 +218,7 @@ public:
     leaveScope();
     funcBdr.terminate(incr);
     funcBdr.setCurr(cond);
-    exprBdr.condBr(four.cond.get(), body, done);
+    exprBdr.condBr(scopes.back(), four.cond.get(), body, done);
     funcBdr.setCurr(incr);
     if (four.incr) {
       four.incr->accept(*this);
@@ -238,7 +233,7 @@ public:
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      exprBdr.expr(expr, addr);
+      exprBdr.expr(scopes.back(), expr, addr);
     } else {
       lifetime.defConstruct(type, addr);
     }
@@ -253,21 +248,18 @@ public:
     let.llvmAddr = insertVar(let.symbol, let.expr.get());
   }
   
-  void destroy(const Object object) {
-    lifetime.destroy(object.type, object.addr);
-  }
   void destroy(const size_t index) {
     for (size_t i = scopes.size() - 1; i != index - 1; --i) {
       for (const Object obj : rev_range(scopes[i])) {
-        destroy(obj);
+        lifetime.destroy(obj.type, obj.addr);
       }
     }
   }
   
   void visit(ast::Assign &assign) override {
     ast::Type *type = assign.left->exprType.get();
-    gen::Expr left = exprBdr.expr(assign.left.get(), nullptr);
-    gen::Expr right = exprBdr.expr(assign.right.get(), nullptr);
+    gen::Expr left = exprBdr.expr(scopes.back(), assign.left.get());
+    gen::Expr right = exprBdr.expr(scopes.back(), assign.right.get());
     assert(glvalue(left.cat));
     lifetime.assign(type, left.obj, right);
   }
@@ -275,7 +267,7 @@ public:
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    exprBdr.expr(&assign.call, nullptr);
+    exprBdr.expr(scopes.back(), &assign.call);
   }
   
   void insert(ast::FuncParam &param, const size_t index) {
