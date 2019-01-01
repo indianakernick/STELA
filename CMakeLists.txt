@@ -169,13 +169,13 @@ target_compile_features(STELA
         cxx_std_17
 )
 
-#include(CheckIPOSupported)
-#check_ipo_supported(RESULT result)
-#if(result)
-#        set_target_properties(STELA
-#                PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
-#        )
-#endif()
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result)
+if(result)
+        set_target_properties(STELA
+                PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE
+        )
+endif()
 
 install(TARGETS STELA
         ARCHIVE DESTINATION lib
