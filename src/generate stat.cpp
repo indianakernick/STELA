@@ -17,7 +17,6 @@
 #include "lifetime exprs.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
-#include "expression builder.hpp"
 
 using namespace stela;
 
@@ -32,9 +31,28 @@ struct FlowData {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, funcBdr{func}, exprBdr{ctx, funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
+    : ctx{ctx}, funcBdr{func}, lifetime{ctx.inst, funcBdr.ir} {}
 
-  using ScopeStack = std::vector<Scope>;
+  gen::Expr genValue(ast::Expression *expr) {
+    return generateValueExpr(scopes.back(), ctx, funcBdr, expr);
+  }
+  void genExpr(ast::Expression *expr, llvm::Value *result) {
+    generateExpr(scopes.back(), ctx, funcBdr, expr, result);
+  }
+  gen::Expr genExpr(ast::Expression *expr) {
+    return generateExpr(scopes.back(), ctx, funcBdr, expr, nullptr);
+  }
+  void genCondBr(
+    ast::Expression *cond,
+    llvm::BasicBlock *troo,
+    llvm::BasicBlock *fols
+  ) {
+    const size_t exprScope = enterScope();
+    llvm::Value *condExpr = genValue(cond).obj;
+    destroy(exprScope);
+    leaveScope();
+    funcBdr.ir.CreateCondBr(condExpr, troo, fols);
+  }
 
   void visitFlow(ast::Statement *body, const FlowData newFlow) {
     FlowData oldFlow = std::exchange(flow, newFlow);
@@ -44,11 +62,16 @@ public:
   // @TODO equality for structs and arrays
   llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
     const ArithCat arith = classifyArith(expr);
+    const size_t exprScope = enterScope();
+    llvm::Value *equalExpr;
     if (arith == ArithCat::floating_point) {
-      return funcBdr.ir.CreateFCmpOEQ(value, exprBdr.value(scopes.back(), expr).obj);
+      equalExpr = funcBdr.ir.CreateFCmpOEQ(value, genValue(expr).obj);
     } else {
-      return funcBdr.ir.CreateICmpEQ(value, exprBdr.value(scopes.back(), expr).obj);
+      equalExpr = funcBdr.ir.CreateICmpEQ(value, genValue(expr).obj);
     }
+    destroy(exprScope);
+    leaveScope();
+    return equalExpr;
   }
   
   void visit(ast::Block &block) override {
@@ -64,7 +87,7 @@ public:
     auto *fols = funcBdr.makeBlock();
     llvm::BasicBlock *done = nullptr;
     funcBdr.setCurr(cond);
-    exprBdr.condBr(scopes.back(), fi.cond.get(), troo, fols);
+    genCondBr(fi.cond.get(), troo, fols);
     
     funcBdr.setCurr(troo);
     fi.body->accept(*this);
@@ -81,12 +104,15 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
-    gen::Expr value = exprBdr.value(scopes.back(), swich.expr.get());
+    const size_t exprScope = enterScope();
+    gen::Expr value = genValue(swich.expr.get());
     if (swich.cases.empty()) {
+      destroy(exprScope);
+      leaveScope();
       return;
     }
     
-    const size_t scopeIndex = scopes.size();
+    const size_t caseScope = scopes.size();
     auto checkBlocks = funcBdr.makeBlocks(swich.cases.size());
     auto caseBlocks = funcBdr.makeBlocks(swich.cases.size());
     llvm::BasicBlock *done = funcBdr.makeBlock();
@@ -128,7 +154,7 @@ public:
         nextBlock = caseBlocks[c + 1];
       }
       enterScope();
-      visitFlow(swich.cases[c].body.get(), {done, nextBlock, scopeIndex});
+      visitFlow(swich.cases[c].body.get(), {done, nextBlock, caseScope});
       leaveScope();
       funcBdr.terminate(done);
     }
@@ -136,7 +162,10 @@ public:
     funcBdr.setCurr(done);
     if (swich.alwaysReturns) {
       funcBdr.ir.CreateUnreachable();
+    } else {
+      destroy(exprScope);
     }
+    leaveScope();
   }
   void visit(ast::Terminate &) override {
     destroy(scopes.size() - 1);
@@ -154,7 +183,7 @@ public:
   llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
     llvm::Value *retObj;
     if (cat == TypeCat::trivially_copyable) {
-      gen::Expr evalExpr = exprBdr.expr(scopes.back(), expr);
+      gen::Expr evalExpr = genExpr(expr);
       if (glvalue(evalExpr.cat)) {
         retObj = funcBdr.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
@@ -166,7 +195,7 @@ public:
       // if there is one object that is always returned from a function,
       //   treat the return pointer as an lvalue of that object
       // move from an lvalue if it's lifetime ends after the function returns.
-      exprBdr.expr(scopes.back(), expr, retObj);
+      genExpr(expr, retObj);
     }
     return retObj;
   }
@@ -200,7 +229,7 @@ public:
     leaveScope();
     funcBdr.terminate(cond);
     funcBdr.setCurr(cond);
-    exprBdr.condBr(scopes.back(), wile.cond.get(), body, done);
+    genCondBr(wile.cond.get(), body, done);
     funcBdr.setCurr(done);
   }
   void visit(ast::For &four) override {
@@ -218,7 +247,7 @@ public:
     leaveScope();
     funcBdr.terminate(incr);
     funcBdr.setCurr(cond);
-    exprBdr.condBr(scopes.back(), four.cond.get(), body, done);
+    genCondBr(four.cond.get(), body, done);
     funcBdr.setCurr(incr);
     if (four.incr) {
       four.incr->accept(*this);
@@ -233,7 +262,10 @@ public:
     ast::Type *type = obj->etype.type.get();
     llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
     if (expr) {
-      exprBdr.expr(scopes.back(), expr, addr);
+      const size_t exprScope = enterScope();
+      genExpr(expr, addr);
+      destroy(exprScope);
+      leaveScope();
     } else {
       lifetime.defConstruct(type, addr);
     }
@@ -257,17 +289,23 @@ public:
   }
   
   void visit(ast::Assign &assign) override {
+    const size_t exprScope = enterScope();
     ast::Type *type = assign.left->exprType.get();
-    gen::Expr left = exprBdr.expr(scopes.back(), assign.left.get());
-    gen::Expr right = exprBdr.expr(scopes.back(), assign.right.get());
+    gen::Expr left = genExpr(assign.left.get());
+    gen::Expr right = genExpr(assign.right.get());
     assert(glvalue(left.cat));
     lifetime.assign(type, left.obj, right);
+    destroy(exprScope);
+    leaveScope();
   }
   void visit(ast::DeclAssign &assign) override {
     assign.llvmAddr = insertVar(assign.symbol, assign.expr.get());
   }
   void visit(ast::CallAssign &assign) override {
-    exprBdr.expr(scopes.back(), &assign.call);
+    const size_t exprScope = enterScope();
+    genExpr(&assign.call);
+    destroy(exprScope);
+    leaveScope();
   }
   
   void insert(ast::FuncParam &param, const size_t index) {
@@ -298,9 +336,8 @@ public:
 private:
   gen::Ctx ctx;
   FuncBuilder funcBdr;
-  ExprBuilder exprBdr;
   FlowData flow;
-  ScopeStack scopes;
+  std::vector<Scope> scopes;
   LifetimeExpr lifetime;
 };
 

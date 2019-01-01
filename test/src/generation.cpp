@@ -1287,6 +1287,12 @@ TEST_GROUP(Generation, {
       extern func constructTempFromX() {
         return make Outer {make Inner {(make Outer {}).inn.arr}};
       }
+      
+      let global = (make Outer {}).inn.arr;
+      
+      extern func constructGlobalFromX() {
+        return global;
+      }
     )");
     
     auto returnX = GET_FUNC("returnX", Array<Real>());
@@ -1308,6 +1314,11 @@ TEST_GROUP(Generation, {
     Array<Real> d = constructTempFromX();
     ASSERT_TRUE(d);
     ASSERT_EQ(d.use_count(), 1);
+    
+    auto constructGlobalFromX = GET_FUNC("constructGlobalFromX", Array<Real>());
+    Array<Real> e = constructGlobalFromX();
+    ASSERT_TRUE(e);
+    ASSERT_EQ(e.use_count(), 2);
   });
   
   /*

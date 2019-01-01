@@ -17,7 +17,6 @@
 		454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B743F21C0EB4900BB4BD0 /* optimize module.cpp */; };
 		454B744721C3947900BB4BD0 /* lower expressions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744521C3947900BB4BD0 /* lower expressions.cpp */; };
 		454B744A21C4A5B700BB4BD0 /* function builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744821C4A5B700BB4BD0 /* function builder.cpp */; };
-		454B744D21C5B59B00BB4BD0 /* expression builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744B21C5B59B00BB4BD0 /* expression builder.cpp */; };
 		454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB7FE21AB6E41001A5D78 /* expr lookup.cpp */; };
 		454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80121AB74DE001A5D78 /* expr stack.cpp */; };
 		454EB80621ABD838001A5D78 /* plain format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454EB80521ABD838001A5D78 /* plain format.cpp */; };
@@ -136,8 +135,6 @@
 		454B744621C3947900BB4BD0 /* lower expressions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "lower expressions.hpp"; sourceTree = "<group>"; };
 		454B744821C4A5B700BB4BD0 /* function builder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "function builder.cpp"; sourceTree = "<group>"; };
 		454B744921C4A5B700BB4BD0 /* function builder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "function builder.hpp"; sourceTree = "<group>"; };
-		454B744B21C5B59B00BB4BD0 /* expression builder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "expression builder.cpp"; sourceTree = "<group>"; };
-		454B744C21C5B59B00BB4BD0 /* expression builder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "expression builder.hpp"; sourceTree = "<group>"; };
 		454EB7F9219E326E001A5D78 /* notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = notes.txt; sourceTree = "<group>"; };
 		454EB7FB219E4681001A5D78 /* retain ptr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "retain ptr.hpp"; sourceTree = "<group>"; };
 		454EB7FD21A0E837001A5D78 /* context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = context.hpp; sourceTree = "<group>"; };
@@ -367,8 +364,6 @@
 				454B744621C3947900BB4BD0 /* lower expressions.hpp */,
 				454B744821C4A5B700BB4BD0 /* function builder.cpp */,
 				454B744921C4A5B700BB4BD0 /* function builder.hpp */,
-				454B744B21C5B59B00BB4BD0 /* expression builder.cpp */,
-				454B744C21C5B59B00BB4BD0 /* expression builder.hpp */,
 				45C7FADD21C74D9100995B7D /* type builder.cpp */,
 				45C7FADE21C74D9100995B7D /* type builder.hpp */,
 				45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */,
@@ -732,7 +727,6 @@
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,
 				4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */,
 				454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */,
-				454B744D21C5B59B00BB4BD0 /* expression builder.cpp in Sources */,
 				454EB80621ABD838001A5D78 /* plain format.cpp in Sources */,
 				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,
 				45816F3F21AF637400712CA3 /* generation.cpp in Sources */,
