@@ -388,82 +388,56 @@ public:
     value = getAddr(ident.definition);
     constructResultFromValue(result, &ident);
   }
+  void visit(ast::Ternary &tern) override {
+    auto *condBlock = funcBdr.nextEmpty();
+    auto *trooBlock = funcBdr.makeBlock();
+    auto *folsBlock = funcBdr.makeBlock();
+    auto *doneBlock = funcBdr.makeBlock();
+    llvm::Value *resultAddr = result;
+    
+    funcBdr.setCurr(condBlock);
+    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
   
-  void ternaryInit(llvm::Value *resultAddr, ast::Ternary &tern) {
-    auto *condBlock = funcBdr.nextEmpty();
-    auto *trooBlock = funcBdr.makeBlock();
-    auto *folsBlock = funcBdr.makeBlock();
-    auto *doneBlock = funcBdr.makeBlock();
-    
-    funcBdr.setCurr(condBlock);
-    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
-    
-    funcBdr.setCurr(trooBlock);
-    visitExpr(tern.troo.get(), resultAddr);
-    
-    funcBdr.setCurr(folsBlock);
-    visitExpr(tern.fols.get(), resultAddr);
-    
-    funcBdr.link(trooBlock, doneBlock);
-    funcBdr.link(folsBlock, doneBlock);
-    
-    funcBdr.setCurr(doneBlock);
-    value = nullptr;
-  }
-  void ternaryExpr(ast::Ternary &tern) {
-    auto *condBlock = funcBdr.nextEmpty();
-    auto *trooBlock = funcBdr.makeBlock();
-    auto *folsBlock = funcBdr.makeBlock();
-    auto *doneBlock = funcBdr.makeBlock();
-    
-    funcBdr.setCurr(condBlock);
-    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
-    
     gen::Expr troo{nullptr, {}};
     gen::Expr fols{nullptr, {}};
     const ValueCat trooCat = classifyValue(tern.troo.get());
     const ValueCat folsCat = classifyValue(tern.fols.get());
     
-    if (trooCat == ValueCat::lvalue && folsCat == ValueCat::lvalue) {
+    if (resultAddr) {
+      funcBdr.setCurr(trooBlock);
+      visitExpr(tern.troo.get(), resultAddr);
+      funcBdr.setCurr(folsBlock);
+      visitExpr(tern.fols.get(), resultAddr);
+      value = nullptr;
+    } else if (trooCat == ValueCat::lvalue && folsCat == ValueCat::lvalue) {
       funcBdr.setCurr(trooBlock);
       troo = visitExpr(tern.troo.get(), nullptr);
       funcBdr.setCurr(folsBlock);
       fols = visitExpr(tern.fols.get(), nullptr);
+    } else if (classifyType(tern.exprType.get()) == TypeCat::trivially_copyable) {
+      funcBdr.setCurr(trooBlock);
+      troo = visitValue(tern.troo.get());
+      funcBdr.setCurr(folsBlock);
+      fols = visitValue(tern.fols.get());
     } else {
-      if (classifyType(tern.exprType.get()) == TypeCat::trivially_copyable) {
-        funcBdr.setCurr(trooBlock);
-        troo = visitValue(tern.troo.get());
-        funcBdr.setCurr(folsBlock);
-        fols = visitValue(tern.fols.get());
-      } else {
-        llvm::Value *addr = funcBdr.alloc(generateType(ctx, tern.exprType.get()));
-        funcBdr.setCurr(trooBlock);
-        visitExpr(tern.troo.get(), addr);
-        funcBdr.setCurr(folsBlock);
-        visitExpr(tern.fols.get(), addr);
-        value = addr;
-      }
+      llvm::Value *addr = funcBdr.alloc(generateType(ctx, tern.exprType.get()));
+      funcBdr.setCurr(trooBlock);
+      visitExpr(tern.troo.get(), addr);
+      funcBdr.setCurr(folsBlock);
+      visitExpr(tern.fols.get(), addr);
+      value = addr;
     }
     
     funcBdr.link(trooBlock, doneBlock);
     funcBdr.link(folsBlock, doneBlock);
-    
     funcBdr.setCurr(doneBlock);
+    
     if (troo.obj) {
       assert(fols.obj);
       llvm::PHINode *phi = funcBdr.ir.CreatePHI(troo.obj->getType(), 2);
       phi->addIncoming(troo.obj, trooBlock);
       phi->addIncoming(fols.obj, folsBlock);
       value = phi;
-    }
-  }
-  
-  void visit(ast::Ternary &tern) override {
-    // @FIXME refactor
-    if (result) {
-      ternaryInit(result, tern);
-    } else {
-      ternaryExpr(tern);
     }
   }
   void visit(ast::Make &make) override {
