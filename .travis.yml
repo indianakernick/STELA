@@ -57,5 +57,5 @@ before_install:
 script:
 - cd build
 - cmake -DCMAKE_BUILD_TYPE=Debug ${DEFINITION} ..
-- make
+- make VERBOSE=1
 - test/suite
