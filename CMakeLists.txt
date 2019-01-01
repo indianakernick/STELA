@@ -119,8 +119,6 @@ add_library(STELA STATIC
         "src/lower expressions.hpp"
         "src/function builder.cpp"
         "src/function builder.hpp"
-        "src/expression builder.cpp"
-        "src/expression builder.cpp"
         "src/type builder.cpp"
         "src/type builder.hpp"
         "src/lifetime exprs.cpp"
