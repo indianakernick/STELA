@@ -337,16 +337,16 @@ public:
   
   void visit(ast::StringLiteral &str) override {
     push(Tag::string, "\"");
-    push(Tag::string, str.value);
+    push(Tag::string, str.literal);
     push(Tag::string, "\"");
   }
   void visit(ast::CharLiteral &ch) override {
     push(Tag::character, "'");
-    push(Tag::character, ch.value);
+    push(Tag::character, ch.literal);
     push(Tag::character, "'");
   }
   void visit(ast::NumberLiteral &num) override {
-    push(Tag::number, num.value);
+    push(Tag::number, num.literal);
   }
   void visit(ast::BoolLiteral &bol) override {
     if (bol.value) {

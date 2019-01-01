@@ -139,14 +139,12 @@ public:
   
   /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
     for (size_t i = 0; i != args.size(); ++i) {
-      // @TODO use address operator for ref parameters
       str += ", (";
       args[i]->accept(*this);
       str += ')';
     }
   }
   void pushBtnFunc(const ast::BtnFuncEnum e) {
-    // @TODO X macros?
     switch (e) {
       case ast::BtnFuncEnum::capacity:
         str += "capacity"; return;
@@ -253,7 +251,6 @@ public:
       str += ".func(";
       str += func;
       str += ".data.get()";
-      // @TODO get the parameter types of a function pointer
       pushArgs(call.args, {});
       str += ")";
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
@@ -313,11 +310,9 @@ public:
   }
   /*
   void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
-    // @TODO this function is too big. Chop, chop!
     assert(definition);
     gen::String name;
     if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
-      // @TODO uncomment when we move from references to pointers
       //str += "(";
       //if (param->ref == ast::ParamRef::ref) {
       //  str += "*";
@@ -490,7 +485,7 @@ public:
   void visit(ast::CharLiteral &chr) override {
     value = llvm::ConstantInt::get(
       llvm::IntegerType::getInt8Ty(ctx.llvm),
-      static_cast<uint64_t>(chr.number),
+      static_cast<uint64_t>(chr.value),
       true
     );
     storeValueAsResult(result);
@@ -526,7 +521,7 @@ public:
           std::is_signed_v<Type>
         );
       }
-    }, num.number);
+    }, num.value);
     storeValueAsResult(result);
   }
   void visit(ast::BoolLiteral &bol) override {

@@ -22,8 +22,6 @@ using namespace stela;
 std::string stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
   /*gen::String name;
   name += "f_null_";
-  // @TODO maybe consider caching type names
-  // generateFuncName does that same work that generateNullFunc does
   name += generateFuncName(ctx, type);
   if (ctx.inst.funcNotInst(name)) {
     ctx.func += "[[noreturn]] static ";

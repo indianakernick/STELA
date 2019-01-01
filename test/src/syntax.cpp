@@ -38,7 +38,7 @@ using namespace stela::ast;
 #define IS_NUM(EXP, NUMBER)                                                     \
   {                                                                             \
     auto *num = ASSERT_DOWN_CAST(const NumberLiteral, EXP);                     \
-    ASSERT_EQ(num->value, NUMBER);                                              \
+    ASSERT_EQ(num->literal, NUMBER);                                            \
   } do{}while(0)
 
 #define IS_ID(EXP, IDENTIFIER)                                                  \
@@ -712,17 +712,17 @@ TEST_GROUP(Syntax, {
     {
       auto *var = ASSERT_DOWN_CAST(const Var, block[0]);
       auto *lit = ASSERT_DOWN_CAST(const StringLiteral, var->expr);
-      ASSERT_EQ(lit->value, "This is a string");
+      ASSERT_EQ(lit->literal, "This is a string");
     }
     {
       auto *var = ASSERT_DOWN_CAST(const Var, block[1]);
       auto *lit = ASSERT_DOWN_CAST(const CharLiteral, var->expr);
-      ASSERT_EQ(lit->value, "c");
+      ASSERT_EQ(lit->literal, "c");
     }
     {
       auto *var = ASSERT_DOWN_CAST(const Var, block[2]);
       auto *lit = ASSERT_DOWN_CAST(const NumberLiteral, var->expr);
-      ASSERT_EQ(lit->value, "73");
+      ASSERT_EQ(lit->literal, "73");
     }
     {
       auto *var = ASSERT_DOWN_CAST(const Var, block[3]);
@@ -760,18 +760,18 @@ TEST_GROUP(Syntax, {
       auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, var->expr);
       ASSERT_EQ(lit->exprs.size(), 1);
       auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0]);
-      ASSERT_EQ(seven->value, "7");
+      ASSERT_EQ(seven->literal, "7");
     }
     {
       auto *var = ASSERT_DOWN_CAST(const Var, block[2]);
       auto *lit = ASSERT_DOWN_CAST(const ArrayLiteral, var->expr);
       ASSERT_EQ(lit->exprs.size(), 3);
       auto *seven = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[0]);
-      ASSERT_EQ(seven->value, "7");
+      ASSERT_EQ(seven->literal, "7");
       auto *eight = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[1]);
-      ASSERT_EQ(eight->value, "8");
+      ASSERT_EQ(eight->literal, "8");
       auto *nine = ASSERT_DOWN_CAST(const NumberLiteral, lit->exprs[2]);
-      ASSERT_EQ(nine->value, "9");
+      ASSERT_EQ(nine->literal, "9");
     }
   });
   
@@ -814,11 +814,11 @@ TEST_GROUP(Syntax, {
           auto *list = ASSERT_DOWN_CAST(const InitList, make->expr);
             ASSERT_EQ(list->exprs.size(), 3);
             auto *a = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[0]);
-              ASSERT_EQ(a->value, "a");
+              ASSERT_EQ(a->literal, "a");
             auto *b = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[1]);
-              ASSERT_EQ(b->value, "b");
+              ASSERT_EQ(b->literal, "b");
             auto *c = ASSERT_DOWN_CAST(const StringLiteral, list->exprs[2]);
-              ASSERT_EQ(c->value, "c");
+              ASSERT_EQ(c->literal, "c");
     }
   });
   
@@ -867,7 +867,7 @@ TEST_GROUP(Syntax, {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0]);
       ASSERT_EQ(let->name, "five");
       auto *num = ASSERT_DOWN_CAST(const NumberLiteral, let->expr);
-      ASSERT_EQ(num->value, "5");
+      ASSERT_EQ(num->literal, "5");
     }
     {
       auto *let = ASSERT_DOWN_CAST(const Let, ast.global[1]);

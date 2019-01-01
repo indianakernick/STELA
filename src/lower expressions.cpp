@@ -99,7 +99,7 @@ public:
   void visit(ast::IncrDecr &incrDecr) override {
     auto *type = assertConcreteType<ast::BtnType>(incrDecr.expr->exprType.get());
     auto one = make_retain<ast::NumberLiteral>();
-    one->number = getOne(type->value);
+    one->value = getOne(type->value);
     one->exprType = incrDecr.expr->exprType;
     auto binExpr = make_retain<ast::BinaryExpr>();
     binExpr->left = incrDecr.expr;

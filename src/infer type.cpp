@@ -127,24 +127,24 @@ public:
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
   void visit(ast::CharLiteral &chr) override {
-    if (chr.value.size() == 1) {
+    if (chr.literal.size() == 1) {
       // @TODO deal with \n \t and others
-      chr.number = chr.value[0];
+      chr.value = chr.literal[0];
     }
     lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }
   void visit(ast::NumberLiteral &n) override {
-    n.number = parseNumberLiteral(n.value, ctx.log);
+    n.value = parseNumberLiteral(n.literal, ctx.log);
     ast::TypePtr type;
-    if (std::holds_alternative<Byte>(n.number)) {
+    if (std::holds_alternative<Byte>(n.value)) {
       type = ctx.btn.Byte;
-    } else if (std::holds_alternative<Char>(n.number)) {
+    } else if (std::holds_alternative<Char>(n.value)) {
       type = ctx.btn.Char;
-    } else if (std::holds_alternative<Real>(n.number)) {
+    } else if (std::holds_alternative<Real>(n.value)) {
       type = ctx.btn.Real;
-    } else if (std::holds_alternative<Sint>(n.number)) {
+    } else if (std::holds_alternative<Sint>(n.value)) {
       type = ctx.btn.Sint;
-    } else if (std::holds_alternative<Uint>(n.number)) {
+    } else if (std::holds_alternative<Uint>(n.value)) {
       type = ctx.btn.Uint;
     }
     lkp.setExpr(sym::makeLetVal(std::move(type)));

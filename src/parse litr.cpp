@@ -21,10 +21,10 @@ ast::LitrPtr parseLiteralToken(ParseTokens &tok, const Token::Type type) {
   if (tok.peekType(type)) {
     auto literal = make_retain<Literal>();
     literal->loc = tok.loc();
-    literal->value = tok.expect(type);
+    literal->literal = tok.expect(type);
     if constexpr (Trim) {
-      literal->value.remove_prefix(1);
-      literal->value.remove_suffix(1);
+      literal->literal.remove_prefix(1);
+      literal->literal.remove_suffix(1);
     }
     return literal;
   } else {

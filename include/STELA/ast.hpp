@@ -452,24 +452,22 @@ struct CallAssign final : Assignment {
 //-------------------------------- Literals ------------------------------------
 
 struct StringLiteral final : Literal {
-  std::string_view value;
+  std::string_view literal;
+  // @TODO std::string value;
   
   void accept(Visitor &) override;
 };
 
 struct CharLiteral final : Literal {
-  std::string_view value;
-  char number = 0;
+  std::string_view literal;
+  char value = 0;
   
   void accept(Visitor &) override;
 };
 
 struct NumberLiteral final : Literal {
-  // @TODO rename these
-  // std::string_view literal
-  // NumberVarient value
-  std::string_view value;
-  NumberVariant number;
+  std::string_view literal;
+  NumberVariant value;
   
   void accept(Visitor &) override;
 };

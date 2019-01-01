@@ -140,7 +140,6 @@ llvm::FunctionType *stela::generateLambSig(gen::Ctx ctx, const ast::FuncType &ty
 }
 
 void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params) {
-  // @FIXME might need refactoring
   llvm::FunctionType *type = func->getFunctionType();
   const unsigned numParams = type->getNumParams();
   const unsigned retParam = numParams > params.size() ? numParams - 1 : 0;
