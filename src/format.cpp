@@ -110,11 +110,11 @@ public:
     pushSpace();
     pushOp("?");
     pushSpace();
-    tern.tru->accept(*this);
+    tern.troo->accept(*this);
     pushSpace();
     pushOp(":");
     pushSpace();
-    tern.fals->accept(*this);
+    tern.fols->accept(*this);
   }
   void visit(ast::Make &make) override {
     pushKey("make");

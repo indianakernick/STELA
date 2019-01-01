@@ -399,10 +399,10 @@ public:
     funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
     
     funcBdr.setCurr(trooBlock);
-    visitExpr(tern.tru.get(), resultAddr);
+    visitExpr(tern.troo.get(), resultAddr);
     
     funcBdr.setCurr(folsBlock);
-    visitExpr(tern.fals.get(), resultAddr);
+    visitExpr(tern.fols.get(), resultAddr);
     
     funcBdr.link(trooBlock, doneBlock);
     funcBdr.link(folsBlock, doneBlock);
@@ -419,28 +419,28 @@ public:
     funcBdr.setCurr(condBlock);
     funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
     
-    gen::Expr tru{nullptr, {}};
-    gen::Expr fals{nullptr, {}};
-    const ValueCat truCat = classifyValue(tern.tru.get());
-    const ValueCat falsCat = classifyValue(tern.fals.get());
+    gen::Expr troo{nullptr, {}};
+    gen::Expr fols{nullptr, {}};
+    const ValueCat trooCat = classifyValue(tern.troo.get());
+    const ValueCat folsCat = classifyValue(tern.fols.get());
     
-    if (truCat == ValueCat::lvalue && falsCat == ValueCat::lvalue) {
+    if (trooCat == ValueCat::lvalue && folsCat == ValueCat::lvalue) {
       funcBdr.setCurr(trooBlock);
-      tru = visitExpr(tern.tru.get(), nullptr);
+      troo = visitExpr(tern.troo.get(), nullptr);
       funcBdr.setCurr(folsBlock);
-      fals = visitExpr(tern.fals.get(), nullptr);
+      fols = visitExpr(tern.fols.get(), nullptr);
     } else {
       if (classifyType(tern.exprType.get()) == TypeCat::trivially_copyable) {
         funcBdr.setCurr(trooBlock);
-        tru = visitValue(tern.tru.get());
+        troo = visitValue(tern.troo.get());
         funcBdr.setCurr(folsBlock);
-        fals = visitValue(tern.fals.get());
+        fols = visitValue(tern.fols.get());
       } else {
         llvm::Value *addr = funcBdr.alloc(generateType(ctx, tern.exprType.get()));
         funcBdr.setCurr(trooBlock);
-        visitExpr(tern.tru.get(), addr);
+        visitExpr(tern.troo.get(), addr);
         funcBdr.setCurr(folsBlock);
-        visitExpr(tern.fals.get(), addr);
+        visitExpr(tern.fols.get(), addr);
         value = addr;
       }
     }
@@ -449,11 +449,11 @@ public:
     funcBdr.link(folsBlock, doneBlock);
     
     funcBdr.setCurr(doneBlock);
-    if (tru.obj) {
-      assert(fals.obj);
-      llvm::PHINode *phi = funcBdr.ir.CreatePHI(tru.obj->getType(), 2);
-      phi->addIncoming(tru.obj, trooBlock);
-      phi->addIncoming(fals.obj, folsBlock);
+    if (troo.obj) {
+      assert(fols.obj);
+      llvm::PHINode *phi = funcBdr.ir.CreatePHI(troo.obj->getType(), 2);
+      phi->addIncoming(troo.obj, trooBlock);
+      phi->addIncoming(fols.obj, folsBlock);
       value = phi;
     }
   }

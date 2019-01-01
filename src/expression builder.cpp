@@ -24,7 +24,7 @@ gen::Expr ExprBuilder::expr(ast::Expression *expr, llvm::Value *result) {
 void ExprBuilder::condBr(
   ast::Expression *cond,
   llvm::BasicBlock *troo,
-  llvm::BasicBlock *folse
+  llvm::BasicBlock *fols
 ) {
-  fn.ir.CreateCondBr(value(cond).obj, troo, folse);
+  fn.ir.CreateCondBr(value(cond).obj, troo, fols);
 }

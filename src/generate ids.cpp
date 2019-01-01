@@ -36,8 +36,8 @@ public:
   }
   void visit(ast::Ternary &tern) override {
     tern.cond->accept(*this);
-    tern.tru->accept(*this);
-    tern.fals->accept(*this);
+    tern.troo->accept(*this);
+    tern.fols->accept(*this);
   }
   void visit(ast::Make &make) override {
     make.expr->accept(*this);

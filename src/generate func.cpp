@@ -253,12 +253,12 @@ void resetArray(gen::FuncInst &inst, FuncBuilder &funcBdr, llvm::Value *array, l
 void likely(llvm::BranchInst *branch) {
   llvm::LLVMContext &ctx = branch->getContext();
   llvm::IntegerType *i32 = llvm::IntegerType::getInt32Ty(ctx);
-  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2048);
-  llvm::Metadata *trueMeta = llvm::ConstantAsMetadata::get(trueWeight);
-  llvm::ConstantInt *falseWeight = llvm::ConstantInt::get(i32, 1);
-  llvm::Metadata *falseMeta = llvm::ConstantAsMetadata::get(falseWeight);
+  llvm::ConstantInt *trooWeight = llvm::ConstantInt::get(i32, 2048);
+  llvm::Metadata *trooMeta = llvm::ConstantAsMetadata::get(trooWeight);
+  llvm::ConstantInt *folsWeight = llvm::ConstantInt::get(i32, 1);
+  llvm::Metadata *folsMeta = llvm::ConstantAsMetadata::get(folsWeight);
   llvm::MDTuple *tuple = llvm::MDNode::get(ctx, {
-    llvm::MDString::get(ctx, "branch_weights"), trueMeta, falseMeta
+    llvm::MDString::get(ctx, "branch_weights"), trooMeta, folsMeta
   });
   branch->setMetadata("prof", tuple);
 }

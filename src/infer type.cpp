@@ -93,15 +93,15 @@ public:
   }
   void visit(ast::Ternary &tern) override {
     visitExprCheck(tern.cond, ctx.btn.Bool);
-    const sym::ExprType tru = visitExprCheck(tern.tru, expected);
-    const sym::ExprType fals = visitExprCheck(tern.fals, expected);
-    if (!compareTypes(ctx, tru.type, fals.type)) {
+    const sym::ExprType troo = visitExprCheck(tern.troo, expected);
+    const sym::ExprType fols = visitExprCheck(tern.fols, expected);
+    if (!compareTypes(ctx, troo.type, fols.type)) {
       ctx.log.error(tern.loc) << "Branches of ternary have different types" << fatal;
     }
     sym::ExprType etype;
-    etype.type = tru.type;
-    etype.mut = sym::common(tru.mut, fals.mut);
-    etype.ref = sym::common(tru.ref, fals.ref);
+    etype.type = troo.type;
+    etype.mut = sym::common(troo.mut, fols.mut);
+    etype.ref = sym::common(troo.ref, fols.ref);
     lkp.setExpr(etype);
   }
   void visit(ast::Make &make) override {

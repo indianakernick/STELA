@@ -1080,8 +1080,8 @@ TEST_GROUP(Syntax, {
         auto *le = IS_BOP(tern->cond, le);
           IS_ID(le->left, "a");
           IS_ID(le->right, "d");
-        IS_ID(tern->tru, "a");
-        auto *div = IS_BOP(tern->fals, div);
+        IS_ID(tern->troo, "a");
+        auto *div = IS_BOP(tern->fols, div);
           IS_ID(div->left, "a");
           IS_ID(div->right, "d");
   });
@@ -1339,8 +1339,8 @@ TEST_GROUP(Syntax, {
         auto *eq = IS_BOP(ternary->cond, eq);
           IS_ID(eq->left, "n");
           IS_NUM(eq->right, "0");
-        IS_NUM(ternary->tru, "1");
-        auto *mul = IS_BOP(ternary->fals, mul);
+        IS_NUM(ternary->troo, "1");
+        auto *mul = IS_BOP(ternary->fols, mul);
           IS_ID(mul->left, "n");
           auto *call = ASSERT_DOWN_CAST(const FuncCall, mul->right);
             IS_ID(call->func, "fac");

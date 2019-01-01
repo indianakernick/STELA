@@ -297,9 +297,9 @@ ast::ExprPtr parseTern(ParseTokens &tok) {
     auto tern = make_retain<ast::Ternary>();
     tern->loc = left->loc;
     tern->cond = std::move(left);
-    tern->tru = expectExpr(tok, parseTern);
+    tern->troo = expectExpr(tok, parseTern);
     tok.expectOp(":");
-    tern->fals = expectExpr(tok, parseTern);
+    tern->fols = expectExpr(tok, parseTern);
     return tern;
   }
   return left;

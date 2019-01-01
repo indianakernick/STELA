@@ -45,17 +45,17 @@ public:
   }
   void visit(ast::If &fi) override {
     fi.body->accept(*this);
-    const Term truTerm = term;
-    const Occurs truOccurs = occurs;
+    const Term trooTerm = term;
+    const Occurs trooOccurs = occurs;
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     } else {
       occurs = Occurs::no;
     }
-    if (occurs != truOccurs || term != truTerm) {
+    if (occurs != trooOccurs || term != trooTerm) {
       occurs = Occurs::maybe;
     }
-    if (truTerm == Term::returns) {
+    if (trooTerm == Term::returns) {
       term = Term::returns;
     }
   }

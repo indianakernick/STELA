@@ -71,11 +71,11 @@ public:
     cat = ValueCat::lvalue;
   }
   void visit(ast::Ternary &tern) override {
-    tern.tru->accept(*this);
-    const ValueCat trueCat = cat;
-    tern.fals->accept(*this);
-    const ValueCat falsCat = cat;
-    if (trueCat == ValueCat::lvalue && falsCat == ValueCat::lvalue) {
+    tern.troo->accept(*this);
+    const ValueCat trooCat = cat;
+    tern.fols->accept(*this);
+    const ValueCat folsCat = cat;
+    if (trooCat == ValueCat::lvalue && folsCat == ValueCat::lvalue) {
       cat = ValueCat::lvalue;
     } else {
       cat = ValueCat::prvalue;

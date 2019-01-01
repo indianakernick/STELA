@@ -227,8 +227,8 @@ struct Identifier final : Expression {
 
 struct Ternary final : Expression {
   ExprPtr cond;
-  ExprPtr tru;
-  ExprPtr fals;
+  ExprPtr troo;
+  ExprPtr fols;
   
   void accept(Visitor &) override;
 };

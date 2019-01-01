@@ -1055,8 +1055,8 @@ TEST_GROUP(Semantics, {
         let ten = five << 1u;
         let two = ten & 2u;
         let t = true;
-        let false0 = ten < two;
-        let false1 = t && false0;
+        let fols0 = ten < two;
+        let fols1 = t && fols0;
       }
     )");
   });
@@ -1761,7 +1761,7 @@ TEST_GROUP(Semantics, {
         let troo = !make bool nullFn;
         let tru = !nullFn;
         let fls = true && nullFn;
-        let folse = false || nullFn;
+        let fols = false || nullFn;
       }
     )");
   });

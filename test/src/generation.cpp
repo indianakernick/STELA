@@ -1486,7 +1486,7 @@ TEST_GROUP(Generation, {
         let e = fn;
         
         if (e) {
-          let tru = e(4, 4.0);
+          let troo = e(4, 4.0);
         }
       }
     )");
