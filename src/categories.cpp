@@ -114,6 +114,22 @@ public:
   ValueCat cat;
 };
 
+class LValueVisitor final : public ast::Visitor {
+public:
+  
+  void visit(ast::MemberIdent &mem) override {
+    mem.object->accept(*this);
+  }
+  void visit(ast::Subscript &sub) override {
+    sub.object->accept(*this);
+  }
+  void visit(ast::Identifier &ident) override {
+    root = &ident;
+  }
+  
+  ast::Identifier *root = nullptr;
+};
+
 }
 
 TypeCat stela::classifyType(ast::Type *type) {
@@ -128,6 +144,12 @@ ValueCat stela::classifyValue(ast::Expression *expr) {
   ValueVisitor visitor;
   expr->accept(visitor);
   return visitor.cat;
+}
+
+ast::Identifier *stela::rootLvalue(ast::Expression *expr) {
+  LValueVisitor visitor;
+  expr->accept(visitor);
+  return visitor.root;
 }
 
 ArithCat stela::classifyArith(ast::Type *type) {

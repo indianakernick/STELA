@@ -15,6 +15,7 @@ namespace ast {
 
 struct Type;
 struct Expression;
+struct Identifier;
 
 }
 
@@ -78,6 +79,7 @@ inline bool rvalue(const ValueCat cat) {
 }
 
 ValueCat classifyValue(ast::Expression *);
+ast::Identifier *rootLvalue(ast::Expression *);
 
 enum class ArithCat {
   /// Char, Sint

@@ -181,7 +181,7 @@ public:
     funcBdr.ir.CreateBr(flow.continueBlock);
   }
   llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
-    llvm::Value *retObj;
+    llvm::Value *retObj = nullptr;
     if (cat == TypeCat::trivially_copyable) {
       gen::Expr evalExpr = genExpr(expr);
       if (glvalue(evalExpr.cat)) {
@@ -189,12 +189,26 @@ public:
       } else { // prvalue
         retObj = evalExpr.obj;
       }
-    } else { // trivially_relocatable or nontrivial
+    } else if (ast::Identifier *ident = rootLvalue(expr)) {
+      // @TODO this is correct but not very efficient
+      // maybe we could check the sym::Scope of the definition and the function.
+      // we'd also have to check if the identifier refers to a reference parameter
+      // lambda captures might complicate things
+      llvm::Value *rootAddr = genExpr(ident).obj;
+      for (const Scope &scope : scopes) {
+        for (const Object obj : scope) {
+          if (obj.addr == rootAddr) {
+            retObj = &funcBdr.args().back();
+            lifetime.moveConstruct(expr->exprType.get(), retObj, genExpr(expr).obj);
+          }
+        }
+      }
+    }
+    if (retObj == nullptr) {
       retObj = &funcBdr.args().back();
       // @TODO NRVO
       // if there is one object that is always returned from a function,
       //   treat the return pointer as an lvalue of that object
-      // move from an lvalue if it's lifetime ends after the function returns.
       genExpr(expr, retObj);
     }
     return retObj;
