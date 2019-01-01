@@ -41,7 +41,8 @@ matrix:
         packages: ["g++-7", "llvm-7-dev"]
     env:
     - COMPILER=g++-7
-    - DEFINITION='-DCMAKE_CXX_FLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"'
+    - FLAGS="-DNDEBUG -DTEST_COVERAGE -O0 --coverage -fno-inline -fno-inline-small-functions -fno-default-inline"
+    - DEFINITION='-DCMAKE_CXX_FLAGS="$FLAGS"'
     install:
     - pip install --user cpp-coveralls
     after_success:
@@ -52,6 +53,6 @@ before_install:
 
 script:
 - cd build
-- cmake -DCMAKE_BUILD_TYPE=Debug ${DEFINITION} ..
+- eval cmake -DCMAKE_BUILD_TYPE=Debug $DEFINITION ..
 - make
 - test/suite
