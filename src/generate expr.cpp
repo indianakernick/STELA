@@ -386,11 +386,7 @@ public:
       writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
     }*/
     value = getAddr(ident.definition);
-    assert(value->getType()->isPointerTy());
-    if (result) {
-      lifetime.construct(ident.exprType.get(), result, {value, ValueCat::lvalue});
-      value = nullptr;
-    }
+    constructResultFromValue(result, &ident);
   }
   
   void ternaryInit(llvm::Value *resultAddr, ast::Ternary &tern) {

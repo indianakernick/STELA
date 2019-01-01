@@ -45,7 +45,7 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvmType = builder.wrapPtrToArrayOf(elem);
+    llvmType = builder.ptrToArrayOf(elem);
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx.llvm, {

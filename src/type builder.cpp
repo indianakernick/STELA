@@ -48,22 +48,14 @@ llvm::StructType *TypeBuilder::arrayOf(llvm::Type *elem) const {
   }, true); // @TODO do we need to declare the struct packed
 }
 
+llvm::PointerType *TypeBuilder::ptrToArrayOf(llvm::Type *elem) const {
+  return arrayOf(elem)->getPointerTo();
+}
+
 llvm::ConstantPointerNull *TypeBuilder::nullPtr(llvm::PointerType *ptr) const {
   return llvm::ConstantPointerNull::get(ptr);
 }
 
 llvm::ConstantPointerNull *TypeBuilder::nullPtrTo(llvm::Type *type) const {
   return nullPtr(type->getPointerTo());
-}
-
-llvm::ArrayType *TypeBuilder::wrap(llvm::Type *type) const {
-  return llvm::ArrayType::get(type, 1);
-}
-
-llvm::ArrayType *TypeBuilder::wrapPtrTo(llvm::Type *type) const {
-  return wrap(type->getPointerTo());
-}
-
-llvm::ArrayType *TypeBuilder::wrapPtrToArrayOf(llvm::Type *elem) const {
-  return wrapPtrTo(arrayOf(elem));
 }

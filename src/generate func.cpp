@@ -210,12 +210,6 @@ llvm::FunctionType *movAsgnFor(llvm::Type *type) {
   return copCtorFor(type);
 }
 
-llvm::Value *wrapPtr(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
-  TypeBuilder typeBdr{ir.getContext()};
-  llvm::Value *undef = llvm::UndefValue::get(typeBdr.wrap(ptr->getType()));
-  return ir.CreateInsertValue(undef, ptr, {0u});
-}
-
 llvm::Constant *constantFor(llvm::Value *val, const uint64_t value) {
   return llvm::ConstantInt::get(val->getType(), value);
 }
@@ -259,10 +253,8 @@ void resetArray(gen::FuncInst &inst, FuncBuilder &funcBdr, llvm::Value *array, l
 void likely(llvm::BranchInst *branch) {
   llvm::LLVMContext &ctx = branch->getContext();
   llvm::IntegerType *i32 = llvm::IntegerType::getInt32Ty(ctx);
-  // likely to be not null
-  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2000);
+  llvm::ConstantInt *trueWeight = llvm::ConstantInt::get(i32, 2048);
   llvm::Metadata *trueMeta = llvm::ConstantAsMetadata::get(trueWeight);
-  // unlikely to be null
   llvm::ConstantInt *falseWeight = llvm::ConstantInt::get(i32, 1);
   llvm::Metadata *falseMeta = llvm::ConstantAsMetadata::get(falseWeight);
   llvm::MDTuple *tuple = llvm::MDNode::get(ctx, {
@@ -314,6 +306,7 @@ llvm::Function *stela::generatePanic(llvm::Module *module) {
   puts->addParamAttr(0, llvm::Attribute::ReadOnly);
   puts->addParamAttr(0, llvm::Attribute::NoCapture);
   exit->addFnAttr(llvm::Attribute::NoReturn);
+  exit->addFnAttr(llvm::Attribute::Cold);
   panic->addFnAttr(llvm::Attribute::NoReturn);
   
   FuncBuilder funcBdr{panic};
@@ -368,11 +361,11 @@ llvm::Function *stela::generateArrayDtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, dtorFor(type), "array_dtor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   llvm::BasicBlock *decrBlock = funcBdr.makeBlock();
   llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
-  llvm::Value *arrayPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
-  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
+  llvm::Value *array = funcBdr.ir.CreateLoad(func->arg_begin());
   funcBdr.ir.CreateCondBr(funcBdr.ir.CreateIsNull(array), doneBlock, decrBlock);
   funcBdr.setCurr(decrBlock);
   resetArray(inst, funcBdr, array, doneBlock);
@@ -381,24 +374,14 @@ llvm::Function *stela::generateArrayDtor(
   return func;
 }
 
-
-
-
-
-// this wrapping and unwrapping is kind of confusing. Sort it out
-
-
-
-
-
 llvm::Function *stela::generateArrayDefCtor(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   TypeBuilder typeBdr{type->getContext()};
-  llvm::Type *arrayPtrType = type->getArrayElementType();
-  llvm::Type *arrayStructType = arrayPtrType->getPointerElementType();
+  llvm::Type *arrayStructType = type->getPointerElementType();
   llvm::Value *array = funcBdr.callAlloc(inst.alloc(), arrayStructType);
 
   /*
@@ -417,7 +400,7 @@ llvm::Function *stela::generateArrayDefCtor(
   llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
   llvm::Type *elem = arrayStructType->getStructElementType(array_idx_dat);
   funcBdr.ir.CreateStore(typeBdr.nullPtrTo(elem->getPointerElementType()), dat);
-  funcBdr.ir.CreateStore(wrapPtr(funcBdr.ir, array), func->arg_begin());
+  funcBdr.ir.CreateStore(array, func->arg_begin());
   
   funcBdr.ir.CreateRetVoid();
   return func;
@@ -427,6 +410,10 @@ llvm::Function *stela::generateArrayCopCtor(
   gen::FuncInst &, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, copCtorFor(type), "array_cop_ctor");
+  func->addParamAttr(0, llvm::Attribute::NoAlias);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NoAlias);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   
   /*
@@ -434,11 +421,9 @@ llvm::Function *stela::generateArrayCopCtor(
   obj = other
   */
   
-  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
-  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
+  llvm::Value *right = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
   refIncr(funcBdr.ir, right);
-  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
-  funcBdr.ir.CreateStore(right, leftPtr);
+  funcBdr.ir.CreateStore(right, func->arg_begin());
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -447,6 +432,8 @@ llvm::Function *stela::generateArrayCopAsgn(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   
   /*
@@ -456,10 +443,9 @@ llvm::Function *stela::generateArrayCopAsgn(
   */
   
   llvm::BasicBlock *block = funcBdr.makeBlock();
-  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
-  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
+  llvm::Value *right = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
   refIncr(funcBdr.ir, right);
-  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  llvm::Value *leftPtr = func->arg_begin();
   llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
   resetArray(inst, funcBdr, left, block);
   funcBdr.setCurr(block);
@@ -473,6 +459,10 @@ llvm::Function *stela::generateArrayMovCtor(
   gen::FuncInst &, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, movCtorFor(type), "array_mov_ctor");
+  func->addParamAttr(0, llvm::Attribute::NoAlias);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NoAlias);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
 
   /*
@@ -480,8 +470,8 @@ llvm::Function *stela::generateArrayMovCtor(
   other = null
   */
 
-  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
-  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
+  llvm::Value *leftPtr = func->arg_begin();
+  llvm::Value *rightPtr = func->arg_begin() + 1;
   funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
   setNull(funcBdr.ir, rightPtr);
   
@@ -493,6 +483,8 @@ llvm::Function *stela::generateArrayMovAsgn(
   gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
 ) {
   llvm::Function *func = makeInternalFunc(module, movAsgnFor(type), "array_mov_asgn");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   
   /*
@@ -502,10 +494,10 @@ llvm::Function *stela::generateArrayMovAsgn(
   */
   
   llvm::BasicBlock *block = funcBdr.makeBlock();
-  llvm::Value *leftPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
+  llvm::Value *leftPtr = func->arg_begin();
   resetArray(inst, funcBdr, funcBdr.ir.CreateLoad(leftPtr), block);
   funcBdr.setCurr(block);
-  llvm::Value *rightPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, 0);
+  llvm::Value *rightPtr = func->arg_begin() + 1;
   funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
   setNull(funcBdr.ir, rightPtr);
   
@@ -524,8 +516,7 @@ llvm::Function *generateArrayIdx(
   BoundsChecker *checkBounds,
   const llvm::Twine &name
 ) {
-  llvm::Type *arrayStructPtr = type->getArrayElementType();
-  llvm::Type *arrayStruct = arrayStructPtr->getPointerElementType();
+  llvm::Type *arrayStruct = type->getPointerElementType();
   llvm::Type *elemPtr = arrayStruct->getStructElementType(array_idx_dat);
   llvm::Type *i32 = llvm::Type::getInt32Ty(type->getContext());
   llvm::Type *sizeTy = getType<size_t>(type->getContext());
@@ -535,12 +526,13 @@ llvm::Function *generateArrayIdx(
     false
   );
   llvm::Function *func = makeInternalFunc(module, fnType, name);
+  func->addParamAttr(0, llvm::Attribute::NoAlias);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
   
   llvm::BasicBlock *okBlock = funcBdr.makeBlock();
   llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
-  llvm::Value *arrayPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), 0);
-  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
+  llvm::Value *array = funcBdr.ir.CreateLoad(func->arg_begin());
   llvm::Value *size = funcBdr.ir.CreateLoad(
     funcBdr.ir.CreateStructGEP(array, array_idx_len)
   );
