@@ -82,11 +82,9 @@ public:
     leaveScope();
   }
   void visit(ast::If &fi) override {
-    auto *cond = funcBdr.nextEmpty();
     auto *troo = funcBdr.makeBlock();
     auto *fols = funcBdr.makeBlock();
     llvm::BasicBlock *done = nullptr;
-    funcBdr.setCurr(cond);
     genCondBr(fi.cond.get(), troo, fols);
     
     funcBdr.setCurr(troo);

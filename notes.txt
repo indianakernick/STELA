@@ -121,3 +121,5 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 struct equality
 struct constructors
+short circuit evaluation
+bool conversion
