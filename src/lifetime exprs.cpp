@@ -189,10 +189,9 @@ void LifetimeExpr::construct(ast::Type *type, llvm::Value *obj, gen::Expr other)
       copyConstruct(type, obj, other.obj);
     } else if (other.cat == ValueCat::xvalue) {
       moveConstruct(type, obj, other.obj);
-    } else { // prvalue
-      moveConstruct(type, obj, other.obj);
-      destroy(type, other.obj);
     }
+    // the constructed object becomes the result object of the prvalue so
+    // there's no need to do anything here
   }
 }
 

@@ -47,7 +47,7 @@ std::vector<llvm::BasicBlock *> FuncBuilder::makeBlocks(size_t count) {
 llvm::BasicBlock *FuncBuilder::nextEmpty() {
   llvm::BasicBlock *next;
   if (curr->empty()) {
-    next = curr;
+    next = curr; // @FIXME this is not reached?
   } else {
     next = makeBlock();
     ir.CreateBr(next);

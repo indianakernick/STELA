@@ -10,14 +10,13 @@ A scripting language built for speed in world where JavaScript runs on web serve
 **Disclamer:**
 I'm calling this a "scripting language built for speed" but does that really
 make sense? If you want speed, you need control. You need to be able to do
-unsafe things. std::string_view is fast but std::string_view is also unsafe. It
-could hold a tangling pointer if you're not careful. operator[] is fast but it's
-unsafe. operator[] doesn't do bounds checking. I've never used .at() and I never
+unsafe things. `std::string_view` is fast but `std::string_view` is also unsafe. It
+could hold a dangling pointer if you're not careful. `operator[]` is fast but it's
+unsafe. `operator[]` doesn't do bounds checking. I've never used `.at()` and I never
 will! I know what I'm doing. I know not to access memory outside the bounds of
 an array.
 
-Being safe costs performance. Scripting languages are meant to be safe because
-scripts are meant to be written by both non-programmers and programmers. I'll
+Being safe costs performance. Scripting languages are meant to be safe. I'll
 try to get as much safety and speed as I can. Even if I don't make this as fast
 as I would like, it will still be much faster than Lua simply due to LLVM and
 static typing.
@@ -373,7 +372,7 @@ let Choice_yes = 1;
 ## Progress
  * The lexical analyser is done.
  * The syntax analyser is done.
- * The semantic analyser is pretty much done. See [semantic tests](test/src/semantics.cpp). It can:
+ * The semantic analyser is done. It can:
    * check the type of variables
    * check types of assignments and expressions
    * lookup overloaded functions
@@ -387,6 +386,7 @@ let Choice_yes = 1;
    * handle lambdas and function pointers
    * produce unused symbol warnings
    * lookup builtin types and builtin functions
+ * LLVM code generation is underway.
  
 ## Building
 

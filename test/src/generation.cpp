@@ -1195,6 +1195,12 @@ TEST_GROUP(Generation, {
       extern func get1() {
         return identity(make S {});
       }
+      
+      extern func get1temp() {
+        var s: S;
+        s = identity(s);
+        return s;
+      }
     )");
     
     struct S {
@@ -1217,6 +1223,12 @@ TEST_GROUP(Generation, {
     S ref1 = get1();
     ASSERT_TRUE(ref1.m);
     ASSERT_EQ(ref1.m.use_count(), 1);
+    
+    auto get1temp = GET_FUNC("get1temp", S());
+    
+    S ref1temp = get1temp();
+    ASSERT_TRUE(ref1temp.m);
+    ASSERT_EQ(ref1temp.m.use_count(), 1);
   });
   
   TEST(Copy elision, {
@@ -1319,6 +1331,23 @@ TEST_GROUP(Generation, {
     Array<Real> e = constructGlobalFromX();
     ASSERT_TRUE(e);
     ASSERT_EQ(e.use_count(), 2);
+  });
+  
+  TEST(Destroy xvalue in empty switch, {
+    ASSERT_SUCCEEDS(R"(
+      type S struct {
+        a: sint;
+        b: [real];
+      };
+      
+      extern func test() {
+        switch ((make S {}).a) {}
+        return 0;
+      }
+    )");
+    
+    auto test = GET_FUNC("test", Sint());
+    ASSERT_EQ(test(), 0);
   });
   
   /*
