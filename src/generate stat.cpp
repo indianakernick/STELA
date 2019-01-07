@@ -102,6 +102,7 @@ public:
     }
   }
   void visit(ast::Switch &swich) override {
+    // @TODO I can't fit this whole function on my screen
     const size_t exprScope = enterScope();
     gen::Expr value = genValue(swich.expr.get());
     if (swich.cases.empty()) {

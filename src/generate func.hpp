@@ -63,6 +63,13 @@ llvm::Function *generateArrayMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type
 llvm::Function *generateArrayIdxS(gen::FuncInst &, llvm::Module *, llvm::Type *);
 llvm::Function *generateArrayIdxU(gen::FuncInst &, llvm::Module *, llvm::Type *);
 
+llvm::Function *genSrtDtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtCopAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtMovCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+
 }
 
 #endif

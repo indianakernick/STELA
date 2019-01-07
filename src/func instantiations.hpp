@@ -19,6 +19,12 @@ class Module;
 
 }
 
+namespace stela::ast {
+
+struct StructType;
+
+}
+
 namespace stela::gen {
 
 class FuncInst {
@@ -42,6 +48,13 @@ public:
   /// Get the unsigned indexing function for an array
   llvm::Function *arrayIdxU(llvm::Type *);
   
+  llvm::Function *structDtor(llvm::Type *, ast::StructType *);
+  llvm::Function *structDefCtor(llvm::Type *, ast::StructType *);
+  llvm::Function *structCopCtor(llvm::Type *, ast::StructType *);
+  llvm::Function *structCopAsgn(llvm::Type *, ast::StructType *);
+  llvm::Function *structMovCtor(llvm::Type *, ast::StructType *);
+  llvm::Function *structMovAsgn(llvm::Type *, ast::StructType *);
+  
   /// Get the panic function
   llvm::Function *panic();
   /// Get the memory allocation function
@@ -51,9 +64,11 @@ public:
   
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
-  using MakeFunc = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *);
+  using MakeArray = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *);
+  using MakeStruct = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
 
   llvm::Module *module;
+  
   FuncMap arrayDtors;
   FuncMap arrayDefCtors;
   FuncMap arrayCopCtors;
@@ -62,11 +77,22 @@ private:
   FuncMap arrayMovAsgns;
   FuncMap arrayIdxSs;
   FuncMap arrayIdxUs;
+  
+  FuncMap structDtors;
+  FuncMap structDefCtors;
+  FuncMap structCopCtors;
+  FuncMap structCopAsgns;
+  FuncMap structMovCtors;
+  FuncMap structMovAsgns;
+  FuncMap structIdxSs;
+  FuncMap structIdxUs;
+  
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;
   llvm::Function *freeFn = nullptr;
   
-  llvm::Function *getCached(FuncMap &, MakeFunc *, llvm::Type *);
+  llvm::Function *getCached(FuncMap &, MakeArray *, llvm::Type *);
+  llvm::Function *getCached(FuncMap &, MakeStruct *, llvm::Type *, ast::StructType *);
 };
 
 }

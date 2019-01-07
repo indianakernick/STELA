@@ -50,6 +50,30 @@ llvm::Function *gen::FuncInst::arrayIdxU(llvm::Type *type) {
   return getCached(arrayIdxUs, generateArrayIdxU, type);
 }
 
+llvm::Function *gen::FuncInst::structDtor(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structDtors, genSrtDtor, type, srt);
+}
+
+llvm::Function *gen::FuncInst::structDefCtor(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structDefCtors, genSrtDefCtor, type, srt);
+}
+
+llvm::Function *gen::FuncInst::structCopCtor(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structCopCtors, genSrtCopCtor, type, srt);
+}
+
+llvm::Function *gen::FuncInst::structCopAsgn(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structCopAsgns, genSrtCopAsgn, type, srt);
+}
+
+llvm::Function *gen::FuncInst::structMovCtor(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structMovCtors, genSrtMovCtor, type, srt);
+}
+
+llvm::Function *gen::FuncInst::structMovAsgn(llvm::Type *type, ast::StructType *srt) {
+  return getCached(structMovAsgns, genSrtMovAsgn, type, srt);
+}
+
 llvm::Function *gen::FuncInst::panic() {
   if (!panicFn) {
     panicFn = generatePanic(module);
@@ -71,10 +95,21 @@ llvm::Function *gen::FuncInst::free() {
   return freeFn;
 }
 
-llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeFunc *make, llvm::Type *type) {
+llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeArray *make, llvm::Type *type) {
   const auto iter = map.find(type);
   if (iter == map.end()) {
     llvm::Function *func = make(*this, module, type);
+    map.insert({type, func});
+    return func;
+  } else {
+    return iter->second;
+  }
+}
+
+llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeStruct *make, llvm::Type *type, ast::StructType *srt) {
+  const auto iter = map.find(type);
+  if (iter == map.end()) {
+    llvm::Function *func = make(*this, module, type, srt);
     map.insert({type, func});
     return func;
   } else {

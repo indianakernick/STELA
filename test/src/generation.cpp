@@ -1199,6 +1199,7 @@ TEST_GROUP(Generation, {
       extern func get1temp() {
         var s: S;
         s = identity(s);
+        s = s;
         return s;
       }
     )");

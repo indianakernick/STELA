@@ -25,11 +25,8 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
     llvm::Function *defCtor = inst.arrayDefCtor(objType);
     ir.CreateCall(defCtor, {obj});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = objType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *memPtr = ir.CreateStructGEP(obj, m);
-      defConstruct(strut->fields[m].type.get(), memPtr);
-    }
+    llvm::Function *defCtor = inst.structDefCtor(objType, strut);
+    ir.CreateCall(defCtor, {obj});
   } else if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     llvm::Value *value = nullptr;
     switch (btn->value) {
@@ -69,12 +66,8 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
     llvm::Function *copCtor = inst.arrayCopCtor(objType);
     ir.CreateCall(copCtor, {obj, other});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = objType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *dstPtr = ir.CreateStructGEP(obj, m);
-      llvm::Value *srcPtr = ir.CreateStructGEP(other, m);
-      copyConstruct(strut->fields[m].type.get(), dstPtr, srcPtr);
-    }
+    llvm::Function *copCtor = inst.structCopCtor(objType, strut);
+    ir.CreateCall(copCtor, {obj, other});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
   } else {
@@ -90,12 +83,8 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
     llvm::Function *movCtor = inst.arrayMovCtor(objType);
     ir.CreateCall(movCtor, {obj, other});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = objType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *dstPtr = ir.CreateStructGEP(obj, m);
-      llvm::Value *srcPtr = ir.CreateStructGEP(other, m);
-      moveConstruct(strut->fields[m].type.get(), dstPtr, srcPtr);
-    }
+    llvm::Function *movCtor = inst.structMovCtor(objType, strut);
+    ir.CreateCall(movCtor, {obj, other});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
   } else {
@@ -112,12 +101,8 @@ void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
     llvm::Function *copAsgn = inst.arrayCopAsgn(leftType);
     ir.CreateCall(copAsgn, {left, right});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = leftType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *dstPtr = ir.CreateStructGEP(left, m);
-      llvm::Value *srcPtr = ir.CreateStructGEP(right, m);
-      copyAssign(strut->fields[m].type.get(), dstPtr, srcPtr);
-    }
+    llvm::Function *copAsgn = inst.structCopAsgn(leftType, strut);
+    ir.CreateCall(copAsgn, {left, right});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
   } else {
@@ -132,12 +117,8 @@ void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
     llvm::Function *movAsgn = inst.arrayMovAsgn(leftType);
     ir.CreateCall(movAsgn, {left, right});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = leftType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *dstPtr = ir.CreateStructGEP(left, m);
-      llvm::Value *srcPtr = ir.CreateStructGEP(right, m);
-      moveAssign(strut->fields[m].type.get(), dstPtr, srcPtr);
-    }
+    llvm::Function *movAsgn = inst.structMovAsgn(leftType, strut);
+    ir.CreateCall(movAsgn, {left, right});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
   } else {
@@ -162,11 +143,8 @@ void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
     llvm::Function *dtor = inst.arrayDtor(objType);
     ir.CreateCall(dtor, {obj});
   } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    const unsigned members = objType->getNumContainedTypes();
-    for (unsigned m = 0; m != members; ++m) {
-      llvm::Value *memPtr = ir.CreateStructGEP(obj, m);
-      destroy(strut->fields[m].type.get(), memPtr);
-    }
+    llvm::Function *dtor = inst.structDtor(objType, strut);
+    ir.CreateCall(dtor, {obj});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     // do nothing
   } else {
