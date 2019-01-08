@@ -89,8 +89,6 @@ private:
   FuncMap structCopAsgns;
   FuncMap structMovCtors;
   FuncMap structMovAsgns;
-  FuncMap structIdxSs;
-  FuncMap structIdxUs;
   
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;

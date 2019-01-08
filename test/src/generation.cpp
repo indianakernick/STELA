@@ -1389,6 +1389,30 @@ TEST_GROUP(Generation, {
     ASSERT_FALSE(fle(18.0f, 3.0f));
   });
   
+  /*TEST(Compare structs, {
+    ASSERT_SUCCEEDS(R"(
+      type S struct {
+        a: real;
+        b: sint;
+      };
+      
+      extern func eq(a: S, b: S) {
+        return a == b;
+      }
+    )");
+    
+    struct S {
+      Real a;
+      Sint b;
+    };
+    
+    auto eq = GET_FUNC("eq", Bool(S, S));
+    ASSERT_TRUE(eq(S{0.0f, 0}, S{0.0f, 0}));
+    ASSERT_TRUE(eq(S{5.5f, 5}, S{5.5f, 5}));
+    ASSERT_FALSE(eq(S{0.1f, 0}, S{0.0f, 0}));
+    ASSERT_FALSE(eq(S{0.0f, 0}, S{0.0f, 1}));
+  });*/
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

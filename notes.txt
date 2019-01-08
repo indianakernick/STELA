@@ -119,7 +119,7 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 
-struct equality
+struct and array equality (not actually supported by semantic analysis yet)
 short circuit evaluation
 bool conversion
 maybe ast::Type uniquing?
