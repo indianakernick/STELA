@@ -44,9 +44,59 @@ public:
     expr->accept(*this);
     return {value, classifyValue(expr)};
   }
+  
+  llvm::Value *boolOr(ast::Expression *left, ast::Expression *right) {
+    llvm::BasicBlock *leftBlock = funcBdr.ir.GetInsertBlock();
+    llvm::BasicBlock *rightBlock = funcBdr.makeBlock();
+    llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+    
+    gen::Expr leftExpr = visitValue(left);
+    llvm::Type *boolType = leftExpr.obj->getType();
+    funcBdr.ir.CreateCondBr(leftExpr.obj, doneBlock, rightBlock);
+    
+    funcBdr.setCurr(rightBlock);
+    gen::Expr rightExpr = visitValue(right);
+    funcBdr.ir.CreateBr(doneBlock);
+    
+    funcBdr.setCurr(doneBlock);
+    llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
+    phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
+    phi->addIncoming(rightExpr.obj, rightBlock);
+    return phi;
+  }
+  
+  llvm::Value *boolAnd(ast::Expression *left, ast::Expression *right) {
+    llvm::BasicBlock *leftBlock = funcBdr.ir.GetInsertBlock();
+    llvm::BasicBlock *rightBlock = funcBdr.makeBlock();
+    llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+    
+    gen::Expr leftExpr = visitValue(left);
+    llvm::Type *boolType = leftExpr.obj->getType();
+    funcBdr.ir.CreateCondBr(leftExpr.obj, rightBlock, doneBlock);
+    
+    funcBdr.setCurr(rightBlock);
+    gen::Expr rightExpr = visitValue(right);
+    funcBdr.ir.CreateBr(doneBlock);
+    
+    funcBdr.setCurr(doneBlock);
+    llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
+    phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
+    phi->addIncoming(rightExpr.obj, rightBlock);
+    return phi;
+  }
 
   void visit(ast::BinaryExpr &expr) override {
     llvm::Value *resultAddr = result;
+    if (expr.oper == ast::BinOp::bool_or) {
+      value = boolOr(expr.left.get(), expr.right.get());
+      storeValueAsResult(resultAddr);
+      return;
+    } else if (expr.oper == ast::BinOp::bool_and) {
+      value = boolAnd(expr.left.get(), expr.right.get());
+      storeValueAsResult(resultAddr);
+      return;
+    }
+    
     gen::Expr left = visitValue(expr.left.get());
     gen::Expr right = visitValue(expr.right.get());
     left.cat = ValueCat::prvalue;

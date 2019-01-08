@@ -1389,6 +1389,59 @@ TEST_GROUP(Generation, {
     ASSERT_FALSE(fle(18.0f, 3.0f));
   });
   
+  TEST(Short circuit eval, {
+    ASSERT_SUCCEEDS(R"(
+      var opCount: sint;
+    
+      extern func getOpCount() {
+        return opCount;
+      }
+      
+      func getFalse() {
+        opCount++;
+        return opCount % 2 * opCount % 2 != opCount % 2;
+      }
+      func getTrue() {
+        opCount++;
+        return opCount % 2 * opCount % 2 == opCount % 2;
+      }
+    
+      extern func shortAnd2() {
+        return getTrue() && getFalse();
+      }
+      extern func shortAnd1() {
+        return getFalse() && getTrue();
+      }
+      extern func shortOr2() {
+        return getFalse() || getTrue();
+      }
+      extern func or2() {
+        let a = getTrue();
+        let b = getFalse();
+        return a || b;
+      }
+    )");
+    
+    auto op = GET_FUNC("getOpCount", Sint());
+    ASSERT_EQ(op(), 0);
+    
+    auto sand2 = GET_FUNC("shortAnd2", Bool());
+    ASSERT_FALSE(sand2());
+    ASSERT_EQ(op(), 2);
+    
+    auto sand1 = GET_FUNC("shortAnd1", Bool());
+    ASSERT_FALSE(sand1());
+    ASSERT_EQ(op(), 3);
+    
+    auto sor2 = GET_FUNC("shortOr2", Bool());
+    ASSERT_TRUE(sor2());
+    ASSERT_EQ(op(), 5);
+    
+    auto or2 = GET_FUNC("or2", Bool());
+    ASSERT_TRUE(or2());
+    ASSERT_EQ(op(), 7);
+  });
+  
   /*TEST(Compare structs, {
     ASSERT_SUCCEEDS(R"(
       type S struct {
