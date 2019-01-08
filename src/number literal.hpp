@@ -24,6 +24,10 @@ size_t validNumberLiteral(std::string_view, Loc, Log &);
 /// or NumberVariant::Invalid if the number cannot be parsed
 NumberVariant parseNumberLiteral(std::string_view, Log &);
 
+/// Parses a string literal. Escape sequences such as \n and \x4F are converted
+/// to characters
+std::string parseStringLiteral(std::string_view, Loc, Log &);
+
 }
 
 #endif

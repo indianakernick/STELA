@@ -129,16 +129,16 @@ public:
   }
   
   void visit(ast::StringLiteral &str) override {
-    // @TODO deal with \n \t and others
-    str.value = str.literal;
+    str.value = parseStringLiteral(str.literal, str.loc, ctx.log);
     str.exprType = ctx.btn.string;
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
   void visit(ast::CharLiteral &chr) override {
-    if (chr.literal.size() == 1) {
-      // @TODO deal with \n \t and others
-      chr.value = chr.literal[0];
+    std::string str = parseStringLiteral(chr.literal, chr.loc, ctx.log);
+    if (str.size() != 1) {
+      ctx.log.error(chr.loc) << "Character literal must be one character" << fatal;
     }
+    chr.value = str[0];
     chr.exprType = ctx.btn.Char;
     lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }

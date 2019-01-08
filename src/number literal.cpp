@@ -25,7 +25,7 @@ struct from_chars_result {
 };
 
 template <typename Number>
-from_chars_result from_chars(const char *first, const char *last, Number &number) {
+from_chars_result from_chars(const char *first, const char *last, Number &number, int base = 0) {
   char *end;
   errno = 0;
   assert(first <= last);
@@ -42,7 +42,7 @@ from_chars_result from_chars(const char *first, const char *last, Number &number
     number = static_cast<Number>(ld);
     return {first + (end - nullTerm.c_str()), false};
   } else if constexpr (std::is_signed_v<Number>) {
-    const long long ll = std::strtoll(nullTerm.c_str(), &end, 0);
+    const long long ll = std::strtoll(nullTerm.c_str(), &end, base);
     if (errno != 0 || (end == nullTerm.c_str() && ll == 0)) {
       return {first, true};
     }
@@ -53,7 +53,7 @@ from_chars_result from_chars(const char *first, const char *last, Number &number
     number = static_cast<Number>(ll);
     return {first + (end - nullTerm.c_str()), false};
   } else if constexpr (std::is_unsigned_v<Number>) {
-    const unsigned long long ull = std::strtoull(nullTerm.c_str(), &end, 0);
+    const unsigned long long ull = std::strtoull(nullTerm.c_str(), &end, base);
     if (errno != 0 || (end == nullTerm.c_str() && ull == 0)) {
       return {first, true};
     }
@@ -222,4 +222,88 @@ stela::NumberVariant stela::parseNumberLiteral(const std::string_view str, Log &
   }
   
   UNREACHABLE();
+}
+
+namespace {
+
+using Iter = std::string_view::const_iterator;
+
+bool isOctDigit(const char c) {
+  return std::isdigit(c) && c != '8' && c != '9';
+}
+
+bool isHexDigit(const char c) {
+  return std::isxdigit(c);
+}
+
+char parseOctChar(Iter &ch, Iter end, Loc loc, Log &log) {
+  Iter octEnd = ch;
+  while (octEnd != end && isOctDigit(*octEnd)) {
+    ++octEnd;
+  }
+  long long charCode;
+  const auto [ptr, err] = from_chars(ch, octEnd, charCode, 8);
+  if (err || !inRange<Char>(charCode)) {
+    log.error(loc) << "Octal sequence out of range" << fatal;
+  }
+  ch = std::prev(octEnd);
+  return static_cast<char>(charCode);
+}
+
+char parseHexChar(Iter &ch, Iter end, Loc loc, Log &log) {
+  Iter hexEnd = ch;
+  while (hexEnd != end && isHexDigit(*hexEnd)) {
+    ++hexEnd;
+  }
+  long long charCode;
+  const auto [ptr, err] = from_chars(ch, hexEnd, charCode, 16);
+  if (err || !inRange<Char>(charCode)) {
+    log.error(loc) << "Hex sequence out of range" << fatal;
+  }
+  ch = std::prev(hexEnd);
+  return static_cast<char>(charCode);
+}
+
+}
+
+std::string stela::parseStringLiteral(const std::string_view lit, Loc loc, Log &log) {
+  std::string str;
+  bool prevWasBack = false;
+  for (auto ch = lit.cbegin(); ch != lit.cend(); ++ch) {
+    const char c = *ch;
+    if (prevWasBack) {
+      if (c == '\'' || c == '\"' || c == '?' || c == '\\') {
+        str += c;
+      } else if (c == 'a') {
+        str += '\a';
+      } else if (c == 'b') {
+        str += '\b';
+      } else if (c == 'f') {
+        str += '\f';
+      } else if (c == 'n') {
+        str += '\n';
+      } else if (c == 'r') {
+        str += '\r';
+      } else if (c == 't') {
+        str += '\t';
+      } else if (c == 'v') {
+        str += '\v';
+      } else if (isOctDigit(c)) {
+        str += parseOctChar(ch, lit.cend(), loc, log);
+      } else if (c == 'x') {
+        ++ch;
+        str += parseHexChar(ch, lit.cend(), loc, log);
+      }
+      prevWasBack = false;
+    } else {
+      if (c == '\\') {
+        prevWasBack = true;
+      } else {
+        str += c;
+      }
+    }
+  }
+  // lexer shouldn't allow this
+  assert(!prevWasBack);
+  return str;
 }

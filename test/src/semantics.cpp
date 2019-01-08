@@ -1124,12 +1124,40 @@ TEST_GROUP(Semantics, {
     ASSERT_SUCCEEDS(R"(
       let str: [char] = "This is a string";
       let empty: [char] = "";
+      let escapes: [char] = "\'\"\?\\\a\b\f\n\r\t\v\00000000000011\x000011";
+    )");
+  });
+  
+  TEST(Expr - Oct sequence out of range, {
+    ASSERT_FAILS(R"(
+      let str: [char] = "\7777777";
+    )");
+  });
+  
+  TEST(Expr - Hex sequence out of range, {
+    ASSERT_FAILS(R"(
+      let str: [char] = "\xfffffff";
     )");
   });
   
   TEST(Expr - Char literals, {
     ASSERT_SUCCEEDS(R"(
-      let c: char = 'a';
+      let a: char = 'a';
+      let newline: char = '\n';
+      let newline1: char = '\x0a';
+      let zero: char = '\0';
+    )");
+  });
+  
+  TEST(Expr - Empty char literal, {
+    ASSERT_FAILS(R"(
+      let c: char = '';
+    )");
+  });
+  
+  TEST(Expr - Long char literal, {
+    ASSERT_FAILS(R"(
+      let c: char = 'hello';
     )");
   });
   

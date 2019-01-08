@@ -1507,6 +1507,10 @@ TEST_GROUP(Generation, {
       extern func zero() {
         return "0000";
       }
+      
+      extern func escapes() {
+        return "\'\"\?\\\a\b\f\n\r\t\v\00000000000011\x000011";
+      }
     )");
     
     auto getEmpty = GET_FUNC("getEmpty", Array<Char>());
@@ -1539,6 +1543,27 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(zeros->dat[1], '0');
     ASSERT_EQ(zeros->dat[2], '0');
     ASSERT_EQ(zeros->dat[3], '0');
+    
+    auto escapes = GET_FUNC("escapes", Array<Char>());
+    Array<Char> chars = escapes();
+    ASSERT_TRUE(chars);
+    ASSERT_EQ(chars.use_count(), 1);
+    ASSERT_EQ(chars->cap, 13);
+    ASSERT_EQ(chars->len, 13);
+    ASSERT_TRUE(chars->dat);
+    ASSERT_EQ(chars->dat[0], '\'');
+    ASSERT_EQ(chars->dat[1], '\"');
+    ASSERT_EQ(chars->dat[2], '?');
+    ASSERT_EQ(chars->dat[3], '\\');
+    ASSERT_EQ(chars->dat[4], '\a');
+    ASSERT_EQ(chars->dat[5], '\b');
+    ASSERT_EQ(chars->dat[6], '\f');
+    ASSERT_EQ(chars->dat[7], '\n');
+    ASSERT_EQ(chars->dat[8], '\r');
+    ASSERT_EQ(chars->dat[9], '\t');
+    ASSERT_EQ(chars->dat[10], '\v');
+    ASSERT_EQ(chars->dat[11], '\11');
+    ASSERT_EQ(chars->dat[12], '\x11');
   });
   
   /*TEST(Compare structs, {
