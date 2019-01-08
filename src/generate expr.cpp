@@ -179,7 +179,7 @@ public:
         return evalExpr.obj;
       }
     } else { // trivially_relocatable or nontrivial
-      llvm::Value *addr = funcBdr.alloc(generateType(ctx, param.type.get()));
+      llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, param.type.get()));
       visitExpr(expr, addr);
       *destroy = addr;
       return addr;
@@ -275,7 +275,7 @@ public:
   llvm::Value *materialize(ast::Expression *expr) {
     if (classifyValue(expr) == ValueCat::prvalue) {
       ast::Type *type = expr->exprType.get();
-      llvm::Value *object = funcBdr.alloc(generateType(ctx, type));
+      llvm::Value *object = funcBdr.alloc(generateType(ctx.llvm, type));
       visitExpr(expr, object);
       temps.push_back({object, type});
       return object;
@@ -297,12 +297,13 @@ public:
     gen::Expr index = visitValue(sub.index.get());
     ast::BtnType *indexType = concreteType<ast::BtnType>(sub.index->exprType.get());
     
-    llvm::Type *arrayType = object->getType()->getPointerElementType();
+    auto *arr = concreteType<ast::ArrayType>(sub.object->exprType.get());
+    assert(arr);
     llvm::Function *indexFn;
     if (indexType->value == ast::BtnTypeEnum::Sint) {
-      indexFn = ctx.inst.arrayIdxS(arrayType);
+      indexFn = ctx.inst.arrayIdxS(arr);
     } else {
-      indexFn = ctx.inst.arrayIdxU(arrayType);
+      indexFn = ctx.inst.arrayIdxU(arr);
     }
     value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
     
@@ -415,7 +416,7 @@ public:
       funcBdr.setCurr(folsBlock);
       fols = visitValue(tern.fols.get());
     } else {
-      llvm::Value *addr = funcBdr.alloc(generateType(ctx, tern.exprType.get()));
+      llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, tern.exprType.get()));
       funcBdr.setCurr(trooBlock);
       visitExpr(tern.troo.get(), addr);
       funcBdr.setCurr(folsBlock);
@@ -440,7 +441,7 @@ public:
       make.expr->accept(*this);
       return;
     }
-    llvm::Type *type = generateType(ctx, make.type.get());
+    llvm::Type *type = generateType(ctx.llvm, make.type.get());
     llvm::Value *resultAddr = result;
     gen::Expr srcVal = visitValue(make.expr.get());
     const ArithCat dst = classifyArith(make.type.get());
@@ -506,7 +507,7 @@ public:
   }
   
   void visit(ast::NumberLiteral &num) override {
-    llvm::Type *type = generateType(ctx, num.exprType.get());
+    llvm::Type *type = generateType(ctx.llvm, num.exprType.get());
     poorMansVisit([this, type] (auto val) {
       using Type = std::decay_t<decltype(val)>;
       if constexpr (std::is_floating_point_v<Type>) {
@@ -564,7 +565,7 @@ public:
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
     llvm::Value *resultAddr = result;
-    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx, type));
+    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
     if (list.exprs.empty()) {
       lifetime.defConstruct(type, addr);
     } else {

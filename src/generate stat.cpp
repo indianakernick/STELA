@@ -273,7 +273,7 @@ public:
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
     ast::Type *type = obj->etype.type.get();
-    llvm::Value *addr = funcBdr.alloc(generateType(ctx, type));
+    llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, type));
     if (expr) {
       const size_t exprScope = enterScope();
       genExpr(expr, addr);

@@ -8,70 +8,69 @@
 
 #include "func instantiations.hpp"
 
+#include <llvm/IR/Module.h>
 #include "generate func.hpp"
+#include "generate type.hpp"
 
 using namespace stela;
 
 gen::FuncInst::FuncInst(llvm::Module *module)
-  : module{module} {
-  arrayDtors.reserve(32);
-  arrayDefCtors.reserve(32);
+  : module{module} {}
+
+llvm::Function *gen::FuncInst::arrayDtor(ast::ArrayType *type) {
+  return getCached(arrayDtors, genArrDtor, type);
 }
 
-llvm::Function *gen::FuncInst::arrayDtor(llvm::Type *type) {
-  return getCached(arrayDtors, generateArrayDtor, type);
+llvm::Function *gen::FuncInst::arrayDefCtor(ast::ArrayType *type) {
+  return getCached(arrayDefCtors, genArrDefCtor, type);
 }
 
-llvm::Function *gen::FuncInst::arrayDefCtor(llvm::Type *type) {
-  return getCached(arrayDefCtors, generateArrayDefCtor, type);
+llvm::Function *gen::FuncInst::arrayCopCtor(ast::ArrayType *type) {
+  return getCached(arrayCopCtors, genArrCopCtor, type);
 }
 
-llvm::Function *gen::FuncInst::arrayCopCtor(llvm::Type *type) {
-  return getCached(arrayCopCtors, generateArrayCopCtor, type);
+llvm::Function *gen::FuncInst::arrayCopAsgn(ast::ArrayType *type) {
+  return getCached(arrayCopAsgns, genArrCopAsgn, type);
 }
 
-llvm::Function *gen::FuncInst::arrayCopAsgn(llvm::Type *type) {
-  return getCached(arrayCopAsgns, generateArrayCopAsgn, type);
+llvm::Function *gen::FuncInst::arrayMovCtor(ast::ArrayType *type) {
+  return getCached(arrayMovCtors, genArrMovCtor, type);
 }
 
-llvm::Function *gen::FuncInst::arrayMovCtor(llvm::Type *type) {
-  return getCached(arrayMovCtors, generateArrayMovCtor, type);
+llvm::Function *gen::FuncInst::arrayMovAsgn(ast::ArrayType *type) {
+  return getCached(arrayMovAsgns, genArrMovAsgn, type);
 }
 
-llvm::Function *gen::FuncInst::arrayMovAsgn(llvm::Type *type) {
-  return getCached(arrayMovAsgns, generateArrayMovAsgn, type);
+llvm::Function *gen::FuncInst::arrayIdxS(ast::ArrayType *type) {
+  return getCached(arrayIdxSs, genArrIdxS, type);
 }
 
-llvm::Function *gen::FuncInst::arrayIdxS(llvm::Type *type) {
-  return getCached(arrayIdxSs, generateArrayIdxS, type);
+llvm::Function *gen::FuncInst::arrayIdxU(ast::ArrayType *type) {
+  return getCached(arrayIdxUs, genArrIdxU, type);
 }
 
-llvm::Function *gen::FuncInst::arrayIdxU(llvm::Type *type) {
-  return getCached(arrayIdxUs, generateArrayIdxU, type);
+llvm::Function *gen::FuncInst::structDtor(ast::StructType *type) {
+  return getCached(structDtors, genSrtDtor, type);
 }
 
-llvm::Function *gen::FuncInst::structDtor(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structDtors, genSrtDtor, type, srt);
+llvm::Function *gen::FuncInst::structDefCtor(ast::StructType *type) {
+  return getCached(structDefCtors, genSrtDefCtor, type);
 }
 
-llvm::Function *gen::FuncInst::structDefCtor(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structDefCtors, genSrtDefCtor, type, srt);
+llvm::Function *gen::FuncInst::structCopCtor(ast::StructType *type) {
+  return getCached(structCopCtors, genSrtCopCtor, type);
 }
 
-llvm::Function *gen::FuncInst::structCopCtor(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structCopCtors, genSrtCopCtor, type, srt);
+llvm::Function *gen::FuncInst::structCopAsgn(ast::StructType *type) {
+  return getCached(structCopAsgns, genSrtCopAsgn, type);
 }
 
-llvm::Function *gen::FuncInst::structCopAsgn(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structCopAsgns, genSrtCopAsgn, type, srt);
+llvm::Function *gen::FuncInst::structMovCtor(ast::StructType *type) {
+  return getCached(structMovCtors, genSrtMovCtor, type);
 }
 
-llvm::Function *gen::FuncInst::structMovCtor(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structMovCtors, genSrtMovCtor, type, srt);
-}
-
-llvm::Function *gen::FuncInst::structMovAsgn(llvm::Type *type, ast::StructType *srt) {
-  return getCached(structMovAsgns, genSrtMovAsgn, type, srt);
+llvm::Function *gen::FuncInst::structMovAsgn(ast::StructType *type) {
+  return getCached(structMovAsgns, genSrtMovAsgn, type);
 }
 
 llvm::Function *gen::FuncInst::panic() {
@@ -95,21 +94,12 @@ llvm::Function *gen::FuncInst::free() {
   return freeFn;
 }
 
-llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeArray *make, llvm::Type *type) {
+template <typename Make, typename Type>
+llvm::Function *gen::FuncInst::getCached(FuncMap &map, Make *make, Type *ast) {
+  llvm::Type *type = generateType(module->getContext(), ast);
   const auto iter = map.find(type);
   if (iter == map.end()) {
-    llvm::Function *func = make(*this, module, type);
-    map.insert({type, func});
-    return func;
-  } else {
-    return iter->second;
-  }
-}
-
-llvm::Function *gen::FuncInst::getCached(FuncMap &map, MakeStruct *make, llvm::Type *type, ast::StructType *srt) {
-  const auto iter = map.find(type);
-  if (iter == map.end()) {
-    llvm::Function *func = make(*this, module, type, srt);
+    llvm::Function *func = make(*this, module, ast);
     map.insert({type, func});
     return func;
   } else {

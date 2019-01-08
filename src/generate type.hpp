@@ -25,9 +25,9 @@ class StructType;
 
 namespace stela {
 
-llvm::Type *generateType(gen::Ctx, ast::Type *);
-llvm::FunctionType *generateFuncSig(gen::Ctx, const ast::Func &);
-llvm::FunctionType *generateLambSig(gen::Ctx, const ast::FuncType &);
+llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
+llvm::FunctionType *generateFuncSig(llvm::LLVMContext &, const ast::Func &);
+llvm::FunctionType *generateLambSig(llvm::LLVMContext &, const ast::FuncType &);
 void assignAttributes(llvm::Function *, const sym::FuncParams &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
@@ -43,7 +43,7 @@ Concrete *assertConcreteType(ast::Type *type) {
   return assertDownCast<Concrete>(concreteType(type));
 }
 
-llvm::StructType *generateLambdaCapture(gen::Ctx, const ast::Lambda &);
+llvm::StructType *generateLambdaCapture(llvm::LLVMContext &, const ast::Lambda &);
 
 }
 

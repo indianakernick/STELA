@@ -21,11 +21,11 @@ LifetimeExpr::LifetimeExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
 void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
   llvm::Type *objType = obj->getType()->getPointerElementType();
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *defCtor = inst.arrayDefCtor(objType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *defCtor = inst.arrayDefCtor(arr);
     ir.CreateCall(defCtor, {obj});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *defCtor = inst.structDefCtor(objType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *defCtor = inst.structDefCtor(srt);
     ir.CreateCall(defCtor, {obj});
   } else if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     llvm::Value *value = nullptr;
@@ -61,12 +61,11 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
 
 void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *objType = obj->getType()->getPointerElementType();
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copCtor = inst.arrayCopCtor(objType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *copCtor = inst.arrayCopCtor(arr);
     ir.CreateCall(copCtor, {obj, other});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *copCtor = inst.structCopCtor(objType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *copCtor = inst.structCopCtor(srt);
     ir.CreateCall(copCtor, {obj, other});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
@@ -78,12 +77,11 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
 
 void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *objType = obj->getType()->getPointerElementType();
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movCtor = inst.arrayMovCtor(objType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *movCtor = inst.arrayMovCtor(arr);
     ir.CreateCall(movCtor, {obj, other});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *movCtor = inst.structMovCtor(objType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *movCtor = inst.structMovCtor(srt);
     ir.CreateCall(movCtor, {obj, other});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
@@ -95,13 +93,12 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
 
 void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *leftType = left->getType()->getPointerElementType();
   // @TODO visitor?
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copAsgn = inst.arrayCopAsgn(leftType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *copAsgn = inst.arrayCopAsgn(arr);
     ir.CreateCall(copAsgn, {left, right});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *copAsgn = inst.structCopAsgn(leftType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *copAsgn = inst.structCopAsgn(srt);
     ir.CreateCall(copAsgn, {left, right});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
@@ -112,12 +109,11 @@ void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
 
 void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *leftType = left->getType()->getPointerElementType();
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movAsgn = inst.arrayMovAsgn(leftType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *movAsgn = inst.arrayMovAsgn(arr);
     ir.CreateCall(movAsgn, {left, right});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *movAsgn = inst.structMovAsgn(leftType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *movAsgn = inst.structMovAsgn(srt);
     ir.CreateCall(movAsgn, {left, right});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
@@ -138,12 +134,11 @@ void LifetimeExpr::relocate(ast::Type *type, llvm::Value *obj, llvm::Value *othe
 
 void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *objType = obj->getType()->getPointerElementType();
-  if (dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *dtor = inst.arrayDtor(objType);
+  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    llvm::Function *dtor = inst.arrayDtor(arr);
     ir.CreateCall(dtor, {obj});
-  } else if (auto *strut = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *dtor = inst.structDtor(objType, strut);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    llvm::Function *dtor = inst.structDtor(srt);
     ir.CreateCall(dtor, {obj});
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     // do nothing

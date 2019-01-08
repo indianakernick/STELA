@@ -35,7 +35,7 @@ public:
     if (def->strong) {
       eq = compare(ctx, left, right); // a strong type alias is its own type
     } else {
-      def->type->accept(*this);  // a weak type alias is an existing type
+      def->type->accept(*this);       // a weak type alias is an existing type
     }
   }
   void visit(ast::StructType &right) override {

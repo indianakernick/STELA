@@ -30,7 +30,7 @@ public:
   }
   
   void visit(ast::Func &func) override {
-    llvm::FunctionType *fnType = generateFuncSig(ctx, func);
+    llvm::FunctionType *fnType = generateFuncSig(ctx.llvm, func);
     func.llvmFunc = llvm::Function::Create(
       fnType,
       linkage(func.external),
@@ -72,7 +72,7 @@ public:
     ast::Expression *expr,
     const bool external
   ) {
-    llvm::Type *llvmType = generateType(ctx, type);
+    llvm::Type *llvmType = generateType(ctx.llvm, type);
     llvm::Value *llvmAddr = new llvm::GlobalVariable{
       *module,
       llvmType,

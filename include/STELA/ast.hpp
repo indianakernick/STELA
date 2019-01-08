@@ -20,6 +20,7 @@ namespace llvm {
 
 class Function;
 class Value;
+class Type;
 
 }
 
@@ -48,6 +49,8 @@ using NodePtr = retain_ptr<Node>;
 
 struct Type : Node {
   ~Type();
+  
+  llvm::Type *llvm = nullptr;
 };
 using TypePtr = retain_ptr<Type>;
 

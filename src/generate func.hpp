@@ -54,21 +54,21 @@ llvm::Function *generatePanic(llvm::Module *);
 llvm::Function *generateAlloc(gen::FuncInst &, llvm::Module *);
 llvm::Function *generateFree(llvm::Module *);
 
-llvm::Function *generateArrayDtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayCopAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayMovCtor(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayIdxS(gen::FuncInst &, llvm::Module *, llvm::Type *);
-llvm::Function *generateArrayIdxU(gen::FuncInst &, llvm::Module *, llvm::Type *);
+llvm::Function *genArrDtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrDefCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrCopCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrCopAsgn(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrMovCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrMovAsgn(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrIdxS(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrIdxU(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
 
-llvm::Function *genSrtDtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
-llvm::Function *genSrtDefCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
-llvm::Function *genSrtCopCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
-llvm::Function *genSrtCopAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
-llvm::Function *genSrtMovCtor(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
-llvm::Function *genSrtMovAsgn(gen::FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
+llvm::Function *genSrtDtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtDefCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtCopCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtCopAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtMovCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtMovAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
 
 }
 

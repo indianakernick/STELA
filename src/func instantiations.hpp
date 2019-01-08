@@ -22,6 +22,7 @@ class Module;
 namespace stela::ast {
 
 struct StructType;
+struct ArrayType;
 
 }
 
@@ -32,28 +33,34 @@ public:
   explicit FuncInst(llvm::Module *);
   
   /// Get the destructor for an array
-  llvm::Function *arrayDtor(llvm::Type *);
+  llvm::Function *arrayDtor(ast::ArrayType *);
   /// Get the default constructor for an array
-  llvm::Function *arrayDefCtor(llvm::Type *);
+  llvm::Function *arrayDefCtor(ast::ArrayType *);
   /// Get the copy constructor for an array
-  llvm::Function *arrayCopCtor(llvm::Type *);
+  llvm::Function *arrayCopCtor(ast::ArrayType *);
   /// Get the copy assignment function for an array
-  llvm::Function *arrayCopAsgn(llvm::Type *);
+  llvm::Function *arrayCopAsgn(ast::ArrayType *);
   /// Get the move constructor for an array
-  llvm::Function *arrayMovCtor(llvm::Type *);
+  llvm::Function *arrayMovCtor(ast::ArrayType *);
   /// Get the move assignment function for an array
-  llvm::Function *arrayMovAsgn(llvm::Type *);
+  llvm::Function *arrayMovAsgn(ast::ArrayType *);
   /// Get the signed indexing function for an array
-  llvm::Function *arrayIdxS(llvm::Type *);
+  llvm::Function *arrayIdxS(ast::ArrayType *);
   /// Get the unsigned indexing function for an array
-  llvm::Function *arrayIdxU(llvm::Type *);
+  llvm::Function *arrayIdxU(ast::ArrayType *);
   
-  llvm::Function *structDtor(llvm::Type *, ast::StructType *);
-  llvm::Function *structDefCtor(llvm::Type *, ast::StructType *);
-  llvm::Function *structCopCtor(llvm::Type *, ast::StructType *);
-  llvm::Function *structCopAsgn(llvm::Type *, ast::StructType *);
-  llvm::Function *structMovCtor(llvm::Type *, ast::StructType *);
-  llvm::Function *structMovAsgn(llvm::Type *, ast::StructType *);
+  /// Get the destructor for a struct
+  llvm::Function *structDtor(ast::StructType *);
+  /// Get the default construct for a struct
+  llvm::Function *structDefCtor(ast::StructType *);
+  /// Get the copy constructor for a struct
+  llvm::Function *structCopCtor(ast::StructType *);
+  /// Get the copy assignment function for a struct
+  llvm::Function *structCopAsgn(ast::StructType *);
+  /// Get the move constructor for a struct
+  llvm::Function *structMovCtor(ast::StructType *);
+  /// Get the move assignment function for a struct
+  llvm::Function *structMovAsgn(ast::StructType *);
   
   /// Get the panic function
   llvm::Function *panic();
@@ -64,8 +71,6 @@ public:
   
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
-  using MakeArray = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *);
-  using MakeStruct = llvm::Function *(FuncInst &, llvm::Module *, llvm::Type *, ast::StructType *);
 
   llvm::Module *module;
   
@@ -91,8 +96,8 @@ private:
   llvm::Function *allocFn = nullptr;
   llvm::Function *freeFn = nullptr;
   
-  llvm::Function *getCached(FuncMap &, MakeArray *, llvm::Type *);
-  llvm::Function *getCached(FuncMap &, MakeStruct *, llvm::Type *, ast::StructType *);
+  template <typename Make, typename Type>
+  llvm::Function *getCached(FuncMap &, Make *, Type *);
 };
 
 }

@@ -360,9 +360,10 @@ llvm::Function *stela::generateFree(llvm::Module *module) {
   return free;
 }
 
-llvm::Function *stela::generateArrayDtor(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrDtor(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, dtorFor(type), "array_dtor");
   func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
@@ -377,9 +378,10 @@ llvm::Function *stela::generateArrayDtor(
   return func;
 }
 
-llvm::Function *stela::generateArrayDefCtor(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrDefCtor(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "array_def_ctor");
   func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
@@ -409,9 +411,10 @@ llvm::Function *stela::generateArrayDefCtor(
   return func;
 }
 
-llvm::Function *stela::generateArrayCopCtor(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrCopCtor(
+  gen::FuncInst &, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, copCtorFor(type), "array_cop_ctor");
   func->addParamAttr(0, llvm::Attribute::NoAlias);
   func->addParamAttr(0, llvm::Attribute::NonNull);
@@ -431,9 +434,10 @@ llvm::Function *stela::generateArrayCopCtor(
   return func;
 }
 
-llvm::Function *stela::generateArrayCopAsgn(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrCopAsgn(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "array_cop_asgn");
   func->addParamAttr(0, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NonNull);
@@ -458,9 +462,10 @@ llvm::Function *stela::generateArrayCopAsgn(
   return func;
 }
 
-llvm::Function *stela::generateArrayMovCtor(
-  gen::FuncInst &, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrMovCtor(
+  gen::FuncInst &, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, movCtorFor(type), "array_mov_ctor");
   func->addParamAttr(0, llvm::Attribute::NoAlias);
   func->addParamAttr(0, llvm::Attribute::NonNull);
@@ -482,9 +487,10 @@ llvm::Function *stela::generateArrayMovCtor(
   return func;
 }
 
-llvm::Function *stela::generateArrayMovAsgn(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrMovAsgn(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Function *func = makeInternalFunc(module, movAsgnFor(type), "array_mov_asgn");
   func->addParamAttr(0, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NonNull);
@@ -515,10 +521,11 @@ using BoundsChecker = llvm::Value *(llvm::IRBuilder<> &, llvm::Value *, llvm::Va
 llvm::Function *generateArrayIdx(
   gen::FuncInst &inst,
   llvm::Module *module,
-  llvm::Type *type,
+  ast::ArrayType *arr,
   BoundsChecker *checkBounds,
   const llvm::Twine &name
 ) {
+  llvm::Type *type = generateType(module->getContext(), arr);
   llvm::Type *arrayStruct = type->getPointerElementType();
   llvm::Type *elemPtr = arrayStruct->getStructElementType(array_idx_dat);
   llvm::Type *i32 = llvm::Type::getInt32Ty(type->getContext());
@@ -570,154 +577,106 @@ llvm::Value *checkUnsignedBounds(llvm::IRBuilder<> &ir, llvm::Value *index, llvm
 
 }
 
-llvm::Function *stela::generateArrayIdxS(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrIdxS(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
-  return generateArrayIdx(inst, module, type, checkSignedBounds, "array_idx_s");
+  return generateArrayIdx(inst, module, arr, checkSignedBounds, "array_idx_s");
 }
 
-llvm::Function *stela::generateArrayIdxU(
-  gen::FuncInst &inst, llvm::Module *module, llvm::Type *type
+llvm::Function *stela::genArrIdxU(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
 ) {
-  return generateArrayIdx(inst, module, type, checkUnsignedBounds, "array_idx_u");
+  return generateArrayIdx(inst, module, arr, checkUnsignedBounds, "array_idx_u");
+}
+
+namespace {
+
+llvm::Function *unarySrt(
+  gen::FuncInst &inst,
+  llvm::Module *module,
+  ast::StructType *srt,
+  const llvm::Twine &name,
+  void (LifetimeExpr::*memFun)(ast::Type *, llvm::Value *)
+) {
+  llvm::Type *type = generateType(module->getContext(), srt);
+  llvm::Function *func = makeInternalFunc(module, dtorFor(type), name);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder funcBdr{func};
+  LifetimeExpr lifetime{inst, funcBdr.ir};
+  
+  const unsigned members = type->getNumContainedTypes();
+  for (unsigned m = 0; m != members; ++m) {
+    llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
+    (lifetime.*memFun)(srt->fields[m].type.get(), memPtr);
+  }
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
+}
+
+llvm::Function *binarySrt(
+  gen::FuncInst &inst,
+  llvm::Module *module,
+  ast::StructType *srt,
+  const llvm::Twine &name,
+  void (LifetimeExpr::*memFun)(ast::Type *, llvm::Value *, llvm::Value *)
+) {
+  llvm::Type *type = generateType(module->getContext(), srt);
+  llvm::Function *func = makeInternalFunc(module, copCtorFor(type), name);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  if (memFun != &LifetimeExpr::copyAssign) {
+    func->addParamAttr(0, llvm::Attribute::NoAlias);
+    func->addParamAttr(1, llvm::Attribute::NoAlias);
+  }
+  FuncBuilder funcBdr{func};
+  LifetimeExpr lifetime{inst, funcBdr.ir};
+  
+  const unsigned members = type->getNumContainedTypes();
+  for (unsigned m = 0; m != members; ++m) {
+    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    (lifetime.*memFun)(srt->fields[m].type.get(), dstPtr, srcPtr);
+  }
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
+}
+
 }
 
 llvm::Function *stela::genSrtDtor(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, dtorFor(type), "struct_dtor");
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{inst, funcBdr.ir};
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    lifetime.destroy(srt->fields[m].type.get(), memPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return unarySrt(inst, module, srt, "struct_dtor", &LifetimeExpr::destroy);
 }
 
 llvm::Function *stela::genSrtDefCtor(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, defCtorFor(type), "struct_def_ctor");
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime(inst, funcBdr.ir);
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    lifetime.defConstruct(srt->fields[m].type.get(), memPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return unarySrt(inst, module, srt, "struct_def_ctor", &LifetimeExpr::defConstruct);
 }
 
 llvm::Function *stela::genSrtCopCtor(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, copCtorFor(type), "struct_cop_ctor");
-  func->addParamAttr(0, llvm::Attribute::NoAlias);
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  func->addParamAttr(1, llvm::Attribute::NoAlias);
-  func->addParamAttr(1, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{inst, funcBdr.ir};
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
-    lifetime.copyConstruct(srt->fields[m].type.get(), dstPtr, srcPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return binarySrt(inst, module, srt, "struct_cop_ctor", &LifetimeExpr::copyConstruct);
 }
 
 llvm::Function *stela::genSrtCopAsgn(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, copAsgnFor(type), "struct_cop_asgn");
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  func->addParamAttr(1, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{inst, funcBdr.ir};
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
-    lifetime.copyAssign(srt->fields[m].type.get(), dstPtr, srcPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return binarySrt(inst, module, srt, "struct_cop_asgn", &LifetimeExpr::copyAssign);
 }
 
 llvm::Function *stela::genSrtMovCtor(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, movCtorFor(type), "struct_mov_ctor");
-  func->addParamAttr(0, llvm::Attribute::NoAlias);
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  func->addParamAttr(1, llvm::Attribute::NoAlias);
-  func->addParamAttr(1, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{inst, funcBdr.ir};
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
-    lifetime.moveConstruct(srt->fields[m].type.get(), dstPtr, srcPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return binarySrt(inst, module, srt, "struct_mov_ctor", &LifetimeExpr::moveConstruct);
 }
 
 llvm::Function *stela::genSrtMovAsgn(
-  gen::FuncInst &inst,
-  llvm::Module *module,
-  llvm::Type *type,
-  ast::StructType *srt
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
-  llvm::Function *func = makeInternalFunc(module, movAsgnFor(type), "struct_mov_asgn");
-  func->addParamAttr(0, llvm::Attribute::NoAlias);
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  func->addParamAttr(1, llvm::Attribute::NoAlias);
-  func->addParamAttr(1, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{inst, funcBdr.ir};
-  
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
-    lifetime.moveAssign(srt->fields[m].type.get(), dstPtr, srcPtr);
-  }
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
+  return binarySrt(inst, module, srt, "struct_mov_asgn", &LifetimeExpr::moveAssign);
 }
