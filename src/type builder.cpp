@@ -45,7 +45,7 @@ llvm::StructType *TypeBuilder::arrayOf(llvm::Type *elem) const {
     len(),               // capacity
     len(),               // length
     elem->getPointerTo() // data
-  }, true); // @TODO do we need to declare the struct packed
+  }, true);
 }
 
 llvm::PointerType *TypeBuilder::ptrToArrayOf(llvm::Type *elem) const {

@@ -33,7 +33,7 @@ retain_ptr<Type> lookupConcrete(const sym::Ctx ctx, const ast::TypePtr &type) {
 }
 
 ast::TypePtr getFuncType(Log &, ast::Func &, Loc);
-ast::TypePtr getLambdaType(sym::Ctx, ast::Lambda &);
+ast::TypePtr getLambdaType(ast::Lambda &);
 
 void checkIdentShadow(sym::Ctx, const sym::Name &, Loc);
 

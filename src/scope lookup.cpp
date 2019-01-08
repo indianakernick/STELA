@@ -9,7 +9,6 @@
 #include "scope lookup.hpp"
 
 #include "symbol desc.hpp"
-#include "compare types.hpp"
 #include "scope traverse.hpp"
 
 using namespace stela;
@@ -112,14 +111,7 @@ ast::TypePtr stela::getFuncType(Log &log, ast::Func &func, Loc loc) {
   return funcType;
 }
 
-ast::TypePtr stela::getLambdaType(sym::Ctx ctx, ast::Lambda &lam) {
-  // @TODO maybe do this validation in "infer type.cpp"
-  if (lam.ret) {
-    validateType(ctx, lam.ret);
-  }
-  for (const ast::FuncParam &param : lam.params) {
-    validateType(ctx, param.type);
-  }
+ast::TypePtr stela::getLambdaType(ast::Lambda &lam) {
   auto funcType = make_retain<ast::FuncType>();
   writeFuncType(*funcType, lam);
   return funcType;

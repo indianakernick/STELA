@@ -221,13 +221,19 @@ public:
     lkp.setExpr(sym::makeLetVal(std::move(expected)));
   }
   void visit(ast::Lambda &lam) override {
+    if (lam.ret) {
+      validateType(ctx, lam.ret);
+    }
+    for (const ast::FuncParam &param : lam.params) {
+      validateType(ctx, param.type);
+    }
     sym::Lambda *const lamSym = insert(ctx, lam);
     lamSym->scope = ctx.man.enterScope(sym::ScopeType::closure, lamSym);
     enterLambdaScope(lamSym, lam);
     traverse(ctx, lam.body);
     leaveLambdaScope(ctx, lamSym, lam);
     ctx.man.leaveScope();
-    lam.exprType = getLambdaType(ctx, lam);
+    lam.exprType = getLambdaType(lam);
     lkp.setExpr(sym::makeLetVal(lam.exprType));
     checkMissingRet(ctx, lam.body, lam.ret, lam.loc);
   }
