@@ -20,7 +20,6 @@ LifetimeExpr::LifetimeExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
 
 void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
-  llvm::Type *objType = obj->getType()->getPointerElementType();
   if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
     llvm::Function *defCtor = inst.arrayDefCtor(arr);
     ir.CreateCall(defCtor, {obj});
@@ -28,6 +27,7 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
     llvm::Function *defCtor = inst.structDefCtor(srt);
     ir.CreateCall(defCtor, {obj});
   } else if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
+    llvm::Type *objType = obj->getType()->getPointerElementType();
     llvm::Value *value = nullptr;
     switch (btn->value) {
       case ast::BtnTypeEnum::Bool:
@@ -54,7 +54,7 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
     //str += ")";
     assert(false);
   } else {
-    assert(false);
+    UNREACHABLE();
   }
   // startLife(obj)
 }
@@ -70,7 +70,7 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
   } else {
-    assert(false);
+    UNREACHABLE();
   }
   // startLife(obj)
 }
@@ -86,7 +86,7 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
   } else {
-    assert(false);
+    UNREACHABLE();
   }
   // startLife(obj)
 }
@@ -103,7 +103,7 @@ void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
   } else {
-    assert(false);
+    UNREACHABLE();
   }
 }
 
@@ -118,7 +118,7 @@ void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
   } else {
-    assert(false);
+    UNREACHABLE();
   }
 }
 
@@ -143,7 +143,7 @@ void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   } else if (dynamic_cast<ast::BtnType *>(concrete)) {
     // do nothing
   } else {
-    assert(false);
+    UNREACHABLE();
   }
   // endLife(obj)
 }

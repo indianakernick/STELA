@@ -14,6 +14,7 @@ namespace stela {
 namespace ast {
 
 struct Type;
+struct BtnType;
 struct Expression;
 struct Identifier;
 
@@ -90,6 +91,7 @@ enum class ArithCat {
   floating_point
 };
 
+ArithCat classifyArith(ast::BtnType *);
 ArithCat classifyArith(ast::Type *);
 ArithCat classifyArith(ast::Expression *);
 

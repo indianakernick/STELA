@@ -1351,6 +1351,44 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(test(), 0);
   });
   
+  TEST(Compare primitives, {
+    ASSERT_SUCCEEDS(R"(
+      extern func feq(a: real, b: real) {
+        return a == b;
+      }
+      
+      extern func ige(a: sint, b: sint) {
+        return a >= b;
+      }
+      
+      extern func fle(a: real, b: real) {
+        return a <= b;
+      }
+    )");
+    
+    auto feq = GET_FUNC("feq", Bool(Real, Real));
+    ASSERT_TRUE(feq(0.0f, 0.0f));
+    ASSERT_TRUE(feq(2.5f, 2.5f));
+    ASSERT_TRUE(feq(1e17f, 1e17f));
+    ASSERT_TRUE(feq(1.1f, 1.10f));
+    ASSERT_FALSE(feq(0.0f, 1.0f));
+    ASSERT_FALSE(feq(1.00001f, 1.00002f));
+    
+    auto ige = GET_FUNC("ige", Bool(Sint, Sint));
+    ASSERT_TRUE(ige(0, 0));
+    ASSERT_TRUE(ige(16, 2));
+    ASSERT_TRUE(ige(11, 11));
+    ASSERT_FALSE(ige(12, 13));
+    ASSERT_FALSE(ige(0, 21));
+    
+    auto fle = GET_FUNC("fle", Bool(Real, Real));
+    ASSERT_TRUE(fle(2.5f, 2.5f));
+    ASSERT_TRUE(fle(3.0f, 81.0f));
+    ASSERT_TRUE(fle(1.00001f, 1.00002f));
+    ASSERT_FALSE(fle(1.00002f, 1.00001f));
+    ASSERT_FALSE(fle(18.0f, 3.0f));
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

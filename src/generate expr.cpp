@@ -16,6 +16,7 @@
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "generate func.hpp"
+#include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
 
 using namespace stela;
@@ -48,15 +49,9 @@ public:
     llvm::Value *resultAddr = result;
     gen::Expr left = visitValue(expr.left.get());
     gen::Expr right = visitValue(expr.right.get());
+    left.cat = ValueCat::prvalue;
+    right.cat = ValueCat::prvalue;
     const ArithCat arith = classifyArith(expr.left.get());
-    
-    #define INT_FLOAT_OP(INT_OP, FLOAT_OP)                                      \
-      if (arith == ArithCat::floating_point) {                                  \
-        value = funcBdr.ir.FLOAT_OP(left.obj, right.obj);                       \
-      } else {                                                                  \
-        value = funcBdr.ir.INT_OP(left.obj, right.obj);                         \
-      }                                                                         \
-      break
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
       if (arith == ArithCat::signed_int) {                                      \
@@ -67,6 +62,9 @@ public:
         value = funcBdr.ir.F_OP(left.obj, right.obj);                           \
       }                                                                         \
       break
+    
+    CompareExpr compare{ctx.inst, funcBdr.ir};
+    ast::Type *type = expr.left->exprType.get();
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
@@ -81,19 +79,18 @@ public:
         value = funcBdr.ir.CreateShl(left.obj, right.obj); break;
       case ast::BinOp::bit_shr:
         value = funcBdr.ir.CreateLShr(left.obj, right.obj); break;
-      // @TODO define comparison expressions for structs and arrays
       case ast::BinOp::eq:
-        INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
+        value = compare.equal(type, left, right); break;
       case ast::BinOp::ne:
-        INT_FLOAT_OP(CreateICmpNE, CreateFCmpONE);
+        value = compare.notEqual(type, left, right); break;
       case ast::BinOp::lt:
-        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
+        value = compare.less(type, left, right); break;
       case ast::BinOp::le:
-        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLE, CreateICmpULE, CreateFCmpOLE);
+        value = compare.lessEqual(type, left, right); break;
       case ast::BinOp::gt:
-        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGT, CreateICmpUGT, CreateFCmpOGT);
+        value = compare.greater(type, left, right); break;
       case ast::BinOp::ge:
-        SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGE, CreateICmpUGE, CreateFCmpOGE);
+        value = compare.greaterEqual(type, left, right); break;
       case ast::BinOp::add:
         SIGNED_UNSIGNED_FLOAT_OP(CreateNSWAdd, CreateAdd, CreateFAdd);
       case ast::BinOp::sub:
@@ -110,7 +107,6 @@ public:
     }
     
     #undef SIGNED_UNSIGNED_FLOAT_OP
-    #undef INT_FLOAT_OP
     
     storeValueAsResult(resultAddr);
   }

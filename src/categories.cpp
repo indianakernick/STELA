@@ -152,9 +152,8 @@ ast::Identifier *stela::rootLvalue(ast::Expression *expr) {
   return visitor.root;
 }
 
-ArithCat stela::classifyArith(ast::Type *type) {
-  ast::BtnType *btn = assertConcreteType<ast::BtnType>(type);
-  switch (btn->value) {
+ArithCat stela::classifyArith(ast::BtnType *type) {
+  switch (type->value) {
     case ast::BtnTypeEnum::Char:
     case ast::BtnTypeEnum::Sint:
       return ArithCat::signed_int;
@@ -167,6 +166,10 @@ ArithCat stela::classifyArith(ast::Type *type) {
     case ast::BtnTypeEnum::Void: ;
   }
   UNREACHABLE();
+}
+
+ArithCat stela::classifyArith(ast::Type *type) {
+  return classifyArith(assertConcreteType<ast::BtnType>(type));
 }
 
 ArithCat stela::classifyArith(ast::Expression *expr) {

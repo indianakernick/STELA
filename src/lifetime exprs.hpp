@@ -9,7 +9,7 @@
 #ifndef stela_lifetime_exprs_hpp
 #define stela_lifetime_exprs_hpp
 
-#include "generate expr.hpp" // @FIXME move gen::Expr
+#include "generate expr.hpp" // @TODO move gen::Expr
 #include <llvm/IR/IRBuilder.h>
 
 namespace stela {
