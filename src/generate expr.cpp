@@ -580,34 +580,27 @@ public:
     }
     storeValueAsResult(result);
   }
-  /*void pushExprs(const std::vector<ast::ExprPtr> &exprs) {
-    if (exprs.empty()) {
-      return;
-    }
-    str += '(';
-    exprs[0]->accept(*this);
-    str += ')';
-    for (auto e = exprs.cbegin() + 1; e != exprs.cend(); ++e) {
-      str += ", (";
-      (*e)->accept(*this);
-      str += ')';
-    }
-  }
   void visit(ast::ArrayLiteral &arr) override {
-    ast::TypePtr elem = assertDownCast<ast::ArrayType>(arr.exprType.get())->elem;
+    ast::ArrayType *type = assertDownCast<ast::ArrayType>(arr.exprType.get());
+    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
     if (arr.exprs.empty()) {
-      str += "make_null_array<";
-      str += generateType(ctx, elem.get());
-      str += ">()";
+      lifetime.defConstruct(type, addr);
     } else {
-      str += "array_literal<";
-      str += generateType(ctx, elem.get());
-      str += ">(";
-      pushExprs(arr.exprs);
-      str += ')';
+      llvm::Function *ctor = ctx.inst.arrayLenCtor(type);
+      llvm::Type *sizeTy = getType<size_t>(addr->getContext());
+      TypeBuilder typeBdr{addr->getContext()};
+      llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), arr.exprs.size());
+      llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
+      llvm::Type *elemTy = basePtr->getType()->getPointerElementType();
+      for (unsigned e = 0; e != arr.exprs.size(); ++e) {
+        llvm::Constant *idx = llvm::ConstantInt::get(sizeTy, e);
+        llvm::Value *elemPtr = funcBdr.ir.CreateInBoundsGEP(elemTy, basePtr, idx);
+        visitExpr(arr.exprs[e].get(), elemPtr);
+      }
+      // @TODO lifetime.startLife
     }
+    value = addr;
   }
-  */
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
     llvm::Value *resultAddr = result;

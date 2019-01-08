@@ -188,6 +188,14 @@ void LifetimeExpr::assign(ast::Type *type, llvm::Value *left, gen::Expr right) {
   }
 }
 
+void LifetimeExpr::startLife(llvm::Value *addr) {
+  ir.CreateLifetimeStart(addr, objectSize(addr));
+}
+
+void LifetimeExpr::endLife(llvm::Value *addr) {
+  ir.CreateLifetimeEnd(addr, objectSize(addr));
+}
+
 llvm::ConstantInt *LifetimeExpr::objectSize(llvm::Value *addr) {
   assert(addr->getType()->isPointerTy());
   llvm::Type *objType = addr->getType()->getPointerElementType();
@@ -198,12 +206,4 @@ llvm::ConstantInt *LifetimeExpr::objectSize(llvm::Value *addr) {
   // I thought llvm.lifetime would allow for optimization but it seems
   // to prevent it in some cases
   return llvm::dyn_cast<llvm::ConstantInt>(size);
-}
-
-void LifetimeExpr::startLife(llvm::Value *addr) {
-  ir.CreateLifetimeStart(addr, objectSize(addr));
-}
-
-void LifetimeExpr::endLife(llvm::Value *addr) {
-  ir.CreateLifetimeEnd(addr, objectSize(addr));
 }

@@ -62,6 +62,7 @@ llvm::Function *genArrMovCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *)
 llvm::Function *genArrMovAsgn(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
 llvm::Function *genArrIdxS(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
 llvm::Function *genArrIdxU(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *genArrLenCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
 
 llvm::Function *genSrtDtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
 llvm::Function *genSrtDefCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);

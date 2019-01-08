@@ -41,13 +41,14 @@ public:
   void construct(ast::Type *, llvm::Value *, gen::Expr);
   void assign(ast::Type *, llvm::Value *, gen::Expr);
 
+  void startLife(llvm::Value *);
+  void endLife(llvm::Value *);
+
 private:
   gen::FuncInst &inst;
   llvm::IRBuilder<> &ir;
   
   llvm::ConstantInt *objectSize(llvm::Value *);
-  void startLife(llvm::Value *);
-  void endLife(llvm::Value *);
 };
 
 }

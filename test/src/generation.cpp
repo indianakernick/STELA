@@ -1192,6 +1192,10 @@ TEST_GROUP(Generation, {
         return identityImpl(s);
       }
       
+      extern func dontMove(s: ref S) {
+        return s;
+      }
+      
       extern func get1() {
         return identity(make S {});
       }
@@ -1200,6 +1204,7 @@ TEST_GROUP(Generation, {
         var s: S;
         s = identity(s);
         s = s;
+        let t = dontMove(s);
         return s;
       }
     )");
@@ -1440,6 +1445,53 @@ TEST_GROUP(Generation, {
     auto or2 = GET_FUNC("or2", Bool());
     ASSERT_TRUE(or2());
     ASSERT_EQ(op(), 7);
+  });
+  
+  TEST(Array literal, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getEmpty() {
+        return make [real] [];
+      }
+      
+      extern func oneTwoThree() {
+        return [1.0, 2.0, 3.0];
+      }
+      
+      extern func zero() {
+        return [0.0, 0.0, 0.0, 0.0];
+      }
+    )");
+    
+    auto getEmpty = GET_FUNC("getEmpty", Array<Real>());
+    Array<Real> empty = getEmpty();
+    ASSERT_TRUE(empty);
+    ASSERT_EQ(empty.use_count(), 1);
+    ASSERT_EQ(empty->cap, 0);
+    ASSERT_EQ(empty->len, 0);
+    ASSERT_EQ(empty->dat, nullptr);
+    
+    auto oneTwoThree = GET_FUNC("oneTwoThree", Array<Real>());
+    Array<Real> nums = oneTwoThree();
+    ASSERT_TRUE(nums);
+    ASSERT_EQ(nums.use_count(), 1);
+    ASSERT_EQ(nums->cap, 3);
+    ASSERT_EQ(nums->len, 3);
+    ASSERT_TRUE(nums->dat);
+    ASSERT_EQ(nums->dat[0], 1.0f);
+    ASSERT_EQ(nums->dat[1], 2.0f);
+    ASSERT_EQ(nums->dat[2], 3.0f);
+    
+    auto zero = GET_FUNC("zero", Array<Real>());
+    Array<Real> zeros = zero();
+    ASSERT_TRUE(zeros);
+    ASSERT_EQ(zeros.use_count(), 1);
+    ASSERT_EQ(zeros->cap, 4);
+    ASSERT_EQ(zeros->len, 4);
+    ASSERT_TRUE(zeros->dat);
+    ASSERT_EQ(zeros->dat[0], 0.0f);
+    ASSERT_EQ(zeros->dat[1], 0.0f);
+    ASSERT_EQ(zeros->dat[2], 0.0f);
+    ASSERT_EQ(zeros->dat[3], 0.0f);
   });
   
   /*TEST(Compare structs, {

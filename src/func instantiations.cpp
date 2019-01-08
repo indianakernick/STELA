@@ -49,6 +49,10 @@ llvm::Function *gen::FuncInst::arrayIdxU(ast::ArrayType *type) {
   return getCached(arrayIdxUs, genArrIdxU, type);
 }
 
+llvm::Function *gen::FuncInst::arrayLenCtor(ast::ArrayType *type) {
+  return getCached(arrayLenCtors, genArrLenCtor, type);
+}
+
 llvm::Function *gen::FuncInst::structDtor(ast::StructType *type) {
   return getCached(structDtors, genSrtDtor, type);
 }

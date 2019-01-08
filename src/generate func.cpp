@@ -589,6 +589,48 @@ llvm::Function *stela::genArrIdxU(
   return generateArrayIdx(inst, module, arr, checkUnsignedBounds, "array_idx_u");
 }
 
+llvm::Function *stela::genArrLenCtor(
+  gen::FuncInst &inst, llvm::Module *module, ast::ArrayType *arr
+) {
+  llvm::LLVMContext &ctx = module->getContext();
+  TypeBuilder typeBdr{ctx};
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::Type *arrayStructType = type->getPointerElementType();
+  llvm::Type *elemPtr = arrayStructType->getStructElementType(array_idx_dat);
+  llvm::Type *elem = elemPtr->getPointerElementType();
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    elemPtr,
+    {type->getPointerTo(), typeBdr.len()},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(module, sig, "array_len_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder funcBdr{func};
+  llvm::Value *array = funcBdr.callAlloc(inst.alloc(), arrayStructType);
+  llvm::Value *size = func->arg_begin() + 1;
+  
+  /*
+  ref = 1
+  cap = size
+  len = size
+  dat = malloc(size)
+  */
+  
+  llvm::Value *ref = funcBdr.ir.CreateStructGEP(array, array_idx_ref);
+  funcBdr.ir.CreateStore(llvm::ConstantInt::get(typeBdr.ref(), 1), ref);
+  llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
+  funcBdr.ir.CreateStore(size, cap);
+  llvm::Value *len = funcBdr.ir.CreateStructGEP(array, array_idx_len);
+  funcBdr.ir.CreateStore(size, len);
+  llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
+  llvm::Value *allocation = funcBdr.callAlloc(inst.alloc(), elem, size);
+  funcBdr.ir.CreateStore(allocation, dat);
+  funcBdr.ir.CreateStore(array, func->arg_begin());
+  
+  funcBdr.ir.CreateRet(allocation);
+  return func;
+}
+
 namespace {
 
 llvm::Function *unarySrt(

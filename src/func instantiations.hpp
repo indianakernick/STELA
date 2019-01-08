@@ -48,6 +48,8 @@ public:
   llvm::Function *arrayIdxS(ast::ArrayType *);
   /// Get the unsigned indexing function for an array
   llvm::Function *arrayIdxU(ast::ArrayType *);
+  /// Get the length construct for an array
+  llvm::Function *arrayLenCtor(ast::ArrayType *);
   
   /// Get the destructor for a struct
   llvm::Function *structDtor(ast::StructType *);
@@ -82,6 +84,7 @@ private:
   FuncMap arrayMovAsgns;
   FuncMap arrayIdxSs;
   FuncMap arrayIdxUs;
+  FuncMap arrayLenCtors;
   
   FuncMap structDtors;
   FuncMap structDefCtors;

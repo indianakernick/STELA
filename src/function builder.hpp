@@ -45,8 +45,10 @@ public:
   /// Get the function arguments
   llvm::MutableArrayRef<llvm::Argument> args() const;
   
-  /// Make a call to alloc
-  llvm::Value *callAlloc(llvm::Function *, llvm::Type *, uint64_t = 1);
+  /// Allocate space for an object
+  llvm::Value *callAlloc(llvm::Function *, llvm::Type *);
+  /// Allocate space for a runtime number of objects
+  llvm::Value *callAlloc(llvm::Function *, llvm::Type *, llvm::Value *);
   /// Make a call to free
   void callFree(llvm::Function *, llvm::Value *);
   
