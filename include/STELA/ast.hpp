@@ -10,6 +10,7 @@
 #define stela_ast_hpp
 
 #include <vector>
+#include <string>
 #include <optional>
 #include "number.hpp"
 #include <string_view>
@@ -456,7 +457,7 @@ struct CallAssign final : Assignment {
 
 struct StringLiteral final : Literal {
   std::string_view literal;
-  // @TODO std::string value;
+  std::string value;
   
   void accept(Visitor &) override;
 };

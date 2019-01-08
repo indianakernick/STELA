@@ -183,13 +183,7 @@ public:
     storeValueAsResult(resultAddr);
   }
   
-  /*void pushArgs(const ast::FuncArgs &args, const sym::FuncParams &) {
-    for (size_t i = 0; i != args.size(); ++i) {
-      str += ", (";
-      args[i]->accept(*this);
-      str += ')';
-    }
-  }
+  /*
   void pushBtnFunc(const ast::BtnFuncEnum e) {
     switch (e) {
       case ast::BtnFuncEnum::capacity:
@@ -520,15 +514,21 @@ public:
     storeValueAsResult(resultAddr);
   }
   
-  /*void visit(ast::StringLiteral &string) override {
-    if (string.value.empty()) {
-      str += "make_null_string()";
+  void visit(ast::StringLiteral &str) override {
+    ast::ArrayType *type = assertDownCast<ast::ArrayType>(str.exprType.get());
+    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
+    if (str.value.empty()) {
+      lifetime.defConstruct(type, addr);
     } else {
-      str += "string_literal(\"";
-      str += string.value;
-      str += "\")";
+      llvm::Function *ctor = ctx.inst.arrayLenCtor(type);
+      TypeBuilder typeBdr{addr->getContext()};
+      llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), str.value.size());
+      llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
+      llvm::Value *strPtr = funcBdr.ir.CreateGlobalStringPtr(str.value);
+      funcBdr.ir.CreateMemCpy(basePtr, 1, strPtr, 1, str.value.size());
     }
-  }*/
+    value = addr;
+  }
   void visit(ast::CharLiteral &chr) override {
     value = llvm::ConstantInt::get(
       llvm::IntegerType::getInt8Ty(ctx.llvm),
@@ -587,11 +587,11 @@ public:
       lifetime.defConstruct(type, addr);
     } else {
       llvm::Function *ctor = ctx.inst.arrayLenCtor(type);
-      llvm::Type *sizeTy = getType<size_t>(addr->getContext());
       TypeBuilder typeBdr{addr->getContext()};
       llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), arr.exprs.size());
       llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
       llvm::Type *elemTy = basePtr->getType()->getPointerElementType();
+      llvm::Type *sizeTy = getType<size_t>(addr->getContext());
       for (unsigned e = 0; e != arr.exprs.size(); ++e) {
         llvm::Constant *idx = llvm::ConstantInt::get(sizeTy, e);
         llvm::Value *elemPtr = funcBdr.ir.CreateInBoundsGEP(elemTy, basePtr, idx);

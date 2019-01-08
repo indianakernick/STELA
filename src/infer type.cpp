@@ -130,6 +130,7 @@ public:
   
   void visit(ast::StringLiteral &str) override {
     // @TODO deal with \n \t and others
+    str.value = str.literal;
     str.exprType = ctx.btn.string;
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }

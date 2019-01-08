@@ -13,6 +13,7 @@
 #include "scope lookup.hpp"
 #include "operator name.hpp"
 #include "compare types.hpp"
+#include "assert down cast.hpp"
 
 using namespace stela;
 
@@ -47,6 +48,12 @@ void insertTypes(sym::Table &table, sym::Builtins &btn) {
   // A string literal has the type [char]
   auto charName = make_retain<ast::NamedType>();
   charName->name = "char";
+  auto symbolIter = table.find("char");
+  assert(symbolIter != table.end());
+  sym::Symbol *symbol = symbolIter->second.get();
+  assert(symbol);
+  sym::TypeAlias *alias = assertDownCast<sym::TypeAlias>(symbol);
+  charName->definition = alias->node.get();
   auto string = make_retain<ast::ArrayType>();
   string->elem = std::move(charName);
   btn.string = std::move(string);

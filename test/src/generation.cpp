@@ -1494,6 +1494,53 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(zeros->dat[3], 0.0f);
   });
   
+  TEST(String literal, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getEmpty() {
+        return "";
+      }
+      
+      extern func oneTwoThree() {
+        return "123";
+      }
+      
+      extern func zero() {
+        return "0000";
+      }
+    )");
+    
+    auto getEmpty = GET_FUNC("getEmpty", Array<Char>());
+    Array<Char> empty = getEmpty();
+    ASSERT_TRUE(empty);
+    ASSERT_EQ(empty.use_count(), 1);
+    ASSERT_EQ(empty->cap, 0);
+    ASSERT_EQ(empty->len, 0);
+    ASSERT_EQ(empty->dat, nullptr);
+    
+    auto oneTwoThree = GET_FUNC("oneTwoThree", Array<Char>());
+    Array<Char> nums = oneTwoThree();
+    ASSERT_TRUE(nums);
+    ASSERT_EQ(nums.use_count(), 1);
+    ASSERT_EQ(nums->cap, 3);
+    ASSERT_EQ(nums->len, 3);
+    ASSERT_TRUE(nums->dat);
+    ASSERT_EQ(nums->dat[0], '1');
+    ASSERT_EQ(nums->dat[1], '2');
+    ASSERT_EQ(nums->dat[2], '3');
+    
+    auto zero = GET_FUNC("zero", Array<Char>());
+    Array<Char> zeros = zero();
+    ASSERT_TRUE(zeros);
+    ASSERT_EQ(zeros.use_count(), 1);
+    ASSERT_EQ(zeros->cap, 4);
+    ASSERT_EQ(zeros->len, 4);
+    ASSERT_TRUE(zeros->dat);
+    ASSERT_EQ(zeros->dat[0], '0');
+    ASSERT_EQ(zeros->dat[1], '0');
+    ASSERT_EQ(zeros->dat[2], '0');
+    ASSERT_EQ(zeros->dat[3], '0');
+  });
+  
   /*TEST(Compare structs, {
     ASSERT_SUCCEEDS(R"(
       type S struct {
