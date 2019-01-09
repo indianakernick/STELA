@@ -1516,6 +1516,22 @@ TEST_GROUP(Semantics, {
       let ptr: func(sint) = getVoid;
     )");
   });
+  
+  TEST(Expr - Compare anything, {
+    ASSERT_SUCCEEDS(R"(
+      func arrays(a: [bool], b: [bool]) -> bool {
+        return a < b;
+      }
+      
+      func functions(a: func(sint), b: func(sint)) -> bool {
+        return a < b;
+      }
+      
+      func structs(a: struct {m: sint;}, b: struct {m: sint;}) -> bool {
+        return a < b;
+      }
+    )");
+  });
 
   TEST(Func - Undefined member function, {
     ASSERT_FAILS(R"(
@@ -1755,6 +1771,16 @@ TEST_GROUP(Semantics, {
       };
       type Numbers [sint];
       let test: Numbers = make Vec2 {};
+    )");
+  });
+  
+  TEST(Add different strong types, {
+    ASSERT_FAILS(R"(
+      type Number sint;
+      
+      func test(a: Number, b: sint) {
+        return a + b;
+      }
     )");
   });
 
@@ -2037,6 +2063,16 @@ TEST_GROUP(Semantics, {
       
       func test() {
         getFive() = 11;
+      }
+    )");
+  });
+  
+  TEST(Compare void, {
+    ASSERT_FAILS(R"(
+      func getVoid() {}
+      
+      func test() {
+        return getVoid() == getVoid();
       }
     )");
   });

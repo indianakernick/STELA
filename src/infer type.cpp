@@ -32,6 +32,16 @@ public:
     ast::TypePtr expType = boolOp(bin.oper) ? ctx.btn.Bool : nullptr;
     const sym::ExprType left = visitExprCheck(bin.left, expType);
     const sym::ExprType right = visitExprCheck(bin.right, expType);
+    if (!compareTypes(ctx, left.type, right.type)) {
+      ctx.log.error(bin.loc) << "Operands to binary expression " << opName(bin.oper)
+        << " must have same type" << fatal;
+    }
+    if (compOp(bin.oper)) {
+      validComp(ctx, bin.oper, left.type, bin.loc);
+      bin.exprType = ctx.btn.Bool;
+      lkp.setExpr(sym::makeLetVal(ctx.btn.Bool));
+      return;
+    }
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
         if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {

@@ -38,50 +38,38 @@ llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right
   ast::Type *concrete = concreteType(type);
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ)
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    return ir.CreateCall(inst.structEq(srt), {left.obj, right.obj});
   } else {
     UNREACHABLE();
   }
 }
 
 llvm::Value *CompareExpr::notEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  if (auto *btn = concreteType<ast::BtnType>(type)) {
-    INT_FLOAT_OP(CreateICmpNE, CreateFCmpUNE)
-  } else {
-    return ir.CreateNot(equal(type, left, right));
-  }
+  return ir.CreateNot(equal(type, left, right));
 }
 
 llvm::Value *CompareExpr::less(ast::Type *type, gen::Expr left, gen::Expr right) {
   ast::Type *concrete = concreteType(type);
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    return ir.CreateCall(inst.structLt(srt), {left.obj, right.obj});
   } else {
     UNREACHABLE();
   }
 }
 
 llvm::Value *CompareExpr::greater(ast::Type *type, gen::Expr left, gen::Expr right) {
-  if (auto *btn = concreteType<ast::BtnType>(type)) {
-    SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGT, CreateICmpUGT, CreateFCmpOGT);
-  } else {
-    return less(type, right, left);
-  }
+  return less(type, right, left);
 }
 
 llvm::Value *CompareExpr::lessEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  if (auto *btn = concreteType<ast::BtnType>(type)) {
-    SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLE, CreateICmpULE, CreateFCmpOLE);
-  } else {
-    return ir.CreateNot(less(type, right, left));
-  }
+  return ir.CreateNot(less(type, right, left));
 }
 
 llvm::Value *CompareExpr::greaterEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  if (auto *btn = concreteType<ast::BtnType>(type)) {
-    SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSGE, CreateICmpUGE, CreateFCmpOGE);
-  } else {
-    return ir.CreateNot(less(type, left, right));
-  }
+  return ir.CreateNot(less(type, left, right));
 }
 
 llvm::Value *CompareExpr::getBtnValue(gen::Expr expr) {

@@ -130,6 +130,10 @@ bool stela::boolOp(const ast::UnOp op) {
   return op == ast::UnOp::bool_not;
 }
 
+bool stela::compOp(const ast::BinOp op) {
+  return isEqualOp(op) || isOrderOp(op);
+}
+
 bool stela::validIncr(const ast::BtnTypePtr &type) {
   return isArithType(type->value);
 }
@@ -159,14 +163,12 @@ ast::BtnTypePtr stela::validOp(
   if (left != right) {
     return nullptr;
   }
+  assert(!isEqualOp(op));
+  assert(!isOrderOp(op));
   if (isBoolOp(op)) {
     return checkType(isBoolType, left);
   } else if (isBitwiseOp(op)) {
     return checkType(isBitwiseType, left);
-  } else if (isEqualOp(op)) {
-    return btn.Bool;
-  } else if (isOrderOp(op)) {
-    return isArithType(left->value) ? btn.Bool : nullptr;
   } else if (isArithOp(op)) {
     return checkType(isArithType, left);
   }
@@ -288,6 +290,29 @@ ast::TypePtr reserveFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc)
   return ctx.btn.Void;
 }
 
+}
+
+void stela::validComp(
+  sym::Ctx ctx,
+  const ast::BinOp op,
+  const ast::TypePtr &type,
+  const Loc loc
+) {
+  ast::TypePtr concrete = lookupConcreteType(ctx, type);
+  if (auto btn = dynamic_pointer_cast<ast::BtnType>(concrete)) {
+    if (btn->value == ast::BtnTypeEnum::Void) {
+      ctx.log.error(loc) << "Cannot compare void expressions" << fatal;
+    }
+    return;
+  } else if (auto arr = dynamic_pointer_cast<ast::ArrayType>(concrete)) {
+    return validComp(ctx, op, arr->elem, loc);
+  } else if (auto fun = dynamic_pointer_cast<ast::FuncType>(concrete)) {
+    return;
+  } else if (auto srt = dynamic_pointer_cast<ast::StructType>(concrete)) {
+    for (const ast::Field &field : srt->fields) {
+      validComp(ctx, op, field.type, loc);
+    }
+  }
 }
 
 ast::TypePtr stela::callBtnFunc(

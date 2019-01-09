@@ -17,6 +17,10 @@ namespace stela {
 
 bool boolOp(ast::BinOp);
 bool boolOp(ast::UnOp);
+bool compOp(ast::BinOp);
+
+// @TODO don't pass const retain_ptr &
+// prefer raw pointers or values
 
 bool validIncr(const ast::BtnTypePtr &);
 bool validOp(ast::UnOp, const ast::BtnTypePtr &);
@@ -29,6 +33,12 @@ retain_ptr<ast::BtnType> validOp(
 bool validOp(ast::AssignOp, const ast::BtnTypePtr &);
 bool validSubscript(const ast::BtnTypePtr &);
 bool validCast(const ast::BtnTypePtr &, const ast::BtnTypePtr &);
+void validComp(
+  sym::Ctx,
+  ast::BinOp,
+  const ast::TypePtr &,
+  Loc
+);
 
 ast::TypePtr callBtnFunc(sym::Ctx, ast::BtnFuncEnum, const sym::FuncParams &, Loc);
 
