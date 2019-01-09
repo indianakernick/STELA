@@ -44,14 +44,15 @@ llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
   return generate(syms, log);
 }
 
-template <typename Fun>
+template <typename Fun, bool Member = false>
 auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
-  return stela::Function<Fun>{engine->getFunctionAddress(name)};
+  return stela::Function<Fun, Member>{engine->getFunctionAddress(name)};
 }
 
 }
 
 #define GET_FUNC(NAME, ...) getFunc<__VA_ARGS__>(engine, NAME)
+#define GET_MEM_FUNC(NAME, ...) getFunc<__VA_ARGS__, true>(engine, NAME)
 #define ASSERT_SUCCEEDS(SOURCE) [[maybe_unused]] auto *engine = generate(SOURCE, log)
 #define ASSERT_FAILS(SOURCE) ASSERT_THROWS(generate(SOURCE, log), stela::FatalError)
 
@@ -1566,6 +1567,52 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(chars->dat[12], '\x11');
   });
   
+  TEST(Member functions, {
+    ASSERT_SUCCEEDS(R"(
+      extern func (self: sint) plus(other: sint) {
+        return self + other;
+      }
+      
+      extern func (self: ref sint) add(other: sint) {
+        self += other;
+      }
+      
+      extern func (this: [real]) first() {
+        return this[0];
+      }
+      
+      extern func (this: [real]) get() {
+        return this;
+      }
+    )");
+    
+    auto plus = GET_MEM_FUNC("plus", Sint(Sint, Sint));
+    ASSERT_EQ(plus(1, 2), 3);
+    ASSERT_EQ(plus(79, -8), 71);
+    
+    auto add = GET_MEM_FUNC("add", Void(Sint *, Sint));
+    Sint sum = 7;
+    add(&sum, 7);
+    ASSERT_EQ(sum, 14);
+    add(&sum, -4);
+    ASSERT_EQ(sum, 10);
+    
+    auto first = GET_MEM_FUNC("first", Real(Array<Real>));
+    Array<Real> array = makeArray<Real>();
+    array->cap = 2;
+    array->len = 2;
+    array->dat = new Real[2] {4.0f, 8.0f};
+    ASSERT_EQ(first(array), 4.0f);
+    array->dat[0] = -0.5f;
+    ASSERT_EQ(first(array), -0.5f);
+    
+    auto get = GET_MEM_FUNC("get", Array<Real>(Array<Real>));
+    Array<Real> copy = get(array);
+    ASSERT_TRUE(copy);
+    ASSERT_EQ(copy, array);
+    ASSERT_EQ(copy.use_count(), 2);
+  });
+  
   /*TEST(Compare structs, {
     ASSERT_SUCCEEDS(R"(
       type S struct {
@@ -1947,4 +1994,5 @@ TEST_GROUP(Generation, {
 
 #undef ASSERT_FAILS
 #undef ASSERT_SUCCEEDS
+#undef GET_MEM_FUNC
 #undef GET_FUNC

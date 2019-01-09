@@ -35,9 +35,12 @@ Array<Elem> makeArray() {
   return make_retain<ArrayStorage<Elem>>();
 }
 
+template <typename, typename = void>
+struct pass_traits;
+
 /// Classes
 template <typename T>
-struct pass_traits {
+struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
   using type = const T *;
   
   static type unwrap(const T &arg) noexcept {
@@ -79,7 +82,6 @@ struct pass_traits<T *> {
   static constexpr bool nontrivial = false;
 };
 
-// @TODO maybe there's some way we can partially specialize based on a trait?
 #define PASS_PRIMITIVE(TYPE)                                                    \
   template <>                                                                   \
   struct pass_traits<TYPE> {                                                    \
@@ -121,11 +123,11 @@ struct pass_traits<Array<Elem>> {
 
 /// A wrapper around a compiled stela function. Acts as an ABI adapter to call
 /// Stela functions using the Stela ABI
-template <typename Fun>
+template <typename Fun, bool Member = false>
 class Function;
 
-template <typename Ret, typename... Params>
-class Function<Ret(Params...)> {
+template <bool Member, typename Ret, typename... Params>
+class Function<Ret(Params...), Member> {
   template <typename Param, size_t Index, typename Tuple>
   static inline auto unwrap(const Tuple &params) noexcept {
     return pass_traits<Param>::unwrap(std::get<Index>(params));
@@ -139,14 +141,26 @@ class Function<Ret(Params...)> {
     if constexpr (param_ret) {
       std::aligned_storage_t<sizeof(Ret), alignof(Ret)> retStorage;
       Ret *retPtr = reinterpret_cast<Ret *>(&retStorage);
-      ptr(nullptr, unwrap<Params, Indicies>(params)..., retPtr);
+      if constexpr (Member) {
+        ptr(unwrap<Params, Indicies>(params)..., retPtr);
+      } else {
+        ptr(nullptr, unwrap<Params, Indicies>(params)..., retPtr);
+      }
       Ret retObj{std::move(*retPtr)};
       retPtr->~Ret();
       return retObj;
     } else if constexpr (std::is_void_v<Ret>) {
-      ptr(nullptr, unwrap<Params, Indicies>(params)...);
+      if constexpr (Member) {
+        ptr(unwrap<Params, Indicies>(params)...);
+      } else {
+        ptr(nullptr, unwrap<Params, Indicies>(params)...);
+      }
     } else {
-      return pass_traits<Ret>::wrap(ptr(nullptr, unwrap<Params, Indicies>(params)...));
+      if constexpr (Member) {
+        return pass_traits<Ret>::wrap(ptr(unwrap<Params, Indicies>(params)...));
+      } else {
+        return pass_traits<Ret>::wrap(ptr(nullptr, unwrap<Params, Indicies>(params)...));
+      }
     }
   }
 
@@ -154,9 +168,17 @@ public:
   static constexpr bool param_ret = pass_traits<Ret>::nontrivial;
 
   using type = std::conditional_t<
-    param_ret,
-    void(void *, pass_type<Params>..., Ret *) noexcept,
-    pass_type<Ret>(void *, pass_type<Params>...) noexcept
+    Member,
+    std::conditional_t<
+      param_ret,
+      void(pass_type<Params>..., Ret *) noexcept,
+      pass_type<Ret>(pass_type<Params>...) noexcept
+    >,
+    std::conditional_t<
+      param_ret,
+      void(void *, pass_type<Params>..., Ret *) noexcept,
+      pass_type<Ret>(void *, pass_type<Params>...) noexcept
+    >
   >;
   
   explicit Function(const uint64_t addr) noexcept
