@@ -77,6 +77,14 @@ llvm::Function *gen::FuncInst::structMovAsgn(ast::StructType *type) {
   return getCached(structMovAsgns, genSrtMovAsgn, type);
 }
 
+llvm::Function *gen::FuncInst::structEq(ast::StructType *type) {
+  return getCached(structEqs, genSrtEq, type);
+}
+
+llvm::Function *gen::FuncInst::structLt(ast::StructType *type) {
+  return getCached(structLts, genSrtLt, type);
+}
+
 llvm::Function *gen::FuncInst::panic() {
   if (!panicFn) {
     panicFn = generatePanic(module);

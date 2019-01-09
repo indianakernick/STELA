@@ -29,14 +29,14 @@ public:
     : temps{temps}, ctx{ctx}, funcBdr{funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
 
   gen::Expr visitValue(ast::Expression *expr) {
-    assert(classifyType(expr->exprType.get()) == TypeCat::trivially_copyable);
     result = nullptr;
     expr->accept(*this);
-    const ValueCat cat = classifyValue(expr);
-    if (glvalue(cat)) {
-      return {funcBdr.ir.CreateLoad(value), cat};
+    const ValueCat valueCat = classifyValue(expr);
+    const TypeCat typeCat = classifyType(expr->exprType.get());
+    if (glvalue(valueCat) && typeCat == TypeCat::trivially_copyable) {
+      return {funcBdr.ir.CreateLoad(value), valueCat};
     } else {
-      return {value, cat};
+      return {value, valueCat};
     }
   }
   gen::Expr visitExpr(ast::Expression *expr, llvm::Value *resultAddr) {
@@ -101,15 +101,17 @@ public:
     gen::Expr right = visitValue(expr.right.get());
     left.cat = ValueCat::prvalue;
     right.cat = ValueCat::prvalue;
-    const ArithCat arith = classifyArith(expr.left.get());
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
-      if (arith == ArithCat::signed_int) {                                      \
-        value = funcBdr.ir.S_OP(left.obj, right.obj);                           \
-      } else if (arith == ArithCat::unsigned_int) {                             \
-        value = funcBdr.ir.U_OP(left.obj, right.obj);                           \
-      } else {                                                                  \
-        value = funcBdr.ir.F_OP(left.obj, right.obj);                           \
+      {                                                                         \
+        const ArithCat arith = classifyArith(expr.left.get());                  \
+        if (arith == ArithCat::signed_int) {                                    \
+          value = funcBdr.ir.S_OP(left.obj, right.obj);                         \
+        } else if (arith == ArithCat::unsigned_int) {                           \
+          value = funcBdr.ir.U_OP(left.obj, right.obj);                         \
+        } else {                                                                \
+          value = funcBdr.ir.F_OP(left.obj, right.obj);                         \
+        }                                                                       \
       }                                                                         \
       break
     

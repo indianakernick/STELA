@@ -1613,29 +1613,71 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(copy.use_count(), 2);
   });
   
-  /*TEST(Compare structs, {
+  TEST(Compare structs, {
     ASSERT_SUCCEEDS(R"(
-      type S struct {
+      type RS struct {
         a: real;
         b: sint;
       };
       
-      extern func eq(a: S, b: S) {
+      extern func eqRS(a: RS, b: RS) {
         return a == b;
+      }
+      
+      type BBBB struct {
+        a: byte;
+        b: byte;
+        c: byte;
+        d: byte;
+      };
+      
+      extern func eqBBBB(a: BBBB, b: BBBB) {
+        return a == b;
+      }
+      
+      type Str struct {
+        a: char;
+        b: char;
+        c: char;
+        d: char;
+      };
+      
+      extern func less(a: Str, b: Str) {
+        return a < b;
       }
     )");
     
-    struct S {
+    struct RS {
       Real a;
       Sint b;
     };
     
-    auto eq = GET_FUNC("eq", Bool(S, S));
-    ASSERT_TRUE(eq(S{0.0f, 0}, S{0.0f, 0}));
-    ASSERT_TRUE(eq(S{5.5f, 5}, S{5.5f, 5}));
-    ASSERT_FALSE(eq(S{0.1f, 0}, S{0.0f, 0}));
-    ASSERT_FALSE(eq(S{0.0f, 0}, S{0.0f, 1}));
-  });*/
+    auto eqRS = GET_FUNC("eqRS", Bool(RS, RS));
+    ASSERT_TRUE(eqRS(RS{0.0f, 0}, RS{0.0f, 0}));
+    ASSERT_TRUE(eqRS(RS{5.5f, 5}, RS{5.5f, 5}));
+    ASSERT_FALSE(eqRS(RS{0.1f, 0}, RS{0.0f, 0}));
+    ASSERT_FALSE(eqRS(RS{0.0f, 0}, RS{0.0f, 1}));
+    
+    struct BBBB {
+      Byte a, b, c, d;
+    };
+    
+    auto eqBBBB = GET_FUNC("eqBBBB", Bool(BBBB, BBBB));
+    ASSERT_TRUE(eqBBBB(BBBB{0, 0, 0, 0}, BBBB{0, 0, 0, 0}));
+    ASSERT_TRUE(eqBBBB(BBBB{1, 2, 3, 4}, BBBB{1, 2, 3, 4}));
+    ASSERT_FALSE(eqBBBB(BBBB{4, 3, 2, 1}, BBBB{3, 4, 1, 2}));
+    ASSERT_FALSE(eqBBBB(BBBB{1, 2, 3, 4}, BBBB{4, 3, 2, 1}));
+    
+    struct Str {
+      Char a, b, c, d;
+    };
+    
+    auto less = GET_FUNC("less", Bool(Str, Str));
+    ASSERT_TRUE(less(Str{'a', 'b', 'c', 'd'}, Str{'b', 'c', 'd', 'e'}));
+    ASSERT_TRUE(less(Str{'a', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'e'}));
+    ASSERT_FALSE(less(Str{'a', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'd'}));
+    ASSERT_FALSE(less(Str{'b', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'd'}));
+  });
   
   /*
   TEST(Vars, {

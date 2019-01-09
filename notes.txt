@@ -119,6 +119,10 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 
-struct and array equality (not actually supported by semantic analysis yet)
+array dtor
+compare arrays
+use memcmp when possible
+optimize for trivially copyable structs that fit in registers
+treat the return parameter as an lvalue (NRVO)
 bool conversion
 maybe ast::Type uniquing?

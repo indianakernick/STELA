@@ -12,6 +12,7 @@
 #include "type builder.hpp"
 #include "generate type.hpp"
 #include "generate decl.hpp"
+#include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
 #include <llvm/IR/Function.h>
 #include "assert down cast.hpp"
@@ -721,4 +722,89 @@ llvm::Function *stela::genSrtMovAsgn(
   gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
 ) {
   return binarySrt(inst, module, srt, "struct_mov_asgn", &LifetimeExpr::moveAssign);
+}
+
+namespace {
+
+gen::Expr lvalue(llvm::Value *obj) {
+  return {obj, ValueCat::lvalue};
+}
+
+llvm::FunctionType *compFor(llvm::Type *type) {
+  return llvm::FunctionType::get(
+    llvm::Type::getInt1Ty(type->getContext()),
+    {type->getPointerTo(), type->getPointerTo()},
+    false
+  );
+}
+
+}
+
+llvm::Function *stela::genSrtEq(
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
+) {
+  llvm::Type *type = generateType(module->getContext(), srt);
+  llvm::Function *func = makeInternalFunc(module, compFor(type), "struct_eq");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::ReadOnly);
+  FuncBuilder funcBdr{func};
+  CompareExpr compare{inst, funcBdr.ir};
+  llvm::BasicBlock *diffBlock = funcBdr.makeBlock();
+  
+  const unsigned members = type->getNumContainedTypes();
+  for (unsigned m = 0; m != members; ++m) {
+    llvm::Value *lPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *rPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    ast::Type *field = srt->fields[m].type.get();
+    llvm::Value *eq = compare.equal(field, lvalue(lPtr), lvalue(rPtr));
+    llvm::BasicBlock *equalBlock = funcBdr.makeBlock();
+    funcBdr.ir.CreateCondBr(eq, equalBlock, diffBlock);
+    funcBdr.setCurr(equalBlock);
+  }
+  
+  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(true));
+  funcBdr.setCurr(diffBlock);
+  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(false));
+  
+  return func;
+}
+
+llvm::Function *stela::genSrtLt(
+  gen::FuncInst &inst, llvm::Module *module, ast::StructType *srt
+) {
+  llvm::Type *type = generateType(module->getContext(), srt);
+  llvm::Function *func = makeInternalFunc(module, compFor(type), "struct_lt");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::ReadOnly);
+  FuncBuilder funcBdr{func};
+  CompareExpr compare{inst, funcBdr.ir};
+  llvm::BasicBlock *ltBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *geBlock = funcBdr.makeBlock();
+  
+  const unsigned members = type->getNumContainedTypes();
+  for (unsigned m = 0; m != members; ++m) {
+    llvm::Value *lPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *rPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    ast::Type *field = srt->fields[m].type.get();
+    llvm::Value *less = compare.less(field, lvalue(lPtr), lvalue(rPtr));
+    llvm::BasicBlock *notLessBlock = funcBdr.makeBlock();
+    funcBdr.ir.CreateCondBr(less, ltBlock, notLessBlock);
+    funcBdr.setCurr(notLessBlock);
+    llvm::Value *greater = compare.less(field, lvalue(rPtr), lvalue(lPtr));
+    llvm::BasicBlock *equalBlock = funcBdr.makeBlock();
+    funcBdr.ir.CreateCondBr(greater, geBlock, equalBlock);
+    funcBdr.setCurr(equalBlock);
+  }
+  
+  funcBdr.ir.CreateBr(geBlock);
+  funcBdr.setCurr(ltBlock);
+  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(true));
+  funcBdr.setCurr(geBlock);
+  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(false));
+  
+  return func;
 }

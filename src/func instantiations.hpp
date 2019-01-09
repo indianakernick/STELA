@@ -48,7 +48,7 @@ public:
   llvm::Function *arrayIdxS(ast::ArrayType *);
   /// Get the unsigned indexing function for an array
   llvm::Function *arrayIdxU(ast::ArrayType *);
-  /// Get the length construct for an array
+  /// Get the length constructor for an array
   llvm::Function *arrayLenCtor(ast::ArrayType *);
   
   /// Get the destructor for a struct
@@ -63,6 +63,10 @@ public:
   llvm::Function *structMovCtor(ast::StructType *);
   /// Get the move assignment function for a struct
   llvm::Function *structMovAsgn(ast::StructType *);
+  /// Get the equality comparison function for a struct
+  llvm::Function *structEq(ast::StructType *);
+  /// Get the less-than comparison function for a struct
+  llvm::Function *structLt(ast::StructType *);
   
   /// Get the panic function
   llvm::Function *panic();
@@ -92,6 +96,8 @@ private:
   FuncMap structCopAsgns;
   FuncMap structMovCtors;
   FuncMap structMovAsgns;
+  FuncMap structEqs;
+  FuncMap structLts;
   
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;

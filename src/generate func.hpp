@@ -70,6 +70,8 @@ llvm::Function *genSrtCopCtor(gen::FuncInst &, llvm::Module *, ast::StructType *
 llvm::Function *genSrtCopAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
 llvm::Function *genSrtMovCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
 llvm::Function *genSrtMovAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtEq(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genSrtLt(gen::FuncInst &, llvm::Module *, ast::StructType *);
 
 }
 
