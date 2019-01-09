@@ -298,8 +298,7 @@ void resetPtr(
   funcBdr.setCurr(del);
   funcBdr.ir.CreateCall(dtor, {ptr});
   callFree(funcBdr.ir, inst.free(), ptr);
-  funcBdr.ir.CreateBr(done);
-  funcBdr.setCurr(done);
+  funcBdr.branch(done);
 }
 
 llvm::Value *ptrDefCtor(
@@ -379,8 +378,7 @@ void ptrCopAsgn(
   llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
   resetPtr(inst, funcBdr, left, dtor, innerDone);
   funcBdr.ir.CreateStore(right, leftPtr);
-  funcBdr.ir.CreateBr(done);
-  funcBdr.setCurr(done);
+  funcBdr.branch(done);
 }
 
 void ptrMovAsgn(
@@ -401,8 +399,7 @@ void ptrMovAsgn(
   resetPtr(inst, funcBdr, left, dtor, innerDone);
   funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
   setNull(funcBdr.ir, rightPtr);
-  funcBdr.ir.CreateBr(done);
-  funcBdr.setCurr(done);
+  funcBdr.branch(done);
 }
 
 void likely(llvm::BranchInst *branch) {
@@ -751,8 +748,7 @@ llvm::Function *stela::genArrStrgDtor(
   llvm::Value *datPtr = funcBdr.ir.CreateStructGEP(storage, array_idx_dat);
   llvm::Value *dat = funcBdr.ir.CreateLoad(datPtr);
   
-  funcBdr.ir.CreateBr(head);
-  funcBdr.setCurr(head);
+  funcBdr.branch(head);
   llvm::Value *idx = funcBdr.ir.CreateLoad(idxPtr);
   llvm::Value *atEnd = funcBdr.ir.CreateICmpEQ(idx, len);
   llvm::Value *incIdx = funcBdr.ir.CreateNSWAdd(idx, constantFor(idx, 1));

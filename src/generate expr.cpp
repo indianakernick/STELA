@@ -56,9 +56,7 @@ public:
     
     funcBdr.setCurr(rightBlock);
     gen::Expr rightExpr = visitValue(right);
-    funcBdr.ir.CreateBr(doneBlock);
-    
-    funcBdr.setCurr(doneBlock);
+    funcBdr.branch(doneBlock);
     llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);
@@ -76,9 +74,7 @@ public:
     
     funcBdr.setCurr(rightBlock);
     gen::Expr rightExpr = visitValue(right);
-    funcBdr.ir.CreateBr(doneBlock);
-    
-    funcBdr.setCurr(doneBlock);
+    funcBdr.branch(doneBlock);
     llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);

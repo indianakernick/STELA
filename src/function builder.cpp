@@ -85,6 +85,11 @@ llvm::BasicBlock *FuncBuilder::terminateLazy(llvm::BasicBlock *dest) {
   return dest;
 }
 
+void FuncBuilder::branch(llvm::BasicBlock *block) {
+  ir.CreateBr(block);
+  setCurr(block);
+}
+
 llvm::MutableArrayRef<llvm::Argument> FuncBuilder::args() const {
   return {func->arg_begin(), func->arg_end()};
 }
