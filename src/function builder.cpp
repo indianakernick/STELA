@@ -88,24 +88,3 @@ llvm::BasicBlock *FuncBuilder::terminateLazy(llvm::BasicBlock *dest) {
 llvm::MutableArrayRef<llvm::Argument> FuncBuilder::args() const {
   return {func->arg_begin(), func->arg_end()};
 }
-
-llvm::Value *FuncBuilder::callAlloc(llvm::Function *alloc, llvm::Type *type) {
-  llvm::Type *sizeTy = getType<size_t>(alloc->getContext());
-  return callAlloc(alloc, type, llvm::ConstantInt::get(sizeTy, 1));
-}
-
-llvm::Value *FuncBuilder::callAlloc(llvm::Function *alloc, llvm::Type *type, llvm::Value *count) {
-  llvm::LLVMContext &ctx = alloc->getContext();
-  llvm::Type *sizeTy = getType<size_t>(ctx);
-  llvm::Constant *size64 = llvm::ConstantExpr::getSizeOf(type);
-  llvm::Constant *size = llvm::ConstantExpr::getIntegerCast(size64, sizeTy, false);
-  llvm::Value *numElems = ir.CreateIntCast(count, sizeTy, false);
-  llvm::Value *bytes = ir.CreateMul(size, numElems);
-  llvm::Value *memPtr = ir.CreateCall(alloc, {bytes});
-  return ir.CreatePointerCast(memPtr, type->getPointerTo());
-}
-
-void FuncBuilder::callFree(llvm::Function *free, llvm::Value *ptr) {
-  llvm::Type *i8ptr = llvm::Type::getInt8PtrTy(ptr->getContext());
-  ir.CreateCall(free, ir.CreatePointerCast(ptr, i8ptr));
-}

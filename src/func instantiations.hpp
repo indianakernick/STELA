@@ -50,6 +50,8 @@ public:
   llvm::Function *arrayIdxU(ast::ArrayType *);
   /// Get the length constructor for an array
   llvm::Function *arrayLenCtor(ast::ArrayType *);
+  /// Get the storage destructor for an array
+  llvm::Function *arrayStrgDtor(ast::ArrayType *);
   
   /// Get the destructor for a struct
   llvm::Function *structDtor(ast::StructType *);
@@ -80,6 +82,8 @@ private:
 
   llvm::Module *module;
   
+  // @TODO std::array<std::unordered_map>
+  
   FuncMap arrayDtors;
   FuncMap arrayDefCtors;
   FuncMap arrayCopCtors;
@@ -89,6 +93,7 @@ private:
   FuncMap arrayIdxSs;
   FuncMap arrayIdxUs;
   FuncMap arrayLenCtors;
+  FuncMap arrayStoreDtors;
   
   FuncMap structDtors;
   FuncMap structDefCtors;

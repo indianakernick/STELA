@@ -119,10 +119,11 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 
-array dtor
+refactor generate func
 compare arrays
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)
 bool conversion
 maybe ast::Type uniquing?
+zero extend i1?

@@ -120,9 +120,6 @@ public:
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
   }
-  void visit(ast::Subscript &sub) override {
-    sub.object->accept(*this);
-  }
   void visit(ast::Identifier &ident) override {
     root = &ident;
   }

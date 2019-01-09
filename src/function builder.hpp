@@ -45,13 +45,6 @@ public:
   /// Get the function arguments
   llvm::MutableArrayRef<llvm::Argument> args() const;
   
-  /// Allocate space for an object
-  llvm::Value *callAlloc(llvm::Function *, llvm::Type *);
-  /// Allocate space for a runtime number of objects
-  llvm::Value *callAlloc(llvm::Function *, llvm::Type *, llvm::Value *);
-  /// Make a call to free
-  void callFree(llvm::Function *, llvm::Value *);
-  
   llvm::IRBuilder<> ir;
   
 private:

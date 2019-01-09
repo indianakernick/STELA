@@ -20,6 +20,10 @@ template <typename Elem>
 struct ArrayStorage : ref_count {
   ArrayStorage()
     : ref_count{} {}
+  ~ArrayStorage() {
+    std::destroy_n(dat, len);
+    std::free(dat);
+  }
 
   // uint64_t ref
   Uint cap = 0;

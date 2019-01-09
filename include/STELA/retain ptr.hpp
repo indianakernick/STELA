@@ -225,6 +225,7 @@ private:
       ref_count *const refPtr = ptr;
       assert(refPtr->count != 0);
       if (--refPtr->count == 0) {
+        ptr->~T();
         std::free(ptr);
       }
     }
@@ -242,9 +243,14 @@ void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
   a.swap(b);
 }
 
+template <typename T>
+T *alloc(const size_t count = 1) noexcept {
+  return static_cast<T *>(std::malloc(sizeof(T) * count));
+}
+
 template <typename T, typename... Args>
 retain_ptr<T> make_retain(Args &&... args) noexcept {
-  T *ptr = static_cast<T *>(std::malloc(sizeof(T)));
+  T *ptr = alloc<T>();
   new (ptr) T{std::forward<Args>(args)...};
   return retain_ptr<T>{ptr};
 }

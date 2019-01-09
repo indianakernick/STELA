@@ -931,7 +931,7 @@ TEST_GROUP(Generation, {
     Array<Real> array1 = makeArray<Real>();
     array1->cap = 1;
     array1->len = 1;
-    array1->dat = new Real;
+    array1->dat = alloc<Real>();
     ASSERT_EQ(array1.use_count(), 1);
   
     setFirst(array1, 11.5f);
@@ -950,8 +950,6 @@ TEST_GROUP(Generation, {
     ASSERT_TRUE(array1->dat);
     ASSERT_EQ(array1->dat[0], 11.5f);
     ASSERT_EQ(first, 11.5f);
-    
-    delete array1->dat;
   });
   
   TEST(Assign structs, {
@@ -1601,7 +1599,9 @@ TEST_GROUP(Generation, {
     Array<Real> array = makeArray<Real>();
     array->cap = 2;
     array->len = 2;
-    array->dat = new Real[2] {4.0f, 8.0f};
+    array->dat = alloc<Real>(2);
+    array->dat[0] = 4.0f;
+    array->dat[1] = 8.0f;
     ASSERT_EQ(first(array), 4.0f);
     array->dat[0] = -0.5f;
     ASSERT_EQ(first(array), -0.5f);
@@ -1677,6 +1677,52 @@ TEST_GROUP(Generation, {
     ASSERT_TRUE(less(Str{'a', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'e'}));
     ASSERT_FALSE(less(Str{'a', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'd'}));
     ASSERT_FALSE(less(Str{'b', 'b', 'c', 'd'}, Str{'a', 'b', 'c', 'd'}));
+  });
+  
+  TEST(Array of arrays, {
+    ASSERT_SUCCEEDS(R"(
+      extern func wrap(inner: [real]) {
+        let ret = [inner];
+        return ret;
+      }
+      
+      extern func unwrap(outer: [[real]]) {
+        let dup = outer;
+        return dup[0];
+      }
+    )");
+    
+    auto wrap = GET_FUNC("wrap", Array<Array<Real>>(Array<Real>));
+    
+    Array<Real> inner = makeArray<Real>();
+    ASSERT_EQ(inner.use_count(), 1);
+    {
+      Array<Array<Real>> wrapped = wrap(inner);
+      ASSERT_TRUE(wrapped);
+      ASSERT_EQ(wrapped.use_count(), 1);
+      ASSERT_TRUE(inner);
+      ASSERT_EQ(inner.use_count(), 2);
+      ASSERT_EQ(wrapped->len, 1);
+      ASSERT_TRUE(wrapped->dat);
+      ASSERT_EQ(inner, wrapped->dat[0]);
+    }
+    ASSERT_EQ(inner.use_count(), 1);
+    
+    auto unwrap = GET_FUNC("unwrap", Array<Real>(Array<Array<Real>>));
+    
+    {
+      Array<Array<Real>> wrapped = wrap(inner);
+      ASSERT_EQ(inner.use_count(), 2);
+      {
+        Array<Real> innerCopy = unwrap(wrapped);
+        ASSERT_EQ(wrapped.use_count(), 1);
+        ASSERT_TRUE(innerCopy);
+        ASSERT_EQ(innerCopy, inner);
+        ASSERT_EQ(inner.use_count(), 3);
+      }
+      ASSERT_EQ(inner.use_count(), 2);
+    }
+    ASSERT_EQ(inner.use_count(), 1);
   });
   
   /*
