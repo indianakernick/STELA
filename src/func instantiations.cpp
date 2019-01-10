@@ -54,7 +54,15 @@ llvm::Function *gen::FuncInst::arrayLenCtor(ast::ArrayType *type) {
 }
 
 llvm::Function *gen::FuncInst::arrayStrgDtor(ast::ArrayType *type) {
-  return getCached(arrayStoreDtors, genArrStrgDtor, type);
+  return getCached(arrayStrgDtors, genArrStrgDtor, type);
+}
+
+llvm::Function *gen::FuncInst::arrayEq(ast::ArrayType *type) {
+  return getCached(arrayEqs, genArrEq, type);
+}
+
+llvm::Function *gen::FuncInst::arrayLt(ast::ArrayType *type) {
+  return getCached(arrayLts, genArrLt, type);
 }
 
 llvm::Function *gen::FuncInst::structDtor(ast::StructType *type) {
@@ -90,24 +98,15 @@ llvm::Function *gen::FuncInst::structLt(ast::StructType *type) {
 }
 
 llvm::Function *gen::FuncInst::panic() {
-  if (!panicFn) {
-    panicFn = generatePanic({*this, module});
-  }
-  return panicFn;
+  return getCached(panicFn, generatePanic);
 }
 
 llvm::Function *gen::FuncInst::alloc() {
-  if (!allocFn) {
-    allocFn = generateAlloc({*this, module});
-  }
-  return allocFn;
+  return getCached(allocFn, generateAlloc);
 }
 
 llvm::Function *gen::FuncInst::free() {
-  if (!freeFn) {
-    freeFn = generateFree({*this, module});
-  }
-  return freeFn;
+  return getCached(freeFn, generateFree);
 }
 
 template <typename Make, typename Type>
@@ -121,4 +120,14 @@ llvm::Function *gen::FuncInst::getCached(FuncMap &map, Make *make, Type *ast) {
   } else {
     return iter->second;
   }
+}
+
+llvm::Function *gen::FuncInst::getCached(
+  llvm::Function *&func,
+  llvm::Function *(*make)(InstData)
+) {
+  if (!func) {
+    func = make({*this, module});
+  }
+  return func;
 }

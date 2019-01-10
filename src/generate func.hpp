@@ -50,11 +50,6 @@ llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
   return getType<Int>(ctx)->getPointerTo();
 }
 
-struct InstData {
-  gen::FuncInst &inst;
-  llvm::Module *const mod;
-};
-
 llvm::Function *generatePanic(InstData);
 llvm::Function *generateAlloc(InstData);
 llvm::Function *generateFree(InstData);
@@ -69,6 +64,8 @@ llvm::Function *genArrIdxS(InstData, ast::ArrayType *);
 llvm::Function *genArrIdxU(InstData, ast::ArrayType *);
 llvm::Function *genArrLenCtor(InstData, ast::ArrayType *);
 llvm::Function *genArrStrgDtor(InstData, ast::ArrayType *);
+llvm::Function *genArrEq(InstData, ast::ArrayType *);
+llvm::Function *genArrLt(InstData, ast::ArrayType *);
 
 llvm::Function *genSrtDtor(InstData, ast::StructType *);
 llvm::Function *genSrtDefCtor(InstData, ast::StructType *);

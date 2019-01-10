@@ -20,6 +20,8 @@ template <typename Elem>
 struct ArrayStorage : ref_count {
   ArrayStorage()
     : ref_count{} {}
+  explicit ArrayStorage(const Uint len)
+    : ref_count{}, cap{len}, len{len}, dat{alloc<Elem>(len)} {}
   ~ArrayStorage() {
     std::destroy_n(dat, len);
     std::free(dat);
@@ -35,8 +37,30 @@ template <typename Elem>
 using Array = retain_ptr<ArrayStorage<Elem>>;
 
 template <typename Elem>
-Array<Elem> makeArray() {
+Array<Elem> makeEmptyArray() noexcept {
   return make_retain<ArrayStorage<Elem>>();
+}
+
+template <typename Elem>
+Array<Elem> makeArray(const Uint size) noexcept {
+  return make_retain<ArrayStorage<Elem>>(size);
+}
+
+template <typename Elem, typename... Args>
+Array<Elem> makeArrayOf(Args &&... args) {
+  Array<Elem> array = makeArray<Elem>(sizeof...(Args));
+  Elem elems[] = {std::forward<Args>(args)...};
+  std::uninitialized_move_n(elems, sizeof...(Args), array->dat);
+  return array;
+}
+
+template <size_t Size>
+Array<Char> makeString(const char (&value)[Size]) {
+  constexpr size_t strSize = Size - 1;
+  Array<Char> string = makeArray<Char>(strSize);
+  std::copy_n(value, strSize, string->dat);
+  string->len = strSize;
+  return string;
 }
 
 template <typename, typename = void>

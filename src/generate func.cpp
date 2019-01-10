@@ -221,6 +221,7 @@ void assignCompareAttrs(llvm::Function *func) {
   assignBinaryAliasCtorAttrs(func);
   func->addParamAttr(0, llvm::Attribute::ReadOnly);
   func->addParamAttr(1, llvm::Attribute::ReadOnly);
+  func->addFnAttr(llvm::Attribute::ReadOnly);
 }
 
 llvm::Constant *constantFor(llvm::Type *type, const uint64_t value) {
@@ -240,7 +241,10 @@ llvm::Value *loadStructElem(llvm::IRBuilder<> &ir, llvm::Value *srtPtr, unsigned
 }
 
 llvm::Value *arrayIndex(llvm::IRBuilder<> &ir, llvm::Value *ptr, llvm::Value *idx) {
-  return ir.CreateInBoundsGEP(ptr->getType()->getPointerElementType(), ptr, idx);
+  llvm::Type *sizeTy = getType<size_t>(ir.getContext());
+  llvm::Value *wideIdx = ir.CreateIntCast(idx, sizeTy, false);
+  llvm::Type *elemTy = ptr->getType()->getPointerElementType();
+  return ir.CreateInBoundsGEP(elemTy, ptr, wideIdx);
 }
 
 void callPanic(llvm::IRBuilder<> &ir, llvm::Function *panic, std::string_view message) {
@@ -611,11 +615,10 @@ llvm::Function *generateArrayIdx(
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Type *arrayStruct = type->getPointerElementType();
   llvm::Type *elemPtr = arrayStruct->getStructElementType(array_idx_dat);
-  llvm::Type *i32 = llvm::Type::getInt32Ty(type->getContext());
-  llvm::Type *sizeTy = getType<size_t>(type->getContext());
+  llvm::Type *lenType = arrayStruct->getStructElementType(array_idx_len);
   llvm::FunctionType *fnType = llvm::FunctionType::get(
     elemPtr,
-    {type->getPointerTo(), i32},
+    {type->getPointerTo(), lenType},
     false
   );
   llvm::Function *func = makeInternalFunc(data.mod, fnType, name);
@@ -630,9 +633,8 @@ llvm::Function *generateArrayIdx(
   likely(funcBdr.ir.CreateCondBr(inBounds, okBlock, errorBlock));
   
   funcBdr.setCurr(okBlock);
-  llvm::Value *idx = funcBdr.ir.CreateIntCast(func->arg_begin() + 1, sizeTy, false);
   llvm::Value *dat = loadStructElem(funcBdr.ir, array, array_idx_dat);
-  funcBdr.ir.CreateRet(arrayIndex(funcBdr.ir, dat, idx));
+  funcBdr.ir.CreateRet(arrayIndex(funcBdr.ir, dat, func->arg_begin() + 1));
   
   funcBdr.setCurr(errorBlock);
   callPanic(funcBdr.ir, data.inst.panic(), "Index out of bounds");
@@ -737,6 +739,153 @@ llvm::Function *stela::genArrStrgDtor(InstData data, ast::ArrayType *arr) {
 
 namespace {
 
+struct ArrPairLoop {
+  llvm::BasicBlock *loop;
+  llvm::Value *left;
+  llvm::Value *right;
+  llvm::Value *leftEnd;
+  llvm::Value *rightEnd;
+};
+
+ArrPairLoop iterArrPair(
+  FuncBuilder &funcBdr,
+  llvm::Value *leftArr,
+  llvm::Value *rightArr,
+  llvm::BasicBlock *done
+) {
+  llvm::BasicBlock *head = funcBdr.makeBlock();
+  llvm::BasicBlock *body = funcBdr.makeBlock();
+  llvm::BasicBlock *tail = funcBdr.makeBlock();
+  
+  llvm::Value *leftDat = loadStructElem(funcBdr.ir, leftArr, array_idx_dat);
+  llvm::Value *rightDat = loadStructElem(funcBdr.ir, rightArr, array_idx_dat);
+  llvm::Value *leftLen = loadStructElem(funcBdr.ir, leftArr, array_idx_len);
+  llvm::Value *rightLen = loadStructElem(funcBdr.ir, rightArr, array_idx_len);
+  llvm::Value *leftEnd = arrayIndex(funcBdr.ir, leftDat, leftLen);
+  llvm::Value *rightEnd = arrayIndex(funcBdr.ir, rightDat, rightLen);
+  llvm::Value *leftPtr = funcBdr.allocStore(leftDat);
+  llvm::Value *rightPtr = funcBdr.allocStore(rightDat);
+  
+  funcBdr.branch(head);
+  llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
+  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
+  llvm::Value *rightAtEnd = funcBdr.ir.CreateICmpEQ(right, rightEnd);
+  funcBdr.ir.CreateCondBr(rightAtEnd, done, body);
+  
+  funcBdr.setCurr(tail);
+  llvm::Value *leftNext = funcBdr.ir.CreateConstInBoundsGEP1_64(left, 1);
+  llvm::Value *rightNext = funcBdr.ir.CreateConstInBoundsGEP1_64(right, 1);
+  funcBdr.ir.CreateStore(leftNext, leftPtr);
+  funcBdr.ir.CreateStore(rightNext, rightPtr);
+  funcBdr.ir.CreateBr(head);
+  
+  funcBdr.setCurr(body);
+  return {tail, left, right, leftEnd, rightEnd};
+}
+
+gen::Expr lvalue(llvm::Value *obj) {
+  return {obj, ValueCat::lvalue};
+}
+
+void returnBool(llvm::IRBuilder<> &ir, const bool ret) {
+  ir.CreateRet(ir.getInt1(ret));
+}
+
+}
+
+llvm::Function *stela::genArrEq(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_eq");
+  assignCompareAttrs(func);
+  FuncBuilder funcBdr{func};
+  
+  /*
+  if leftArr.len == rightArr.len
+    for left, right in leftArr, rightArr
+      if left == right
+        continue
+      else
+        return false
+    return true
+  else
+    return false
+  */
+
+  llvm::BasicBlock *compareBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *equalBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *diffBlock = funcBdr.makeBlock();
+  llvm::Value *leftArr = funcBdr.ir.CreateLoad(func->arg_begin());
+  llvm::Value *rightArr = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
+  llvm::Value *leftLen = loadStructElem(funcBdr.ir, leftArr, array_idx_len);
+  llvm::Value *rightLen = loadStructElem(funcBdr.ir, rightArr, array_idx_len);
+  llvm::Value *sameLen = funcBdr.ir.CreateICmpEQ(leftLen, rightLen);
+  funcBdr.ir.CreateCondBr(sameLen, compareBlock, diffBlock);
+  
+  funcBdr.setCurr(compareBlock);
+  ArrPairLoop comp = iterArrPair(funcBdr, leftArr, rightArr, equalBlock);
+  CompareExpr compare{data.inst, funcBdr.ir};
+  llvm::Value *eq = compare.equal(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  funcBdr.ir.CreateCondBr(eq, comp.loop, diffBlock);
+  
+  funcBdr.setCurr(equalBlock);
+  returnBool(funcBdr.ir, true);
+  funcBdr.setCurr(diffBlock);
+  returnBool(funcBdr.ir, false);
+  
+  return func;
+}
+
+llvm::Function *stela::genArrLt(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_lt");
+  assignCompareAttrs(func);
+  FuncBuilder funcBdr{func};
+  
+  /*
+  for left, right in leftArr, rightArr
+    if left == leftEnd
+      return true
+    else if left < right
+      return true
+    else if right < left
+      return false
+    else
+      continue
+  return false
+  */
+  
+  llvm::BasicBlock *ltBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *geBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *notEndBlock = funcBdr.makeBlock();
+  llvm::BasicBlock *notLtBlock = funcBdr.makeBlock();
+  llvm::Value *leftArr = funcBdr.ir.CreateLoad(func->arg_begin());
+  llvm::Value *rightArr = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
+  ArrPairLoop comp = iterArrPair(funcBdr, leftArr, rightArr, geBlock);
+  
+  llvm::Value *leftAtEnd = funcBdr.ir.CreateICmpEQ(comp.left, comp.leftEnd);
+  funcBdr.ir.CreateCondBr(leftAtEnd, ltBlock, notEndBlock);
+  
+  funcBdr.setCurr(notEndBlock);
+  CompareExpr compare{data.inst, funcBdr.ir};
+  llvm::Value *lt = compare.less(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  funcBdr.ir.CreateCondBr(lt, ltBlock, notLtBlock);
+  
+  funcBdr.setCurr(notLtBlock);
+  llvm::Value *gt = compare.less(arr->elem.get(), lvalue(comp.right), lvalue(comp.left));
+  funcBdr.ir.CreateCondBr(gt, geBlock, comp.loop);
+  
+  funcBdr.setCurr(ltBlock);
+  returnBool(funcBdr.ir, true);
+  funcBdr.setCurr(geBlock);
+  returnBool(funcBdr.ir, false);
+  
+  return func;
+}
+
+namespace {
+
 llvm::Function *unarySrt(
   InstData data,
   ast::StructType *srt,
@@ -812,14 +961,6 @@ llvm::Function *stela::genSrtMovAsgn(InstData data, ast::StructType *srt) {
   return binarySrt(data, srt, "srt_mov_asgn", &LifetimeExpr::moveAssign);
 }
 
-namespace {
-
-gen::Expr lvalue(llvm::Value *obj) {
-  return {obj, ValueCat::lvalue};
-}
-
-}
-
 llvm::Function *stela::genSrtEq(InstData data, ast::StructType *srt) {
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "srt_eq");
@@ -848,9 +989,9 @@ llvm::Function *stela::genSrtEq(InstData data, ast::StructType *srt) {
     funcBdr.setCurr(equalBlock);
   }
   
-  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(true));
+  returnBool(funcBdr.ir, true);
   funcBdr.setCurr(diffBlock);
-  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(false));
+  returnBool(funcBdr.ir, false);
   return func;
 }
 
@@ -892,8 +1033,8 @@ llvm::Function *stela::genSrtLt(InstData data, ast::StructType *srt) {
   
   funcBdr.ir.CreateBr(geBlock);
   funcBdr.setCurr(ltBlock);
-  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(true));
+  returnBool(funcBdr.ir, true);
   funcBdr.setCurr(geBlock);
-  funcBdr.ir.CreateRet(funcBdr.ir.getInt1(false));
+  returnBool(funcBdr.ir, false);
   return func;
 }

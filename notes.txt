@@ -73,7 +73,6 @@ the other?
 --------------------------------------------------------------------------------
 
 think about the rules for function overloading and shadowing. Overload across modules?
-manually manage reference count
 manually instantiate builtin functions
 should mutability be part of the type system properly? What we have now just lets use make variables constant
 maybe a move keyword that does a similar job to std::move
@@ -87,18 +86,7 @@ cache some stuff in the AST. Benchmark
 consider using ORC
 maybe make semicolons optional
 help optimizer with switch on global let
-annotate AST with calls to ctor, dtor, etc
 trivially relocatable optimizations
-
-newArraySize is constant so this is just nullptr
-newArraySize is always a constant!!!
-OK to delete ArrayStorage when dat == nullptr as long as len == 0
-
-if (newArraySize == 0) {
-  return nullptr;
-} else {
-  return malloc(newArraySize * sizeof(Elem));
-}
 
 This is could be part of the standard library
 func (self: sint) to_string() -> [char]
@@ -119,11 +107,10 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 
-refactor generate func
-compare arrays
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)
 bool conversion
 maybe ast::Type uniquing?
 zero extend i1?
+maybe we shouldn't inline so aggressively

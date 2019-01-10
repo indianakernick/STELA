@@ -19,14 +19,27 @@ class Module;
 
 }
 
-namespace stela::ast {
+namespace stela {
+
+namespace gen {
+
+class FuncInst;
+
+}
+
+struct InstData {
+  gen::FuncInst &inst;
+  llvm::Module *const mod;
+};
+
+namespace ast {
 
 struct StructType;
 struct ArrayType;
 
 }
 
-namespace stela::gen {
+namespace gen {
 
 class FuncInst {
 public:
@@ -52,6 +65,10 @@ public:
   llvm::Function *arrayLenCtor(ast::ArrayType *);
   /// Get the storage destructor for an array
   llvm::Function *arrayStrgDtor(ast::ArrayType *);
+  /// Get the equality comparision function for an array
+  llvm::Function *arrayEq(ast::ArrayType *);
+  /// Get the less-than comparision function for an array
+  llvm::Function *arrayLt(ast::ArrayType *);
   
   /// Get the destructor for a struct
   llvm::Function *structDtor(ast::StructType *);
@@ -93,7 +110,9 @@ private:
   FuncMap arrayIdxSs;
   FuncMap arrayIdxUs;
   FuncMap arrayLenCtors;
-  FuncMap arrayStoreDtors;
+  FuncMap arrayStrgDtors;
+  FuncMap arrayEqs;
+  FuncMap arrayLts;
   
   FuncMap structDtors;
   FuncMap structDefCtors;
@@ -110,7 +129,10 @@ private:
   
   template <typename Make, typename Type>
   llvm::Function *getCached(FuncMap &, Make *, Type *);
+  llvm::Function *getCached(llvm::Function *&, llvm::Function *(*)(InstData));
 };
+
+}
 
 }
 

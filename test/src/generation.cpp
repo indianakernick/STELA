@@ -333,14 +333,14 @@ TEST_GROUP(Generation, {
     
     auto select = GET_FUNC("select", Array<Real>(Bool, Array<Real>));
     {
-      Array<Real> array = makeArray<Real>();
+      Array<Real> array = makeEmptyArray<Real>();
       Array<Real> sameArray = select(true, array);
       ASSERT_TRUE(array);
       ASSERT_TRUE(sameArray);
       ASSERT_EQ(array, sameArray);
       ASSERT_EQ(array.use_count(), 2);
       
-      Array<Real> array2 = makeArray<Real>();
+      Array<Real> array2 = makeEmptyArray<Real>();
       Array<Real> diffArray = select(false, array2);
       ASSERT_TRUE(array2);
       ASSERT_TRUE(diffArray);
@@ -351,14 +351,14 @@ TEST_GROUP(Generation, {
     
     auto selectTemp = GET_FUNC("selectTemp", Array<Real>(Bool, Array<Real>));
     {
-      Array<Real> array = makeArray<Real>();
+      Array<Real> array = makeEmptyArray<Real>();
       Array<Real> sameArray = selectTemp(true, array);
       ASSERT_TRUE(array);
       ASSERT_TRUE(sameArray);
       ASSERT_EQ(array, sameArray);
       ASSERT_EQ(array.use_count(), 2);
       
-      Array<Real> array2 = makeArray<Real>();
+      Array<Real> array2 = makeEmptyArray<Real>();
       Array<Real> diffArray = selectTemp(false, array2);
       ASSERT_TRUE(array2);
       ASSERT_TRUE(diffArray);
@@ -915,23 +915,20 @@ TEST_GROUP(Generation, {
     
     auto identity = GET_FUNC("identity", Array<Real>(Array<Real>));
     
-    Array<Real> orig = makeArray<Real>();
+    Array<Real> orig = makeEmptyArray<Real>();
     Array<Real> copy = identity(orig);
     ASSERT_TRUE(orig);
     ASSERT_TRUE(copy);
     ASSERT_EQ(orig.get(), copy.get());
     ASSERT_EQ(orig.use_count(), 2);
     
-    Array<Real> same = identity(makeArray<Real>());
+    Array<Real> same = identity(makeEmptyArray<Real>());
     ASSERT_TRUE(same);
     ASSERT_EQ(same.use_count(), 1);
   
     auto setFirst = GET_FUNC("setFirst", Void(Array<Real>, Real));
   
-    Array<Real> array1 = makeArray<Real>();
-    array1->cap = 1;
-    array1->len = 1;
-    array1->dat = alloc<Real>();
+    Array<Real> array1 = makeArray<Real>(1);
     ASSERT_EQ(array1.use_count(), 1);
   
     setFirst(array1, 11.5f);
@@ -1155,14 +1152,14 @@ TEST_GROUP(Generation, {
     
     auto identity = GET_FUNC("identity", Array<Real>(Array<Real>));
     
-    Array<Real> a = makeArray<Real>();
+    Array<Real> a = makeEmptyArray<Real>();
     Array<Real> ret = identity(a);
     ASSERT_TRUE(a);
     ASSERT_TRUE(ret);
     ASSERT_EQ(a.get(), ret.get());
     ASSERT_EQ(a.use_count(), 2);
     
-    ASSERT_EQ(identity(makeArray<Real>()).use_count(), 1);
+    ASSERT_EQ(identity(makeEmptyArray<Real>()).use_count(), 1);
     
     auto get1_r = GET_FUNC("get1_r", Array<Real>());
     
@@ -1214,12 +1211,12 @@ TEST_GROUP(Generation, {
     
     auto identity = GET_FUNC("identity", S(S));
     
-    S s = {makeArray<Real>()};
+    S s = {makeEmptyArray<Real>()};
     S ret = identity(s);
     ASSERT_EQ(s.m.get(), ret.m.get());
     ASSERT_EQ(s.m.use_count(), 2);
     
-    S one = identity(S{makeArray<Real>()});
+    S one = identity(S{makeEmptyArray<Real>()});
     ASSERT_TRUE(one.m);
     ASSERT_EQ(one.m.use_count(), 1);
     
@@ -1596,12 +1593,7 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(sum, 10);
     
     auto first = GET_MEM_FUNC("first", Real(Array<Real>));
-    Array<Real> array = makeArray<Real>();
-    array->cap = 2;
-    array->len = 2;
-    array->dat = alloc<Real>(2);
-    array->dat[0] = 4.0f;
-    array->dat[1] = 8.0f;
+    Array<Real> array = makeArrayOf<Real>(4.0f, 8.0f);
     ASSERT_EQ(first(array), 4.0f);
     array->dat[0] = -0.5f;
     ASSERT_EQ(first(array), -0.5f);
@@ -1694,7 +1686,7 @@ TEST_GROUP(Generation, {
     
     auto wrap = GET_FUNC("wrap", Array<Array<Real>>(Array<Real>));
     
-    Array<Real> inner = makeArray<Real>();
+    Array<Real> inner = makeEmptyArray<Real>();
     ASSERT_EQ(inner.use_count(), 1);
     {
       Array<Array<Real>> wrapped = wrap(inner);
@@ -1723,6 +1715,96 @@ TEST_GROUP(Generation, {
       ASSERT_EQ(inner.use_count(), 2);
     }
     ASSERT_EQ(inner.use_count(), 1);
+  });
+  
+  TEST(Compare arrays, {
+    ASSERT_SUCCEEDS(R"(
+      extern func less(a: [char], b: [char]) {
+        return a < b;
+      }
+      
+      extern func eq(a: [char], b: [char]) {
+        return a == b;
+      }
+    )");
+    
+    auto less = GET_FUNC("less", Bool(Array<Char>, Array<Char>));
+    
+    ASSERT_TRUE(less(makeString("abc"), makeString("abcd")));
+    ASSERT_TRUE(less(makeString("abcd"), makeString("abce")));
+    ASSERT_TRUE(less(makeString("a"), makeString("b")));
+    ASSERT_TRUE(less(makeString(""), makeString("a")));
+    ASSERT_FALSE(less(makeString(""), makeString("")));
+    ASSERT_FALSE(less(makeEmptyArray<Char>(), makeEmptyArray<Char>()));
+    ASSERT_FALSE(less(makeString("abc"), makeString("abc")));
+    ASSERT_FALSE(less(makeString("abce"), makeString("abcd")));
+    ASSERT_FALSE(less(makeString("abcd"), makeString("abc")));
+    
+    auto eq = GET_FUNC("eq", Bool(Array<Char>, Array<Char>));
+    
+    ASSERT_TRUE(eq(makeString("abc"), makeString("abc")));
+    ASSERT_TRUE(eq(makeString("a"), makeString("a")));
+    ASSERT_TRUE(eq(makeString(""), makeString("")));
+    ASSERT_TRUE(eq(makeEmptyArray<Char>(), makeEmptyArray<Char>()));
+    ASSERT_FALSE(eq(makeString("a"), makeString("b")));
+    ASSERT_FALSE(eq(makeString("abcdefg"), makeString("abcdeg")));
+    ASSERT_FALSE(eq(makeString("abcd"), makeString("dcba")));
+    ASSERT_FALSE(eq(makeString("abc"), makeString("abcd")));
+    ASSERT_FALSE(eq(makeString("abcd"), makeString("abc")));
+  });
+  
+  TEST(Sort strings, {
+    ASSERT_SUCCEEDS(R"(
+      func swap(a: ref [char], b: ref [char]) {
+        // @TODO this is where it would be useful to have a move keyword
+        // let t = move a;
+        // a = move b;
+        // b = move t;
+        let t = a;
+        a = b;
+        b = t;
+      }
+      
+      extern func bubbles(arr: [[char]], len: sint) {
+        if (len < 2) return;
+        let numPairs = len - 1;
+        var sorted = false;
+        while (!sorted) {
+          sorted = true;
+          for (p := 0; p != numPairs; p++) {
+            if (arr[p] > arr[p + 1]) {
+              swap(arr[p], arr[p + 1]);
+              sorted = false;
+            }
+          }
+        }
+      }
+    )");
+    
+    auto sort = GET_FUNC("bubbles", Void(Array<Array<Char>>, Sint));
+    
+    Array<Char> stat = makeString("statically");
+    Array<Char> type = makeString("typed");
+    Array<Char> embd = makeString("embeddable");
+    Array<Char> lang = makeString("language");
+    Array<Array<Char>> arr = makeArrayOf<Array<Char>>(stat, type, embd, lang);
+    ASSERT_EQ(stat.use_count(), 2);
+    ASSERT_EQ(type.use_count(), 2);
+    ASSERT_EQ(embd.use_count(), 2);
+    ASSERT_EQ(lang.use_count(), 2);
+    ASSERT_EQ(arr.use_count(), 1);
+    
+    sort(arr, arr->len);
+    
+    ASSERT_EQ(stat.use_count(), 2);
+    ASSERT_EQ(type.use_count(), 2);
+    ASSERT_EQ(embd.use_count(), 2);
+    ASSERT_EQ(lang.use_count(), 2);
+    ASSERT_EQ(arr.use_count(), 1);
+    ASSERT_EQ(arr->dat[0], embd);
+    ASSERT_EQ(arr->dat[1], lang);
+    ASSERT_EQ(arr->dat[2], stat);
+    ASSERT_EQ(arr->dat[3], type);
   });
   
   /*

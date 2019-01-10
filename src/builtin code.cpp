@@ -36,7 +36,7 @@ using t_real = float;
 using t_sint = int32_t;
 using t_uint = uint32_t;
 
-[[noreturn]] void panic(const char *const reason) noexcept {
+/*[[noreturn]] void panic(const char *const reason) noexcept {
   std::puts(reason);
   std::exit(EXIT_FAILURE);
 }
@@ -115,7 +115,7 @@ private:
       deallocate(ptr);
     }
   }
-};
+};*/
 
 #define BITS(T) static_cast<T>(sizeof(T) * CHAR_BIT)
 
@@ -171,7 +171,7 @@ struct Array {
   }
 };
 
-template <typename T>
+/*template <typename T>
 Array<T> make_array(const t_uint cap, const t_uint len) noexcept {
   return {static_cast<T *>(allocate(cap * sizeof(T))), cap, len};
 }
@@ -203,7 +203,7 @@ Array<t_char> string_literal(const t_char (&string)[Size]) noexcept {
   Array<t_char> array = make_array_len<t_char>(Size - 1);
   std::uninitialized_copy_n(&string[0], Size - 1, array.data);
   return array;
-}
+}*/
 
 template <typename T>
 t_uint capacity(const Array<T> &array) noexcept {
@@ -274,7 +274,7 @@ void reserve(Array<T> &array, const t_uint cap) noexcept {
   }
 }
 
-template <typename T>
+/*template <typename T>
 T &index(Array<T> &array, const t_uint index) noexcept {
   if (UNLIKELY(index >= array.len)) {
     panic("Array index out of bounds");
@@ -290,7 +290,7 @@ T &index(Array<T> &array, const t_sint index) noexcept {
   } else {
     return array.data[index];
   }
-}
+}*/
 
 struct ClosureData : ref_count {
   virtual ~ClosureData() = default;
