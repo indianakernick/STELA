@@ -110,6 +110,15 @@ llvm::Type *pushRet(ast::Type *retType, llvm::Type *ret, LLVMTypes &params) {
   return ret;
 }
 
+bool isBool(ast::Type *type) {
+  if (auto *btn = concreteType<ast::BtnType>(type)) {
+    if (btn->value == ast::BtnTypeEnum::Bool) {
+      return true;
+    }
+  }
+  return false;
+}
+
 }
 
 llvm::FunctionType *stela::generateFuncSig(llvm::LLVMContext &ctx, const ast::Func &func) {
@@ -142,7 +151,7 @@ llvm::FunctionType *stela::generateLambSig(llvm::LLVMContext &ctx, const ast::Fu
   return llvm::FunctionType::get(ret, params, false);
 }
 
-void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params) {
+void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params, ast::Type *ret) {
   llvm::FunctionType *type = func->getFunctionType();
   const unsigned numParams = type->getNumParams();
   const unsigned retParam = numParams > params.size() ? numParams - 1 : 0;
@@ -154,11 +163,15 @@ void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params
       if (p != retParam && params[p].ref != sym::ValueRef::ref) {
         func->addParamAttr(p, llvm::Attribute::NoAlias);
       }
+    } else if (p != retParam && isBool(params[p].type.get())) {
+      func->addParamAttr(p, llvm::Attribute::ZExt);
     }
   }
   if (retParam) {
     func->addParamAttr(retParam, llvm::Attribute::NoAlias);
     func->addParamAttr(retParam, llvm::Attribute::WriteOnly);
+  } else if (isBool(ret)) {
+    func->addAttribute(0, llvm::Attribute::ZExt);
   }
   func->addFnAttr(llvm::Attribute::NoUnwind);
 }

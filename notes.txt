@@ -112,5 +112,4 @@ optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)
 bool conversion
 maybe ast::Type uniquing?
-zero extend i1?
 maybe we shouldn't inline so aggressively

@@ -219,6 +219,7 @@ void assignBinaryCtorAttrs(llvm::Function *func) {
 
 void assignCompareAttrs(llvm::Function *func) {
   assignBinaryAliasCtorAttrs(func);
+  func->addAttribute(0, llvm::Attribute::ZExt);
   func->addParamAttr(0, llvm::Attribute::ReadOnly);
   func->addParamAttr(1, llvm::Attribute::ReadOnly);
   func->addFnAttr(llvm::Attribute::ReadOnly);

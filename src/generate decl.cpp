@@ -37,7 +37,7 @@ public:
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );
-    assignAttributes(func.llvmFunc, func.symbol->params);
+    assignAttributes(func.llvmFunc, func.symbol->params, func.symbol->ret.type.get());
     
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }

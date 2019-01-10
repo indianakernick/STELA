@@ -28,7 +28,7 @@ namespace stela {
 llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
 llvm::FunctionType *generateFuncSig(llvm::LLVMContext &, const ast::Func &);
 llvm::FunctionType *generateLambSig(llvm::LLVMContext &, const ast::FuncType &);
-void assignAttributes(llvm::Function *, const sym::FuncParams &);
+void assignAttributes(llvm::Function *, const sym::FuncParams &, ast::Type *);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
 ast::Type *concreteType(ast::Type *);
