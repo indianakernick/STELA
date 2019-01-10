@@ -91,21 +91,21 @@ llvm::Function *gen::FuncInst::structLt(ast::StructType *type) {
 
 llvm::Function *gen::FuncInst::panic() {
   if (!panicFn) {
-    panicFn = generatePanic(module);
+    panicFn = generatePanic({*this, module});
   }
   return panicFn;
 }
 
 llvm::Function *gen::FuncInst::alloc() {
   if (!allocFn) {
-    allocFn = generateAlloc(*this, module);
+    allocFn = generateAlloc({*this, module});
   }
   return allocFn;
 }
 
 llvm::Function *gen::FuncInst::free() {
   if (!freeFn) {
-    freeFn = generateFree(module);
+    freeFn = generateFree({*this, module});
   }
   return freeFn;
 }
@@ -115,7 +115,7 @@ llvm::Function *gen::FuncInst::getCached(FuncMap &map, Make *make, Type *ast) {
   llvm::Type *type = generateType(module->getContext(), ast);
   const auto iter = map.find(type);
   if (iter == map.end()) {
-    llvm::Function *func = make(*this, module, ast);
+    llvm::Function *func = make({*this, module}, ast);
     map.insert({type, func});
     return func;
   } else {

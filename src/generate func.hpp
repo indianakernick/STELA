@@ -50,29 +50,34 @@ llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
   return getType<Int>(ctx)->getPointerTo();
 }
 
-llvm::Function *generatePanic(llvm::Module *);
-llvm::Function *generateAlloc(gen::FuncInst &, llvm::Module *);
-llvm::Function *generateFree(llvm::Module *);
+struct InstData {
+  gen::FuncInst &inst;
+  llvm::Module *const mod;
+};
 
-llvm::Function *genArrDtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrDefCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrCopCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrCopAsgn(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrMovCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrMovAsgn(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrIdxS(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrIdxU(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrLenCtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
-llvm::Function *genArrStrgDtor(gen::FuncInst &, llvm::Module *, ast::ArrayType *);
+llvm::Function *generatePanic(InstData);
+llvm::Function *generateAlloc(InstData);
+llvm::Function *generateFree(InstData);
 
-llvm::Function *genSrtDtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtDefCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtCopCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtCopAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtMovCtor(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtMovAsgn(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtEq(gen::FuncInst &, llvm::Module *, ast::StructType *);
-llvm::Function *genSrtLt(gen::FuncInst &, llvm::Module *, ast::StructType *);
+llvm::Function *genArrDtor(InstData, ast::ArrayType *);
+llvm::Function *genArrDefCtor(InstData, ast::ArrayType *);
+llvm::Function *genArrCopCtor(InstData, ast::ArrayType *);
+llvm::Function *genArrCopAsgn(InstData, ast::ArrayType *);
+llvm::Function *genArrMovCtor(InstData, ast::ArrayType *);
+llvm::Function *genArrMovAsgn(InstData, ast::ArrayType *);
+llvm::Function *genArrIdxS(InstData, ast::ArrayType *);
+llvm::Function *genArrIdxU(InstData, ast::ArrayType *);
+llvm::Function *genArrLenCtor(InstData, ast::ArrayType *);
+llvm::Function *genArrStrgDtor(InstData, ast::ArrayType *);
+
+llvm::Function *genSrtDtor(InstData, ast::StructType *);
+llvm::Function *genSrtDefCtor(InstData, ast::StructType *);
+llvm::Function *genSrtCopCtor(InstData, ast::StructType *);
+llvm::Function *genSrtCopAsgn(InstData, ast::StructType *);
+llvm::Function *genSrtMovCtor(InstData, ast::StructType *);
+llvm::Function *genSrtMovAsgn(InstData, ast::StructType *);
+llvm::Function *genSrtEq(InstData, ast::StructType *);
+llvm::Function *genSrtLt(InstData, ast::StructType *);
 
 }
 
