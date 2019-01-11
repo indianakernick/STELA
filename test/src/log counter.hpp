@@ -9,25 +9,18 @@
 #ifndef test_log_counter_hpp
 #define test_log_counter_hpp
 
+#include <array>
 #include <STELA/log.hpp>
 
 class CountLogs final : public stela::LogSink {
 public:
-  CountLogs() = default;
+  CountLogs();
   
-  uint32_t status() const;
-  uint32_t verbose() const;
-  uint32_t info() const;
-  uint32_t warn() const;
-  uint32_t error() const;
+  uint32_t countOf(stela::LogPri) const;
   void reset();
   
 private:
-  uint32_t statusCount = 0;
-  uint32_t verboseCount = 0;
-  uint32_t infoCount = 0;
-  uint32_t warnCount = 0;
-  uint32_t errorCount = 0;
+  std::array<uint32_t, static_cast<size_t>(stela::LogPri::nothing)> count;
   
   bool writeHead(const stela::LogInfo &) override;
   std::streambuf *getBuf(const stela::LogInfo &) override;

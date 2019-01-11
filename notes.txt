@@ -116,3 +116,4 @@ treat the return parameter as an lvalue (NRVO)
 bool conversion
 maybe ast::Type uniquing?
 maybe we shouldn't inline so aggressively
+swap operator? :=: see the C++ proposal

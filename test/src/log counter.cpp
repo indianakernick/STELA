@@ -10,49 +10,20 @@
 
 using namespace stela;
 
-uint32_t CountLogs::status() const {
-  return statusCount;
+CountLogs::CountLogs() {
+  reset();
 }
 
-uint32_t CountLogs::verbose() const {
-  return verboseCount;
-}
-
-uint32_t CountLogs::info() const {
-  return infoCount;
-}
-
-uint32_t CountLogs::warn() const {
-  return warnCount;
-}
-
-uint32_t CountLogs::error() const {
-  return errorCount;
+uint32_t CountLogs::countOf(const LogPri pri) const {
+  return count[static_cast<size_t>(pri)];
 }
 
 void CountLogs::reset() {
-  statusCount = verboseCount = infoCount = warnCount = errorCount = 0;
+  count.fill(0);
 }
 
 bool CountLogs::writeHead(const stela::LogInfo &info) {
-  switch (info.pri) {
-    case LogPri::status:
-      ++statusCount;
-      break;
-    case LogPri::verbose:
-      ++verboseCount;
-      break;
-    case LogPri::info:
-      ++infoCount;
-      break;
-    case LogPri::warning:
-      ++warnCount;
-      break;
-    case LogPri::error:
-      ++errorCount;
-      break;
-    case LogPri::nothing: ;
-  }
+  ++count[static_cast<size_t>(info.pri)];
   return false;
 }
 
