@@ -53,6 +53,7 @@ llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
 llvm::Function *generatePanic(InstData);
 llvm::Function *generateAlloc(InstData);
 llvm::Function *generateFree(InstData);
+llvm::Function *genCeilToPow2(InstData);
 
 llvm::Function *genArrDtor(InstData, ast::ArrayType *);
 llvm::Function *genArrDefCtor(InstData, ast::ArrayType *);

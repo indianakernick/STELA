@@ -9,6 +9,7 @@
 #include "generate func.hpp"
 
 #include "unreachable.hpp"
+#include "type builder.hpp"
 #include "generate type.hpp"
 #include "generate decl.hpp"
 #include "compare exprs.hpp"
@@ -203,10 +204,12 @@ llvm::FunctionType *compareFor(llvm::Type *type) {
 }
 
 void assignUnaryCtorAttrs(llvm::Function *func) {
+  func->addFnAttr(llvm::Attribute::NoRecurse);
   func->addParamAttr(0, llvm::Attribute::NonNull);
 }
 
 void assignBinaryAliasCtorAttrs(llvm::Function *func) {
+  func->addFnAttr(llvm::Attribute::NoRecurse);
   func->addParamAttr(0, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NonNull);
 }
@@ -522,6 +525,35 @@ llvm::Function *stela::generateFree(InstData data) {
   llvm::Function *free = declareCFunc(data.mod, freeType, "free");
   free->addParamAttr(0, llvm::Attribute::NoCapture);
   return free;
+}
+
+llvm::Function *stela::genCeilToPow2(InstData data) {
+  // this returns 2 when the input is 1
+  // we could subtract val == 1 but that's just more instructions for no reason!
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  TypeBuilder typeBdr{ctx};
+  llvm::Type *type = typeBdr.len();
+  llvm::FunctionType *fnType = llvm::FunctionType::get(
+    type, {type}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, fnType, "ceil_to_pow_2");
+  FuncBuilder funcBdr{func};
+  
+  llvm::DataLayout layout{data.mod};
+  const uint64_t bitSize = layout.getTypeSizeInBits(type);
+  llvm::FunctionType *ctlzType = llvm::FunctionType::get(
+    type, {type, funcBdr.ir.getInt1Ty()}, false
+  );
+  llvm::Twine name = llvm::Twine{"llvm.ctlz.i"} + llvm::Twine{bitSize};
+  llvm::Function *ctlz = declareCFunc(data.mod, ctlzType, name);
+  llvm::Value *minus1 = funcBdr.ir.CreateNSWSub(func->arg_begin(), constantFor(type, 1));
+  llvm::Value *leadingZeros = funcBdr.ir.CreateCall(ctlz, {minus1, funcBdr.ir.getTrue()});
+  llvm::Value *bits = constantFor(type, bitSize);
+  llvm::Value *log2 = funcBdr.ir.CreateNSWSub(bits, leadingZeros);
+  llvm::Value *ceiled = funcBdr.ir.CreateShl(constantFor(type, 1), log2);
+  
+  funcBdr.ir.CreateRet(ceiled);
+  return func;
 }
 
 llvm::Function *stela::genArrDtor(InstData data, ast::ArrayType *arr) {

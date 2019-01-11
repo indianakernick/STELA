@@ -93,6 +93,8 @@ public:
   llvm::Function *alloc();
   /// Get the memory deallocation function
   llvm::Function *free();
+  /// Get the function used to ceil array lengths when calculating capacity
+  llvm::Function *ceilToPow2();
   
 private:
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
@@ -100,6 +102,9 @@ private:
   llvm::Module *module;
   
   // @TODO std::array<std::unordered_map>
+  // an enum will identify all of the functions
+  // perhaps we could lookup the generator function from the enum
+  // something like gen<Enum::arr_dtor>()
   
   FuncMap arrayDtors;
   FuncMap arrayDefCtors;
@@ -126,6 +131,7 @@ private:
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;
   llvm::Function *freeFn = nullptr;
+  llvm::Function *ceilToPow2Fn = nullptr;
   
   template <typename Make, typename Type>
   llvm::Function *getCached(FuncMap &, Make *, Type *);

@@ -109,6 +109,10 @@ llvm::Function *gen::FuncInst::free() {
   return getCached(freeFn, generateFree);
 }
 
+llvm::Function *gen::FuncInst::ceilToPow2() {
+  return getCached(ceilToPow2Fn, genCeilToPow2);
+}
+
 template <typename Make, typename Type>
 llvm::Function *gen::FuncInst::getCached(FuncMap &map, Make *make, Type *ast) {
   llvm::Type *type = generateType(module->getContext(), ast);

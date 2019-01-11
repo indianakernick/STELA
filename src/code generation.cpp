@@ -21,6 +21,9 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   log.status() << "Generating code" << endlog;
   
   auto module = std::make_unique<llvm::Module>("", getLLVM());
+  // @TODO how do we get the native target machine object?
+  // module->setTargetTriple(machine->getTargetTriple().str());
+  // module->setDataLayout(machine->createDataLayout());
   gen::FuncInst inst{module.get()};
   gen::Ctx ctx {module->getContext(), inst, log};
   generateIDs(syms.decls);
