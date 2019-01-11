@@ -16,15 +16,6 @@
 
 namespace stela {
 
-namespace gen {
-
-struct Expr {
-  llvm::Value *obj;
-  ValueCat cat;
-};
-
-}
-
 struct Object {
   llvm::Value *addr;
   ast::Type *type;

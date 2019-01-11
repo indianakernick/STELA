@@ -8,7 +8,6 @@
 
 #include "lifetime exprs.hpp"
 
-#include "categories.hpp"
 #include "unreachable.hpp"
 #include "generate type.hpp"
 #include "func instantiations.hpp"

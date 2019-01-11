@@ -33,45 +33,10 @@ std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
 
-template <size_t Size>
-llvm::IntegerType *getSizedType(llvm::LLVMContext &);
-
-template <typename Int>
-llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
-  return getSizedType<sizeof(Int)>(ctx);
-}
-
-template <typename Int>
-llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
-  return getType<Int>(ctx)->getPointerTo();
-}
-
 llvm::Function *genPanic(InstData);
 llvm::Function *genAlloc(InstData);
 llvm::Function *genFree(InstData);
 llvm::Function *genCeilToPow2(InstData);
-
-llvm::Function *genArrDtor(InstData, ast::ArrayType *);
-llvm::Function *genArrDefCtor(InstData, ast::ArrayType *);
-llvm::Function *genArrCopCtor(InstData, ast::ArrayType *);
-llvm::Function *genArrCopAsgn(InstData, ast::ArrayType *);
-llvm::Function *genArrMovCtor(InstData, ast::ArrayType *);
-llvm::Function *genArrMovAsgn(InstData, ast::ArrayType *);
-llvm::Function *genArrIdxS(InstData, ast::ArrayType *);
-llvm::Function *genArrIdxU(InstData, ast::ArrayType *);
-llvm::Function *genArrLenCtor(InstData, ast::ArrayType *);
-llvm::Function *genArrStrgDtor(InstData, ast::ArrayType *);
-llvm::Function *genArrEq(InstData, ast::ArrayType *);
-llvm::Function *genArrLt(InstData, ast::ArrayType *);
-
-llvm::Function *genSrtDtor(InstData, ast::StructType *);
-llvm::Function *genSrtDefCtor(InstData, ast::StructType *);
-llvm::Function *genSrtCopCtor(InstData, ast::StructType *);
-llvm::Function *genSrtCopAsgn(InstData, ast::StructType *);
-llvm::Function *genSrtMovCtor(InstData, ast::StructType *);
-llvm::Function *genSrtMovAsgn(InstData, ast::StructType *);
-llvm::Function *genSrtEq(InstData, ast::StructType *);
-llvm::Function *genSrtLt(InstData, ast::StructType *);
 
 }
 

@@ -11,11 +11,11 @@
 #include "llvm.hpp"
 #include "symbols.hpp"
 #include "categories.hpp"
+#include "gen helpers.hpp"
 #include "unreachable.hpp"
 #include "type builder.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
-#include "generate func.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
 

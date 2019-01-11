@@ -9,8 +9,10 @@
 #include "func instantiations.hpp"
 
 #include <llvm/IR/Module.h>
-#include "generate func.hpp"
 #include "generate type.hpp"
+#include "generate func.hpp"
+#include "generate array.hpp"
+#include "generate struct.hpp"
 
 using namespace stela;
 

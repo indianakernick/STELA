@@ -127,6 +127,14 @@ add_library(STELA STATIC
     "src/categories.hpp"
     "src/compare exprs.cpp"
     "src/compare exprs.hpp"
+    "src/gen helpers.cpp"
+    "src/gen helpers.hpp"
+    "src/generate array.cpp"
+    "src/generate array.hpp"
+    "src/generate struct.cpp"
+    "src/generate struct.hpp"
+    "src/generate pointer.cpp"
+    "src/generate pointer.hpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

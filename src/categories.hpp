@@ -9,6 +9,12 @@
 #ifndef stela_categories_hpp
 #define stela_categories_hpp
 
+namespace llvm {
+
+class Value;
+
+}
+
 namespace stela {
 
 namespace ast {
@@ -94,6 +100,15 @@ enum class ArithCat {
 ArithCat classifyArith(ast::BtnType *);
 ArithCat classifyArith(ast::Type *);
 ArithCat classifyArith(ast::Expression *);
+
+namespace gen {
+
+struct Expr {
+  llvm::Value *obj;
+  ValueCat cat;
+};
+
+}
 
 }
 
