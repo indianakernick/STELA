@@ -104,10 +104,6 @@ llvm::Function *FuncInst::pointerDtor() {
   return getCached(pointerDtorFn, genPtrDtor);
 }
 
-llvm::Function *FuncInst::pointerDefCtor() {
-  return getCached(pointerDefCtorFn, genPtrDefCtor);
-}
-
 llvm::Function *FuncInst::pointerCopCtor() {
   return getCached(pointerCopCtorFn, genPtrCopCtor);
 }

@@ -94,37 +94,6 @@ llvm::Function *stela::genPtrDtor(InstData data) {
   return func;
 }
 
-llvm::Function *stela::genPtrDefCtor(InstData data) {
-  // @TODO maybe change the signature of this function
-  // maybe the caller should allocate the memory and all this function will is
-  // set the reference count to 1
-  llvm::LLVMContext &ctx = data.mod->getContext();
-  
-  llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
-    {refPtrPtrTy(ctx), getType<size_t>(ctx)},
-    false
-  );
-  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_def_ctor");
-  func->addParamAttr(0, llvm::Attribute::ReadOnly);
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
-  
-  /*
-  ptr = malloc bytes
-  ptr.ref = 1
-  */
-  
-  llvm::Value *bytes = func->arg_begin() + 1;
-  llvm::Value *bytePtr = funcBdr.ir.CreateCall(data.inst.alloc(), {bytes});
-  llvm::Value *ref = funcBdr.ir.CreatePointerCast(bytePtr, refPtrTy(ctx));
-  funcBdr.ir.CreateStore(constantForPtr(ref, 1), ref);
-  funcBdr.ir.CreateStore(ref, func->arg_begin());
-  
-  funcBdr.ir.CreateRetVoid();
-  return func;
-}
-
 llvm::Function *stela::genPtrCopCtor(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   

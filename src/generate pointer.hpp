@@ -14,7 +14,6 @@
 namespace stela {
 
 llvm::Function *genPtrDtor(InstData);
-llvm::Function *genPtrDefCtor(InstData);
 llvm::Function *genPtrCopCtor(InstData);
 llvm::Function *genPtrCopAsgn(InstData);
 llvm::Function *genPtrMovCtor(InstData);

@@ -83,8 +83,6 @@ public:
   
   /// Get the destructor for a reference counted pointer
   llvm::Function *pointerDtor();
-  /// Get the default constructor for a reference counted pointer
-  llvm::Function *pointerDefCtor();
   /// Get the copy constructor for a reference counted pointer
   llvm::Function *pointerCopCtor();
   /// Get the copy assignment function for a reference counted pointer
@@ -136,7 +134,6 @@ private:
   FuncMap structLts;
   
   llvm::Function *pointerDtorFn = nullptr;
-  llvm::Function *pointerDefCtorFn = nullptr;
   llvm::Function *pointerCopCtorFn = nullptr;
   llvm::Function *pointerCopAsgnFn = nullptr;
   llvm::Function *pointerMovCtorFn = nullptr;

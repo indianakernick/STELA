@@ -47,11 +47,9 @@ llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
   */
   
   llvm::Value *arrayPtr = func->arg_begin();
-  llvm::Value *refPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
   llvm::Type *storageTy = type->getPointerElementType();
-  llvm::Value *storageSize = llvm::ConstantExpr::getSizeOf(storageTy);
-  funcBdr.ir.CreateCall(data.inst.pointerDefCtor(), {refPtr, storageSize});
-  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
+  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.alloc(), storageTy);
+  initRefCount(funcBdr.ir, array);
 
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
   funcBdr.ir.CreateStore(constantForPtr(cap, 0), cap);
@@ -59,7 +57,7 @@ llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
   funcBdr.ir.CreateStore(constantForPtr(len, 0), len);
   llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
   setNull(funcBdr.ir, dat);
-  funcBdr.ir.CreateStore(array, func->arg_begin());
+  funcBdr.ir.CreateStore(array, arrayPtr);
   
   funcBdr.ir.CreateRetVoid();
   return func;
@@ -218,19 +216,17 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   FuncBuilder funcBdr{func};
   
   /*
-  ptr_def_ctor(bitcast array, sizeof storage)
+  array = malloc
   array.cap = size
   array.len = size
   array.dat = malloc(size)
   */
   
   llvm::Value *arrayPtr = func->arg_begin();
-  llvm::Value *refPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
-  llvm::Type *storageTy = type->getPointerElementType();
-  llvm::Value *storageSize = llvm::ConstantExpr::getSizeOf(storageTy);
-  funcBdr.ir.CreateCall(data.inst.pointerDefCtor(), {refPtr, storageSize});
-  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
   llvm::Value *size = func->arg_begin() + 1;
+  llvm::Type *storageTy = type->getPointerElementType();
+  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.alloc(), storageTy);
+  initRefCount(funcBdr.ir, array);
   
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
   funcBdr.ir.CreateStore(size, cap);
@@ -239,7 +235,7 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
   llvm::Value *allocation = callAlloc(funcBdr.ir, data.inst.alloc(), elem, size);
   funcBdr.ir.CreateStore(allocation, dat);
-  funcBdr.ir.CreateStore(array, func->arg_begin());
+  funcBdr.ir.CreateStore(array, arrayPtr);
   
   funcBdr.ir.CreateRet(allocation);
   return func;

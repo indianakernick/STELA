@@ -210,3 +210,8 @@ llvm::PointerType *stela::refPtrDtorPtrTy(llvm::LLVMContext &ctx) {
 llvm::Value *stela::refPtrPtrCast(llvm::IRBuilder<> &ir, llvm::Value *ptrPtr) {
   return ir.CreatePointerCast(ptrPtr, refPtrPtrTy(ir.getContext()));
 }
+
+void stela::initRefCount(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
+  llvm::Value *refPtr = ir.CreatePointerCast(ptr, refPtrTy(ir.getContext()));
+  ir.CreateStore(constantForPtr(refPtr, 1), refPtr);
+}
