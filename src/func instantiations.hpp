@@ -81,6 +81,19 @@ public:
   /// Get the less-than comparison function for a struct
   llvm::Function *structLt(ast::StructType *);
   
+  /// Get the destructor for a reference counted pointer
+  llvm::Function *pointerDtor();
+  /// Get the default constructor for a reference counted pointer
+  llvm::Function *pointerDefCtor();
+  /// Get the copy constructor for a reference counted pointer
+  llvm::Function *pointerCopCtor();
+  /// Get the copy assignment function for a reference counted pointer
+  llvm::Function *pointerCopAsgn();
+  /// Get the move constructor for a reference counted pointer
+  llvm::Function *pointerMovCtor();
+  /// Get the move assignment function for a reference counted pointer
+  llvm::Function *pointerMovAsgn();
+  
   /// Get the panic function
   llvm::Function *panic();
   /// Get the memory allocation function
@@ -121,6 +134,13 @@ private:
   FuncMap structMovAsgns;
   FuncMap structEqs;
   FuncMap structLts;
+  
+  llvm::Function *pointerDtorFn = nullptr;
+  llvm::Function *pointerDefCtorFn = nullptr;
+  llvm::Function *pointerCopCtorFn = nullptr;
+  llvm::Function *pointerCopAsgnFn = nullptr;
+  llvm::Function *pointerMovCtorFn = nullptr;
+  llvm::Function *pointerMovAsgnFn = nullptr;
   
   llvm::Function *panicFn = nullptr;
   llvm::Function *allocFn = nullptr;

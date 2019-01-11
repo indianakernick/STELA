@@ -9,6 +9,8 @@
 #include "generate pointer.hpp"
 
 #include "gen helpers.hpp"
+#include "type builder.hpp"
+#include "function builder.hpp"
 
 using namespace stela;
 
@@ -19,17 +21,12 @@ enum class RefChg {
   dec
 };
 
-llvm::Value *getRef(llvm::IRBuilder<> &ir, llvm::Value *ptr) {
-  return ir.CreateStructGEP(ptr, 0);
-}
-
 llvm::Value *refChange(llvm::IRBuilder<> &ir, llvm::Value *ptr, const RefChg chg) {
-  llvm::Value *ref = getRef(ir, ptr);
-  llvm::Value *refVal = ir.CreateLoad(ref);
-  llvm::Constant *one = constantFor(refVal, 1);
-  llvm::Value *changed = chg == RefChg::inc ? ir.CreateNSWAdd(refVal, one)
-                                            : ir.CreateNSWSub(refVal, one);
-  ir.CreateStore(changed, ref);
+  llvm::Value *ref = ir.CreateLoad(ptr);
+  llvm::Constant *one = constantFor(ref, 1);
+  llvm::Value *changed = chg == RefChg::inc ? ir.CreateNSWAdd(ref, one)
+                                            : ir.CreateNSWSub(ref, one);
+  ir.CreateStore(changed, ptr);
   return changed;
 }
 
@@ -37,7 +34,7 @@ void resetPtr(
   FuncInst &inst,
   FuncBuilder &funcBdr,
   llvm::Value *ptr,
-  llvm::Function *dtor,
+  llvm::Value *dtor,
   llvm::BasicBlock *done
 ) {
   /*
@@ -49,6 +46,7 @@ void resetPtr(
   else
     done
   */
+  
   llvm::BasicBlock *del = funcBdr.makeBlock();
   llvm::Value *subed = refChange(funcBdr.ir, ptr, RefChg::dec);
   llvm::Value *isZero = funcBdr.ir.CreateICmpEQ(subed, constantFor(subed, 0));
@@ -61,102 +59,195 @@ void resetPtr(
 
 }
 
-llvm::Value *stela::ptrDefCtor(
-  FuncInst &inst, FuncBuilder &funcBdr, llvm::Type *elemType
-) {
-  /*
-  ptr = malloc elemType
-  ptr.ref = 1
-  */
-  llvm::Value *ptr = callAlloc(funcBdr.ir, inst.alloc(), elemType);
-  llvm::Value *ref = getRef(funcBdr.ir, ptr);
-  funcBdr.ir.CreateStore(constantForPtr(ref, 1), ref);
-  return ptr;
-}
-
-void stela::ptrDtor(
-  FuncInst &inst,
-  FuncBuilder &funcBdr,
-  llvm::Value *objPtr,
-  llvm::Function *dtor,
-  llvm::BasicBlock *done
-) {
+llvm::Function *stela::genPtrDtor(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_dtor");
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  FuncBuilder funcBdr{func};
+  
   /*
   if ptr == null
-    done
+    return
   else
     reset ptr
-    done
+    return
   */
+  
   llvm::BasicBlock *decr = funcBdr.makeBlock();
-  llvm::Value *ptr = funcBdr.ir.CreateLoad(objPtr);
+  llvm::BasicBlock *done = funcBdr.makeBlock();
+  llvm::Value *dtor = func->arg_begin();
+  llvm::Value *ptr = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
   funcBdr.ir.CreateCondBr(funcBdr.ir.CreateIsNull(ptr), done, decr);
+  
   funcBdr.setCurr(decr);
-  resetPtr(inst, funcBdr, ptr, dtor, done);
+  resetPtr(data.inst, funcBdr, ptr, dtor, done);
+  funcBdr.ir.CreateRetVoid();
+  
+  return func;
 }
 
-void stela::ptrCopCtor(
-  FuncBuilder &funcBdr, llvm::Value *objPtr, llvm::Value *otherPtr
-) {
+llvm::Function *stela::genPtrDefCtor(InstData data) {
+  // @TODO maybe change the signature of this function
+  // maybe the caller should allocate the memory and all this function will is
+  // set the reference count to 1
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrPtrTy(ctx), getType<size_t>(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_def_ctor");
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder funcBdr{func};
+  
+  /*
+  ptr = malloc bytes
+  ptr.ref = 1
+  */
+  
+  llvm::Value *bytes = func->arg_begin() + 1;
+  llvm::Value *bytePtr = funcBdr.ir.CreateCall(data.inst.alloc(), {bytes});
+  llvm::Value *ref = funcBdr.ir.CreatePointerCast(bytePtr, refPtrTy(ctx));
+  funcBdr.ir.CreateStore(constantForPtr(ref, 1), ref);
+  funcBdr.ir.CreateStore(ref, func->arg_begin());
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
+}
+
+llvm::Function *stela::genPtrCopCtor(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_cop_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::NoAlias);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NoAlias);
+  FuncBuilder funcBdr{func};
+  
   /*
   other.ref++
   obj = other
   */
-  llvm::Value *other = funcBdr.ir.CreateLoad(otherPtr);
+  
+  llvm::Value *other = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
   refChange(funcBdr.ir, other, RefChg::inc);
-  funcBdr.ir.CreateStore(other, objPtr);
+  funcBdr.ir.CreateStore(other, func->arg_begin());
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
 }
 
-void stela::ptrMovCtor(
-  FuncBuilder &funcBdr, llvm::Value *objPtr, llvm::Value *otherPtr
-) {
-  /*
-  obj = other
-  other = null
-  */
-  funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(otherPtr), objPtr);
-  setNull(funcBdr.ir, otherPtr);
-}
-
-void stela::ptrCopAsgn(
-  FuncInst &inst,
-  FuncBuilder &funcBdr,
-  llvm::Value *leftPtr,
-  llvm::Value *rightPtr,
-  llvm::Function *dtor,
-  llvm::BasicBlock *done
-) {
+llvm::Function *stela::genPtrCopAsgn(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_cop_asgn");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(2, llvm::Attribute::NonNull);
+  FuncBuilder funcBdr{func};
+  
   /*
   right.ref++
   reset left
   left = right
   */
-  llvm::BasicBlock *innerDone = funcBdr.makeBlock();
+  
+  llvm::Value *dtor = func->arg_begin();
+  llvm::Value *leftPtr = func->arg_begin() + 1;
+  llvm::Value *rightPtr = func->arg_begin() + 2;
+  llvm::BasicBlock *asgn = funcBdr.makeBlock();
   llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
   refChange(funcBdr.ir, right, RefChg::inc);
   llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
-  resetPtr(inst, funcBdr, left, dtor, innerDone);
+  resetPtr(data.inst, funcBdr, left, dtor, asgn);
   funcBdr.ir.CreateStore(right, leftPtr);
-  funcBdr.branch(done);
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
 }
 
-void stela::ptrMovAsgn(
-  FuncInst &inst,
-  FuncBuilder &funcBdr,
-  llvm::Value *leftPtr,
-  llvm::Value *rightPtr,
-  llvm::Function *dtor,
-  llvm::BasicBlock *done
-) {
+llvm::Function *stela::genPtrMovCtor(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_mov_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::NoAlias);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NoAlias);
+  FuncBuilder funcBdr{func};
+  
+  /*
+  obj = other
+  other = null
+  */
+  
+  llvm::Value *otherPtr = func->arg_begin() + 1;
+  funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(otherPtr), func->arg_begin());
+  setNull(funcBdr.ir, otherPtr);
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
+}
+
+llvm::Function *stela::genPtrMovAsgn(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_mov_asgn");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NoAlias);
+  func->addParamAttr(2, llvm::Attribute::NonNull);
+  func->addParamAttr(2, llvm::Attribute::NoAlias);
+  FuncBuilder funcBdr{func};
+  
   /*
   reset left
   left = right
   right = null
   */
-  llvm::BasicBlock *innerDone = funcBdr.makeBlock();
+  
+  llvm::Value *dtor = func->arg_begin();
+  llvm::Value *leftPtr = func->arg_begin() + 1;
+  llvm::Value *rightPtr = func->arg_begin() + 2;
+  llvm::BasicBlock *asgn = funcBdr.makeBlock();
   llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
-  resetPtr(inst, funcBdr, left, dtor, innerDone);
+  resetPtr(data.inst, funcBdr, left, dtor, asgn);
   funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
   setNull(funcBdr.ir, rightPtr);
-  funcBdr.branch(done);
+  
+  funcBdr.ir.CreateRetVoid();
+  return func;
 }

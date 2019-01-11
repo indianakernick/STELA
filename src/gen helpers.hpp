@@ -61,6 +61,12 @@ void callFree(llvm::IRBuilder<> &, llvm::Function *, llvm::Value *);
 gen::Expr lvalue(llvm::Value *);
 void returnBool(llvm::IRBuilder<> &, bool);
 
+llvm::PointerType *refPtrTy(llvm::LLVMContext &);
+llvm::PointerType *refPtrPtrTy(llvm::LLVMContext &);
+llvm::FunctionType *refPtrDtorTy(llvm::LLVMContext &);
+llvm::PointerType *refPtrDtorPtrTy(llvm::LLVMContext &);
+llvm::Value *refPtrPtrCast(llvm::IRBuilder<> &, llvm::Value *);
+
 }
 
 #endif

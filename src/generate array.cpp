@@ -13,7 +13,6 @@
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
 #include "function builder.hpp"
-#include "generate pointer.hpp"
 
 using namespace stela;
 
@@ -22,8 +21,14 @@ llvm::Function *stela::genArrDtor(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, unaryCtorFor(type), "arr_dtor");
   assignUnaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  llvm::BasicBlock *done = funcBdr.makeBlock();
-  ptrDtor(data.inst, funcBdr, func->arg_begin(), data.inst.arrayStrgDtor(arr), done);
+  
+  /*
+  ptr_dtor(arr_strg_dtor, bitcast obj)
+  */
+  
+  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Value *obj = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  funcBdr.ir.CreateCall(data.inst.pointerDtor(), {strgDtor, obj});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -33,14 +38,20 @@ llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, unaryCtorFor(type), "arr_def_ctor");
   assignUnaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  llvm::Type *arrayStructType = type->getPointerElementType();
-  llvm::Value *array = ptrDefCtor(data.inst, funcBdr, arrayStructType);
-
+  
   /*
-  cap = 0
-  len = 0
-  dat = null
+  ptr_def_ctor(bitcast obj, sizeof storage)
+  obj.cap = 0
+  obj.len = 0
+  obj.dat = null
   */
+  
+  llvm::Value *arrayPtr = func->arg_begin();
+  llvm::Value *refPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Type *storageTy = type->getPointerElementType();
+  llvm::Value *storageSize = llvm::ConstantExpr::getSizeOf(storageTy);
+  funcBdr.ir.CreateCall(data.inst.pointerDefCtor(), {refPtr, storageSize});
+  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
 
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
   funcBdr.ir.CreateStore(constantForPtr(cap, 0), cap);
@@ -59,7 +70,14 @@ llvm::Function *stela::genArrCopCtor(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_cop_ctor");
   assignBinaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  ptrCopCtor(funcBdr, func->arg_begin(), func->arg_begin() + 1);
+  
+  /*
+  ptr_cop_ctor(bitcast obj, bitcast other)
+  */
+  
+  llvm::Value *objPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Value *otherPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
+  funcBdr.ir.CreateCall(data.inst.pointerCopCtor(), {objPtr, otherPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -69,8 +87,15 @@ llvm::Function *stela::genArrCopAsgn(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_cop_asgn");
   assignBinaryAliasCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  llvm::BasicBlock *done = funcBdr.makeBlock();
-  ptrCopAsgn(data.inst, funcBdr, func->arg_begin(), func->arg_begin() + 1, data.inst.arrayStrgDtor(arr), done);
+  
+  /*
+  ptr_cop_asgn(arr_strg_dtor, bitcast left, bitcast right)
+  */
+  
+  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Value *leftPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Value *rightPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
+  funcBdr.ir.CreateCall(data.inst.pointerCopAsgn(), {strgDtor, leftPtr, rightPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -80,7 +105,14 @@ llvm::Function *stela::genArrMovCtor(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_mov_ctor");
   assignBinaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  ptrMovCtor(funcBdr, func->arg_begin(), func->arg_begin() + 1);
+  
+  /*
+  ptr_mov_ctor(bitcast obj, bitcast other)
+  */
+  
+  llvm::Value *objPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Value *otherPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
+  funcBdr.ir.CreateCall(data.inst.pointerMovCtor(), {objPtr, otherPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -90,8 +122,15 @@ llvm::Function *stela::genArrMovAsgn(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_mov_asgn");
   assignBinaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
-  llvm::BasicBlock *done = funcBdr.makeBlock();
-  ptrMovAsgn(data.inst, funcBdr, func->arg_begin(), func->arg_begin() + 1, data.inst.arrayStrgDtor(arr), done);
+  
+  /*
+  ptr_mov_asgn(arr_strg_dtor, bitcast left, bitcast right)
+  */
+  
+  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Value *leftPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Value *rightPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
+  funcBdr.ir.CreateCall(data.inst.pointerMovAsgn(), {strgDtor, leftPtr, rightPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -118,6 +157,13 @@ llvm::Function *generateArrayIdx(
   llvm::Function *func = makeInternalFunc(data.mod, fnType, name);
   assignUnaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
+  
+  /*
+  if checkBounds(idx, array.len)
+    return array.dat[idx]
+  else
+    panic
+  */
   
   llvm::BasicBlock *okBlock = funcBdr.makeBlock();
   llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
@@ -170,14 +216,21 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   llvm::Function *func = makeInternalFunc(data.mod, sig, "arr_len_ctor");
   func->addParamAttr(0, llvm::Attribute::NonNull);
   FuncBuilder funcBdr{func};
-  llvm::Value *array = ptrDefCtor(data.inst, funcBdr, arrayStructType);
-  llvm::Value *size = func->arg_begin() + 1;
   
   /*
-  cap = size
-  len = size
-  dat = malloc(size)
+  ptr_def_ctor(bitcast array, sizeof storage)
+  array.cap = size
+  array.len = size
+  array.dat = malloc(size)
   */
+  
+  llvm::Value *arrayPtr = func->arg_begin();
+  llvm::Value *refPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
+  llvm::Type *storageTy = type->getPointerElementType();
+  llvm::Value *storageSize = llvm::ConstantExpr::getSizeOf(storageTy);
+  funcBdr.ir.CreateCall(data.inst.pointerDefCtor(), {refPtr, storageSize});
+  llvm::Value *array = funcBdr.ir.CreateLoad(arrayPtr);
+  llvm::Value *size = func->arg_begin() + 1;
   
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
   funcBdr.ir.CreateStore(size, cap);
@@ -195,11 +248,7 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
 llvm::Function *stela::genArrStrgDtor(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
-  llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
-    {type},
-    false
-  );
+  llvm::FunctionType *sig = refPtrDtorTy(ctx);
   llvm::Function *func = makeInternalFunc(data.mod, sig, "arr_strg_dtor");
   assignUnaryCtorAttrs(func);
   FuncBuilder funcBdr{func};
@@ -207,7 +256,7 @@ llvm::Function *stela::genArrStrgDtor(InstData data, ast::ArrayType *arr) {
   llvm::BasicBlock *head = funcBdr.makeBlock();
   llvm::BasicBlock *body = funcBdr.makeBlock();
   llvm::BasicBlock *done = funcBdr.makeBlock();
-  llvm::Value *storage = func->arg_begin();
+  llvm::Value *storage = funcBdr.ir.CreatePointerCast(func->arg_begin(), type);
   llvm::Value *len = loadStructElem(funcBdr.ir, storage, array_idx_len);
   llvm::Value *idxPtr = funcBdr.allocStore(constantFor(len, 0));
   llvm::Value *dat = loadStructElem(funcBdr.ir, storage, array_idx_dat);

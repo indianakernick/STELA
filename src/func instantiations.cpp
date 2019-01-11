@@ -13,6 +13,7 @@
 #include "generate func.hpp"
 #include "generate array.hpp"
 #include "generate struct.hpp"
+#include "generate pointer.hpp"
 
 using namespace stela;
 
@@ -97,6 +98,30 @@ llvm::Function *FuncInst::structEq(ast::StructType *type) {
 
 llvm::Function *FuncInst::structLt(ast::StructType *type) {
   return getCached(structLts, genSrtLt, type);
+}
+
+llvm::Function *FuncInst::pointerDtor() {
+  return getCached(pointerDtorFn, genPtrDtor);
+}
+
+llvm::Function *FuncInst::pointerDefCtor() {
+  return getCached(pointerDefCtorFn, genPtrDefCtor);
+}
+
+llvm::Function *FuncInst::pointerCopCtor() {
+  return getCached(pointerCopCtorFn, genPtrCopCtor);
+}
+
+llvm::Function *FuncInst::pointerCopAsgn() {
+  return getCached(pointerCopAsgnFn, genPtrCopAsgn);
+}
+
+llvm::Function *FuncInst::pointerMovCtor() {
+  return getCached(pointerMovCtorFn, genPtrMovCtor);
+}
+
+llvm::Function *FuncInst::pointerMovAsgn() {
+  return getCached(pointerMovAsgnFn, genPtrMovAsgn);
 }
 
 llvm::Function *FuncInst::panic() {

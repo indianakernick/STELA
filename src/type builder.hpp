@@ -24,6 +24,9 @@ class ConstantPointerNull;
 
 namespace stela {
 
+// @TODO remove TypeBuilder
+// just expose some free functions that take a llvm::LLVMContext &
+
 class TypeBuilder {
 public:
   explicit TypeBuilder(llvm::LLVMContext &);

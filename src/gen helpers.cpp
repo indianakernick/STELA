@@ -8,6 +8,8 @@
 
 #include "gen helpers.hpp"
 
+#include "type builder.hpp"
+
 using namespace stela;
 
 template <>
@@ -91,8 +93,7 @@ void stela::assignUnaryCtorAttrs(llvm::Function *func) {
 }
 
 void stela::assignBinaryAliasCtorAttrs(llvm::Function *func) {
-  func->addFnAttr(llvm::Attribute::NoRecurse);
-  func->addParamAttr(0, llvm::Attribute::NonNull);
+  assignUnaryCtorAttrs(func);
   func->addParamAttr(1, llvm::Attribute::NonNull);
 }
 
@@ -183,4 +184,29 @@ gen::Expr stela::lvalue(llvm::Value *obj) {
 
 void stela::returnBool(llvm::IRBuilder<> &ir, const bool ret) {
   ir.CreateRet(ir.getInt1(ret));
+}
+
+llvm::PointerType *stela::refPtrTy(llvm::LLVMContext &ctx) {
+  TypeBuilder typeBdr{ctx};
+  return typeBdr.ref()->getPointerTo();
+}
+
+llvm::PointerType *stela::refPtrPtrTy(llvm::LLVMContext &ctx) {
+  return refPtrTy(ctx)->getPointerTo();
+}
+
+llvm::FunctionType *stela::refPtrDtorTy(llvm::LLVMContext &ctx) {
+  return llvm::FunctionType::get(
+    llvm::Type::getVoidTy(ctx),
+    {refPtrTy(ctx)},
+    false
+  );
+}
+
+llvm::PointerType *stela::refPtrDtorPtrTy(llvm::LLVMContext &ctx) {
+  return refPtrDtorTy(ctx)->getPointerTo();
+}
+
+llvm::Value *stela::refPtrPtrCast(llvm::IRBuilder<> &ir, llvm::Value *ptrPtr) {
+  return ir.CreatePointerCast(ptrPtr, refPtrPtrTy(ir.getContext()));
 }
