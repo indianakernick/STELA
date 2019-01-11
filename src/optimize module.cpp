@@ -30,7 +30,8 @@ void addOptPasses(
   llvm::PassManagerBuilder builder;
   builder.OptLevel = 3;
   builder.SizeLevel = 0;
-  builder.Inliner = llvm::createFunctionInliningPass(3, 0, false);
+  // @TODO don't forget to uncomment this
+  //builder.Inliner = llvm::createFunctionInliningPass(3, 0, false);
   builder.LoopVectorize = true;
   builder.SLPVectorize = true;
   builder.NewGVN = true;
@@ -44,7 +45,7 @@ void addOptPasses(
 void addLinkPasses(llvm::legacy::PassManagerBase &passes) {
   llvm::PassManagerBuilder builder;
   builder.PrepareForLTO = true;
-  builder.Inliner = llvm::createFunctionInliningPass(3, 0, false);
+  //builder.Inliner = llvm::createFunctionInliningPass(3, 0, false);
   builder.populateLTOPassManager(passes);
 }
 
