@@ -24,7 +24,7 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   // @TODO how do we get the native target machine object?
   // module->setTargetTriple(machine->getTargetTriple().str());
   // module->setDataLayout(machine->createDataLayout());
-  gen::FuncInst inst{module.get()};
+  FuncInst inst{module.get()};
   gen::Ctx ctx {module->getContext(), inst, log};
   generateIDs(syms.decls);
   generateDecl(ctx, module.get(), syms.decls);

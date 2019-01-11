@@ -31,7 +31,7 @@ using namespace stela;
     return ir.F_OP(getBtnValue(left), getBtnValue(right));                      \
   }
 
-CompareExpr::CompareExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
+CompareExpr::CompareExpr(FuncInst &inst, llvm::IRBuilder<> &ir)
   : inst{inst}, ir{ir} {}
 
 llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right) {

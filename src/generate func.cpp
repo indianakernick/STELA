@@ -304,7 +304,7 @@ llvm::Value *refChange(llvm::IRBuilder<> &ir, llvm::Value *ptr, const RefChg chg
 }
 
 void resetPtr(
-  gen::FuncInst &inst,
+  FuncInst &inst,
   FuncBuilder &funcBdr,
   llvm::Value *ptr,
   llvm::Function *dtor,
@@ -330,7 +330,7 @@ void resetPtr(
 }
 
 llvm::Value *ptrDefCtor(
-  gen::FuncInst &inst, FuncBuilder &funcBdr, llvm::Type *elemType
+  FuncInst &inst, FuncBuilder &funcBdr, llvm::Type *elemType
 ) {
   /*
   ptr = malloc elemType
@@ -343,7 +343,7 @@ llvm::Value *ptrDefCtor(
 }
 
 void ptrDtor(
-  gen::FuncInst &inst,
+  FuncInst &inst,
   FuncBuilder &funcBdr,
   llvm::Value *objPtr,
   llvm::Function *dtor,
@@ -387,7 +387,7 @@ void ptrMovCtor(
 }
 
 void ptrCopAsgn(
-  gen::FuncInst &inst,
+  FuncInst &inst,
   FuncBuilder &funcBdr,
   llvm::Value *leftPtr,
   llvm::Value *rightPtr,
@@ -409,7 +409,7 @@ void ptrCopAsgn(
 }
 
 void ptrMovAsgn(
-  gen::FuncInst &inst,
+  FuncInst &inst,
   FuncBuilder &funcBdr,
   llvm::Value *leftPtr,
   llvm::Value *rightPtr,
@@ -462,7 +462,7 @@ llvm::IntegerType *stela::getSizedType<8>(llvm::LLVMContext &ctx) {
   return llvm::IntegerType::getInt64Ty(ctx);
 }
 
-llvm::Function *stela::generatePanic(InstData data) {
+llvm::Function *stela::genPanic(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
@@ -489,7 +489,7 @@ llvm::Function *stela::generatePanic(InstData data) {
   return panic;
 }
 
-llvm::Function *stela::generateAlloc(InstData data) {
+llvm::Function *stela::genAlloc(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
@@ -517,7 +517,7 @@ llvm::Function *stela::generateAlloc(InstData data) {
   return alloc;
 }
 
-llvm::Function *stela::generateFree(InstData data) {
+llvm::Function *stela::genFree(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
   llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);

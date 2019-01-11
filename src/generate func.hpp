@@ -26,11 +26,7 @@ class PointerType;
 
 namespace stela {
 
-namespace gen {
-
 class FuncInst;
-
-}
 
 std::string generateNullFunc(gen::Ctx, const ast::FuncType &);
 std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
@@ -50,9 +46,9 @@ llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
   return getType<Int>(ctx)->getPointerTo();
 }
 
-llvm::Function *generatePanic(InstData);
-llvm::Function *generateAlloc(InstData);
-llvm::Function *generateFree(InstData);
+llvm::Function *genPanic(InstData);
+llvm::Function *genAlloc(InstData);
+llvm::Function *genFree(InstData);
 llvm::Function *genCeilToPow2(InstData);
 
 llvm::Function *genArrDtor(InstData, ast::ArrayType *);

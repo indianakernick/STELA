@@ -14,15 +14,11 @@
 
 namespace stela {
 
-namespace gen {
-
 class FuncInst;
-
-}
 
 class CompareExpr {
 public:
-  CompareExpr(gen::FuncInst &, llvm::IRBuilder<> &);
+  CompareExpr(FuncInst &, llvm::IRBuilder<> &);
 
   llvm::Value *equal(ast::Type *, gen::Expr, gen::Expr);
   llvm::Value *notEqual(ast::Type *, gen::Expr, gen::Expr);
@@ -32,7 +28,7 @@ public:
   llvm::Value *greaterEqual(ast::Type *, gen::Expr, gen::Expr);
 
 private:
-  gen::FuncInst &inst;
+  FuncInst &inst;
   llvm::IRBuilder<> &ir;
   
   llvm::Value *getBtnValue(gen::Expr);

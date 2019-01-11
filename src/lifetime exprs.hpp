@@ -20,15 +20,11 @@ struct Type;
 
 }
 
-namespace gen {
-
 class FuncInst;
-
-}
 
 class LifetimeExpr {
 public:
-  LifetimeExpr(gen::FuncInst &, llvm::IRBuilder<> &);
+  LifetimeExpr(FuncInst &, llvm::IRBuilder<> &);
 
   void defConstruct(ast::Type *, llvm::Value *);
   void copyConstruct(ast::Type *, llvm::Value *, llvm::Value *);
@@ -45,7 +41,7 @@ public:
   void endLife(llvm::Value *);
 
 private:
-  gen::FuncInst &inst;
+  FuncInst &inst;
   llvm::IRBuilder<> &ir;
   
   llvm::ConstantInt *objectSize(llvm::Value *);

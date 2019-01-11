@@ -21,14 +21,10 @@ class Module;
 
 namespace stela {
 
-namespace gen {
-
 class FuncInst;
 
-}
-
 struct InstData {
-  gen::FuncInst &inst;
+  FuncInst &inst;
   llvm::Module *const mod;
 };
 
@@ -38,8 +34,6 @@ struct StructType;
 struct ArrayType;
 
 }
-
-namespace gen {
 
 class FuncInst {
 public:
@@ -137,8 +131,6 @@ private:
   llvm::Function *getCached(FuncMap &, Make *, Type *);
   llvm::Function *getCached(llvm::Function *&, llvm::Function *(*)(InstData));
 };
-
-}
 
 }
 

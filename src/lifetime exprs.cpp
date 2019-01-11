@@ -15,7 +15,7 @@
 
 using namespace stela;
 
-LifetimeExpr::LifetimeExpr(gen::FuncInst &inst, llvm::IRBuilder<> &ir)
+LifetimeExpr::LifetimeExpr(FuncInst &inst, llvm::IRBuilder<> &ir)
   : inst{inst}, ir{ir} {}
 
 void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
