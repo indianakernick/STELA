@@ -274,10 +274,8 @@ llvm::Function *stela::genFn<PFGI::arr_strg_dtor>(InstData data, ast::ArrayType 
   builder.ir.CreateCondBr(atEnd, done, body);
   
   builder.setCurr(body);
-  // @TODO can we just use idx?
-  llvm::Value *idx1 = builder.ir.CreateLoad(idxPtr);
   LifetimeExpr lifetime{data.inst, builder.ir};
-  lifetime.destroy(arr->elem.get(), arrayIndex(builder.ir, dat, idx1));
+  lifetime.destroy(arr->elem.get(), arrayIndex(builder.ir, dat, idx));
   builder.ir.CreateBr(head);
   
   builder.setCurr(done);

@@ -116,7 +116,6 @@ public:
 
 class LValueVisitor final : public ast::Visitor {
 public:
-  
   void visit(ast::MemberIdent &mem) override {
     mem.object->accept(*this);
   }

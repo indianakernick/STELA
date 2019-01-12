@@ -1020,6 +1020,38 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(d.use_count(), 1);
   });
   
+  TEST(Switch on strings, {
+    ASSERT_SUCCEEDS(R"(
+      extern func whichString(str: [char]) {
+        /*
+        @TODO switch expression
+        
+        return switch str {
+          "no" -> 0.0;
+          "maybe" -> 0.5;
+          "yes" -> 1.0;
+          default -> -1.0;
+        };
+        */
+      
+        switch (str) {
+          case ("no") return 0.0;
+          case ("maybe") return 0.5;
+          case ("yes") return 1.0;
+          default return -1.0;
+        }
+      }
+    )");
+    
+    auto which = GET_FUNC("whichString", Real(Array<Char>));
+    
+    ASSERT_EQ(which(makeString("no")), 0.0f);
+    ASSERT_EQ(which(makeString("maybe")), 0.5f);
+    ASSERT_EQ(which(makeString("yes")), 1.0f);
+    ASSERT_EQ(which(makeString("kinda")), -1.0f);
+    ASSERT_EQ(which(makeString("")), -1.0f);
+  });
+  
   TEST(Destructors in while, {
     ASSERT_SUCCEEDS(R"(
       extern func get_1_ref(val: sint) {

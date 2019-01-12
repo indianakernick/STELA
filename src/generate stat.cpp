@@ -11,6 +11,7 @@
 #include "llvm.hpp"
 #include "symbols.hpp"
 #include "categories.hpp"
+#include "compare exprs.hpp"
 #include "generate type.hpp"
 #include "generate expr.hpp"
 #include "iterator range.hpp"
@@ -59,16 +60,17 @@ public:
     body->accept(*this);
     flow = oldFlow;
   }
-  // @TODO equality for structs and arrays
-  llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr) {
-    const ArithCat arith = classifyArith(expr);
+  llvm::Value *equalTo(llvm::Value *value, ast::Expression *expr, llvm::Type *type) {
+    CompareExpr compare{ctx.inst, builder.ir};
     const size_t exprScope = enterScope();
-    llvm::Value *equalExpr;
-    if (arith == ArithCat::floating_point) {
-      equalExpr = builder.ir.CreateFCmpOEQ(value, genValue(expr).obj);
-    } else {
-      equalExpr = builder.ir.CreateICmpEQ(value, genValue(expr).obj);
-    }
+    llvm::Value *exprAddr = builder.alloc(type);
+    genExpr(expr, exprAddr);
+    pushObj({exprAddr, expr->exprType.get()});
+    llvm::Value *equalExpr = compare.equal(
+      expr->exprType.get(),
+      {value, ValueCat::lvalue},
+      {exprAddr, ValueCat::lvalue}
+    );
     destroy(exprScope);
     leaveScope();
     return equalExpr;
@@ -104,7 +106,10 @@ public:
   void visit(ast::Switch &swich) override {
     // @TODO I can't fit this whole function on my screen
     const size_t exprScope = enterScope();
-    gen::Expr value = genValue(swich.expr.get());
+    ast::Type *exprType = swich.expr->exprType.get();
+    llvm::Type *type = generateType(ctx.llvm, exprType);
+    llvm::Value *value = builder.alloc(type);
+    genExpr(swich.expr.get(), value);
     if (swich.cases.empty()) {
       destroy(exprScope);
       leaveScope();
@@ -130,7 +135,7 @@ public:
       const size_t caseIndex = c;
       
       builder.setCurr(checkBlocks[checkIndex]);
-      llvm::Value *cond = equalTo(value.obj, expr);
+      llvm::Value *cond = equalTo(value, expr, type);
       
       llvm::BasicBlock *nextCheck;
       if (!foundDefault && c == swich.cases.size() - 1) {
