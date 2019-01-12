@@ -75,6 +75,11 @@ enum class PFGI : size_t {
   srt_eq,
   srt_lt,
   
+  destroy_n,
+  move_n,
+  copy_n,
+  reallocate,
+  
   btn_capacity,
   btn_size,
   btn_push_back,

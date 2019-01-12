@@ -258,27 +258,12 @@ llvm::Function *stela::genFn<PFGI::arr_strg_dtor>(InstData data, ast::ArrayType 
   assignUnaryCtorAttrs(func);
   FuncBuilder builder{func};
   
-  llvm::BasicBlock *head = builder.makeBlock();
-  llvm::BasicBlock *body = builder.makeBlock();
-  llvm::BasicBlock *done = builder.makeBlock();
   llvm::Value *storage = builder.ir.CreatePointerCast(func->arg_begin(), type);
   llvm::Value *len = loadStructElem(builder.ir, storage, array_idx_len);
-  llvm::Value *idxPtr = builder.allocStore(constantFor(len, 0));
   llvm::Value *dat = loadStructElem(builder.ir, storage, array_idx_dat);
+  llvm::Value *destroy_n = data.inst.get<PFGI::destroy_n>(arr->elem.get());
+  builder.ir.CreateCall(destroy_n, {dat, len});
   
-  builder.branch(head);
-  llvm::Value *idx = builder.ir.CreateLoad(idxPtr);
-  llvm::Value *atEnd = builder.ir.CreateICmpEQ(idx, len);
-  llvm::Value *incIdx = builder.ir.CreateNSWAdd(idx, constantFor(idx, 1));
-  builder.ir.CreateStore(incIdx, idxPtr);
-  builder.ir.CreateCondBr(atEnd, done, body);
-  
-  builder.setCurr(body);
-  LifetimeExpr lifetime{data.inst, builder.ir};
-  lifetime.destroy(arr->elem.get(), arrayIndex(builder.ir, dat, idx));
-  builder.ir.CreateBr(head);
-  
-  builder.setCurr(done);
   builder.ir.CreateRetVoid();
   return func;
 }

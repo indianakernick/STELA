@@ -117,7 +117,7 @@ private:
   }
 };*/
 
-#define BITS(T) static_cast<T>(sizeof(T) * CHAR_BIT)
+/*#define BITS(T) static_cast<T>(sizeof(T) * CHAR_BIT)
 
 unsigned long long ceilToPowerOf2(const unsigned long long num) {
   assert(num != 0);
@@ -132,7 +132,7 @@ unsigned ceilToPowerOf2(const unsigned num) {
   return (1u << (BITS(unsigned) - static_cast<unsigned>(__builtin_clz(num - 1u)))) - (num == 1u);
 }
 
-#undef BITS
+#undef BITS*/
 
 template <typename T>
 struct Array {
@@ -215,7 +215,7 @@ t_uint size(const Array<T> &array) noexcept {
   return array.len;
 }*/
 
-template <typename T>
+/*template <typename T>
 void reallocate(Array<T> &array, const t_uint cap) noexcept {
   T *newData = static_cast<T *>(allocate(sizeof(T) * cap));
   std::uninitialized_move_n(array.data, array.len, newData);
@@ -223,7 +223,7 @@ void reallocate(Array<T> &array, const t_uint cap) noexcept {
   deallocate(array.data);
   array.data = newData;
   array.cap = cap;
-}
+}*/
 
 template <typename T>
 void push_back(Array<T> &array, const T value) noexcept {
