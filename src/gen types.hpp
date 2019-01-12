@@ -26,23 +26,22 @@ class ConstantPointerNull;
 
 namespace stela {
 
+/// Integer type with the given size
 template <size_t Size>
 llvm::IntegerType *getSizedType(llvm::LLVMContext &);
 
+/// Integer type with the same size as the given type
 template <typename Int>
 llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
   return getSizedType<sizeof(Int)>(ctx);
-}
-
-template <typename Int>
-llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
-  return getType<Int>(ctx)->getPointerTo();
 }
 
 /// Integer for storing length of array
 llvm::IntegerType *lenTy(llvm::LLVMContext &);
 /// Integer for storing reference count
 llvm::IntegerType *refTy(llvm::LLVMContext &);
+/// Void type
+llvm::Type *voidTy(llvm::LLVMContext &);
 /// Opaque pointer
 llvm::PointerType *voidPtrTy(llvm::LLVMContext &);
 

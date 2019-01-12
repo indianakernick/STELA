@@ -15,39 +15,48 @@ using namespace stela;
 
 template <>
 llvm::IntegerType *stela::getSizedType<1>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt8Ty(ctx);
+  return llvm::Type::getInt8Ty(ctx);
 }
 
 template <>
 llvm::IntegerType *stela::getSizedType<2>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt16Ty(ctx);
+  return llvm::Type::getInt16Ty(ctx);
 }
 
 template <>
 llvm::IntegerType *stela::getSizedType<4>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt32Ty(ctx);
+  return llvm::Type::getInt32Ty(ctx);
 }
 
 template <>
 llvm::IntegerType *stela::getSizedType<8>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt64Ty(ctx);
+  return llvm::Type::getInt64Ty(ctx);
+}
+
+template <>
+llvm::IntegerType *stela::getSizedType<16>(llvm::LLVMContext &ctx) {
+  return llvm::Type::getInt128Ty(ctx);
 }
 
 llvm::IntegerType *stela::lenTy(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt32Ty(ctx);
+  return llvm::Type::getInt32Ty(ctx);
 }
 
 llvm::IntegerType *stela::refTy(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt64Ty(ctx);
+  return llvm::Type::getInt64Ty(ctx);
+}
+
+llvm::Type *stela::voidTy(llvm::LLVMContext &ctx) {
+  return llvm::Type::getVoidTy(ctx);
 }
 
 llvm::PointerType *stela::voidPtrTy(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt8PtrTy(ctx);
+  return llvm::Type::getInt8PtrTy(ctx);
 }
 
 llvm::FunctionType *stela::dtorTy(llvm::LLVMContext &ctx) {
   return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx), {voidPtrTy(ctx)}, false
+    voidTy(ctx), {voidPtrTy(ctx)}, false
   );
 }
 

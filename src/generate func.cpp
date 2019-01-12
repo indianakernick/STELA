@@ -142,12 +142,11 @@ template <>
 llvm::Function *stela::genFn<FGI::panic>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
-  llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
-  llvm::Type *strTy = getTypePtr<char>(ctx);
+  llvm::Type *strTy = getType<char>(ctx)->getPointerTo();
   llvm::Type *intTy = getType<int>(ctx);
   llvm::FunctionType *putsType = llvm::FunctionType::get(intTy, {strTy}, false);
-  llvm::FunctionType *exitType = llvm::FunctionType::get(voidTy, {intTy}, false);
-  llvm::FunctionType *panicType = llvm::FunctionType::get(voidTy, {strTy}, false);
+  llvm::FunctionType *exitType = llvm::FunctionType::get(voidTy(ctx), {intTy}, false);
+  llvm::FunctionType *panicType = llvm::FunctionType::get(voidTy(ctx), {strTy}, false);
   
   llvm::Function *puts = declareCFunc(data.mod, putsType, "puts");
   llvm::Function *exit = declareCFunc(data.mod, exitType, "exit");
@@ -170,7 +169,7 @@ template <>
 llvm::Function *stela::genFn<FGI::alloc>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
-  llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
+  llvm::Type *memTy = voidPtrTy(ctx);
   llvm::Type *sizeTy = getType<size_t>(ctx);
   llvm::FunctionType *mallocType = llvm::FunctionType::get(memTy, {sizeTy}, false);
   llvm::FunctionType *allocType = mallocType;
@@ -198,9 +197,8 @@ llvm::Function *stela::genFn<FGI::alloc>(InstData data) {
 template <>
 llvm::Function *stela::genFn<FGI::free>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
-  llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
-  llvm::FunctionType *freeType = llvm::FunctionType::get(voidTy, {memTy}, false);
+  llvm::Type *memTy = voidPtrTy(ctx);
+  llvm::FunctionType *freeType = llvm::FunctionType::get(voidTy(ctx), {memTy}, false);
   llvm::Function *free = declareCFunc(data.mod, freeType, "free");
   free->addParamAttr(0, llvm::Attribute::NoCapture);
   return free;

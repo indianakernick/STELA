@@ -45,7 +45,7 @@ llvm::Function *stela::declareCFunc(
 
 llvm::FunctionType *stela::unaryCtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(type->getContext()),
+    voidTy(type->getContext()),
     {type->getPointerTo()},
     false
   );
@@ -53,7 +53,7 @@ llvm::FunctionType *stela::unaryCtorFor(llvm::Type *type) {
 
 llvm::FunctionType *stela::binaryCtorFor(llvm::Type *type) {
   return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(type->getContext()),
+    voidTy(type->getContext()),
     {type->getPointerTo(), type->getPointerTo()},
     false
   );
@@ -154,8 +154,7 @@ llvm::Value *stela::callAlloc(llvm::IRBuilder<> &ir, llvm::Function *alloc, llvm
 }
 
 void stela::callFree(llvm::IRBuilder<> &ir, llvm::Function *free, llvm::Value *ptr) {
-  llvm::Type *i8ptr = llvm::Type::getInt8PtrTy(ptr->getContext());
-  ir.CreateCall(free, ir.CreatePointerCast(ptr, i8ptr));
+  ir.CreateCall(free, ir.CreatePointerCast(ptr, voidPtrTy(ptr->getContext())));
 }
 
 gen::Expr stela::lvalue(llvm::Value *obj) {
@@ -176,7 +175,7 @@ llvm::PointerType *stela::refPtrPtrTy(llvm::LLVMContext &ctx) {
 
 llvm::FunctionType *stela::refPtrDtorTy(llvm::LLVMContext &ctx) {
   return llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrTy(ctx)},
     false
   );

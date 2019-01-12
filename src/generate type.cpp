@@ -104,7 +104,7 @@ using LLVMTypes = std::vector<llvm::Type *>;
 llvm::Type *pushRet(ast::Type *retType, llvm::Type *ret, LLVMTypes &params) {
   if (classifyType(retType) != TypeCat::trivially_copyable) {
     params.push_back(ret->getPointerTo());
-    ret = llvm::Type::getVoidTy(ret->getContext());
+    ret = voidTy(ret->getContext());
   }
   return ret;
 }

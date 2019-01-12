@@ -6,6 +6,7 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
+#include "gen types.hpp"
 #include "gen helpers.hpp"
 #include "function builder.hpp"
 #include "func instantiations.hpp"
@@ -62,7 +63,7 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
@@ -98,7 +99,7 @@ llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
@@ -127,7 +128,7 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
@@ -163,7 +164,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
@@ -192,7 +193,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getVoidTy(ctx),
+    voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
