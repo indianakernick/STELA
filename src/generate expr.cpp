@@ -339,9 +339,9 @@ public:
     assert(arr);
     llvm::Function *indexFn;
     if (indexType->value == ast::BtnTypeEnum::Sint) {
-      indexFn = ctx.inst.arrayIdxS(arr);
+      indexFn = ctx.inst.get<PFGI::arr_idx_s>(arr);
     } else {
-      indexFn = ctx.inst.arrayIdxU(arr);
+      indexFn = ctx.inst.get<PFGI::arr_idx_u>(arr);
     }
     value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
     
@@ -518,7 +518,7 @@ public:
     if (str.value.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
-      llvm::Function *ctor = ctx.inst.arrayLenCtor(type);
+      llvm::Function *ctor = ctx.inst.get<PFGI::arr_len_ctor>(type);
       TypeBuilder typeBdr{addr->getContext()};
       llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), str.value.size());
       llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
@@ -584,7 +584,7 @@ public:
     if (arr.exprs.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
-      llvm::Function *ctor = ctx.inst.arrayLenCtor(type);
+      llvm::Function *ctor = ctx.inst.get<PFGI::arr_len_ctor>(type);
       TypeBuilder typeBdr{addr->getContext()};
       llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), arr.exprs.size());
       llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});

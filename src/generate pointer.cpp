@@ -6,11 +6,10 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
-#include "generate pointer.hpp"
-
 #include "gen helpers.hpp"
 #include "type builder.hpp"
 #include "function builder.hpp"
+#include "func instantiations.hpp"
 
 using namespace stela;
 
@@ -53,13 +52,14 @@ void resetPtr(
   funcBdr.ir.CreateCondBr(isZero, del, done);
   funcBdr.setCurr(del);
   funcBdr.ir.CreateCall(dtor, {ptr});
-  callFree(funcBdr.ir, inst.free(), ptr);
+  callFree(funcBdr.ir, inst.get<FGI::free>(), ptr);
   funcBdr.branch(done);
 }
 
 }
 
-llvm::Function *stela::genPtrDtor(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
@@ -94,7 +94,8 @@ llvm::Function *stela::genPtrDtor(InstData data) {
   return func;
 }
 
-llvm::Function *stela::genPtrCopCtor(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
@@ -122,7 +123,8 @@ llvm::Function *stela::genPtrCopCtor(InstData data) {
   return func;
 }
 
-llvm::Function *stela::genPtrCopAsgn(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
@@ -157,7 +159,8 @@ llvm::Function *stela::genPtrCopAsgn(InstData data) {
   return func;
 }
 
-llvm::Function *stela::genPtrMovCtor(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(
@@ -185,7 +188,8 @@ llvm::Function *stela::genPtrMovCtor(InstData data) {
   return func;
 }
 
-llvm::Function *stela::genPtrMovAsgn(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::FunctionType *sig = llvm::FunctionType::get(

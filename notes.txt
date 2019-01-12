@@ -108,7 +108,6 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 builtin functions
-refactor FuncInst
 organsize the src directory (folder references instead of groups)
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers

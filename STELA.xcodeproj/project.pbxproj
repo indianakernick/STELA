@@ -135,11 +135,9 @@
 		4525048B21E83876004AE038 /* gen helpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen helpers.cpp"; sourceTree = "<group>"; };
 		4525048C21E83876004AE038 /* gen helpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen helpers.hpp"; sourceTree = "<group>"; };
 		4525048E21E83C16004AE038 /* generate array.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate array.cpp"; sourceTree = "<group>"; };
-		4525048F21E83C16004AE038 /* generate array.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate array.hpp"; sourceTree = "<group>"; };
 		4525049121E83D40004AE038 /* generate struct.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate struct.cpp"; sourceTree = "<group>"; };
-		4525049221E83D40004AE038 /* generate struct.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate struct.hpp"; sourceTree = "<group>"; };
 		4525049421E83DE5004AE038 /* generate pointer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate pointer.cpp"; sourceTree = "<group>"; };
-		4525049521E83DE5004AE038 /* generate pointer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate pointer.hpp"; sourceTree = "<group>"; };
+		4525049921E95634004AE038 /* inst data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "inst data.hpp"; sourceTree = "<group>"; };
 		454B36E721BA3B3100485BA4 /* iterator range.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "iterator range.hpp"; sourceTree = "<group>"; };
 		454B743F21C0EB4900BB4BD0 /* optimize module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "optimize module.cpp"; sourceTree = "<group>"; };
 		454B744021C0EB4900BB4BD0 /* optimize module.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "optimize module.hpp"; sourceTree = "<group>"; };
@@ -301,6 +299,7 @@
 		4525049721E83FA5004AE038 /* Functions */ = {
 			isa = PBXGroup;
 			children = (
+				4525049921E95634004AE038 /* inst data.hpp */,
 				45816F5221B1049300712CA3 /* func instantiations.cpp */,
 				45816F5121B1032500712CA3 /* func instantiations.hpp */,
 				4525048B21E83876004AE038 /* gen helpers.cpp */,
@@ -308,11 +307,8 @@
 				45816F6021B3583C00712CA3 /* generate func.cpp */,
 				45816F6121B3583C00712CA3 /* generate func.hpp */,
 				4525048E21E83C16004AE038 /* generate array.cpp */,
-				4525048F21E83C16004AE038 /* generate array.hpp */,
 				4525049121E83D40004AE038 /* generate struct.cpp */,
-				4525049221E83D40004AE038 /* generate struct.hpp */,
 				4525049421E83DE5004AE038 /* generate pointer.cpp */,
-				4525049521E83DE5004AE038 /* generate pointer.hpp */,
 			);
 			name = Functions;
 			sourceTree = "<group>";

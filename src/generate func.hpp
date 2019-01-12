@@ -9,6 +9,8 @@
 #ifndef stela_generate_func_hpp
 #define stela_generate_func_hpp
 
+// @TODO remove this header
+
 #include "ast.hpp"
 #include "symbols.hpp"
 #include "gen context.hpp"
@@ -26,17 +28,10 @@ class PointerType;
 
 namespace stela {
 
-class FuncInst;
-
 std::string generateNullFunc(gen::Ctx, const ast::FuncType &);
 std::string generateMakeFunc(gen::Ctx, ast::FuncType &);
 std::string generateLambda(gen::Ctx, const ast::Lambda &);
 std::string generateMakeLam(gen::Ctx, const ast::Lambda &);
-
-llvm::Function *genPanic(InstData);
-llvm::Function *genAlloc(InstData);
-llvm::Function *genFree(InstData);
-llvm::Function *genCeilToPow2(InstData);
 
 }
 

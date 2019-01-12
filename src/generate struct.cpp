@@ -6,8 +6,7 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
-#include "generate struct.hpp"
-
+#include "inst data.hpp"
 #include "gen helpers.hpp"
 #include "generate type.hpp"
 #include "compare exprs.hpp"
@@ -69,31 +68,38 @@ llvm::Function *binarySrt(
 
 }
 
-llvm::Function *stela::genSrtDtor(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_dtor>(InstData data, ast::StructType *srt) {
   return unarySrt(data, srt, "srt_dtor", &LifetimeExpr::destroy);
 }
 
-llvm::Function *stela::genSrtDefCtor(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_def_ctor>(InstData data, ast::StructType *srt) {
   return unarySrt(data, srt, "srt_def_ctor", &LifetimeExpr::defConstruct);
 }
 
-llvm::Function *stela::genSrtCopCtor(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_cop_ctor>(InstData data, ast::StructType *srt) {
   return binarySrt(data, srt, "srt_cop_ctor", &LifetimeExpr::copyConstruct);
 }
 
-llvm::Function *stela::genSrtCopAsgn(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_cop_asgn>(InstData data, ast::StructType *srt) {
   return binarySrt(data, srt, "srt_cop_asgn", &LifetimeExpr::copyAssign);
 }
 
-llvm::Function *stela::genSrtMovCtor(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_mov_ctor>(InstData data, ast::StructType *srt) {
   return binarySrt(data, srt, "srt_mov_ctor", &LifetimeExpr::moveConstruct);
 }
 
-llvm::Function *stela::genSrtMovAsgn(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_mov_asgn>(InstData data, ast::StructType *srt) {
   return binarySrt(data, srt, "srt_mov_asgn", &LifetimeExpr::moveAssign);
 }
 
-llvm::Function *stela::genSrtEq(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) {
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "srt_eq");
   assignCompareAttrs(func);
@@ -127,7 +133,8 @@ llvm::Function *stela::genSrtEq(InstData data, ast::StructType *srt) {
   return func;
 }
 
-llvm::Function *stela::genSrtLt(InstData data, ast::StructType *srt) {
+template <>
+llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) {
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "srt_lt");
   assignCompareAttrs(func);

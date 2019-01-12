@@ -8,15 +8,11 @@
 
 #include "generate func.hpp"
 
+#include "inst data.hpp"
 #include "gen helpers.hpp"
-#include "unreachable.hpp"
 #include "type builder.hpp"
-#include "generate type.hpp"
-#include "generate decl.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
-#include <llvm/IR/Function.h>
-#include "assert down cast.hpp"
 #include "function builder.hpp"
 #include "func instantiations.hpp"
 
@@ -142,7 +138,8 @@ std::string stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   return {};
 }
 
-llvm::Function *stela::genPanic(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::panic>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
@@ -169,7 +166,8 @@ llvm::Function *stela::genPanic(InstData data) {
   return panic;
 }
 
-llvm::Function *stela::genAlloc(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::alloc>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   
   llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
@@ -192,12 +190,13 @@ llvm::Function *stela::genAlloc(InstData data) {
   funcBdr.setCurr(okBlock);
   funcBdr.ir.CreateRet(ptr);
   funcBdr.setCurr(errorBlock);
-  callPanic(funcBdr.ir, data.inst.panic(), "Out of memory");
+  callPanic(funcBdr.ir, data.inst.get<FGI::panic>(), "Out of memory");
   
   return alloc;
 }
 
-llvm::Function *stela::genFree(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::free>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *voidTy = llvm::Type::getVoidTy(ctx);
   llvm::Type *memTy = llvm::Type::getInt8PtrTy(ctx);
@@ -207,7 +206,8 @@ llvm::Function *stela::genFree(InstData data) {
   return free;
 }
 
-llvm::Function *stela::genCeilToPow2(InstData data) {
+template <>
+llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   // this returns 2 when the input is 1
   // we could subtract val == 1 but that's just more instructions for no reason!
   llvm::LLVMContext &ctx = data.mod->getContext();

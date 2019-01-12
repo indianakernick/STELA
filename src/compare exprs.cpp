@@ -39,9 +39,9 @@ llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
   } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    return ir.CreateCall(inst.arrayEq(arr), {left.obj, right.obj});
+    return ir.CreateCall(inst.get<PFGI::arr_eq>(arr), {left.obj, right.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    return ir.CreateCall(inst.structEq(srt), {left.obj, right.obj});
+    return ir.CreateCall(inst.get<PFGI::srt_eq>(srt), {left.obj, right.obj});
   } else {
     UNREACHABLE();
   }
@@ -56,9 +56,9 @@ llvm::Value *CompareExpr::less(ast::Type *type, gen::Expr left, gen::Expr right)
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
   } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    return ir.CreateCall(inst.arrayLt(arr), {left.obj, right.obj});
+    return ir.CreateCall(inst.get<PFGI::arr_lt>(arr), {left.obj, right.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    return ir.CreateCall(inst.structLt(srt), {left.obj, right.obj});
+    return ir.CreateCall(inst.get<PFGI::srt_lt>(srt), {left.obj, right.obj});
   } else {
     UNREACHABLE();
   }

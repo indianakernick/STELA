@@ -6,8 +6,7 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
-#include "generate array.hpp"
-
+#include "inst data.hpp"
 #include "gen helpers.hpp"
 #include "generate type.hpp"
 #include "compare exprs.hpp"
@@ -16,7 +15,8 @@
 
 using namespace stela;
 
-llvm::Function *stela::genArrDtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_dtor>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, unaryCtorFor(type), "arr_dtor");
   assignUnaryCtorAttrs(func);
@@ -26,14 +26,15 @@ llvm::Function *stela::genArrDtor(InstData data, ast::ArrayType *arr) {
   ptr_dtor(arr_strg_dtor, bitcast obj)
   */
   
-  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Function *strgDtor = data.inst.get<PFGI::arr_strg_dtor>(arr);
   llvm::Value *obj = refPtrPtrCast(funcBdr.ir, func->arg_begin());
-  funcBdr.ir.CreateCall(data.inst.pointerDtor(), {strgDtor, obj});
+  funcBdr.ir.CreateCall(data.inst.get<FGI::ptr_dtor>(), {strgDtor, obj});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
 
-llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_def_ctor>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, unaryCtorFor(type), "arr_def_ctor");
   assignUnaryCtorAttrs(func);
@@ -48,7 +49,7 @@ llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
   
   llvm::Value *arrayPtr = func->arg_begin();
   llvm::Type *storageTy = type->getPointerElementType();
-  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.alloc(), storageTy);
+  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.get<FGI::alloc>(), storageTy);
   initRefCount(funcBdr.ir, array);
 
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
@@ -63,7 +64,8 @@ llvm::Function *stela::genArrDefCtor(InstData data, ast::ArrayType *arr) {
   return func;
 }
 
-llvm::Function *stela::genArrCopCtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_cop_ctor>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_cop_ctor");
   assignBinaryCtorAttrs(func);
@@ -75,12 +77,13 @@ llvm::Function *stela::genArrCopCtor(InstData data, ast::ArrayType *arr) {
   
   llvm::Value *objPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
   llvm::Value *otherPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
-  funcBdr.ir.CreateCall(data.inst.pointerCopCtor(), {objPtr, otherPtr});
+  funcBdr.ir.CreateCall(data.inst.get<FGI::ptr_cop_ctor>(), {objPtr, otherPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
 
-llvm::Function *stela::genArrCopAsgn(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_cop_asgn>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_cop_asgn");
   assignBinaryAliasCtorAttrs(func);
@@ -90,15 +93,16 @@ llvm::Function *stela::genArrCopAsgn(InstData data, ast::ArrayType *arr) {
   ptr_cop_asgn(arr_strg_dtor, bitcast left, bitcast right)
   */
   
-  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Function *strgDtor = data.inst.get<PFGI::arr_strg_dtor>(arr);
   llvm::Value *leftPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
   llvm::Value *rightPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
-  funcBdr.ir.CreateCall(data.inst.pointerCopAsgn(), {strgDtor, leftPtr, rightPtr});
+  funcBdr.ir.CreateCall(data.inst.get<FGI::ptr_cop_asgn>(), {strgDtor, leftPtr, rightPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
 
-llvm::Function *stela::genArrMovCtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_mov_ctor>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_mov_ctor");
   assignBinaryCtorAttrs(func);
@@ -110,12 +114,13 @@ llvm::Function *stela::genArrMovCtor(InstData data, ast::ArrayType *arr) {
   
   llvm::Value *objPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
   llvm::Value *otherPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
-  funcBdr.ir.CreateCall(data.inst.pointerMovCtor(), {objPtr, otherPtr});
+  funcBdr.ir.CreateCall(data.inst.get<FGI::ptr_mov_ctor>(), {objPtr, otherPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
 
-llvm::Function *stela::genArrMovAsgn(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_mov_asgn>(InstData data, ast::ArrayType *arr) {
   llvm::Type *type = generateType(data.mod->getContext(), arr);
   llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), "arr_mov_asgn");
   assignBinaryCtorAttrs(func);
@@ -125,10 +130,10 @@ llvm::Function *stela::genArrMovAsgn(InstData data, ast::ArrayType *arr) {
   ptr_mov_asgn(arr_strg_dtor, bitcast left, bitcast right)
   */
   
-  llvm::Function *strgDtor = data.inst.arrayStrgDtor(arr);
+  llvm::Function *strgDtor = data.inst.get<PFGI::arr_strg_dtor>(arr);
   llvm::Value *leftPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin());
   llvm::Value *rightPtr = refPtrPtrCast(funcBdr.ir, func->arg_begin() + 1);
-  funcBdr.ir.CreateCall(data.inst.pointerMovAsgn(), {strgDtor, leftPtr, rightPtr});
+  funcBdr.ir.CreateCall(data.inst.get<FGI::ptr_mov_asgn>(), {strgDtor, leftPtr, rightPtr});
   funcBdr.ir.CreateRetVoid();
   return func;
 }
@@ -175,7 +180,7 @@ llvm::Function *generateArrayIdx(
   funcBdr.ir.CreateRet(arrayIndex(funcBdr.ir, dat, func->arg_begin() + 1));
   
   funcBdr.setCurr(errorBlock);
-  callPanic(funcBdr.ir, data.inst.panic(), "Index out of bounds");
+  callPanic(funcBdr.ir, data.inst.get<FGI::panic>(), "Index out of bounds");
   
   return func;
 }
@@ -192,15 +197,18 @@ llvm::Value *checkUnsignedBounds(llvm::IRBuilder<> &ir, llvm::Value *index, llvm
 
 }
 
-llvm::Function *stela::genArrIdxS(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_idx_s>(InstData data, ast::ArrayType *arr) {
   return generateArrayIdx(data, arr, checkSignedBounds, "arr_idx_s");
 }
 
-llvm::Function *stela::genArrIdxU(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_idx_u>(InstData data, ast::ArrayType *arr) {
   return generateArrayIdx(data, arr, checkUnsignedBounds, "arr_idx_u");
 }
 
-llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_len_ctor>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
   llvm::Type *arrayStructType = type->getPointerElementType();
@@ -225,7 +233,7 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   llvm::Value *arrayPtr = func->arg_begin();
   llvm::Value *size = func->arg_begin() + 1;
   llvm::Type *storageTy = type->getPointerElementType();
-  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.alloc(), storageTy);
+  llvm::Value *array = callAlloc(funcBdr.ir, data.inst.get<FGI::alloc>(), storageTy);
   initRefCount(funcBdr.ir, array);
   
   llvm::Value *cap = funcBdr.ir.CreateStructGEP(array, array_idx_cap);
@@ -233,7 +241,7 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   llvm::Value *len = funcBdr.ir.CreateStructGEP(array, array_idx_len);
   funcBdr.ir.CreateStore(size, len);
   llvm::Value *dat = funcBdr.ir.CreateStructGEP(array, array_idx_dat);
-  llvm::Value *allocation = callAlloc(funcBdr.ir, data.inst.alloc(), elem, size);
+  llvm::Value *allocation = callAlloc(funcBdr.ir, data.inst.get<FGI::alloc>(), elem, size);
   funcBdr.ir.CreateStore(allocation, dat);
   funcBdr.ir.CreateStore(array, arrayPtr);
   
@@ -241,7 +249,8 @@ llvm::Function *stela::genArrLenCtor(InstData data, ast::ArrayType *arr) {
   return func;
 }
 
-llvm::Function *stela::genArrStrgDtor(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_strg_dtor>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
   llvm::FunctionType *sig = refPtrDtorTy(ctx);
@@ -324,7 +333,8 @@ ArrPairLoop iterArrPair(
 
 }
 
-llvm::Function *stela::genArrEq(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_eq>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_eq");
@@ -367,7 +377,8 @@ llvm::Function *stela::genArrEq(InstData data, ast::ArrayType *arr) {
   return func;
 }
 
-llvm::Function *stela::genArrLt(InstData data, ast::ArrayType *arr) {
+template <>
+llvm::Function *stela::genFn<PFGI::arr_lt>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_lt");
