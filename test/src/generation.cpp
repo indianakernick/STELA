@@ -1839,6 +1839,43 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(arr->dat[3], type);
   });
   
+  TEST(Builtin functions, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getCap(arr: ref [real]) {
+        return capacity(arr);
+      }
+      extern func getLen(arr: ref [real]) {
+        return size(arr);
+      }
+      extern func getTwelve() {
+        return size("Hello World!");
+      }
+    )");
+    
+    auto getCap = GET_FUNC("getCap", Uint(Array<Real> &));
+    auto getLen = GET_FUNC("getLen", Uint(Array<Real> &));
+    
+    Array<Real> array = makeEmptyArray<Real>();
+    
+    ASSERT_EQ(getCap(array), 0);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(getLen(array), 0);
+    ASSERT_EQ(array.use_count(), 1);
+    
+    array->cap = 789;
+    array->len = 987;
+    
+    ASSERT_EQ(getCap(array), 789);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(getLen(array), 987);
+    ASSERT_EQ(array.use_count(), 1);
+    
+    auto getTwelve = GET_FUNC("getTwelve", Uint());
+    
+    ASSERT_EQ(getTwelve(), 12);
+    ASSERT_EQ(getTwelve(), 12);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

@@ -133,6 +133,7 @@ add_library(STELA STATIC
     "src/generate struct.cpp"
     "src/generate pointer.cpp"
     "src/inst data.hpp"
+    "src/generate builtin.cpp"
 )
 
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")

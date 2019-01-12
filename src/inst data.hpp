@@ -75,6 +75,9 @@ enum class PFGI : size_t {
   srt_eq,
   srt_lt,
   
+  capacity,
+  size,
+  
   count_
 };
 

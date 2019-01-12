@@ -180,34 +180,22 @@ public:
     storeValueAsResult(resultAddr);
   }
   
-  /*
-  void pushBtnFunc(const ast::BtnFuncEnum e) {
-    switch (e) {
+  llvm::Function *getBtnFunc(const ast::BtnFuncEnum f, ast::ArrayType *arr) {
+    switch (f) {
       case ast::BtnFuncEnum::capacity:
-        str += "capacity"; return;
+        return ctx.inst.get<PFGI::capacity>(arr);
       case ast::BtnFuncEnum::size:
-        str += "size"; return;
-      case ast::BtnFuncEnum::push_back:
-        str += "push_back"; return;
-      case ast::BtnFuncEnum::append:
-        str += "append"; return;
-      case ast::BtnFuncEnum::pop_back:
-        str += "pop_back"; return;
-      case ast::BtnFuncEnum::resize:
-        str += "resize"; return;
-      case ast::BtnFuncEnum::reserve:
-        str += "reserve"; return;
+        return ctx.inst.get<PFGI::size>(arr);
     }
     UNREACHABLE();
   }
-  */
-  llvm::Value *visitParam(const ast::FuncParam &param, ast::Expression *expr, llvm::Value **destroy) {
-    if (param.ref == ast::ParamRef::ref) {
+  llvm::Value *visitParam(ast::Type *type, ast::ParamRef ref, ast::Expression *expr, Object *destroy) {
+    if (ref == ast::ParamRef::ref) {
       const gen::Expr evalExpr = visitExpr(expr, nullptr);
       assert(evalExpr.cat == ValueCat::lvalue);
       return evalExpr.obj;
     }
-    const TypeCat typeCat = classifyType(param.type.get());
+    const TypeCat typeCat = classifyType(type);
     if (typeCat == TypeCat::trivially_copyable) {
       const gen::Expr evalExpr = visitExpr(expr, nullptr);
       if (evalExpr.cat == ValueCat::lvalue || evalExpr.cat == ValueCat::xvalue) {
@@ -216,9 +204,10 @@ public:
         return evalExpr.obj;
       }
     } else { // trivially_relocatable or nontrivial
-      llvm::Value *addr = builder.alloc(generateType(ctx.llvm, param.type.get()));
+      llvm::Value *addr = builder.alloc(generateType(ctx.llvm, type));
       visitExpr(expr, addr);
-      *destroy = addr;
+      destroy->addr = addr;
+      destroy->type = type;
       return addr;
     }
   }
@@ -226,10 +215,19 @@ public:
     std::vector<llvm::Value *> &args,
     const ast::FuncArgs &callArgs,
     const ast::FuncParams &params,
-    std::vector<llvm::Value *> &destroyList
+    std::vector<Object> &dtors
   ) {
     for (size_t a = 0; a != callArgs.size(); ++a) {
-      args.push_back(visitParam(params[a], callArgs[a].get(), &destroyList[a + 1]));
+      args.push_back(visitParam(
+        params[a].type.get(), params[a].ref, callArgs[a].get(), &dtors[a + 1]
+      ));
+    }
+  }
+  void destroyArgs(const std::vector<Object> &args) {
+    for (const Object &obj : args) {
+      if (obj.addr) {
+        lifetime.destroy(obj.type, obj.addr);
+      }
     }
   }
   void visit(ast::FuncCall &call) override {
@@ -241,15 +239,16 @@ public:
       std::vector<llvm::Value *> args;
       args.reserve(1 + call.args.size());
       llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
-      std::vector<llvm::Value *> destroyList;
-      destroyList.resize(1 + call.args.size(), nullptr);
+      std::vector<Object> dtors;
+      dtors.resize(1 + call.args.size());
       if (func->receiver) {
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
-        args.push_back(visitParam(*func->receiver, self, &destroyList[0]));
+        ast::FuncParam &rec = *func->receiver;
+        args.push_back(visitParam(rec.type.get(), rec.ref, self, &dtors[0]));
       } else {
         args.push_back(llvm::UndefValue::get(voidPtrTy(ctx.llvm)));
       }
-      pushArgs(args, call.args, func->params, destroyList);
+      pushArgs(args, call.args, func->params, dtors);
       
       if (funcType->params().size() == args.size() + 1) {
         if (resultAddr) {
@@ -268,17 +267,27 @@ public:
         constructResultFromValue(resultAddr, &call);
       }
       
-      if (destroyList[0]) {
-        lifetime.destroy(func->receiver->type.get(), destroyList[0]);
-      }
-      for (size_t a = 1; a != destroyList.size(); ++a) {
-        if (destroyList[a]) {
-          lifetime.destroy(func->params[a - 1].type.get(), destroyList[a]);
-        }
-      }
+      destroyArgs(dtors);
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
-      // call a builtin function
-      assert(false);
+      // @TODO this is highly dependent on the array builtin functions
+      llvm::Value *resultAddr = result;
+      ast::ArrayType *arr = concreteType<ast::ArrayType>(call.args[0]->exprType.get());
+      std::vector<llvm::Value *> args;
+      args.reserve(call.args.size());
+      std::vector<Object> dtors;
+      dtors.resize(call.args.size());
+      if (btnFunc->value == ast::BtnFuncEnum::capacity || btnFunc->value == ast::BtnFuncEnum::size) {
+        args.push_back(visitParam(arr, ast::ParamRef::val, call.args[0].get(), &dtors[0]));
+      } else {
+        args.push_back(visitParam(arr, ast::ParamRef::ref, call.args[0].get(), &dtors[0]));
+      }
+      if (call.args.size() == 2) {
+        ast::Type *secType = call.args[1]->exprType.get();
+        args.push_back(visitParam(secType, ast::ParamRef::val, call.args[1].get(), &dtors[1]));
+      }
+      value = builder.ir.CreateCall(getBtnFunc(btnFunc->value, arr), args);
+      constructResultFromValue(resultAddr, &call);
+      destroyArgs(dtors);
     }
     /*if (call.definition == nullptr) {
       call.func->accept(*this);
@@ -289,22 +298,6 @@ public:
       str += ".data.get()";
       pushArgs(call.args, {});
       str += ")";
-    } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
-      pushBtnFunc(btnFunc->value);
-      str += '(';
-      if (call.args.empty()) {
-        str += ')';
-        return;
-      }
-      str += '(';
-      call.args[0]->accept(*this);
-      str += ')';
-      for (auto a = call.args.cbegin() + 1; a != call.args.cend(); ++a) {
-        str += ", (";
-        (*a)->accept(*this);
-        str += ')';
-      }
-      str += ')';
     }*/
   }
   

@@ -18,6 +18,7 @@
 		4525049021E83C16004AE038 /* generate array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525048E21E83C16004AE038 /* generate array.cpp */; };
 		4525049321E83D40004AE038 /* generate struct.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525049121E83D40004AE038 /* generate struct.cpp */; };
 		4525049621E83DE5004AE038 /* generate pointer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525049421E83DE5004AE038 /* generate pointer.cpp */; };
+		4525049D21E993B6004AE038 /* generate builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525049C21E993B6004AE038 /* generate builtin.cpp */; };
 		454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B743F21C0EB4900BB4BD0 /* optimize module.cpp */; };
 		454B744721C3947900BB4BD0 /* lower expressions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744521C3947900BB4BD0 /* lower expressions.cpp */; };
 		454B744A21C4A5B700BB4BD0 /* function builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 454B744821C4A5B700BB4BD0 /* function builder.cpp */; };
@@ -138,6 +139,7 @@
 		4525049121E83D40004AE038 /* generate struct.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate struct.cpp"; sourceTree = "<group>"; };
 		4525049421E83DE5004AE038 /* generate pointer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate pointer.cpp"; sourceTree = "<group>"; };
 		4525049921E95634004AE038 /* inst data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "inst data.hpp"; sourceTree = "<group>"; };
+		4525049C21E993B6004AE038 /* generate builtin.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate builtin.cpp"; sourceTree = "<group>"; };
 		454B36E721BA3B3100485BA4 /* iterator range.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "iterator range.hpp"; sourceTree = "<group>"; };
 		454B743F21C0EB4900BB4BD0 /* optimize module.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "optimize module.cpp"; sourceTree = "<group>"; };
 		454B744021C0EB4900BB4BD0 /* optimize module.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "optimize module.hpp"; sourceTree = "<group>"; };
@@ -309,6 +311,7 @@
 				4525048E21E83C16004AE038 /* generate array.cpp */,
 				4525049121E83D40004AE038 /* generate struct.cpp */,
 				4525049421E83DE5004AE038 /* generate pointer.cpp */,
+				4525049C21E993B6004AE038 /* generate builtin.cpp */,
 			);
 			name = Functions;
 			sourceTree = "<group>";
@@ -776,6 +779,7 @@
 				45EE9C1220DCF19400CC3289 /* log.cpp in Sources */,
 				45816F4B21B0B6A700712CA3 /* generate decl.cpp in Sources */,
 				45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */,
+				4525049D21E993B6004AE038 /* generate builtin.cpp in Sources */,
 				45816F4821AFA16700712CA3 /* builtin code.cpp in Sources */,
 				4525048D21E83876004AE038 /* gen helpers.cpp in Sources */,
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
