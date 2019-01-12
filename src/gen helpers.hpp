@@ -14,19 +14,6 @@
 
 namespace stela {
 
-template <size_t Size>
-llvm::IntegerType *getSizedType(llvm::LLVMContext &);
-
-template <typename Int>
-llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
-  return getSizedType<sizeof(Int)>(ctx);
-}
-
-template <typename Int>
-llvm::PointerType *getTypePtr(llvm::LLVMContext &ctx) {
-  return getType<Int>(ctx)->getPointerTo();
-}
-
 // constexpr unsigned array_idx_ref = 0;
 constexpr unsigned array_idx_cap = 1;
 constexpr unsigned array_idx_len = 2;

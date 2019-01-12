@@ -8,29 +8,9 @@
 
 #include "gen helpers.hpp"
 
-#include "type builder.hpp"
+#include "gen types.hpp"
 
 using namespace stela;
-
-template <>
-llvm::IntegerType *stela::getSizedType<1>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt8Ty(ctx);
-}
-
-template <>
-llvm::IntegerType *stela::getSizedType<2>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt16Ty(ctx);
-}
-
-template <>
-llvm::IntegerType *stela::getSizedType<4>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt32Ty(ctx);
-}
-
-template <>
-llvm::IntegerType *stela::getSizedType<8>(llvm::LLVMContext &ctx) {
-  return llvm::IntegerType::getInt64Ty(ctx);
-}
 
 llvm::Function *stela::makeInternalFunc(
   llvm::Module *module,
@@ -187,8 +167,7 @@ void stela::returnBool(llvm::IRBuilder<> &ir, const bool ret) {
 }
 
 llvm::PointerType *stela::refPtrTy(llvm::LLVMContext &ctx) {
-  TypeBuilder typeBdr{ctx};
-  return typeBdr.ref()->getPointerTo();
+  return refTy(ctx)->getPointerTo();
 }
 
 llvm::PointerType *stela::refPtrPtrTy(llvm::LLVMContext &ctx) {

@@ -10,10 +10,9 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "gen types.hpp"
 #include "categories.hpp"
-#include "gen helpers.hpp"
 #include "unreachable.hpp"
-#include "type builder.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "compare exprs.hpp"
@@ -25,8 +24,8 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(Scope &temps, gen::Ctx ctx, FuncBuilder &funcBdr)
-    : temps{temps}, ctx{ctx}, funcBdr{funcBdr}, lifetime{ctx.inst, funcBdr.ir} {}
+  Visitor(Scope &temps, gen::Ctx ctx, FuncBuilder &builder)
+    : temps{temps}, ctx{ctx}, builder{builder}, lifetime{ctx.inst, builder.ir} {}
 
   gen::Expr visitValue(ast::Expression *expr) {
     result = nullptr;
@@ -34,7 +33,7 @@ public:
     const ValueCat valueCat = classifyValue(expr);
     const TypeCat typeCat = classifyType(expr->exprType.get());
     if (glvalue(valueCat) && typeCat == TypeCat::trivially_copyable) {
-      return {funcBdr.ir.CreateLoad(value), valueCat};
+      return {builder.ir.CreateLoad(value), valueCat};
     } else {
       return {value, valueCat};
     }
@@ -46,36 +45,36 @@ public:
   }
   
   llvm::Value *boolOr(ast::Expression *left, ast::Expression *right) {
-    llvm::BasicBlock *leftBlock = funcBdr.ir.GetInsertBlock();
-    llvm::BasicBlock *rightBlock = funcBdr.makeBlock();
-    llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+    llvm::BasicBlock *leftBlock = builder.ir.GetInsertBlock();
+    llvm::BasicBlock *rightBlock = builder.makeBlock();
+    llvm::BasicBlock *doneBlock = builder.makeBlock();
     
     gen::Expr leftExpr = visitValue(left);
     llvm::Type *boolType = leftExpr.obj->getType();
-    funcBdr.ir.CreateCondBr(leftExpr.obj, doneBlock, rightBlock);
+    builder.ir.CreateCondBr(leftExpr.obj, doneBlock, rightBlock);
     
-    funcBdr.setCurr(rightBlock);
+    builder.setCurr(rightBlock);
     gen::Expr rightExpr = visitValue(right);
-    funcBdr.branch(doneBlock);
-    llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
+    builder.branch(doneBlock);
+    llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);
     return phi;
   }
   
   llvm::Value *boolAnd(ast::Expression *left, ast::Expression *right) {
-    llvm::BasicBlock *leftBlock = funcBdr.ir.GetInsertBlock();
-    llvm::BasicBlock *rightBlock = funcBdr.makeBlock();
-    llvm::BasicBlock *doneBlock = funcBdr.makeBlock();
+    llvm::BasicBlock *leftBlock = builder.ir.GetInsertBlock();
+    llvm::BasicBlock *rightBlock = builder.makeBlock();
+    llvm::BasicBlock *doneBlock = builder.makeBlock();
     
     gen::Expr leftExpr = visitValue(left);
     llvm::Type *boolType = leftExpr.obj->getType();
-    funcBdr.ir.CreateCondBr(leftExpr.obj, rightBlock, doneBlock);
+    builder.ir.CreateCondBr(leftExpr.obj, rightBlock, doneBlock);
     
-    funcBdr.setCurr(rightBlock);
+    builder.setCurr(rightBlock);
     gen::Expr rightExpr = visitValue(right);
-    funcBdr.branch(doneBlock);
-    llvm::PHINode *phi = funcBdr.ir.CreatePHI(boolType, 2);
+    builder.branch(doneBlock);
+    llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);
     return phi;
@@ -102,31 +101,31 @@ public:
       {                                                                         \
         const ArithCat arith = classifyArith(expr.left.get());                  \
         if (arith == ArithCat::signed_int) {                                    \
-          value = funcBdr.ir.S_OP(left.obj, right.obj);                         \
+          value = builder.ir.S_OP(left.obj, right.obj);                         \
         } else if (arith == ArithCat::unsigned_int) {                           \
-          value = funcBdr.ir.U_OP(left.obj, right.obj);                         \
+          value = builder.ir.U_OP(left.obj, right.obj);                         \
         } else {                                                                \
-          value = funcBdr.ir.F_OP(left.obj, right.obj);                         \
+          value = builder.ir.F_OP(left.obj, right.obj);                         \
         }                                                                       \
       }                                                                         \
       break
     
-    CompareExpr compare{ctx.inst, funcBdr.ir};
+    CompareExpr compare{ctx.inst, builder.ir};
     ast::Type *type = expr.left->exprType.get();
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
       case ast::BinOp::bit_or:
-        value = funcBdr.ir.CreateOr(left.obj, right.obj); break;
+        value = builder.ir.CreateOr(left.obj, right.obj); break;
       case ast::BinOp::bit_xor:
-        value = funcBdr.ir.CreateXor(left.obj, right.obj); break;
+        value = builder.ir.CreateXor(left.obj, right.obj); break;
       case ast::BinOp::bool_and:
       case ast::BinOp::bit_and:
-        value = funcBdr.ir.CreateAnd(left.obj, right.obj); break;
+        value = builder.ir.CreateAnd(left.obj, right.obj); break;
       case ast::BinOp::bit_shl:
-        value = funcBdr.ir.CreateShl(left.obj, right.obj); break;
+        value = builder.ir.CreateShl(left.obj, right.obj); break;
       case ast::BinOp::bit_shr:
-        value = funcBdr.ir.CreateLShr(left.obj, right.obj); break;
+        value = builder.ir.CreateLShr(left.obj, right.obj); break;
       case ast::BinOp::eq:
         value = compare.equal(type, left, right); break;
       case ast::BinOp::ne:
@@ -166,16 +165,16 @@ public:
     switch (expr.oper) {
       case ast::UnOp::neg:
         if (arith == ArithCat::signed_int) {
-          value = funcBdr.ir.CreateNSWNeg(operand.obj);
+          value = builder.ir.CreateNSWNeg(operand.obj);
         } else if (arith == ArithCat::unsigned_int) {
-          value = funcBdr.ir.CreateNeg(operand.obj);
+          value = builder.ir.CreateNeg(operand.obj);
         } else {
-          value = funcBdr.ir.CreateFNeg(operand.obj);
+          value = builder.ir.CreateFNeg(operand.obj);
         }
         break;
       case ast::UnOp::bool_not:
       case ast::UnOp::bit_not:
-        value = funcBdr.ir.CreateNot(operand.obj); break;
+        value = builder.ir.CreateNot(operand.obj); break;
       default: UNREACHABLE();
     }
     storeValueAsResult(resultAddr);
@@ -212,12 +211,12 @@ public:
     if (typeCat == TypeCat::trivially_copyable) {
       const gen::Expr evalExpr = visitExpr(expr, nullptr);
       if (evalExpr.cat == ValueCat::lvalue || evalExpr.cat == ValueCat::xvalue) {
-        return funcBdr.ir.CreateLoad(evalExpr.obj);
+        return builder.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
         return evalExpr.obj;
       }
     } else { // trivially_relocatable or nontrivial
-      llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, param.type.get()));
+      llvm::Value *addr = builder.alloc(generateType(ctx.llvm, param.type.get()));
       visitExpr(expr, addr);
       *destroy = addr;
       return addr;
@@ -248,25 +247,24 @@ public:
         ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
         args.push_back(visitParam(*func->receiver, self, &destroyList[0]));
       } else {
-        TypeBuilder typeBdr{ctx.llvm};
-        args.push_back(llvm::UndefValue::get(typeBdr.voidPtr()));
+        args.push_back(llvm::UndefValue::get(voidPtrTy(ctx.llvm)));
       }
       pushArgs(args, call.args, func->params, destroyList);
       
       if (funcType->params().size() == args.size() + 1) {
         if (resultAddr) {
           args.push_back(resultAddr);
-          funcBdr.ir.CreateCall(func->llvmFunc, args);
+          builder.ir.CreateCall(func->llvmFunc, args);
           value = nullptr;
         } else {
           llvm::Type *retType = funcType->params().back()->getPointerElementType();
-          llvm::Value *retAddr = funcBdr.alloc(retType);
+          llvm::Value *retAddr = builder.alloc(retType);
           args.push_back(retAddr);
-          funcBdr.ir.CreateCall(func->llvmFunc, args);
+          builder.ir.CreateCall(func->llvmFunc, args);
           value = retAddr;
         }
       } else {
-        value = funcBdr.ir.CreateCall(func->llvmFunc, args);
+        value = builder.ir.CreateCall(func->llvmFunc, args);
         constructResultFromValue(resultAddr, &call);
       }
       
@@ -313,7 +311,7 @@ public:
   llvm::Value *materialize(ast::Expression *expr) {
     if (classifyValue(expr) == ValueCat::prvalue) {
       ast::Type *type = expr->exprType.get();
-      llvm::Value *object = funcBdr.alloc(generateType(ctx.llvm, type));
+      llvm::Value *object = builder.alloc(generateType(ctx.llvm, type));
       visitExpr(expr, object);
       temps.push_back({object, type});
       return object;
@@ -325,7 +323,7 @@ public:
   void visit(ast::MemberIdent &mem) override {
     llvm::Value *resultAddr = result;
     llvm::Value *object = materialize(mem.object.get());
-    value = funcBdr.ir.CreateStructGEP(object, mem.index);
+    value = builder.ir.CreateStructGEP(object, mem.index);
     constructResultFromValue(resultAddr, &mem);
   }
   
@@ -343,7 +341,7 @@ public:
     } else {
       indexFn = ctx.inst.get<PFGI::arr_idx_u>(arr);
     }
-    value = funcBdr.ir.CreateCall(indexFn, {object, index.obj});
+    value = builder.ir.CreateCall(indexFn, {object, index.obj});
     
     constructResultFromValue(resultAddr, &sub);
   }
@@ -423,14 +421,14 @@ public:
     constructResultFromValue(result, &ident);
   }
   void visit(ast::Ternary &tern) override {
-    auto *condBlock = funcBdr.nextEmpty();
-    auto *trooBlock = funcBdr.makeBlock();
-    auto *folsBlock = funcBdr.makeBlock();
-    auto *doneBlock = funcBdr.makeBlock();
+    auto *condBlock = builder.nextEmpty();
+    auto *trooBlock = builder.makeBlock();
+    auto *folsBlock = builder.makeBlock();
+    auto *doneBlock = builder.makeBlock();
     llvm::Value *resultAddr = result;
     
-    funcBdr.setCurr(condBlock);
-    funcBdr.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
+    builder.setCurr(condBlock);
+    builder.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
   
     gen::Expr troo{nullptr, {}};
     gen::Expr fols{nullptr, {}};
@@ -438,37 +436,37 @@ public:
     const ValueCat folsCat = classifyValue(tern.fols.get());
     
     if (resultAddr) {
-      funcBdr.setCurr(trooBlock);
+      builder.setCurr(trooBlock);
       visitExpr(tern.troo.get(), resultAddr);
-      funcBdr.setCurr(folsBlock);
+      builder.setCurr(folsBlock);
       visitExpr(tern.fols.get(), resultAddr);
       value = nullptr;
     } else if (trooCat == ValueCat::lvalue && folsCat == ValueCat::lvalue) {
-      funcBdr.setCurr(trooBlock);
+      builder.setCurr(trooBlock);
       troo = visitExpr(tern.troo.get(), nullptr);
-      funcBdr.setCurr(folsBlock);
+      builder.setCurr(folsBlock);
       fols = visitExpr(tern.fols.get(), nullptr);
     } else if (classifyType(tern.exprType.get()) == TypeCat::trivially_copyable) {
-      funcBdr.setCurr(trooBlock);
+      builder.setCurr(trooBlock);
       troo = visitValue(tern.troo.get());
-      funcBdr.setCurr(folsBlock);
+      builder.setCurr(folsBlock);
       fols = visitValue(tern.fols.get());
     } else {
-      llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, tern.exprType.get()));
-      funcBdr.setCurr(trooBlock);
+      llvm::Value *addr = builder.alloc(generateType(ctx.llvm, tern.exprType.get()));
+      builder.setCurr(trooBlock);
       visitExpr(tern.troo.get(), addr);
-      funcBdr.setCurr(folsBlock);
+      builder.setCurr(folsBlock);
       visitExpr(tern.fols.get(), addr);
       value = addr;
     }
     
-    funcBdr.link(trooBlock, doneBlock);
-    funcBdr.link(folsBlock, doneBlock);
-    funcBdr.setCurr(doneBlock);
+    builder.link(trooBlock, doneBlock);
+    builder.link(folsBlock, doneBlock);
+    builder.setCurr(doneBlock);
     
     if (troo.obj) {
       assert(fols.obj);
-      llvm::PHINode *phi = funcBdr.ir.CreatePHI(troo.obj->getType(), 2);
+      llvm::PHINode *phi = builder.ir.CreatePHI(troo.obj->getType(), 2);
       phi->addIncoming(troo.obj, trooBlock);
       phi->addIncoming(fols.obj, folsBlock);
       value = phi;
@@ -486,27 +484,27 @@ public:
     const ArithCat src = classifyArith(make.expr.get());
     if (src == ArithCat::signed_int) {
       if (dst == ArithCat::signed_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, true);
+        value = builder.ir.CreateIntCast(srcVal.obj, type, true);
       } else if (dst == ArithCat::unsigned_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, true);
+        value = builder.ir.CreateIntCast(srcVal.obj, type, true);
       } else {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::SIToFP, srcVal.obj, type);
+        value = builder.ir.CreateCast(llvm::Instruction::SIToFP, srcVal.obj, type);
       }
     } else if (src == ArithCat::unsigned_int) {
       if (dst == ArithCat::signed_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, false);
+        value = builder.ir.CreateIntCast(srcVal.obj, type, false);
       } else if (dst == ArithCat::unsigned_int) {
-        value = funcBdr.ir.CreateIntCast(srcVal.obj, type, false);
+        value = builder.ir.CreateIntCast(srcVal.obj, type, false);
       } else {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::UIToFP, srcVal.obj, type);
+        value = builder.ir.CreateCast(llvm::Instruction::UIToFP, srcVal.obj, type);
       }
     } else {
       if (dst == ArithCat::signed_int) {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToSI, srcVal.obj, type);
+        value = builder.ir.CreateCast(llvm::Instruction::FPToSI, srcVal.obj, type);
       } else if (dst == ArithCat::unsigned_int) {
-        value = funcBdr.ir.CreateCast(llvm::Instruction::FPToUI, srcVal.obj, type);
+        value = builder.ir.CreateCast(llvm::Instruction::FPToUI, srcVal.obj, type);
       } else {
-        value = funcBdr.ir.CreateFPCast(srcVal.obj, type);
+        value = builder.ir.CreateFPCast(srcVal.obj, type);
       }
     }
     storeValueAsResult(resultAddr);
@@ -514,16 +512,17 @@ public:
   
   void visit(ast::StringLiteral &str) override {
     ast::ArrayType *type = assertDownCast<ast::ArrayType>(str.exprType.get());
-    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
+    llvm::Value *addr = result ? result : builder.alloc(generateType(ctx.llvm, type));
     if (str.value.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
       llvm::Function *ctor = ctx.inst.get<PFGI::arr_len_ctor>(type);
-      TypeBuilder typeBdr{addr->getContext()};
-      llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), str.value.size());
-      llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
-      llvm::Value *strPtr = funcBdr.ir.CreateGlobalStringPtr(str.value);
-      funcBdr.ir.CreateMemCpy(basePtr, 1, strPtr, 1, str.value.size());
+      llvm::Constant *size = llvm::ConstantInt::get(
+        lenTy(addr->getContext()), str.value.size()
+      );
+      llvm::Value *basePtr = builder.ir.CreateCall(ctor, {addr, size});
+      llvm::Value *strPtr = builder.ir.CreateGlobalStringPtr(str.value);
+      builder.ir.CreateMemCpy(basePtr, 1, strPtr, 1, str.value.size());
     }
     value = addr;
   }
@@ -580,19 +579,20 @@ public:
   }
   void visit(ast::ArrayLiteral &arr) override {
     ast::ArrayType *type = assertDownCast<ast::ArrayType>(arr.exprType.get());
-    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
+    llvm::Value *addr = result ? result : builder.alloc(generateType(ctx.llvm, type));
     if (arr.exprs.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
       llvm::Function *ctor = ctx.inst.get<PFGI::arr_len_ctor>(type);
-      TypeBuilder typeBdr{addr->getContext()};
-      llvm::Constant *size = llvm::ConstantInt::get(typeBdr.len(), arr.exprs.size());
-      llvm::Value *basePtr = funcBdr.ir.CreateCall(ctor, {addr, size});
+      llvm::Constant *size = llvm::ConstantInt::get(
+        lenTy(addr->getContext()), arr.exprs.size()
+      );
+      llvm::Value *basePtr = builder.ir.CreateCall(ctor, {addr, size});
       llvm::Type *elemTy = basePtr->getType()->getPointerElementType();
       llvm::Type *sizeTy = getType<size_t>(addr->getContext());
       for (unsigned e = 0; e != arr.exprs.size(); ++e) {
         llvm::Constant *idx = llvm::ConstantInt::get(sizeTy, e);
-        llvm::Value *elemPtr = funcBdr.ir.CreateInBoundsGEP(elemTy, basePtr, idx);
+        llvm::Value *elemPtr = builder.ir.CreateInBoundsGEP(elemTy, basePtr, idx);
         visitExpr(arr.exprs[e].get(), elemPtr);
       }
       // @TODO lifetime.startLife
@@ -602,12 +602,12 @@ public:
   void visit(ast::InitList &list) override {
     ast::Type *type = list.exprType.get();
     llvm::Value *resultAddr = result;
-    llvm::Value *addr = result ? result : funcBdr.alloc(generateType(ctx.llvm, type));
+    llvm::Value *addr = result ? result : builder.alloc(generateType(ctx.llvm, type));
     if (list.exprs.empty()) {
       lifetime.defConstruct(type, addr);
     } else {
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
-        visitExpr(list.exprs[e].get(), funcBdr.ir.CreateStructGEP(addr, e));
+        visitExpr(list.exprs[e].get(), builder.ir.CreateStructGEP(addr, e));
       }
     }
     if (resultAddr) {
@@ -616,7 +616,7 @@ public:
       if (classifyType(type) == TypeCat::trivially_copyable) {
         // @TODO don't do this loading and storing for trivially copyable types
         // maybe something like lifetime.defValue
-        value = funcBdr.ir.CreateLoad(addr);
+        value = builder.ir.CreateLoad(addr);
       } else {
         value = addr;
       }
@@ -650,7 +650,7 @@ public:
 private:
   Scope &temps;
   gen::Ctx ctx;
-  FuncBuilder &funcBdr;
+  FuncBuilder &builder;
   LifetimeExpr lifetime;
   llvm::Value *value = nullptr;
   llvm::Value *result = nullptr;
@@ -659,7 +659,7 @@ private:
     if (resultAddr) {
       // @TODO start the lifetime of the result object
       // maybe call lifetime.construct or lifetime.startLife
-      funcBdr.ir.CreateStore(value, resultAddr);
+      builder.ir.CreateStore(value, resultAddr);
       value = nullptr;
     }
   }

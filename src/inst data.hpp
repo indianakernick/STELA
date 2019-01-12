@@ -9,6 +9,8 @@
 #ifndef stela_inst_data_hpp
 #define stela_inst_data_hpp
 
+#include <cstddef>
+
 namespace llvm {
 
 class Module;
@@ -33,11 +35,8 @@ struct ArrayType;
 
 }
 
-// @TODO maybe rename these enums
-// maybe they should be unscoped enums
-
 /// Function generator identifier
-enum class FGI {
+enum class FGI : size_t {
   ptr_dtor,
   ptr_cop_ctor,
   ptr_cop_asgn,
@@ -53,7 +52,7 @@ enum class FGI {
 };
 
 /// Parametized function generator identifier
-enum class PFGI {
+enum class PFGI : size_t {
   arr_dtor,
   arr_def_ctor,
   arr_cop_ctor,

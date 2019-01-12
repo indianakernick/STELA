@@ -7,7 +7,6 @@
 //
 
 #include "gen helpers.hpp"
-#include "type builder.hpp"
 #include "function builder.hpp"
 #include "func instantiations.hpp"
 
@@ -31,7 +30,7 @@ llvm::Value *refChange(llvm::IRBuilder<> &ir, llvm::Value *ptr, const RefChg chg
 
 void resetPtr(
   FuncInst &inst,
-  FuncBuilder &funcBdr,
+  FuncBuilder &builder,
   llvm::Value *ptr,
   llvm::Value *dtor,
   llvm::BasicBlock *done
@@ -46,14 +45,14 @@ void resetPtr(
     done
   */
   
-  llvm::BasicBlock *del = funcBdr.makeBlock();
-  llvm::Value *subed = refChange(funcBdr.ir, ptr, RefChg::dec);
-  llvm::Value *isZero = funcBdr.ir.CreateICmpEQ(subed, constantFor(subed, 0));
-  funcBdr.ir.CreateCondBr(isZero, del, done);
-  funcBdr.setCurr(del);
-  funcBdr.ir.CreateCall(dtor, {ptr});
-  callFree(funcBdr.ir, inst.get<FGI::free>(), ptr);
-  funcBdr.branch(done);
+  llvm::BasicBlock *del = builder.makeBlock();
+  llvm::Value *subed = refChange(builder.ir, ptr, RefChg::dec);
+  llvm::Value *isZero = builder.ir.CreateICmpEQ(subed, constantFor(subed, 0));
+  builder.ir.CreateCondBr(isZero, del, done);
+  builder.setCurr(del);
+  builder.ir.CreateCall(dtor, {ptr});
+  callFree(builder.ir, inst.get<FGI::free>(), ptr);
+  builder.branch(done);
 }
 
 }
@@ -71,7 +70,7 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   func->addParamAttr(0, llvm::Attribute::ReadOnly);
   func->addParamAttr(0, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   /*
   if ptr == null
@@ -81,15 +80,15 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
     return
   */
   
-  llvm::BasicBlock *decr = funcBdr.makeBlock();
-  llvm::BasicBlock *done = funcBdr.makeBlock();
+  llvm::BasicBlock *decr = builder.makeBlock();
+  llvm::BasicBlock *done = builder.makeBlock();
   llvm::Value *dtor = func->arg_begin();
-  llvm::Value *ptr = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
-  funcBdr.ir.CreateCondBr(funcBdr.ir.CreateIsNull(ptr), done, decr);
+  llvm::Value *ptr = builder.ir.CreateLoad(func->arg_begin() + 1);
+  builder.ir.CreateCondBr(builder.ir.CreateIsNull(ptr), done, decr);
   
-  funcBdr.setCurr(decr);
-  resetPtr(data.inst, funcBdr, ptr, dtor, done);
-  funcBdr.ir.CreateRetVoid();
+  builder.setCurr(decr);
+  resetPtr(data.inst, builder, ptr, dtor, done);
+  builder.ir.CreateRetVoid();
   
   return func;
 }
@@ -108,18 +107,18 @@ llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   func->addParamAttr(0, llvm::Attribute::NoAlias);
   func->addParamAttr(1, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NoAlias);
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   /*
   other.ref++
   obj = other
   */
   
-  llvm::Value *other = funcBdr.ir.CreateLoad(func->arg_begin() + 1);
-  refChange(funcBdr.ir, other, RefChg::inc);
-  funcBdr.ir.CreateStore(other, func->arg_begin());
+  llvm::Value *other = builder.ir.CreateLoad(func->arg_begin() + 1);
+  refChange(builder.ir, other, RefChg::inc);
+  builder.ir.CreateStore(other, func->arg_begin());
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }
 
@@ -137,7 +136,7 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   func->addParamAttr(0, llvm::Attribute::ReadOnly);
   func->addParamAttr(1, llvm::Attribute::NonNull);
   func->addParamAttr(2, llvm::Attribute::NonNull);
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   /*
   right.ref++
@@ -148,14 +147,14 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   llvm::Value *dtor = func->arg_begin();
   llvm::Value *leftPtr = func->arg_begin() + 1;
   llvm::Value *rightPtr = func->arg_begin() + 2;
-  llvm::BasicBlock *asgn = funcBdr.makeBlock();
-  llvm::Value *right = funcBdr.ir.CreateLoad(rightPtr);
-  refChange(funcBdr.ir, right, RefChg::inc);
-  llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
-  resetPtr(data.inst, funcBdr, left, dtor, asgn);
-  funcBdr.ir.CreateStore(right, leftPtr);
+  llvm::BasicBlock *asgn = builder.makeBlock();
+  llvm::Value *right = builder.ir.CreateLoad(rightPtr);
+  refChange(builder.ir, right, RefChg::inc);
+  llvm::Value *left = builder.ir.CreateLoad(leftPtr);
+  resetPtr(data.inst, builder, left, dtor, asgn);
+  builder.ir.CreateStore(right, leftPtr);
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }
 
@@ -173,7 +172,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   func->addParamAttr(0, llvm::Attribute::NoAlias);
   func->addParamAttr(1, llvm::Attribute::NonNull);
   func->addParamAttr(1, llvm::Attribute::NoAlias);
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   /*
   obj = other
@@ -181,10 +180,10 @@ llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   */
   
   llvm::Value *otherPtr = func->arg_begin() + 1;
-  funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(otherPtr), func->arg_begin());
-  setNull(funcBdr.ir, otherPtr);
+  builder.ir.CreateStore(builder.ir.CreateLoad(otherPtr), func->arg_begin());
+  setNull(builder.ir, otherPtr);
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }
 
@@ -204,7 +203,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   func->addParamAttr(1, llvm::Attribute::NoAlias);
   func->addParamAttr(2, llvm::Attribute::NonNull);
   func->addParamAttr(2, llvm::Attribute::NoAlias);
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   /*
   reset left
@@ -215,12 +214,12 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::Value *dtor = func->arg_begin();
   llvm::Value *leftPtr = func->arg_begin() + 1;
   llvm::Value *rightPtr = func->arg_begin() + 2;
-  llvm::BasicBlock *asgn = funcBdr.makeBlock();
-  llvm::Value *left = funcBdr.ir.CreateLoad(leftPtr);
-  resetPtr(data.inst, funcBdr, left, dtor, asgn);
-  funcBdr.ir.CreateStore(funcBdr.ir.CreateLoad(rightPtr), leftPtr);
-  setNull(funcBdr.ir, rightPtr);
+  llvm::BasicBlock *asgn = builder.makeBlock();
+  llvm::Value *left = builder.ir.CreateLoad(leftPtr);
+  resetPtr(data.inst, builder, left, dtor, asgn);
+  builder.ir.CreateStore(builder.ir.CreateLoad(rightPtr), leftPtr);
+  setNull(builder.ir, rightPtr);
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }

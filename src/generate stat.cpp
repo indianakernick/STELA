@@ -31,16 +31,16 @@ struct FlowData {
 class Visitor final : public ast::Visitor {
 public:
   Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, funcBdr{func}, lifetime{ctx.inst, funcBdr.ir} {}
+    : ctx{ctx}, builder{func}, lifetime{ctx.inst, builder.ir} {}
 
   gen::Expr genValue(ast::Expression *expr) {
-    return generateValueExpr(scopes.back(), ctx, funcBdr, expr);
+    return generateValueExpr(scopes.back(), ctx, builder, expr);
   }
   void genExpr(ast::Expression *expr, llvm::Value *result) {
-    generateExpr(scopes.back(), ctx, funcBdr, expr, result);
+    generateExpr(scopes.back(), ctx, builder, expr, result);
   }
   gen::Expr genExpr(ast::Expression *expr) {
-    return generateExpr(scopes.back(), ctx, funcBdr, expr, nullptr);
+    return generateExpr(scopes.back(), ctx, builder, expr, nullptr);
   }
   void genCondBr(
     ast::Expression *cond,
@@ -51,7 +51,7 @@ public:
     llvm::Value *condExpr = genValue(cond).obj;
     destroy(exprScope);
     leaveScope();
-    funcBdr.ir.CreateCondBr(condExpr, troo, fols);
+    builder.ir.CreateCondBr(condExpr, troo, fols);
   }
 
   void visitFlow(ast::Statement *body, const FlowData newFlow) {
@@ -65,9 +65,9 @@ public:
     const size_t exprScope = enterScope();
     llvm::Value *equalExpr;
     if (arith == ArithCat::floating_point) {
-      equalExpr = funcBdr.ir.CreateFCmpOEQ(value, genValue(expr).obj);
+      equalExpr = builder.ir.CreateFCmpOEQ(value, genValue(expr).obj);
     } else {
-      equalExpr = funcBdr.ir.CreateICmpEQ(value, genValue(expr).obj);
+      equalExpr = builder.ir.CreateICmpEQ(value, genValue(expr).obj);
     }
     destroy(exprScope);
     leaveScope();
@@ -82,23 +82,23 @@ public:
     leaveScope();
   }
   void visit(ast::If &fi) override {
-    auto *troo = funcBdr.makeBlock();
-    auto *fols = funcBdr.makeBlock();
+    auto *troo = builder.makeBlock();
+    auto *fols = builder.makeBlock();
     llvm::BasicBlock *done = nullptr;
     genCondBr(fi.cond.get(), troo, fols);
     
-    funcBdr.setCurr(troo);
+    builder.setCurr(troo);
     fi.body->accept(*this);
-    done = funcBdr.terminateLazy(done);
+    done = builder.terminateLazy(done);
     
-    funcBdr.setCurr(fols);
+    builder.setCurr(fols);
     if (fi.elseBody) {
       fi.elseBody->accept(*this);
     }
-    done = funcBdr.terminateLazy(done);
+    done = builder.terminateLazy(done);
     
     if (done) {
-      funcBdr.setCurr(done);
+      builder.setCurr(done);
     }
   }
   void visit(ast::Switch &swich) override {
@@ -112,12 +112,12 @@ public:
     }
     
     const size_t caseScope = scopes.size();
-    auto checkBlocks = funcBdr.makeBlocks(swich.cases.size());
-    auto caseBlocks = funcBdr.makeBlocks(swich.cases.size());
-    llvm::BasicBlock *done = funcBdr.makeBlock();
+    auto checkBlocks = builder.makeBlocks(swich.cases.size());
+    auto caseBlocks = builder.makeBlocks(swich.cases.size());
+    llvm::BasicBlock *done = builder.makeBlock();
     size_t defaultIndex = ~size_t{};
     bool foundDefault = false;
-    funcBdr.ir.CreateBr(checkBlocks[0]);
+    builder.ir.CreateBr(checkBlocks[0]);
     
     for (size_t c = 0; c != swich.cases.size(); ++c) {
       ast::Expression *expr = swich.cases[c].expr.get();
@@ -129,7 +129,7 @@ public:
       const size_t checkIndex = c - foundDefault;
       const size_t caseIndex = c;
       
-      funcBdr.setCurr(checkBlocks[checkIndex]);
+      builder.setCurr(checkBlocks[checkIndex]);
       llvm::Value *cond = equalTo(value.obj, expr);
       
       llvm::BasicBlock *nextCheck;
@@ -139,15 +139,15 @@ public:
         nextCheck = checkBlocks[checkIndex + 1];
       }
       
-      funcBdr.ir.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
+      builder.ir.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
     }
     
     if (foundDefault) {
-      funcBdr.link(checkBlocks.back(), caseBlocks[defaultIndex]);
+      builder.link(checkBlocks.back(), caseBlocks[defaultIndex]);
     }
     
     for (size_t c = 0; c != swich.cases.size(); ++c) {
-      funcBdr.setCurr(caseBlocks[c]);
+      builder.setCurr(caseBlocks[c]);
       llvm::BasicBlock *nextBlock = nullptr;
       if (c != swich.cases.size() - 1) {
         nextBlock = caseBlocks[c + 1];
@@ -155,12 +155,12 @@ public:
       enterScope();
       visitFlow(swich.cases[c].body.get(), {done, nextBlock, caseScope});
       leaveScope();
-      funcBdr.terminate(done);
+      builder.terminate(done);
     }
     
-    funcBdr.setCurr(done);
+    builder.setCurr(done);
     if (swich.alwaysReturns) {
-      funcBdr.ir.CreateUnreachable();
+      builder.ir.CreateUnreachable();
     } else {
       destroy(exprScope);
     }
@@ -172,19 +172,19 @@ public:
   void visit(ast::Break &) override {
     assert(flow.breakBlock);
     destroy(flow.scopeIndex);
-    funcBdr.ir.CreateBr(flow.breakBlock);
+    builder.ir.CreateBr(flow.breakBlock);
   }
   void visit(ast::Continue &) override {
     assert(flow.continueBlock);
     destroy(flow.scopeIndex);
-    funcBdr.ir.CreateBr(flow.continueBlock);
+    builder.ir.CreateBr(flow.continueBlock);
   }
   llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
     llvm::Value *retObj = nullptr;
     if (cat == TypeCat::trivially_copyable) {
       gen::Expr evalExpr = genExpr(expr);
       if (glvalue(evalExpr.cat)) {
-        retObj = funcBdr.ir.CreateLoad(evalExpr.obj);
+        retObj = builder.ir.CreateLoad(evalExpr.obj);
       } else { // prvalue
         retObj = evalExpr.obj;
       }
@@ -197,14 +197,14 @@ public:
       for (const Scope &scope : scopes) {
         for (const Object obj : scope) {
           if (obj.addr == rootAddr) {
-            retObj = &funcBdr.args().back();
+            retObj = &builder.args().back();
             lifetime.moveConstruct(expr->exprType.get(), retObj, genExpr(expr).obj);
           }
         }
       }
     }
     if (retObj == nullptr) {
-      retObj = &funcBdr.args().back();
+      retObj = &builder.args().back();
       // @TODO NRVO
       // if there is one object that is always returned from a function,
       //   treat the return pointer as an lvalue of that object
@@ -214,11 +214,11 @@ public:
   }
   void returnObject(llvm::Value *retObj, const TypeCat cat) {
     if (retObj->getType()->isVoidTy()) {
-      funcBdr.ir.CreateRetVoid();
+      builder.ir.CreateRetVoid();
     } else if (cat == TypeCat::trivially_copyable) {
-      funcBdr.ir.CreateRet(retObj);
+      builder.ir.CreateRet(retObj);
     } else { // trivially_relocatable or nontrivial
-      funcBdr.ir.CreateRetVoid();
+      builder.ir.CreateRetVoid();
     }
   }
   void visit(ast::Return &ret) override {
@@ -229,51 +229,51 @@ public:
       returnObject(retObj, cat);
     } else {
       destroy(0);
-      funcBdr.ir.CreateRetVoid();
+      builder.ir.CreateRetVoid();
     }
   }
   void visit(ast::While &wile) override {
-    auto *cond = funcBdr.nextEmpty();
-    auto *body = funcBdr.makeBlock();
-    auto *done = funcBdr.makeBlock();
-    funcBdr.setCurr(body);
+    auto *cond = builder.nextEmpty();
+    auto *body = builder.makeBlock();
+    auto *done = builder.makeBlock();
+    builder.setCurr(body);
     const size_t scopeIndex = enterScope();
     visitFlow(wile.body.get(), {done, cond, scopeIndex});
     leaveScope();
-    funcBdr.terminate(cond);
-    funcBdr.setCurr(cond);
+    builder.terminate(cond);
+    builder.setCurr(cond);
     genCondBr(wile.cond.get(), body, done);
-    funcBdr.setCurr(done);
+    builder.setCurr(done);
   }
   void visit(ast::For &four) override {
     const size_t outerIndex = enterScope();
     if (four.init) {
       four.init->accept(*this);
     }
-    auto *cond = funcBdr.nextEmpty();
-    auto *body = funcBdr.makeBlock();
-    auto *incr = funcBdr.makeBlock();
-    auto *done = funcBdr.makeBlock();
-    funcBdr.setCurr(body);
+    auto *cond = builder.nextEmpty();
+    auto *body = builder.makeBlock();
+    auto *incr = builder.makeBlock();
+    auto *done = builder.makeBlock();
+    builder.setCurr(body);
     const size_t innerIndex = enterScope();
     visitFlow(four.body.get(), {done, incr, innerIndex});
     leaveScope();
-    funcBdr.terminate(incr);
-    funcBdr.setCurr(cond);
+    builder.terminate(incr);
+    builder.setCurr(cond);
     genCondBr(four.cond.get(), body, done);
-    funcBdr.setCurr(incr);
+    builder.setCurr(incr);
     if (four.incr) {
       four.incr->accept(*this);
-      funcBdr.ir.CreateBr(cond);
+      builder.ir.CreateBr(cond);
     }
-    funcBdr.setCurr(done);
+    builder.setCurr(done);
     destroy(outerIndex);
     leaveScope();
   }
   
   llvm::Value *insertVar(sym::Object *obj, ast::Expression *expr) {
     ast::Type *type = obj->etype.type.get();
-    llvm::Value *addr = funcBdr.alloc(generateType(ctx.llvm, type));
+    llvm::Value *addr = builder.alloc(generateType(ctx.llvm, type));
     if (expr) {
       const size_t exprScope = enterScope();
       genExpr(expr, addr);
@@ -322,12 +322,12 @@ public:
   }
   
   void insert(ast::FuncParam &param, const size_t index) {
-    llvm::Value *arg = funcBdr.args().begin() + index;
+    llvm::Value *arg = builder.args().begin() + index;
     if (param.ref == ast::ParamRef::ref) {
       param.llvmAddr = arg;
     } else {
       if (classifyType(param.type.get()) == TypeCat::trivially_copyable) {
-        param.llvmAddr = funcBdr.allocStore(arg);
+        param.llvmAddr = builder.allocStore(arg);
       } else { // trivially_relocatable or nontrivial
         param.llvmAddr = arg;
       }
@@ -348,7 +348,7 @@ public:
   
 private:
   gen::Ctx ctx;
-  FuncBuilder funcBdr;
+  FuncBuilder builder;
   FlowData flow;
   std::vector<Scope> scopes;
   LifetimeExpr lifetime;

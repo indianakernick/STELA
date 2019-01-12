@@ -61,7 +61,7 @@
 		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		45C7FADF21C74D9100995B7D /* type builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FADD21C74D9100995B7D /* type builder.cpp */; };
+		45C7FADF21C74D9100995B7D /* gen types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FADD21C74D9100995B7D /* gen types.cpp */; };
 		45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */; };
 		45DF194C21D5D80E00FA28A8 /* categories.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45DF194A21D5D80E00FA28A8 /* categories.cpp */; };
 		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
@@ -231,8 +231,8 @@
 		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA40420D6418B006108C1 /* lexical analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lexical analysis.cpp"; sourceTree = "<group>"; };
 		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
-		45C7FADD21C74D9100995B7D /* type builder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "type builder.cpp"; sourceTree = "<group>"; };
-		45C7FADE21C74D9100995B7D /* type builder.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "type builder.hpp"; sourceTree = "<group>"; };
+		45C7FADD21C74D9100995B7D /* gen types.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen types.cpp"; sourceTree = "<group>"; };
+		45C7FADE21C74D9100995B7D /* gen types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen types.hpp"; sourceTree = "<group>"; };
 		45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lifetime exprs.cpp"; sourceTree = "<group>"; };
 		45C7FAE421D1F3CA00995B7D /* lifetime exprs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "lifetime exprs.hpp"; sourceTree = "<group>"; };
 		45DF194A21D5D80E00FA28A8 /* categories.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = categories.cpp; sourceTree = "<group>"; };
@@ -405,8 +405,8 @@
 				454B744621C3947900BB4BD0 /* lower expressions.hpp */,
 				454B744821C4A5B700BB4BD0 /* function builder.cpp */,
 				454B744921C4A5B700BB4BD0 /* function builder.hpp */,
-				45C7FADD21C74D9100995B7D /* type builder.cpp */,
-				45C7FADE21C74D9100995B7D /* type builder.hpp */,
+				45C7FADD21C74D9100995B7D /* gen types.cpp */,
+				45C7FADE21C74D9100995B7D /* gen types.hpp */,
 			);
 			name = "Code Generation";
 			sourceTree = "<group>";
@@ -761,7 +761,7 @@
 				454EB80321AB74DE001A5D78 /* expr stack.cpp in Sources */,
 				4572CA9820FC462800EA1A56 /* operator name.cpp in Sources */,
 				454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */,
-				45C7FADF21C74D9100995B7D /* type builder.cpp in Sources */,
+				45C7FADF21C74D9100995B7D /* gen types.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
 				45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */,
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,

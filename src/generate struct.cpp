@@ -26,16 +26,16 @@ llvm::Function *unarySrt(
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, unaryCtorFor(type), name);
   assignUnaryCtorAttrs(func);
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{data.inst, funcBdr.ir};
+  FuncBuilder builder{func};
+  LifetimeExpr lifetime{data.inst, builder.ir};
   
   const unsigned members = type->getNumContainedTypes();
   for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *memPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *memPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     (lifetime.*memFun)(srt->fields[m].type.get(), memPtr);
   }
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }
 
@@ -52,17 +52,17 @@ llvm::Function *binarySrt(
   } else {
     assignBinaryCtorAttrs(func);
   }
-  FuncBuilder funcBdr{func};
-  LifetimeExpr lifetime{data.inst, funcBdr.ir};
+  FuncBuilder builder{func};
+  LifetimeExpr lifetime{data.inst, builder.ir};
   
   const unsigned members = type->getNumContainedTypes();
   for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *dstPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *srcPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    llvm::Value *dstPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *srcPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     (lifetime.*memFun)(srt->fields[m].type.get(), dstPtr, srcPtr);
   }
   
-  funcBdr.ir.CreateRetVoid();
+  builder.ir.CreateRetVoid();
   return func;
 }
 
@@ -103,9 +103,9 @@ llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) 
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "srt_eq");
   assignCompareAttrs(func);
-  FuncBuilder funcBdr{func};
-  CompareExpr compare{data.inst, funcBdr.ir};
-  llvm::BasicBlock *diffBlock = funcBdr.makeBlock();
+  FuncBuilder builder{func};
+  CompareExpr compare{data.inst, builder.ir};
+  llvm::BasicBlock *diffBlock = builder.makeBlock();
   
   /*
   for m in struct
@@ -118,18 +118,18 @@ llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) 
   
   const unsigned members = type->getNumContainedTypes();
   for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *lPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *rPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();
     llvm::Value *eq = compare.equal(field, lvalue(lPtr), lvalue(rPtr));
-    llvm::BasicBlock *equalBlock = funcBdr.makeBlock();
-    funcBdr.ir.CreateCondBr(eq, equalBlock, diffBlock);
-    funcBdr.setCurr(equalBlock);
+    llvm::BasicBlock *equalBlock = builder.makeBlock();
+    builder.ir.CreateCondBr(eq, equalBlock, diffBlock);
+    builder.setCurr(equalBlock);
   }
   
-  returnBool(funcBdr.ir, true);
-  funcBdr.setCurr(diffBlock);
-  returnBool(funcBdr.ir, false);
+  returnBool(builder.ir, true);
+  builder.setCurr(diffBlock);
+  returnBool(builder.ir, false);
   return func;
 }
 
@@ -138,10 +138,10 @@ llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) 
   llvm::Type *type = generateType(data.mod->getContext(), srt);
   llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "srt_lt");
   assignCompareAttrs(func);
-  FuncBuilder funcBdr{func};
-  CompareExpr compare{data.inst, funcBdr.ir};
-  llvm::BasicBlock *ltBlock = funcBdr.makeBlock();
-  llvm::BasicBlock *geBlock = funcBdr.makeBlock();
+  FuncBuilder builder{func};
+  CompareExpr compare{data.inst, builder.ir};
+  llvm::BasicBlock *ltBlock = builder.makeBlock();
+  llvm::BasicBlock *geBlock = builder.makeBlock();
   
   /*
   for m in struct
@@ -157,23 +157,23 @@ llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) 
   
   const unsigned members = type->getNumContainedTypes();
   for (unsigned m = 0; m != members; ++m) {
-    llvm::Value *lPtr = funcBdr.ir.CreateStructGEP(func->arg_begin(), m);
-    llvm::Value *rPtr = funcBdr.ir.CreateStructGEP(func->arg_begin() + 1, m);
+    llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
+    llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();
     llvm::Value *less = compare.less(field, lvalue(lPtr), lvalue(rPtr));
-    llvm::BasicBlock *notLessBlock = funcBdr.makeBlock();
-    funcBdr.ir.CreateCondBr(less, ltBlock, notLessBlock);
-    funcBdr.setCurr(notLessBlock);
+    llvm::BasicBlock *notLessBlock = builder.makeBlock();
+    builder.ir.CreateCondBr(less, ltBlock, notLessBlock);
+    builder.setCurr(notLessBlock);
     llvm::Value *greater = compare.less(field, lvalue(rPtr), lvalue(lPtr));
-    llvm::BasicBlock *equalBlock = funcBdr.makeBlock();
-    funcBdr.ir.CreateCondBr(greater, geBlock, equalBlock);
-    funcBdr.setCurr(equalBlock);
+    llvm::BasicBlock *equalBlock = builder.makeBlock();
+    builder.ir.CreateCondBr(greater, geBlock, equalBlock);
+    builder.setCurr(equalBlock);
   }
   
-  funcBdr.ir.CreateBr(geBlock);
-  funcBdr.setCurr(ltBlock);
-  returnBool(funcBdr.ir, true);
-  funcBdr.setCurr(geBlock);
-  returnBool(funcBdr.ir, false);
+  builder.ir.CreateBr(geBlock);
+  builder.setCurr(ltBlock);
+  returnBool(builder.ir, true);
+  builder.setCurr(geBlock);
+  returnBool(builder.ir, false);
   return func;
 }

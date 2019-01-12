@@ -10,10 +10,10 @@
 
 #include "llvm.hpp"
 #include "symbols.hpp"
+#include "gen types.hpp"
 #include "categories.hpp"
 #include <llvm/IR/Type.h>
 #include "unreachable.hpp"
-#include "type builder.hpp"
 #include <llvm/IR/Function.h>
 #include <llvm/IR/DerivedTypes.h>
 
@@ -24,7 +24,7 @@ namespace {
 class Visitor final : public ast::Visitor {
 public:
   explicit Visitor(llvm::LLVMContext &ctx)
-    : ctx{ctx}, builder{ctx} {}
+    : ctx{ctx} {}
   
   void visit(ast::BtnType &type) override {
     switch (type.value) {
@@ -45,12 +45,12 @@ public:
   }
   void visit(ast::ArrayType &type) override {
     llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvmType = builder.ptrToArrayOf(elem);
+    llvmType = ptrToArrayTy(elem);
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx, {
       generateLambSig(ctx, type),
-      builder.cloData()->getPointerTo()
+      ptrToCloDataTy(ctx)
     });
   }
   void visit(ast::NamedType &type) override {
@@ -70,7 +70,6 @@ public:
   
 private:
   llvm::LLVMContext &ctx;
-  TypeBuilder builder;
 };
 
 }
@@ -128,8 +127,7 @@ llvm::FunctionType *stela::generateFuncSig(llvm::LLVMContext &ctx, const ast::Fu
   if (func.receiver) {
     params.push_back(convertParam(ctx, convert(*func.receiver)));
   } else {
-    TypeBuilder builder{ctx};
-    params.push_back(builder.voidPtr());
+    params.push_back(voidPtrTy(ctx));
   }
   for (const ast::FuncParam &param : func.params) {
     params.push_back(convertParam(ctx, convert(param)));
@@ -142,8 +140,7 @@ llvm::FunctionType *stela::generateLambSig(llvm::LLVMContext &ctx, const ast::Fu
   llvm::Type *ret = ret = generateType(ctx, type.ret.get());
   LLVMTypes params;
   params.reserve(1 + type.params.size() + 1);
-  TypeBuilder builder{ctx};
-  params.push_back(builder.voidPtr());
+  params.push_back(voidPtrTy(ctx));
   for (const ast::ParamType &param : type.params) {
     params.push_back(convertParam(ctx, param));
   }
@@ -205,11 +202,10 @@ ast::Type *stela::concreteType(ast::Type *type) {
 llvm::StructType *stela::generateLambdaCapture(llvm::LLVMContext &ctx, const ast::Lambda &lambda) {
   sym::Lambda *symbol = lambda.symbol;
   const size_t numCaptures = symbol->captures.size();
-  TypeBuilder builder{ctx};
   std::vector<llvm::Type *> types;
   types.reserve(2 + numCaptures);
-  types.push_back(builder.ref());
-  types.push_back(builder.dtor());
+  types.push_back(refTy(ctx));
+  types.push_back(dtorTy(ctx));
   for (const sym::ClosureCap &cap : symbol->captures) {
     types.push_back(generateType(ctx, cap.type.get()));
   }

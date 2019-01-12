@@ -9,8 +9,8 @@
 #include "generate func.hpp"
 
 #include "inst data.hpp"
+#include "gen types.hpp"
 #include "gen helpers.hpp"
-#include "type builder.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
 #include "function builder.hpp"
@@ -158,10 +158,10 @@ llvm::Function *stela::genFn<FGI::panic>(InstData data) {
   exit->addFnAttr(llvm::Attribute::Cold);
   panic->addFnAttr(llvm::Attribute::NoReturn);
   
-  FuncBuilder funcBdr{panic};
-  funcBdr.ir.CreateCall(puts, panic->arg_begin());
-  funcBdr.ir.CreateCall(exit, constantFor(intTy, EXIT_FAILURE));
-  funcBdr.ir.CreateUnreachable();
+  FuncBuilder builder{panic};
+  builder.ir.CreateCall(puts, panic->arg_begin());
+  builder.ir.CreateCall(exit, constantFor(intTy, EXIT_FAILURE));
+  builder.ir.CreateUnreachable();
   
   return panic;
 }
@@ -180,17 +180,17 @@ llvm::Function *stela::genFn<FGI::alloc>(InstData data) {
   malloc->addAttribute(0, llvm::Attribute::NoAlias);
   alloc->addAttribute(0, llvm::Attribute::NoAlias);
   
-  FuncBuilder funcBdr{alloc};
-  llvm::BasicBlock *okBlock = funcBdr.makeBlock();
-  llvm::BasicBlock *errorBlock = funcBdr.makeBlock();
-  llvm::Value *ptr = funcBdr.ir.CreateCall(malloc, alloc->arg_begin());
-  llvm::Value *isNotNull = funcBdr.ir.CreateIsNotNull(ptr);
-  likely(funcBdr.ir.CreateCondBr(isNotNull, okBlock, errorBlock));
+  FuncBuilder builder{alloc};
+  llvm::BasicBlock *okBlock = builder.makeBlock();
+  llvm::BasicBlock *errorBlock = builder.makeBlock();
+  llvm::Value *ptr = builder.ir.CreateCall(malloc, alloc->arg_begin());
+  llvm::Value *isNotNull = builder.ir.CreateIsNotNull(ptr);
+  likely(builder.ir.CreateCondBr(isNotNull, okBlock, errorBlock));
   
-  funcBdr.setCurr(okBlock);
-  funcBdr.ir.CreateRet(ptr);
-  funcBdr.setCurr(errorBlock);
-  callPanic(funcBdr.ir, data.inst.get<FGI::panic>(), "Out of memory");
+  builder.setCurr(okBlock);
+  builder.ir.CreateRet(ptr);
+  builder.setCurr(errorBlock);
+  callPanic(builder.ir, data.inst.get<FGI::panic>(), "Out of memory");
   
   return alloc;
 }
@@ -211,27 +211,26 @@ llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   // this returns 2 when the input is 1
   // we could subtract val == 1 but that's just more instructions for no reason!
   llvm::LLVMContext &ctx = data.mod->getContext();
-  TypeBuilder typeBdr{ctx};
-  llvm::Type *type = typeBdr.len();
+  llvm::Type *type = lenTy(ctx);
   llvm::FunctionType *fnType = llvm::FunctionType::get(
     type, {type}, false
   );
   llvm::Function *func = makeInternalFunc(data.mod, fnType, "ceil_to_pow_2");
-  FuncBuilder funcBdr{func};
+  FuncBuilder builder{func};
   
   llvm::DataLayout layout{data.mod};
   const uint64_t bitSize = layout.getTypeSizeInBits(type);
   llvm::FunctionType *ctlzType = llvm::FunctionType::get(
-    type, {type, funcBdr.ir.getInt1Ty()}, false
+    type, {type, builder.ir.getInt1Ty()}, false
   );
   llvm::Twine name = llvm::Twine{"llvm.ctlz.i"} + llvm::Twine{bitSize};
   llvm::Function *ctlz = declareCFunc(data.mod, ctlzType, name);
-  llvm::Value *minus1 = funcBdr.ir.CreateNSWSub(func->arg_begin(), constantFor(type, 1));
-  llvm::Value *leadingZeros = funcBdr.ir.CreateCall(ctlz, {minus1, funcBdr.ir.getTrue()});
+  llvm::Value *minus1 = builder.ir.CreateNSWSub(func->arg_begin(), constantFor(type, 1));
+  llvm::Value *leadingZeros = builder.ir.CreateCall(ctlz, {minus1, builder.ir.getTrue()});
   llvm::Value *bits = constantFor(type, bitSize);
-  llvm::Value *log2 = funcBdr.ir.CreateNSWSub(bits, leadingZeros);
-  llvm::Value *ceiled = funcBdr.ir.CreateShl(constantFor(type, 1), log2);
+  llvm::Value *log2 = builder.ir.CreateNSWSub(bits, leadingZeros);
+  llvm::Value *ceiled = builder.ir.CreateShl(constantFor(type, 1), log2);
   
-  funcBdr.ir.CreateRet(ceiled);
+  builder.ir.CreateRet(ceiled);
   return func;
 }
