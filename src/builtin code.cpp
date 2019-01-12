@@ -205,7 +205,7 @@ Array<t_char> string_literal(const t_char (&string)[Size]) noexcept {
   return array;
 }*/
 
-template <typename T>
+/*template <typename T>
 t_uint capacity(const Array<T> &array) noexcept {
   return array.cap;
 }
@@ -213,12 +213,12 @@ t_uint capacity(const Array<T> &array) noexcept {
 template <typename T>
 t_uint size(const Array<T> &array) noexcept {
   return array.len;
-}
+}*/
 
 template <typename T>
 void reallocate(Array<T> &array, const t_uint cap) noexcept {
   T *newData = static_cast<T *>(allocate(sizeof(T) * cap));
-  std::uninitialized_copy_n(array.data, array.len, newData);
+  std::uninitialized_move_n(array.data, array.len, newData);
   std::destroy_n(array.data, array.len);
   deallocate(array.data);
   array.data = newData;
@@ -243,7 +243,7 @@ void append(Array<T> &array, const Array<T> &other) noexcept {
   array.len += other.len;
 }
 
-template <typename T>
+/*template <typename T>
 void pop_back(Array<T> &array) noexcept {
   if (UNLIKELY(array.len == 0)) {
     panic("pop_back from empty array");
@@ -251,7 +251,7 @@ void pop_back(Array<T> &array) noexcept {
     --array.len;
     std::destroy_at(array.data + array.len);
   }
-}
+}*/
 
 template <typename T>
 void resize(Array<T> &array, const t_uint size) noexcept {

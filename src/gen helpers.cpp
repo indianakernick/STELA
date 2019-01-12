@@ -19,7 +19,7 @@ llvm::Function *stela::makeInternalFunc(
 ) {
   llvm::Function *func = llvm::Function::Create(
     type,
-    llvm::Function::ExternalLinkage, // @TODO temporary. So functions aren't removed
+    llvm::Function::InternalLinkage,
     name,
     module
   );

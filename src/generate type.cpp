@@ -44,8 +44,7 @@ public:
     UNREACHABLE();
   }
   void visit(ast::ArrayType &type) override {
-    llvm::Type *elem = generateType(ctx, type.elem.get());
-    llvmType = ptrToArrayTy(elem);
+    llvmType = ptrToArrayTy(generateType(ctx, type.elem.get()));
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx, {

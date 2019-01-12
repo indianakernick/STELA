@@ -183,9 +183,19 @@ public:
   llvm::Function *getBtnFunc(const ast::BtnFuncEnum f, ast::ArrayType *arr) {
     switch (f) {
       case ast::BtnFuncEnum::capacity:
-        return ctx.inst.get<PFGI::capacity>(arr);
+        return ctx.inst.get<PFGI::btn_capacity>(arr);
       case ast::BtnFuncEnum::size:
-        return ctx.inst.get<PFGI::size>(arr);
+        return ctx.inst.get<PFGI::btn_size>(arr);
+      //case ast::BtnFuncEnum::push_back:
+      //  return ctx.inst.get<PFGI::btn_push_back>(arr);
+      //case ast::BtnFuncEnum::append:
+      //  return ctx.inst.get<PFGI::btn_append>(arr);
+      case ast::BtnFuncEnum::pop_back:
+        return ctx.inst.get<PFGI::btn_pop_back>(arr);
+      //case ast::BtnFuncEnum::resize:
+      //  return ctx.inst.get<PFGI::btn_resize>(arr);
+      //case ast::BtnFuncEnum::reserve:
+      //  return ctx.inst.get<PFGI::btn_reserve>(arr);
     }
     UNREACHABLE();
   }

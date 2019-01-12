@@ -1839,7 +1839,7 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(arr->dat[3], type);
   });
   
-  TEST(Builtin functions, {
+  TEST(Builtin capacity size, {
     ASSERT_SUCCEEDS(R"(
       extern func getCap(arr: ref [real]) {
         return capacity(arr);
@@ -1874,6 +1874,29 @@ TEST_GROUP(Generation, {
     
     ASSERT_EQ(getTwelve(), 12);
     ASSERT_EQ(getTwelve(), 12);
+  });
+  
+  TEST(Builtin pop_back, {
+    ASSERT_SUCCEEDS(R"(
+      extern func pop(arr: ref [[char]]) {
+        pop_back(arr);
+      }
+    )");
+    
+    auto pop = GET_FUNC("pop", Void(Array<Array<Char>> &));
+    
+    Array<Char> str = makeString("String");
+    ASSERT_EQ(str.use_count(), 1);
+    Array<Array<Char>> array = makeArrayOf<Array<Char>>(str);
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    
+    pop(array);
+    
+    ASSERT_EQ(str.use_count(), 1);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 0);
   });
   
   /*
