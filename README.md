@@ -23,7 +23,7 @@ static typing.
 
 ## Examples
 
-The LLVM backend is underway. Lambdas and arrays are not supported yet. It's still very experimental.
+The LLVM backend is underway. Lambdas are not supported yet. It's still very experimental.
 Part of the C++ backend is still in the code but commented out.
 
 The CLI is not implemented yet so here is an example of compiling a Stela program to LLVM IR and executing it. See the **Building** section.
@@ -39,7 +39,7 @@ The CLI is not implemented yet so here is an example of compiling a Stela progra
 
 int main() {
   const std::string_view source = R"(
-    func plus(left: real, right: real) {
+    extern func plus(left: real, right: real) {
       return left + right;
     }
   )";
@@ -79,8 +79,8 @@ int main() {
 }
 ```
 
-~~Here's some programs you can try out!~~ Currently, only the **Member functions** test can be compiled to LLVM IR.
-The other tests use arrays, lambdas and global variables which are not supported yet.
+~~Here's some programs you can try out!~~ Lambdas are not supported yet so not all of the tests
+can be compiled with the LLVM backend.
 
 ### Lambdas
 
