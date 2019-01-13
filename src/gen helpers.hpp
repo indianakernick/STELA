@@ -19,7 +19,19 @@ constexpr unsigned array_idx_cap = 1;
 constexpr unsigned array_idx_len = 2;
 constexpr unsigned array_idx_dat = 3;
 
-llvm::Function *makeInternalFunc(llvm::Module *, llvm::FunctionType *, const llvm::Twine &);
+enum class Inline {
+  never,
+  smart,
+  hint,
+  always
+};
+
+llvm::Function *makeInternalFunc(
+  llvm::Module *,
+  llvm::FunctionType *,
+  const llvm::Twine &,
+  Inline = Inline::always
+);
 llvm::Function *declareCFunc(llvm::Module *, llvm::FunctionType *, const llvm::Twine &);
 
 llvm::FunctionType *unaryCtorFor(llvm::Type *);

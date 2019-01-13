@@ -29,39 +29,84 @@ llvm::Value *refChange(llvm::IRBuilder<> &ir, llvm::Value *ptr, const RefChg chg
   return changed;
 }
 
-void resetPtr(
-  FuncInst &inst,
-  FuncBuilder &builder,
-  llvm::Value *ptr,
-  llvm::Value *dtor,
-  llvm::BasicBlock *done
-) {
-  /*
-  ptr.ref--
-  if ptr.ref == 0
-    dtor
-    free ptr
-    done
-  else
-    done
-  */
-  
-  llvm::BasicBlock *del = builder.makeBlock();
-  llvm::Value *subed = refChange(builder.ir, ptr, RefChg::dec);
-  llvm::Value *isZero = builder.ir.CreateICmpEQ(subed, constantFor(subed, 0));
-  builder.ir.CreateCondBr(isZero, del, done);
-  builder.setCurr(del);
-  builder.ir.CreateCall(dtor, {ptr});
-  callFree(builder.ir, inst.get<FGI::free>(), ptr);
-  builder.branch(done);
 }
 
+template <>
+llvm::Function *stela::genFn<FGI::ptr_inc>(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {refPtrTy(ctx)}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_inc");
+  FuncBuilder builder{func};
+  
+  /*
+  if ptr != null
+    ptr.ref++
+  */
+  
+  llvm::BasicBlock *incBlock = builder.makeBlock();
+  llvm::BasicBlock *doneBlock = builder.makeBlock();
+  llvm::Value *ptrNotNull = builder.ir.CreateIsNotNull(func->arg_begin());
+  builder.ir.CreateCondBr(ptrNotNull, incBlock, doneBlock);
+  
+  builder.setCurr(incBlock);
+  refChange(builder.ir, func->arg_begin(), RefChg::inc);
+  builder.ir.CreateBr(doneBlock);
+  
+  builder.setCurr(doneBlock);
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<FGI::ptr_dec>(InstData data) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx),
+    {refPtrDtorPtrTy(ctx), refPtrTy(ctx)},
+    false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_dec");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder builder{func};
+  
+  /*
+  if ptr != null
+    ptr.ref--
+    if ptr.ref == 0
+      dtor
+      free ptr
+  */
+  
+  llvm::BasicBlock *decBlock = builder.makeBlock();
+  llvm::BasicBlock *destroyBlock = builder.makeBlock();
+  llvm::BasicBlock *doneBlock = builder.makeBlock();
+  llvm::Value *dtor = func->arg_begin();
+  llvm::Value *ptr = func->arg_begin() + 1;
+  llvm::Value *ptrNotNull = builder.ir.CreateIsNotNull(ptr);
+  builder.ir.CreateCondBr(ptrNotNull, decBlock, doneBlock);
+  
+  builder.setCurr(decBlock);
+  llvm::Value *subed = refChange(builder.ir, ptr, RefChg::dec);
+  llvm::Value *refIsZero = builder.ir.CreateICmpEQ(subed, constantFor(subed, 0));
+  builder.ir.CreateCondBr(refIsZero, destroyBlock, doneBlock);
+  
+  builder.setCurr(destroyBlock);
+  builder.ir.CreateCall(dtor, {ptr});
+  callFree(builder.ir, data.inst.get<FGI::free>(), ptr);
+  builder.ir.CreateBr(doneBlock);
+  
+  builder.setCurr(doneBlock);
+  builder.ir.CreateRetVoid();
+  
+  return func;
 }
 
 template <>
 llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx)},
@@ -74,21 +119,13 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  if ptr == null
-    return
-  else
-    reset ptr
-    return
+  dec ptr
   */
   
-  llvm::BasicBlock *decr = builder.makeBlock();
-  llvm::BasicBlock *done = builder.makeBlock();
   llvm::Value *dtor = func->arg_begin();
   llvm::Value *ptr = builder.ir.CreateLoad(func->arg_begin() + 1);
-  builder.ir.CreateCondBr(builder.ir.CreateIsNull(ptr), done, decr);
-  
-  builder.setCurr(decr);
-  resetPtr(data.inst, builder, ptr, dtor, done);
+  llvm::Function *dec = data.inst.get<FGI::ptr_dec>();
+  builder.ir.CreateCall(dec, {dtor, ptr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -97,7 +134,6 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
 template <>
 llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
     {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
@@ -111,22 +147,23 @@ llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  other.ref++
+  inc other
   obj = other
   */
   
+  llvm::Value *objPtr = func->arg_begin();
   llvm::Value *other = builder.ir.CreateLoad(func->arg_begin() + 1);
-  refChange(builder.ir, other, RefChg::inc);
-  builder.ir.CreateStore(other, func->arg_begin());
-  
+  llvm::Function *inc = data.inst.get<FGI::ptr_inc>();
+  builder.ir.CreateCall(inc, {other});
+  builder.ir.CreateStore(other, objPtr);
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
 template <>
 llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
@@ -140,29 +177,28 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  right.ref++
-  reset left
+  inc right
+  dec left
   left = right
   */
   
   llvm::Value *dtor = func->arg_begin();
   llvm::Value *leftPtr = func->arg_begin() + 1;
-  llvm::Value *rightPtr = func->arg_begin() + 2;
-  llvm::BasicBlock *asgn = builder.makeBlock();
-  llvm::Value *right = builder.ir.CreateLoad(rightPtr);
-  refChange(builder.ir, right, RefChg::inc);
   llvm::Value *left = builder.ir.CreateLoad(leftPtr);
-  resetPtr(data.inst, builder, left, dtor, asgn);
+  llvm::Value *right = builder.ir.CreateLoad(func->arg_begin() + 2);
+  llvm::Function *inc = data.inst.get<FGI::ptr_inc>();
+  builder.ir.CreateCall(inc, {right});
+  llvm::Function *dec = data.inst.get<FGI::ptr_dec>();
+  builder.ir.CreateCall(dec, {dtor, left});
   builder.ir.CreateStore(right, leftPtr);
-  
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
 template <>
 llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
     {refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
@@ -191,7 +227,6 @@ llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
 template <>
 llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
-  
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
     {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
@@ -207,7 +242,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  reset left
+  dec left
   left = right
   right = null
   */
@@ -215,9 +250,8 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::Value *dtor = func->arg_begin();
   llvm::Value *leftPtr = func->arg_begin() + 1;
   llvm::Value *rightPtr = func->arg_begin() + 2;
-  llvm::BasicBlock *asgn = builder.makeBlock();
-  llvm::Value *left = builder.ir.CreateLoad(leftPtr);
-  resetPtr(data.inst, builder, left, dtor, asgn);
+  llvm::Function *dec = data.inst.get<FGI::ptr_dec>();
+  builder.ir.CreateCall(dec, {dtor, builder.ir.CreateLoad(leftPtr)});
   builder.ir.CreateStore(builder.ir.CreateLoad(rightPtr), leftPtr);
   setNull(builder.ir, rightPtr);
   

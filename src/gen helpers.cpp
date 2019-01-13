@@ -9,13 +9,29 @@
 #include "gen helpers.hpp"
 
 #include "gen types.hpp"
+#include "unreachable.hpp"
 
 using namespace stela;
+
+namespace {
+
+llvm::Attribute::AttrKind getInline(const Inline inl) {
+  switch (inl) {
+    case Inline::never:  return llvm::Attribute::NoInline;
+    case Inline::smart:  return llvm::Attribute::None;
+    case Inline::hint:   return llvm::Attribute::InlineHint;
+    case Inline::always: return llvm::Attribute::AlwaysInline;
+  }
+  UNREACHABLE();
+}
+
+}
 
 llvm::Function *stela::makeInternalFunc(
   llvm::Module *module,
   llvm::FunctionType *type,
-  const llvm::Twine &name
+  const llvm::Twine &name,
+  const Inline inl
 ) {
   llvm::Function *func = llvm::Function::Create(
     type,
@@ -24,7 +40,7 @@ llvm::Function *stela::makeInternalFunc(
     module
   );
   func->addFnAttr(llvm::Attribute::NoUnwind);
-  func->addFnAttr(llvm::Attribute::AlwaysInline);
+  func->addFnAttr(getInline(inl));
   return func;
 }
 

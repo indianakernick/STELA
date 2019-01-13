@@ -127,12 +127,13 @@ llvm::Function *stela::genFn<FGI::panic>(InstData data) {
   
   llvm::Function *puts = declareCFunc(data.mod, putsType, "puts");
   llvm::Function *exit = declareCFunc(data.mod, exitType, "exit");
-  llvm::Function *panic = makeInternalFunc(data.mod, panicType, "panic");
+  llvm::Function *panic = makeInternalFunc(data.mod, panicType, "panic", Inline::never);
   puts->addParamAttr(0, llvm::Attribute::ReadOnly);
   puts->addParamAttr(0, llvm::Attribute::NoCapture);
   exit->addFnAttr(llvm::Attribute::NoReturn);
   exit->addFnAttr(llvm::Attribute::Cold);
   panic->addFnAttr(llvm::Attribute::NoReturn);
+  panic->addFnAttr(llvm::Attribute::Cold);
   
   FuncBuilder builder{panic};
   builder.ir.CreateCall(puts, panic->arg_begin());
@@ -155,8 +156,9 @@ llvm::Function *stela::genFn<FGI::alloc>(InstData data) {
   llvm::Function *alloc = makeInternalFunc(data.mod, allocType, "alloc");
   malloc->addAttribute(0, llvm::Attribute::NoAlias);
   alloc->addAttribute(0, llvm::Attribute::NoAlias);
-  
+  alloc->addAttribute(0, llvm::Attribute::NonNull);
   FuncBuilder builder{alloc};
+  
   llvm::BasicBlock *okBlock = builder.makeBlock();
   llvm::BasicBlock *errorBlock = builder.makeBlock();
   llvm::Value *ptr = builder.ir.CreateCall(malloc, alloc->arg_begin());
@@ -207,16 +209,5 @@ llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   llvm::Value *ceiled = builder.ir.CreateShl(constantFor(type, 1), log2);
   
   builder.ir.CreateRet(ceiled);
-  return func;
-}
-
-template <>
-llvm::Function *stela::genFn<FGI::dtor_stub>(InstData data) {
-  llvm::FunctionType *fnType = dtorTy(data.mod->getContext());
-  llvm::Function *func = makeInternalFunc(data.mod, fnType, "dtor_stub");
-  func->addParamAttr(0, llvm::Attribute::ReadNone);
-  func->addFnAttr(llvm::Attribute::ReadNone);
-  FuncBuilder builder{func};
-  builder.ir.CreateRetVoid();
   return func;
 }

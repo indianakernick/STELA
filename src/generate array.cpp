@@ -320,7 +320,7 @@ template <>
 llvm::Function *stela::genFn<PFGI::arr_eq>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
-  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_eq");
+  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_eq", Inline::hint);
   assignCompareAttrs(func);
   FuncBuilder builder{func};
   
@@ -364,7 +364,7 @@ template <>
 llvm::Function *stela::genFn<PFGI::arr_lt>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
-  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_lt");
+  llvm::Function *func = makeInternalFunc(data.mod, compareFor(type), "arr_lt", Inline::hint);
   assignCompareAttrs(func);
   FuncBuilder builder{func};
   
