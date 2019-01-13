@@ -1950,6 +1950,129 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(array.use_count(), 1);
     ASSERT_EQ(array->len, 1);
     ASSERT_EQ(array->cap, 8);
+    
+    Array<Array<Char>> empty = makeEmptyArray<Array<Char>>();
+    ASSERT_EQ(empty.use_count(), 1);
+    ASSERT_EQ(empty->len, 0);
+    ASSERT_EQ(empty->cap, 0);
+    
+    res(empty, 4);
+    
+    ASSERT_EQ(empty.use_count(), 1);
+    ASSERT_EQ(empty->len, 0);
+    ASSERT_EQ(empty->cap, 4);
+  });
+  
+  TEST(Builtin append, {
+    ASSERT_SUCCEEDS(R"(
+      extern func app(arr: ref [[char]], other: ref [[char]]) {
+        append(arr, other);
+      }
+    )");
+    
+    auto app = GET_FUNC("app", Void(Array<Array<Char>> &, Array<Array<Char>> &));
+    
+    Array<Char> str0 = makeString("String");
+    Array<Array<Char>> arr0 = makeArrayOf<Array<Char>>(str0);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(arr0->len, 1);
+    ASSERT_EQ(arr0->cap, 1);
+    
+    Array<Char> str1 = makeString("in");
+    Array<Array<Char>> arr1 = makeArrayOf<Array<Char>>(str1);
+    ASSERT_EQ(str1.use_count(), 2);
+    ASSERT_EQ(arr1->len, 1);
+    ASSERT_EQ(arr1->cap, 1);
+    
+    // ["String"] += ["in"]
+    app(arr0, arr1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(arr1.use_count(), 1);
+    ASSERT_EQ(str1.use_count(), 3);
+    ASSERT_EQ(arr0->len, 2);
+    ASSERT_EQ(arr0->cap, 2);
+    
+    Array<Char> str2 = makeString("an");
+    Array<Char> str3 = makeString("array");
+    Array<Char> str4 = makeString("of");
+    Array<Char> str5 = makeString("strings");
+    Array<Array<Char>> arr2 = makeArrayOf<Array<Char>>(str2, str3, str4, str5);
+    ASSERT_EQ(str2.use_count(), 2);
+    ASSERT_EQ(str3.use_count(), 2);
+    ASSERT_EQ(str4.use_count(), 2);
+    ASSERT_EQ(str5.use_count(), 2);
+    ASSERT_EQ(arr2->len, 4);
+    ASSERT_EQ(arr2->cap, 4);
+    
+    // ["String", "in"] += ["an", "array", "of", "strings"]
+    app(arr0, arr2);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(arr1.use_count(), 1);
+    ASSERT_EQ(str1.use_count(), 3);
+    ASSERT_EQ(arr2.use_count(), 1);
+    ASSERT_EQ(str2.use_count(), 3);
+    ASSERT_EQ(str3.use_count(), 3);
+    ASSERT_EQ(str4.use_count(), 3);
+    ASSERT_EQ(str5.use_count(), 3);
+    ASSERT_EQ(arr0->len, 6);
+    ASSERT_EQ(arr0->cap, 8);
+    
+    Array<Array<Char>> arr3 = makeEmptyArray<Array<Char>>();
+    ASSERT_EQ(arr3->len, 0);
+    ASSERT_EQ(arr3->cap, 0);
+    
+    // ["String", "in", "an", "array", "of", "strings"] += []
+    app(arr0, arr3);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(arr1.use_count(), 1);
+    ASSERT_EQ(str1.use_count(), 3);
+    ASSERT_EQ(arr2.use_count(), 1);
+    ASSERT_EQ(str2.use_count(), 3);
+    ASSERT_EQ(str3.use_count(), 3);
+    ASSERT_EQ(str4.use_count(), 3);
+    ASSERT_EQ(str5.use_count(), 3);
+    ASSERT_EQ(arr3.use_count(), 1);
+    ASSERT_EQ(arr0->len, 6);
+    ASSERT_EQ(arr0->cap, 8);
+    
+    // ["String", "in", "an", "array", "of", "strings"] += ["String", "in", "an", "array", "of", "strings"]
+    app(arr0, arr0);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 3);
+    ASSERT_EQ(str1.use_count(), 4);
+    ASSERT_EQ(str2.use_count(), 4);
+    ASSERT_EQ(str3.use_count(), 4);
+    ASSERT_EQ(str4.use_count(), 4);
+    ASSERT_EQ(str5.use_count(), 4);
+    ASSERT_EQ(arr0->len, 12);
+    ASSERT_EQ(arr0->cap, 16);
+    
+    // [] += []
+    app(arr3, arr3);
+    
+    ASSERT_EQ(arr3.use_count(), 1);
+    ASSERT_EQ(arr3->len, 0);
+    ASSERT_EQ(arr3->cap, 0);
+    
+    // [] += ["String", "in", "an", "array", "of", "strings", "String", "in", "an", "array", "of", "strings"]
+    app(arr3, arr0);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 5);
+    ASSERT_EQ(str1.use_count(), 6);
+    ASSERT_EQ(str2.use_count(), 6);
+    ASSERT_EQ(str3.use_count(), 6);
+    ASSERT_EQ(str4.use_count(), 6);
+    ASSERT_EQ(str5.use_count(), 6);
+    ASSERT_EQ(arr3->len, 12);
+    ASSERT_EQ(arr3->cap, 16);
   });
   
   /*

@@ -24,7 +24,7 @@ struct ArrayStorage : ref_count {
     : ref_count{}, cap{len}, len{len}, dat{alloc<Elem>(len)} {}
   ~ArrayStorage() {
     std::destroy_n(dat, len);
-    std::free(dat);
+    dealloc(dat);
   }
 
   // uint64_t ref

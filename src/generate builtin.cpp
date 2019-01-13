@@ -85,9 +85,11 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
   func->addParamAttr(2, llvm::Attribute::NoAlias);
   FuncBuilder builder{func};
   
-  // @TODO find out why the optimizer won't emit memcpy
-  // the optimizer produces a vectorized loop but not a call to memcpy
-  if (classifyType(obj) != TypeCat::nontrivial) {
+  const TypeCat cat = classifyType(obj);
+  const bool fastCopy = copyType == CopyType::copy
+                      ? (cat == TypeCat::trivially_copyable)
+                      : (cat != TypeCat::nontrivial);
+  if (fastCopy) {
     llvm::Value *src = func->arg_begin();
     llvm::Value *len = func->arg_begin() + 1;
     llvm::Value *dst = func->arg_begin() + 2;
@@ -234,6 +236,60 @@ llvm::Function *stela::genFn<PFGI::btn_size>(InstData data, ast::ArrayType *arr)
   
   llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
   builder.ir.CreateRet(loadStructElem(builder.ir, array, array_idx_len));
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::btn_append>(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo(), type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "btn_append");
+  assignBinaryAliasCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  if array.len + other.len > array.cap
+    reallocate(array, ceil_to_pow_2(array.len + other.len))
+    continue
+  else
+    continue
+  copy_n(other.dat, other.len, array.dat + array.len)
+  array.len = array.len + other.len
+  return
+  */
+  
+  llvm::BasicBlock *reallocBlock = builder.makeBlock();
+  llvm::BasicBlock *copyBlock = builder.makeBlock();
+  llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *other = builder.ir.CreateLoad(func->arg_begin() + 1);
+  llvm::Value *arrayLenPtr = builder.ir.CreateStructGEP(array, array_idx_len);
+  llvm::Value *arrayLen = builder.ir.CreateLoad(arrayLenPtr);
+  llvm::Value *otherLen = loadStructElem(builder.ir, other, array_idx_len);
+  llvm::Value *totalLen = builder.ir.CreateNSWAdd(arrayLen, otherLen);
+  llvm::Value *arrayCap = loadStructElem(builder.ir, array, array_idx_cap);
+  llvm::Value *grow = builder.ir.CreateICmpUGT(totalLen, arrayCap);
+  builder.ir.CreateCondBr(grow, reallocBlock, copyBlock);
+  
+  builder.setCurr(reallocBlock);
+  llvm::Function *ceil = data.inst.get<FGI::ceil_to_pow_2>();
+  llvm::Value *ceiledCap = builder.ir.CreateCall(ceil, {totalLen});
+  llvm::Function *realloc = data.inst.get<PFGI::reallocate>(arr);
+  builder.ir.CreateCall(realloc, {array, ceiledCap});
+  builder.ir.CreateBr(copyBlock);
+  
+  builder.setCurr(copyBlock);
+  llvm::Function *copy_n = data.inst.get<PFGI::copy_n>(arr->elem.get());
+  llvm::Value *otherDat = loadStructElem(builder.ir, other, array_idx_dat);
+  llvm::Value *arrayDat = loadStructElem(builder.ir, array, array_idx_dat);
+  llvm::Type *elemTy = arrayDat->getType()->getPointerElementType();
+  llvm::Value *arrayEnd = builder.ir.CreateInBoundsGEP(elemTy, arrayDat, arrayLen);
+  builder.ir.CreateCall(copy_n, {otherDat, otherLen, arrayEnd});
+  builder.ir.CreateStore(totalLen, arrayLenPtr);
+  builder.ir.CreateRetVoid();
+  
   return func;
 }
 

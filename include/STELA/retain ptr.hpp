@@ -24,7 +24,7 @@ T *alloc(const size_t count = 1) noexcept {
   return static_cast<T *>(std::malloc(sizeof(T) * count));
 }
 
-inline void dealloc(void *ptr) noexcept {
+inline void dealloc(void *const ptr) noexcept {
   std::free(ptr);
 }
 

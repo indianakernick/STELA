@@ -228,20 +228,20 @@ void reallocate(Array<T> &array, const t_uint cap) noexcept {
 template <typename T>
 void push_back(Array<T> &array, const T value) noexcept {
   if (array.len == array.cap) {
-    reallocate(array, array.cap * 2);
+    reallocate(array, ceilToPowerOf2(array.len + 1));
   }
   new (array.data + array.len) T(value);
   ++array.len;
 }
 
-template <typename T>
+/*template <typename T>
 void append(Array<T> &array, const Array<T> &other) noexcept {
   if (array.len + other.len > array.cap) {
     reallocate(array, ceilToPowerOf2(array.len + other.len));
   }
   std::uninitialized_copy_n(other.data, other.len, array.data + array.len);
   array.len += other.len;
-}
+}*/
 
 /*template <typename T>
 void pop_back(Array<T> &array) noexcept {
