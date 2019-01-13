@@ -75,6 +75,7 @@ enum class PFGI : size_t {
   srt_eq,
   srt_lt,
   
+  construct_n,
   destroy_n,
   move_n,
   copy_n,

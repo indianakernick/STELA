@@ -165,6 +165,18 @@ struct Array {
     data = static_cast<T *>(allocate(sizeof(T) * cap));
     std::uninitialized_copy_n(other.data, other.len, data);
   }
+  Array &operator=(Array<T> &&other) noexcept {
+    std::destroy_n(data, len);
+    deallocate(data);
+    data = std::exchange(other.data, nullptr);
+    cap = other.cap;
+    len = std::exchange(other.len, 0);
+  }
+  Array(Array<T> &&other) noexcept {
+    data = std::exchange(other.data, nullptr);
+    cap = other.cap;
+    len = std::exchange(other.len, 0);
+  }
   ~Array() noexcept {
     std::destroy_n(data, len);
     deallocate(data);
@@ -253,7 +265,7 @@ void pop_back(Array<T> &array) noexcept {
   }
 }*/
 
-template <typename T>
+/*template <typename T>
 void resize(Array<T> &array, const t_uint size) noexcept {
   if (size <= array.len) {
     std::destroy_n(array.data + size, array.len - size);
@@ -264,7 +276,7 @@ void resize(Array<T> &array, const t_uint size) noexcept {
     std::uninitialized_value_construct_n(array.data + array.len, size - array.len);
   }
   array.len = size;
-}
+}*/
 
 /*template <typename T>
 void reserve(Array<T> &array, const t_uint cap) noexcept {

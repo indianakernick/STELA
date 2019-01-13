@@ -2192,6 +2192,78 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str0->dat[6], 'y');
   });
   
+  TEST(Builtin resize, {
+    ASSERT_SUCCEEDS(R"(
+      extern func resStr(arr: ref [[char]], len: uint) {
+        resize(arr, len);
+      }
+      
+      extern func resChr(arr: ref [char], len: uint) {
+        resize(arr, len);
+      }
+    )");
+    
+    auto resStr = GET_FUNC("resStr", Void(Array<Array<Char>> &, Uint));
+    auto resChr = GET_FUNC("resChr", Void(Array<Char> &, Uint));
+    
+    Array<Array<Char>> arr0 = makeEmptyArray<Array<Char>>();
+    
+    resStr(arr0, 0);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(arr0->len, 0);
+    ASSERT_EQ(arr0->cap, 0);
+    ASSERT_EQ(arr0->dat, nullptr);
+    
+    resStr(arr0, 1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(arr0->len, 1);
+    ASSERT_EQ(arr0->cap, 2); // ceil_to_pow_2(1) == 2
+    ASSERT_EQ(arr0->dat[0].use_count(), 1);
+    
+    Array<Char> str0 = arr0->dat[0];
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(str0->len, 0);
+    ASSERT_EQ(str0->cap, 0);
+    ASSERT_EQ(str0->dat, nullptr);
+    
+    resStr(arr0, 2);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(arr0->len, 2);
+    ASSERT_EQ(arr0->cap, 2);
+    ASSERT_EQ(arr0->dat[0].use_count(), 2);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1].use_count(), 1);
+    
+    Array<Char> str1 = arr0->dat[1];
+    ASSERT_EQ(str1.use_count(), 2);
+    ASSERT_EQ(str1->len, 0);
+    ASSERT_EQ(str1->cap, 0);
+    ASSERT_EQ(str1->dat, nullptr);
+    
+    resStr(arr0, 1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(arr0->len, 1);
+    ASSERT_EQ(arr0->cap, 2);
+    ASSERT_EQ(arr0->dat[0].use_count(), 2);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(str1.use_count(), 1);
+    
+    resChr(str0, 5);
+    
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(str0->len, 5);
+    ASSERT_EQ(str0->cap, 8);
+    ASSERT_EQ(str0->dat[0], 0);
+    ASSERT_EQ(str0->dat[1], 0);
+    ASSERT_EQ(str0->dat[2], 0);
+    ASSERT_EQ(str0->dat[3], 0);
+    ASSERT_EQ(str0->dat[4], 0);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(
