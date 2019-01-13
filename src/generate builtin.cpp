@@ -240,6 +240,63 @@ llvm::Function *stela::genFn<PFGI::btn_size>(InstData data, ast::ArrayType *arr)
 }
 
 template <>
+llvm::Function *stela::genFn<PFGI::btn_push_back>(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::Type *objType = convertParam(ctx, {ast::ParamRef::val, arr->elem});
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo(), objType}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "btn_push_back");
+  assignUnaryCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  if array.len == array.cap
+    reallocate(array, ceil_to_pow_2(array.len + 1))
+    continue
+  else
+    continue
+  copy_construct(array.dat + array.len, value)
+  array.len = array.len + 1
+  return
+  */
+  
+  llvm::BasicBlock *reallocBlock = builder.makeBlock();
+  llvm::BasicBlock *copyBlock = builder.makeBlock();
+  llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *value = func->arg_begin() + 1;
+  llvm::Value *arrayLenPtr = builder.ir.CreateStructGEP(array, array_idx_len);
+  llvm::Value *arrayLen = builder.ir.CreateLoad(arrayLenPtr);
+  llvm::Value *lenPlus1 = builder.ir.CreateNSWAdd(arrayLen, constantFor(arrayLen, 1));
+  llvm::Value *arrayCap = loadStructElem(builder.ir, array, array_idx_cap);
+  llvm::Value *grow = builder.ir.CreateICmpEQ(arrayLen, arrayCap);
+  builder.ir.CreateCondBr(grow, reallocBlock, copyBlock);
+  
+  builder.setCurr(reallocBlock);
+  llvm::Function *ceil = data.inst.get<FGI::ceil_to_pow_2>();
+  llvm::Value *ceiledLen = builder.ir.CreateCall(ceil, {lenPlus1});
+  llvm::Function *realloc = data.inst.get<PFGI::reallocate>(arr);
+  builder.ir.CreateCall(realloc, {array, ceiledLen});
+  builder.ir.CreateBr(copyBlock);
+  
+  builder.setCurr(copyBlock);
+  llvm::Value *arrayDat = loadStructElem(builder.ir, array, array_idx_dat);
+  llvm::Value *arrayEnd = arrayIndex(builder.ir, arrayDat, arrayLen);
+  if (classifyType(arr->elem.get()) == TypeCat::trivially_copyable) {
+    builder.ir.CreateStore(value, arrayEnd);
+    // @TODO lifetime.startLife
+  } else {
+    LifetimeExpr lifetime{data.inst, builder.ir};
+    lifetime.copyConstruct(arr->elem.get(), arrayEnd, value);
+  }
+  builder.ir.CreateStore(lenPlus1, arrayLenPtr);
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+template <>
 llvm::Function *stela::genFn<PFGI::btn_append>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
@@ -284,8 +341,7 @@ llvm::Function *stela::genFn<PFGI::btn_append>(InstData data, ast::ArrayType *ar
   llvm::Function *copy_n = data.inst.get<PFGI::copy_n>(arr->elem.get());
   llvm::Value *otherDat = loadStructElem(builder.ir, other, array_idx_dat);
   llvm::Value *arrayDat = loadStructElem(builder.ir, array, array_idx_dat);
-  llvm::Type *elemTy = arrayDat->getType()->getPointerElementType();
-  llvm::Value *arrayEnd = builder.ir.CreateInBoundsGEP(elemTy, arrayDat, arrayLen);
+  llvm::Value *arrayEnd = arrayIndex(builder.ir, arrayDat, arrayLen);
   builder.ir.CreateCall(copy_n, {otherDat, otherLen, arrayEnd});
   builder.ir.CreateStore(totalLen, arrayLenPtr);
   builder.ir.CreateRetVoid();

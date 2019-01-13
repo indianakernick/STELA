@@ -1993,6 +1993,8 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str1.use_count(), 3);
     ASSERT_EQ(arr0->len, 2);
     ASSERT_EQ(arr0->cap, 2);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
     
     Array<Char> str2 = makeString("an");
     Array<Char> str3 = makeString("array");
@@ -2020,6 +2022,12 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str5.use_count(), 3);
     ASSERT_EQ(arr0->len, 6);
     ASSERT_EQ(arr0->cap, 8);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    ASSERT_EQ(arr0->dat[2], str2);
+    ASSERT_EQ(arr0->dat[3], str3);
+    ASSERT_EQ(arr0->dat[4], str4);
+    ASSERT_EQ(arr0->dat[5], str5);
     
     Array<Array<Char>> arr3 = makeEmptyArray<Array<Char>>();
     ASSERT_EQ(arr3->len, 0);
@@ -2040,6 +2048,12 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(arr3.use_count(), 1);
     ASSERT_EQ(arr0->len, 6);
     ASSERT_EQ(arr0->cap, 8);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    ASSERT_EQ(arr0->dat[2], str2);
+    ASSERT_EQ(arr0->dat[3], str3);
+    ASSERT_EQ(arr0->dat[4], str4);
+    ASSERT_EQ(arr0->dat[5], str5);
     
     // ["String", "in", "an", "array", "of", "strings"] += ["String", "in", "an", "array", "of", "strings"]
     app(arr0, arr0);
@@ -2053,6 +2067,18 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str5.use_count(), 4);
     ASSERT_EQ(arr0->len, 12);
     ASSERT_EQ(arr0->cap, 16);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    ASSERT_EQ(arr0->dat[2], str2);
+    ASSERT_EQ(arr0->dat[3], str3);
+    ASSERT_EQ(arr0->dat[4], str4);
+    ASSERT_EQ(arr0->dat[5], str5);
+    ASSERT_EQ(arr0->dat[6], str0);
+    ASSERT_EQ(arr0->dat[7], str1);
+    ASSERT_EQ(arr0->dat[8], str2);
+    ASSERT_EQ(arr0->dat[9], str3);
+    ASSERT_EQ(arr0->dat[10], str4);
+    ASSERT_EQ(arr0->dat[11], str5);
     
     // [] += []
     app(arr3, arr3);
@@ -2073,6 +2099,97 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str5.use_count(), 6);
     ASSERT_EQ(arr3->len, 12);
     ASSERT_EQ(arr3->cap, 16);
+    ASSERT_EQ(arr3->dat[0], str0);
+    ASSERT_EQ(arr3->dat[1], str1);
+    ASSERT_EQ(arr3->dat[2], str2);
+    ASSERT_EQ(arr3->dat[3], str3);
+    ASSERT_EQ(arr3->dat[4], str4);
+    ASSERT_EQ(arr3->dat[5], str5);
+    ASSERT_EQ(arr3->dat[6], str0);
+    ASSERT_EQ(arr3->dat[7], str1);
+    ASSERT_EQ(arr3->dat[8], str2);
+    ASSERT_EQ(arr3->dat[9], str3);
+    ASSERT_EQ(arr3->dat[10], str4);
+    ASSERT_EQ(arr3->dat[11], str5);
+  });
+  
+  TEST(Builtin push_back, {
+    ASSERT_SUCCEEDS(R"(
+      extern func pushStr(arr: ref [[char]], val: [char]) {
+        push_back(arr, val);
+      }
+      
+      extern func pushChr(arr: ref [char], val: char) {
+        push_back(arr, val);
+      }
+    )");
+    
+    auto pushStr = GET_FUNC("pushStr", Void(Array<Array<Char>> &, Array<Char>));
+    auto pushChr = GET_FUNC("pushChr", Void(Array<Char> &, Char));
+    
+    Array<Char> str0 = makeString("String");
+    Array<Array<Char>> arr0 = makeArrayOf<Array<Char>>(str0);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(arr0->len, 1);
+    ASSERT_EQ(arr0->cap, 1);
+    
+    Array<Char> str1 = makeString("array");
+    
+    pushStr(arr0, str1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(str1.use_count(), 2);
+    ASSERT_EQ(arr0->len, 2);
+    ASSERT_EQ(arr0->cap, 2);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    
+    pushStr(arr0, str1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(str1.use_count(), 3);
+    ASSERT_EQ(arr0->len, 3);
+    ASSERT_EQ(arr0->cap, 4);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    ASSERT_EQ(arr0->dat[2], str1);
+    
+    pushStr(arr0, str1);
+    
+    ASSERT_EQ(arr0.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 2);
+    ASSERT_EQ(str1.use_count(), 4);
+    ASSERT_EQ(arr0->len, 4);
+    ASSERT_EQ(arr0->cap, 4);
+    ASSERT_EQ(arr0->dat[0], str0);
+    ASSERT_EQ(arr0->dat[1], str1);
+    ASSERT_EQ(arr0->dat[2], str1);
+    ASSERT_EQ(arr0->dat[3], str1);
+    
+    Array<Array<Char>> arr1 = makeEmptyArray<Array<Char>>();
+    
+    pushStr(arr1, str0);
+    
+    ASSERT_EQ(arr1.use_count(), 1);
+    ASSERT_EQ(str0.use_count(), 3);
+    ASSERT_EQ(arr1->len, 1);
+    ASSERT_EQ(arr1->cap, 2); // ceil_to_pow_2(1) == 2
+    ASSERT_EQ(arr1->dat[0], str0);
+    
+    pushChr(str0, 'y');
+    
+    ASSERT_EQ(str0.use_count(), 3);
+    ASSERT_EQ(str0->len, 7);
+    ASSERT_EQ(str0->cap, 8);
+    ASSERT_EQ(str0->dat[0], 'S');
+    ASSERT_EQ(str0->dat[1], 't');
+    ASSERT_EQ(str0->dat[2], 'r');
+    ASSERT_EQ(str0->dat[3], 'i');
+    ASSERT_EQ(str0->dat[4], 'n');
+    ASSERT_EQ(str0->dat[5], 'g');
+    ASSERT_EQ(str0->dat[6], 'y');
   });
   
   /*

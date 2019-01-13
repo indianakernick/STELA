@@ -225,14 +225,14 @@ void reallocate(Array<T> &array, const t_uint cap) noexcept {
   array.cap = cap;
 }*/
 
-template <typename T>
+/*template <typename T>
 void push_back(Array<T> &array, const T value) noexcept {
   if (array.len == array.cap) {
     reallocate(array, ceilToPowerOf2(array.len + 1));
   }
   new (array.data + array.len) T(value);
   ++array.len;
-}
+}*/
 
 /*template <typename T>
 void append(Array<T> &array, const Array<T> &other) noexcept {
@@ -255,7 +255,6 @@ void pop_back(Array<T> &array) noexcept {
 
 template <typename T>
 void resize(Array<T> &array, const t_uint size) noexcept {
-  assert(array);
   if (size <= array.len) {
     std::destroy_n(array.data + size, array.len - size);
   } else if (size <= array.cap) {

@@ -89,15 +89,6 @@ ast::ParamType convert(const ast::FuncParam &param) {
   return {param.ref, param.type};
 }
 
-llvm::Type *convertParam(llvm::LLVMContext &ctx, const ast::ParamType &param) {
-  TypeCat typeCat = classifyType(param.type.get());
-  llvm::Type *paramType = generateType(ctx, param.type.get());
-  if (param.ref == ast::ParamRef::ref || typeCat != TypeCat::trivially_copyable) {
-    paramType = paramType->getPointerTo();
-  }
-  return paramType;
-}
-
 using LLVMTypes = std::vector<llvm::Type *>;
 
 llvm::Type *pushRet(ast::Type *retType, llvm::Type *ret, LLVMTypes &params) {
@@ -170,6 +161,15 @@ void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params
     func->addAttribute(0, llvm::Attribute::ZExt);
   }
   func->addFnAttr(llvm::Attribute::NoUnwind);
+}
+
+llvm::Type *stela::convertParam(llvm::LLVMContext &ctx, const ast::ParamType &param) {
+  TypeCat typeCat = classifyType(param.type.get());
+  llvm::Type *paramType = generateType(ctx, param.type.get());
+  if (param.ref == ast::ParamRef::ref || typeCat != TypeCat::trivially_copyable) {
+    paramType = paramType->getPointerTo();
+  }
+  return paramType;
 }
 
 std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {

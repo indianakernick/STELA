@@ -20,6 +20,7 @@ class Type;
 class FunctionType;
 class PointerType;
 class StructType;
+class LLVMContext;
 
 }
 
@@ -28,7 +29,9 @@ namespace stela {
 llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
 llvm::FunctionType *generateFuncSig(llvm::LLVMContext &, const ast::Func &);
 llvm::FunctionType *generateLambSig(llvm::LLVMContext &, const ast::FuncType &);
+
 void assignAttributes(llvm::Function *, const sym::FuncParams &, ast::Type *);
+llvm::Type *convertParam(llvm::LLVMContext &, const ast::ParamType &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
 ast::Type *concreteType(ast::Type *);

@@ -186,8 +186,8 @@ public:
         return ctx.inst.get<PFGI::btn_capacity>(arr);
       case ast::BtnFuncEnum::size:
         return ctx.inst.get<PFGI::btn_size>(arr);
-      //case ast::BtnFuncEnum::push_back:
-      //  return ctx.inst.get<PFGI::btn_push_back>(arr);
+      case ast::BtnFuncEnum::push_back:
+        return ctx.inst.get<PFGI::btn_push_back>(arr);
       case ast::BtnFuncEnum::append:
         return ctx.inst.get<PFGI::btn_append>(arr);
       case ast::BtnFuncEnum::pop_back:
