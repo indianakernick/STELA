@@ -124,9 +124,10 @@ struct ParamType {
   ParamRef ref;
   TypePtr type;
 };
+using ParamTypes = std::vector<ParamType>;
 
 struct FuncType final : Type {
-  std::vector<ParamType> params;
+  ParamTypes params;
   TypePtr ret;
   
   void accept(Visitor &) override;

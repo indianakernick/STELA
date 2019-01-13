@@ -6,10 +6,10 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "generate func.hpp"
-
+#include "ast.hpp"
 #include "inst data.hpp"
 #include "gen types.hpp"
+#include "gen context.hpp"
 #include "gen helpers.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
@@ -18,33 +18,8 @@
 
 using namespace stela;
 
-// stub
-std::string stela::generateNullFunc(gen::Ctx ctx, const ast::FuncType &type) {
-  /*gen::String name;
-  name += "f_null_";
-  name += generateFuncName(ctx, type);
-  if (ctx.inst.funcNotInst(name)) {
-    ctx.func += "[[noreturn]] static ";
-    ctx.func += generateType(ctx, type.ret.get());
-    ctx.func += ' ';
-    ctx.func += name;
-    ctx.func += "(void *";
-    for (const ast::ParamType &param : type.params) {
-      ctx.func += ", ";
-      ctx.func += generateType(ctx, param.type.get());
-      if (param.ref == ast::ParamRef::ref) {
-        ctx.func += " &";
-      }
-    }
-    ctx.func += ") noexcept {\n";
-    ctx.func += "panic(\"Calling null function pointer\");\n";
-    ctx.func += "}\n";
-  }
-  return name;*/
-  return {};
-}
-
-std::string stela::generateMakeFunc(gen::Ctx ctx, ast::FuncType &type) {
+// create function object from function
+std::string generateMakeFunc(gen::Ctx ctx, ast::FuncType &type) {
   /*gen::String name;
   name += "f_makefunc_";
   name += generateFuncName(ctx, type);
@@ -67,7 +42,8 @@ return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
   return {};
 }
 
-std::string stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
+// body of a lambda
+std::string generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   /*gen::String func;
   func += "static ";
   func += generateType(ctx, lambda.ret.get());
@@ -98,7 +74,8 @@ std::string stela::generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
   return {};
 }
 
-std::string stela::generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
+// create function object from lambda
+std::string generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
   /*gen::String func;
   func += "static inline ";
   func += generateType(ctx, lambda.exprType.get());

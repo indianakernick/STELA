@@ -119,3 +119,8 @@ expose reference counted pointers
 arrays should be value types
 cref
 remove that damn power operator
+
+separate function signature from functions, lambdas and function types
+  there are a lot of functions that only need to know the function signature
+  but actually take sym::FuncParams or ast::Func.
+  This is a mess!

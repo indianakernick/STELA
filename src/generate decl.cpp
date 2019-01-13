@@ -30,14 +30,15 @@ public:
   }
   
   void visit(ast::Func &func) override {
-    llvm::FunctionType *fnType = generateFuncSig(ctx.llvm, func);
+    const Signature sig = getSignature(func);
+    llvm::FunctionType *fnType = generateSig(ctx.llvm, sig);
     func.llvmFunc = llvm::Function::Create(
       fnType,
       linkage(func.external),
       llvm::StringRef{func.name.data(), func.name.size()},
       module
     );
-    assignAttributes(func.llvmFunc, func.symbol->params, func.symbol->ret.type.get());
+    assignAttrs(func.llvmFunc, sig);
     
     generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
   }

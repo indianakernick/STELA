@@ -48,7 +48,7 @@ public:
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx, {
-      generateLambSig(ctx, type),
+      generateSig(ctx, getSignature(type)),
       ptrToCloDataTy(ctx)
     });
   }
@@ -89,14 +89,8 @@ ast::ParamType convert(const ast::FuncParam &param) {
   return {param.ref, param.type};
 }
 
-using LLVMTypes = std::vector<llvm::Type *>;
-
-llvm::Type *pushRet(ast::Type *retType, llvm::Type *ret, LLVMTypes &params) {
-  if (classifyType(retType) != TypeCat::trivially_copyable) {
-    params.push_back(ret->getPointerTo());
-    ret = voidTy(ret->getContext());
-  }
-  return ret;
+ast::ParamType convert(const sym::ExprType &param) {
+  return {static_cast<ast::ParamRef>(param.ref), param.type};
 }
 
 bool isBool(ast::Type *type) {
@@ -110,54 +104,92 @@ bool isBool(ast::Type *type) {
 
 }
 
-llvm::FunctionType *stela::generateFuncSig(llvm::LLVMContext &ctx, const ast::Func &func) {
-  llvm::Type *ret = generateType(ctx, func.ret.get());
-  LLVMTypes params;
-  params.reserve(1 + func.params.size() + 1);
-  if (func.receiver) {
-    params.push_back(convertParam(ctx, convert(*func.receiver)));
+llvm::FunctionType *stela::generateSig(llvm::LLVMContext &ctx, const Signature &sig) {
+  std::vector<llvm::Type *> params;
+  params.reserve(1 + sig.params.size());
+  if (sig.receiver.type) {
+    params.push_back(convertParam(ctx, sig.receiver));
   } else {
     params.push_back(voidPtrTy(ctx));
   }
-  for (const ast::FuncParam &param : func.params) {
-    params.push_back(convertParam(ctx, convert(param)));
-  }
-  ret = pushRet(func.ret.get(), ret, params);
-  return llvm::FunctionType::get(ret, params, false);
-}
-
-llvm::FunctionType *stela::generateLambSig(llvm::LLVMContext &ctx, const ast::FuncType &type) {
-  llvm::Type *ret = ret = generateType(ctx, type.ret.get());
-  LLVMTypes params;
-  params.reserve(1 + type.params.size() + 1);
-  params.push_back(voidPtrTy(ctx));
-  for (const ast::ParamType &param : type.params) {
+  for (const ast::ParamType &param : sig.params) {
     params.push_back(convertParam(ctx, param));
   }
-  ret = pushRet(type.ret.get(), ret, params);
-  return llvm::FunctionType::get(ret, params, false);
+  llvm::Type *ret = generateType(ctx, sig.ret.get());
+  if (classifyType(sig.ret.get()) == TypeCat::trivially_copyable) {
+    return llvm::FunctionType::get(ret, params, false);
+  } else {
+    params.push_back(ret->getPointerTo());
+    return llvm::FunctionType::get(voidTy(ctx), params, false);
+  }
 }
 
-void stela::assignAttributes(llvm::Function *func, const sym::FuncParams &params, ast::Type *ret) {
+Signature stela::getSignature(const ast::Func &func) {
+  Signature sig;
+  sig.receiver = convert(func.symbol->params[0]);
+  sig.params.reserve(func.params.size());
+  for (auto p = func.symbol->params.cbegin() + 1; p != func.symbol->params.cend(); ++p) {
+    sig.params.push_back(convert(*p));
+  }
+  sig.ret = func.symbol->ret.type;
+  return sig;
+}
+
+Signature stela::getSignature(const ast::Lambda &lam) {
+  Signature sig;
+  sig.receiver = {};
+  sig.params.reserve(lam.params.size());
+  for (const sym::ExprType &param : lam.symbol->params) {
+    sig.params.push_back(convert(param));
+  }
+  sig.ret = lam.symbol->ret.type;
+  return sig;
+}
+
+Signature stela::getSignature(const ast::FuncType &type) {
+  Signature sig;
+  sig.receiver = {};
+  sig.params.reserve(type.params.size());
+  sig.params = type.params;
+  sig.ret = type.ret;
+  return sig;
+}
+
+namespace {
+
+void assignParamAttrs(
+  llvm::Function *func,
+  const ast::ParamType &param,
+  const unsigned idx,
+  const unsigned retParam
+) {
+  llvm::FunctionType *fnType = func->getFunctionType();
+  llvm::Type *paramType = fnType->getParamType(idx);
+  if (paramType->isPointerTy()) {
+    func->addParamAttr(idx, llvm::Attribute::NonNull);
+    func->addParamAttr(idx, llvm::Attribute::NoCapture);
+    if (idx != retParam && param.ref != ast::ParamRef::ref) {
+      func->addParamAttr(idx, llvm::Attribute::NoAlias);
+    }
+  } else if (idx != retParam && isBool(param.type.get())) {
+    func->addParamAttr(idx, llvm::Attribute::ZExt);
+  }
+}
+
+}
+
+void stela::assignAttrs(llvm::Function *func, const Signature &sig) {
   llvm::FunctionType *type = func->getFunctionType();
   const unsigned numParams = type->getNumParams();
-  const unsigned retParam = numParams > params.size() ? numParams - 1 : 0;
-  for (unsigned p = 0; p != numParams; ++p) {
-    llvm::Type *paramType = type->getParamType(p);
-    if (paramType->isPointerTy()) {
-      func->addParamAttr(p, llvm::Attribute::NonNull);
-      func->addParamAttr(p, llvm::Attribute::NoCapture);
-      if (p != retParam && params[p].ref != sym::ValueRef::ref) {
-        func->addParamAttr(p, llvm::Attribute::NoAlias);
-      }
-    } else if (p != retParam && isBool(params[p].type.get())) {
-      func->addParamAttr(p, llvm::Attribute::ZExt);
-    }
+  const unsigned retParam = numParams > sig.params.size() + 1 ? numParams - 1 : 0;
+  assignParamAttrs(func, sig.receiver, 0, retParam);
+  for (unsigned p = 1; p != numParams; ++p) {
+    assignParamAttrs(func, sig.params[p - 1], p, retParam);
   }
   if (retParam) {
     func->addParamAttr(retParam, llvm::Attribute::NoAlias);
     func->addParamAttr(retParam, llvm::Attribute::WriteOnly);
-  } else if (isBool(ret)) {
+  } else if (isBool(sig.ret.get())) {
     func->addAttribute(0, llvm::Attribute::ZExt);
   }
   func->addFnAttr(llvm::Attribute::NoUnwind);
@@ -170,25 +202,6 @@ llvm::Type *stela::convertParam(llvm::LLVMContext &ctx, const ast::ParamType &pa
     paramType = paramType->getPointerTo();
   }
   return paramType;
-}
-
-std::string stela::generateFuncName(gen::Ctx ctx, const ast::FuncType &type) {
-  /*gen::String name{16 + 16 * type.params.size()};
-  const gen::String ret = generateType(ctx, type.ret.get());
-  name += ret.size();
-  name += "_";
-  name += ret;
-  for (const ast::ParamType &param : type.params) {
-    name += "_";
-    const gen::String paramType = generateType(ctx, param.type.get());
-    const std::string_view ref = param.ref == ast::ParamRef::ref ? "_ref" : "";
-    name += paramType.size() + ref.size();
-    name += "_";
-    name += paramType;
-    name += ref;
-  }
-  return name;*/
-  return {};
 }
 
 ast::Type *stela::concreteType(ast::Type *type) {

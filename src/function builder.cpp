@@ -8,8 +8,6 @@
 
 #include "function builder.hpp"
 
-#include "generate func.hpp"
-
 using namespace stela;
 
 FuncBuilder::FuncBuilder(llvm::Function *func)

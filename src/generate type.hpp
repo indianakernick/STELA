@@ -26,11 +26,21 @@ class LLVMContext;
 
 namespace stela {
 
-llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
-llvm::FunctionType *generateFuncSig(llvm::LLVMContext &, const ast::Func &);
-llvm::FunctionType *generateLambSig(llvm::LLVMContext &, const ast::FuncType &);
+// @TODO Use signature in more places
+struct Signature {
+  ast::ParamType receiver;
+  ast::ParamTypes params;
+  ast::TypePtr ret;
+};
 
-void assignAttributes(llvm::Function *, const sym::FuncParams &, ast::Type *);
+llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
+llvm::FunctionType *generateSig(llvm::LLVMContext &, const Signature &);
+
+Signature getSignature(const ast::Func &);
+Signature getSignature(const ast::Lambda &);
+Signature getSignature(const ast::FuncType &);
+
+void assignAttrs(llvm::Function *, const Signature &);
 llvm::Type *convertParam(llvm::LLVMContext &, const ast::ParamType &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 

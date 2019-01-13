@@ -30,8 +30,9 @@ struct InstData {
 namespace ast {
 
 struct Type;
-struct StructType;
 struct ArrayType;
+struct FuncType;
+struct StructType;
 
 }
 
@@ -88,6 +89,8 @@ enum class PFGI : size_t {
   btn_pop_back,
   btn_resize,
   btn_reserve,
+  
+  clo_stub,
   
   count_
 };
