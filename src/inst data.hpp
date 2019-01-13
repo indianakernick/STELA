@@ -48,6 +48,8 @@ enum class FGI : size_t {
   alloc,
   free,
   ceil_to_pow_2,
+  /// The virtual destructor of a closure holding a function
+  dtor_stub,
   
   count_
 };
@@ -90,7 +92,12 @@ enum class PFGI : size_t {
   btn_resize,
   btn_reserve,
   
+  /// Stub function that is used to initialize a default constructed closure
   clo_stub,
+  /// Construct a closure from a function
+  clo_fun_ctor,
+  /// Construct a closure from a lambda
+  clo_lam_ctor,
   
   count_
 };

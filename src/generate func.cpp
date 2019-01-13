@@ -209,3 +209,14 @@ llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   builder.ir.CreateRet(ceiled);
   return func;
 }
+
+template <>
+llvm::Function *stela::genFn<FGI::dtor_stub>(InstData data) {
+  llvm::FunctionType *fnType = dtorTy(data.mod->getContext());
+  llvm::Function *func = makeInternalFunc(data.mod, fnType, "dtor_stub");
+  func->addParamAttr(0, llvm::Attribute::ReadNone);
+  func->addFnAttr(llvm::Attribute::ReadNone);
+  FuncBuilder builder{func};
+  builder.ir.CreateRetVoid();
+  return func;
+}
