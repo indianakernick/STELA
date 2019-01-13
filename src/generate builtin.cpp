@@ -77,12 +77,12 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx), {type->getPointerTo(), lenTy(ctx), type->getPointerTo()}, false
   );
-  llvm::Function *func = makeInternalFunc(data.mod, sig, "move_n");
+  llvm::Twine name = copyType == CopyType::copy ? "copy_n" : "move_n";
+  llvm::Function *func = makeInternalFunc(data.mod, sig, name);
   func->addParamAttr(0, llvm::Attribute::NonNull);
   func->addParamAttr(0, llvm::Attribute::NoAlias);
   func->addParamAttr(2, llvm::Attribute::NonNull);
   func->addParamAttr(2, llvm::Attribute::NoAlias);
-  func->addParamAttr(2, llvm::Attribute::WriteOnly);
   FuncBuilder builder{func};
   
   // @TODO find out why the optimizer won't emit memcpy
@@ -93,7 +93,9 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
     llvm::Value *dst = func->arg_begin() + 2;
     llvm::DataLayout layout{""};
     const unsigned align = layout.getPrefTypeAlignment(type);
-    builder.ir.CreateMemCpy(dst, align, src, align, len);
+    const uint64_t size = layout.getTypeAllocSize(type);
+    llvm::Value *byteLen = builder.ir.CreateNSWMul(len, constantFor(len, size));
+    builder.ir.CreateMemCpy(dst, align, src, align, byteLen);
     builder.ir.CreateRetVoid();
     return func;
   }
@@ -273,6 +275,44 @@ llvm::Function *stela::genFn<PFGI::btn_pop_back>(InstData data, ast::ArrayType *
   
   builder.setCurr(panicBlock);
   callPanic(builder.ir, data.inst.get<FGI::panic>(), "pop_back from empty array");
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::btn_reserve>(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo(), lenTy(ctx)}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "btn_reserve");
+  assignUnaryCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  if cap > array.cap
+    reallocate array, cap
+    return
+  else
+    return
+  */
+  
+  llvm::BasicBlock *reallocBlock = builder.makeBlock();
+  llvm::BasicBlock *doneBlock = builder.makeBlock();
+  llvm::Value *cap = func->arg_begin() + 1;
+  llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *arrayCap = loadStructElem(builder.ir, array, array_idx_cap);
+  llvm::Value *grow = builder.ir.CreateICmpUGT(cap, arrayCap);
+  builder.ir.CreateCondBr(grow, reallocBlock, doneBlock);
+  
+  builder.setCurr(reallocBlock);
+  llvm::Function *realloc = data.inst.get<PFGI::reallocate>(arr);
+  builder.ir.CreateCall(realloc, {array, cap});
+  builder.ir.CreateRetVoid();
+  
+  builder.setCurr(doneBlock);
+  builder.ir.CreateRetVoid();
   
   return func;
 }

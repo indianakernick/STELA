@@ -20,6 +20,15 @@
 namespace stela {
 
 template <typename T>
+T *alloc(const size_t count = 1) noexcept {
+  return static_cast<T *>(std::malloc(sizeof(T) * count));
+}
+
+inline void dealloc(void *ptr) noexcept {
+  std::free(ptr);
+}
+
+template <typename T>
 class retain_ptr;
 
 struct ref_count {
@@ -226,7 +235,7 @@ private:
       assert(refPtr->count != 0);
       if (--refPtr->count == 0) {
         ptr->~T();
-        std::free(ptr);
+        dealloc(ptr);
       }
     }
   }
@@ -241,11 +250,6 @@ retain_ptr(retain_t, T *) -> retain_ptr<T>;
 template <typename T>
 void swap(retain_ptr<T> &a, retain_ptr<T> &b) {
   a.swap(b);
-}
-
-template <typename T>
-T *alloc(const size_t count = 1) noexcept {
-  return static_cast<T *>(std::malloc(sizeof(T) * count));
 }
 
 template <typename T, typename... Args>

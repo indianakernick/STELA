@@ -1899,6 +1899,59 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(array->len, 0);
   });
   
+  TEST(Builtin reserve, {
+    ASSERT_SUCCEEDS(R"(
+      extern func res(arr: ref [[char]], cap: uint) {
+        reserve(arr, cap);
+      }
+    )");
+    
+    auto res = GET_FUNC("res", Void(Array<Array<Char>> &, Uint));
+    
+    Array<Char> str = makeString("String");
+    ASSERT_EQ(str.use_count(), 1);
+    Array<Array<Char>> array = makeArrayOf<Array<Char>>(str);
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 1);
+    
+    res(array, 0);
+    
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 1);
+    
+    res(array, 1);
+    
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 1);
+    
+    res(array, 2);
+    
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 2);
+    
+    res(array, 8);
+    
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 8);
+    
+    res(array, 4);
+    
+    ASSERT_EQ(str.use_count(), 2);
+    ASSERT_EQ(array.use_count(), 1);
+    ASSERT_EQ(array->len, 1);
+    ASSERT_EQ(array->cap, 8);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

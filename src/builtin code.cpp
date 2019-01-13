@@ -267,12 +267,12 @@ void resize(Array<T> &array, const t_uint size) noexcept {
   array.len = size;
 }
 
-template <typename T>
+/*template <typename T>
 void reserve(Array<T> &array, const t_uint cap) noexcept {
   if (cap > array.cap) {
     reallocate(array, cap);
   }
-}
+}*/
 
 /*template <typename T>
 T &index(Array<T> &array, const t_uint index) noexcept {
