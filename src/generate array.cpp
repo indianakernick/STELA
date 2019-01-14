@@ -7,6 +7,7 @@
 //
 
 #include "inst data.hpp"
+#include "gen types.hpp"
 #include "gen helpers.hpp"
 #include "generate type.hpp"
 #include "compare exprs.hpp"
@@ -41,7 +42,8 @@ llvm::Function *stela::genFn<PFGI::arr_def_ctor>(InstData data, ast::ArrayType *
   FuncBuilder builder{func};
   
   /*
-  ptr_def_ctor(bitcast obj, sizeof storage)
+  obj = malloc
+  obj.ref = 1
   obj.cap = 0
   obj.len = 0
   obj.dat = null
@@ -225,6 +227,7 @@ llvm::Function *stela::genFn<PFGI::arr_len_ctor>(InstData data, ast::ArrayType *
   
   /*
   array = malloc
+  array.ref = 1
   array.cap = size
   array.len = size
   array.dat = malloc(size)
@@ -253,7 +256,7 @@ template <>
 llvm::Function *stela::genFn<PFGI::arr_strg_dtor>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);
-  llvm::FunctionType *sig = refPtrDtorTy(ctx);
+  llvm::FunctionType *sig = dtorTy(ctx);
   llvm::Function *func = makeInternalFunc(data.mod, sig, "arr_strg_dtor");
   assignUnaryCtorAttrs(func);
   FuncBuilder builder{func};

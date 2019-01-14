@@ -189,18 +189,6 @@ llvm::PointerType *stela::refPtrPtrTy(llvm::LLVMContext &ctx) {
   return refPtrTy(ctx)->getPointerTo();
 }
 
-llvm::FunctionType *stela::refPtrDtorTy(llvm::LLVMContext &ctx) {
-  return llvm::FunctionType::get(
-    voidTy(ctx),
-    {refPtrTy(ctx)},
-    false
-  );
-}
-
-llvm::PointerType *stela::refPtrDtorPtrTy(llvm::LLVMContext &ctx) {
-  return refPtrDtorTy(ctx)->getPointerTo();
-}
-
 llvm::Value *stela::refPtrPtrCast(llvm::IRBuilder<> &ir, llvm::Value *ptrPtr) {
   return ir.CreatePointerCast(ptrPtr, refPtrPtrTy(ir.getContext()));
 }

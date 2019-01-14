@@ -60,10 +60,14 @@ llvm::FunctionType *stela::dtorTy(llvm::LLVMContext &ctx) {
   );
 }
 
+llvm::PointerType *stela::ptrToDtorTy(llvm::LLVMContext &ctx) {
+  return dtorTy(ctx)->getPointerTo();
+}
+
 llvm::StructType *stela::cloDataTy(llvm::LLVMContext &ctx) {
   return llvm::StructType::get(ctx, {
-    refTy(ctx), // reference count
-    dtorTy(ctx) // virtual destructor
+    refTy(ctx),      // reference count
+    ptrToDtorTy(ctx) // virtual destructor
   });
 }
 

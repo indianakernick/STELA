@@ -6,6 +6,7 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
+#include "gen types.hpp"
 #include "gen helpers.hpp"
 #include "generate type.hpp"
 #include "function builder.hpp"
@@ -14,6 +15,12 @@
 using namespace stela;
 
 namespace {
+
+constexpr unsigned clo_idx_fun = 0;
+constexpr unsigned clo_idx_dat = 1;
+
+// constexpr unsigned clodat_idx_ref = 0;
+constexpr unsigned clodat_idx_dtor = 1;
 
 void stubAttributes(llvm::Function *func) {
   const size_t args = func->arg_size();
@@ -43,5 +50,120 @@ llvm::Function *stela::genFn<PFGI::clo_stub>(InstData data, ast::FuncType *clo) 
   FuncBuilder builder{func};
   llvm::Function *panic = data.inst.get<FGI::panic>();
   callPanic(builder.ir, panic, "Calling null function pointer");
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_fun_ctor>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::Type *funTy = type->getStructElementType(clo_idx_fun);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo(), funTy}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_fun_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  FuncBuilder builder{func};
+  
+  /*
+  clo.fun = fun
+  clo.dat = null
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *fun = func->arg_begin() + 1;
+  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
+  builder.ir.CreateStore(fun, cloFunPtr);
+  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  setNull(builder.ir, cloDatPtr);
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_lam_ctor>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::Type *funTy = type->getStructElementType(clo_idx_fun);
+  llvm::Type *datTy = type->getStructElementType(clo_idx_dat);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo(), funTy, datTy}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_lam_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(1, llvm::Attribute::NonNull);
+  func->addParamAttr(2, llvm::Attribute::NonNull);
+  FuncBuilder builder{func};
+  
+  /*
+  clo.fun = fun
+  clo.dat = dat
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *fun = func->arg_begin() + 1;
+  llvm::Value *dat = func->arg_begin() + 2;
+  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
+  builder.ir.CreateStore(fun, cloFunPtr);
+  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  builder.ir.CreateStore(dat, cloDatPtr);
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_dtor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder builder{func};
+  
+  /*
+  ptr_dtor(clo.dat.dtor, bitcast clo)
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  llvm::Value *cloDat = builder.ir.CreateLoad(cloDatPtr);
+  llvm::Value *cloDatDtor = loadStructElem(builder.ir, cloDat, clodat_idx_dtor);
+  llvm::Value *refPtr = refPtrPtrCast(builder.ir, cloDatPtr);
+  llvm::Function *ptrDtor = data.inst.get<FGI::ptr_dtor>();
+  builder.ir.CreateCall(ptrDtor, {cloDatDtor, refPtr});
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_def_ctor");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  FuncBuilder builder{func};
+  
+  /*
+  clo.fun = stub
+  clo.dat = null
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
+  llvm::Function *stub = data.inst.get<PFGI::clo_stub>(clo);
+  builder.ir.CreateStore(stub, cloFunPtr);
+  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  setNull(builder.ir, cloDatPtr);
+  builder.ir.CreateRetVoid();
+  
   return func;
 }

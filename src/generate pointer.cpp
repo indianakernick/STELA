@@ -65,7 +65,7 @@ llvm::Function *stela::genFn<FGI::ptr_dec>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
-    {refPtrDtorPtrTy(ctx), refPtrTy(ctx)},
+    {ptrToDtorTy(ctx), refPtrTy(ctx)},
     false
   );
   llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_dec");
@@ -94,7 +94,8 @@ llvm::Function *stela::genFn<FGI::ptr_dec>(InstData data) {
   builder.ir.CreateCondBr(refIsZero, destroyBlock, doneBlock);
   
   builder.setCurr(destroyBlock);
-  builder.ir.CreateCall(dtor, {ptr});
+  llvm::Value *voidPtr = builder.ir.CreatePointerCast(ptr, voidPtrTy(ctx));
+  builder.ir.CreateCall(dtor, {voidPtr});
   callFree(builder.ir, data.inst.get<FGI::free>(), ptr);
   builder.ir.CreateBr(doneBlock);
   
@@ -109,7 +110,7 @@ llvm::Function *stela::genFn<FGI::ptr_dtor>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
-    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx)},
+    {ptrToDtorTy(ctx), refPtrPtrTy(ctx)},
     false
   );
   llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_dtor");
@@ -166,7 +167,7 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
-    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    {ptrToDtorTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
   llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_cop_asgn");
@@ -229,7 +230,7 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::FunctionType *sig = llvm::FunctionType::get(
     voidTy(ctx),
-    {refPtrDtorPtrTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
+    {ptrToDtorTy(ctx), refPtrPtrTy(ctx), refPtrPtrTy(ctx)},
     false
   );
   llvm::Function *func = makeInternalFunc(data.mod, sig, "ptr_mov_asgn");

@@ -95,11 +95,11 @@ enum class PFGI : size_t {
   /// Stub function that is used to initialize a default constructed closure
   clo_stub, //
   /// Construct a closure from a function
-  clo_fun_ctor,
+  clo_fun_ctor, //
   /// Construct a closure from a lambda
-  clo_lam_ctor,
-  clo_dtor,
-  clo_def_ctor,
+  clo_lam_ctor, //
+  clo_dtor, //
+  clo_def_ctor, //
   clo_cop_ctor,
   clo_cop_asgn,
   clo_mov_ctor,

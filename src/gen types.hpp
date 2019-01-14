@@ -47,6 +47,8 @@ llvm::PointerType *voidPtrTy(llvm::LLVMContext &);
 
 /// Destructor
 llvm::FunctionType *dtorTy(llvm::LLVMContext &);
+/// Pointer to destructor
+llvm::PointerType *ptrToDtorTy(llvm::LLVMContext &);
 /// Closure data
 llvm::StructType *cloDataTy(llvm::LLVMContext &);
 /// Pointer to closure data
