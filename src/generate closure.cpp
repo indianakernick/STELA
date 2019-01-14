@@ -167,3 +167,49 @@ llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *c
   
   return func;
 }
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_eq>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = compareFor(type);
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_eq");
+  assignCompareAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  return left.fun == right.fun
+  */
+  
+  llvm::Value *leftPtr = func->arg_begin();
+  llvm::Value *rightPtr = func->arg_begin() + 1;
+  llvm::Value *leftFun = loadStructElem(builder.ir, leftPtr, clo_idx_fun);
+  llvm::Value *rightFun = loadStructElem(builder.ir, rightPtr, clo_idx_fun);
+  llvm::Value *equal = builder.ir.CreateICmpEQ(leftFun, rightFun);
+  builder.ir.CreateRet(equal);
+  
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_lt>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = compareFor(type);
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_lt");
+  assignCompareAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  return left.fun < right.fun
+  */
+  
+  llvm::Value *leftPtr = func->arg_begin();
+  llvm::Value *rightPtr = func->arg_begin() + 1;
+  llvm::Value *leftFun = loadStructElem(builder.ir, leftPtr, clo_idx_fun);
+  llvm::Value *rightFun = loadStructElem(builder.ir, rightPtr, clo_idx_fun);
+  llvm::Value *equal = builder.ir.CreateICmpULT(leftFun, rightFun);
+  builder.ir.CreateRet(equal);
+  
+  return func;
+}
