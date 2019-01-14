@@ -34,7 +34,7 @@ using namespace stela;
 CompareExpr::CompareExpr(FuncInst &inst, llvm::IRBuilder<> &ir)
   : inst{inst}, ir{ir} {}
 
-llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right) {
+llvm::Value *CompareExpr::eq(ast::Type *type, gen::Expr left, gen::Expr right) {
   ast::Type *concrete = concreteType(type);
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
@@ -49,11 +49,11 @@ llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right
   }
 }
 
-llvm::Value *CompareExpr::notEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  return ir.CreateNot(equal(type, left, right));
+llvm::Value *CompareExpr::ne(ast::Type *type, gen::Expr left, gen::Expr right) {
+  return ir.CreateNot(eq(type, left, right));
 }
 
-llvm::Value *CompareExpr::less(ast::Type *type, gen::Expr left, gen::Expr right) {
+llvm::Value *CompareExpr::lt(ast::Type *type, gen::Expr left, gen::Expr right) {
   ast::Type *concrete = concreteType(type);
   if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
@@ -68,16 +68,16 @@ llvm::Value *CompareExpr::less(ast::Type *type, gen::Expr left, gen::Expr right)
   }
 }
 
-llvm::Value *CompareExpr::greater(ast::Type *type, gen::Expr left, gen::Expr right) {
-  return less(type, right, left);
+llvm::Value *CompareExpr::gt(ast::Type *type, gen::Expr left, gen::Expr right) {
+  return lt(type, right, left);
 }
 
-llvm::Value *CompareExpr::lessEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  return ir.CreateNot(less(type, right, left));
+llvm::Value *CompareExpr::le(ast::Type *type, gen::Expr left, gen::Expr right) {
+  return ir.CreateNot(lt(type, right, left));
 }
 
-llvm::Value *CompareExpr::greaterEqual(ast::Type *type, gen::Expr left, gen::Expr right) {
-  return ir.CreateNot(less(type, left, right));
+llvm::Value *CompareExpr::ge(ast::Type *type, gen::Expr left, gen::Expr right) {
+  return ir.CreateNot(lt(type, left, right));
 }
 
 llvm::Value *CompareExpr::getBtnValue(gen::Expr expr) {

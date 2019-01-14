@@ -352,7 +352,7 @@ llvm::Function *stela::genFn<PFGI::arr_eq>(InstData data, ast::ArrayType *arr) {
   builder.setCurr(compareBlock);
   ArrPairLoop comp = iterArrPair(builder, leftArr, rightArr, equalBlock);
   CompareExpr compare{data.inst, builder.ir};
-  llvm::Value *eq = compare.equal(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  llvm::Value *eq = compare.eq(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
   builder.ir.CreateCondBr(eq, comp.loop, diffBlock);
   
   builder.setCurr(equalBlock);
@@ -397,11 +397,11 @@ llvm::Function *stela::genFn<PFGI::arr_lt>(InstData data, ast::ArrayType *arr) {
   
   builder.setCurr(notEndBlock);
   CompareExpr compare{data.inst, builder.ir};
-  llvm::Value *lt = compare.less(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  llvm::Value *lt = compare.lt(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
   builder.ir.CreateCondBr(lt, ltBlock, notLtBlock);
   
   builder.setCurr(notLtBlock);
-  llvm::Value *gt = compare.less(arr->elem.get(), lvalue(comp.right), lvalue(comp.left));
+  llvm::Value *gt = compare.lt(arr->elem.get(), lvalue(comp.right), lvalue(comp.left));
   builder.ir.CreateCondBr(gt, geBlock, comp.loop);
   
   builder.setCurr(ltBlock);

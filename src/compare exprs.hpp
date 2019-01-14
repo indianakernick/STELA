@@ -20,12 +20,12 @@ class CompareExpr {
 public:
   CompareExpr(FuncInst &, llvm::IRBuilder<> &);
 
-  llvm::Value *equal(ast::Type *, gen::Expr, gen::Expr);
-  llvm::Value *notEqual(ast::Type *, gen::Expr, gen::Expr);
-  llvm::Value *less(ast::Type *, gen::Expr, gen::Expr);
-  llvm::Value *greater(ast::Type *, gen::Expr, gen::Expr);
-  llvm::Value *lessEqual(ast::Type *, gen::Expr, gen::Expr);
-  llvm::Value *greaterEqual(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *eq(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *ne(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *lt(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *gt(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *le(ast::Type *, gen::Expr, gen::Expr);
+  llvm::Value *ge(ast::Type *, gen::Expr, gen::Expr);
 
 private:
   FuncInst &inst;

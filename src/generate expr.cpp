@@ -127,17 +127,17 @@ public:
       case ast::BinOp::bit_shr:
         value = builder.ir.CreateLShr(left.obj, right.obj); break;
       case ast::BinOp::eq:
-        value = compare.equal(type, left, right); break;
+        value = compare.eq(type, left, right); break;
       case ast::BinOp::ne:
-        value = compare.notEqual(type, left, right); break;
+        value = compare.ne(type, left, right); break;
       case ast::BinOp::lt:
-        value = compare.less(type, left, right); break;
+        value = compare.lt(type, left, right); break;
       case ast::BinOp::le:
-        value = compare.lessEqual(type, left, right); break;
+        value = compare.le(type, left, right); break;
       case ast::BinOp::gt:
-        value = compare.greater(type, left, right); break;
+        value = compare.gt(type, left, right); break;
       case ast::BinOp::ge:
-        value = compare.greaterEqual(type, left, right); break;
+        value = compare.ge(type, left, right); break;
       case ast::BinOp::add:
         SIGNED_UNSIGNED_FLOAT_OP(CreateNSWAdd, CreateAdd, CreateFAdd);
       case ast::BinOp::sub:

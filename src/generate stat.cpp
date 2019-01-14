@@ -66,7 +66,7 @@ public:
     llvm::Value *exprAddr = builder.alloc(type);
     genExpr(expr, exprAddr);
     pushObj({exprAddr, expr->exprType.get()});
-    llvm::Value *equalExpr = compare.equal(
+    llvm::Value *equalExpr = compare.eq(
       expr->exprType.get(),
       {value, ValueCat::lvalue},
       {exprAddr, ValueCat::lvalue}

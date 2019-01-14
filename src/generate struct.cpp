@@ -121,7 +121,7 @@ llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) 
     llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();
-    llvm::Value *eq = compare.equal(field, lvalue(lPtr), lvalue(rPtr));
+    llvm::Value *eq = compare.eq(field, lvalue(lPtr), lvalue(rPtr));
     llvm::BasicBlock *equalBlock = builder.makeBlock();
     builder.ir.CreateCondBr(eq, equalBlock, diffBlock);
     builder.setCurr(equalBlock);
@@ -160,11 +160,11 @@ llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) 
     llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();
-    llvm::Value *less = compare.less(field, lvalue(lPtr), lvalue(rPtr));
+    llvm::Value *less = compare.lt(field, lvalue(lPtr), lvalue(rPtr));
     llvm::BasicBlock *notLessBlock = builder.makeBlock();
     builder.ir.CreateCondBr(less, ltBlock, notLessBlock);
     builder.setCurr(notLessBlock);
-    llvm::Value *greater = compare.less(field, lvalue(rPtr), lvalue(lPtr));
+    llvm::Value *greater = compare.lt(field, lvalue(rPtr), lvalue(lPtr));
     llvm::BasicBlock *equalBlock = builder.makeBlock();
     builder.ir.CreateCondBr(greater, geBlock, equalBlock);
     builder.setCurr(equalBlock);
