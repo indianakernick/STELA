@@ -49,6 +49,11 @@ auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
   return stela::Function<Fun, Member>{engine->getFunctionAddress(name)};
 }
 
+template <typename Type>
+Type identity(Type obj) noexcept {
+  return obj;
+}
+
 }
 
 #define GET_FUNC(NAME, ...) getFunc<__VA_ARGS__>(engine, NAME)
@@ -1023,16 +1028,13 @@ TEST_GROUP(Generation, {
   TEST(Switch on strings, {
     ASSERT_SUCCEEDS(R"(
       extern func whichString(str: [char]) {
-        /*
-        @TODO switch expression
-        
-        return switch str {
-          "no" -> 0.0;
-          "maybe" -> 0.5;
-          "yes" -> 1.0;
-          default -> -1.0;
-        };
-        */
+        // @TODO switch expression
+        // return switch str {
+        //   "no" -> 0.0;
+        //   "maybe" -> 0.5;
+        //   "yes" -> 1.0;
+        //   default -> -1.0;
+        // };
       
         switch (str) {
           case ("no") return 0.0;
@@ -2262,6 +2264,39 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(str0->dat[2], 0);
     ASSERT_EQ(str0->dat[3], 0);
     ASSERT_EQ(str0->dat[4], 0);
+  });
+  
+  TEST(Pass closure, {
+    ASSERT_SUCCEEDS(R"(
+      type Closure = func(struct {}) -> struct {};
+    
+      func passClosureImpl(clo: Closure) {
+        return clo;
+      }
+      
+      extern func passClosure(clo: Closure) {
+        return passClosureImpl(clo);
+      }
+      
+      extern func getStub() {
+        let stub = make Closure {};
+        return passClosure(stub);
+      }
+    )");
+    
+    struct Empty {};
+    using ClosureType = Closure<Empty(Empty)>;
+    
+    auto passClosure = GET_FUNC("passClosure", ClosureType(ClosureType));
+    auto getStub = GET_FUNC("getStub", ClosureType());
+    
+    Closure<Empty(Empty)> stub = getStub();
+    
+    Closure<Empty(Empty)> closure = makeClosureFromFunc<identity<Empty>>();
+    Closure<Empty(Empty)> sameClosure = passClosure(closure);
+    
+    ASSERT_EQ(closure.fun, sameClosure.fun);
+    ASSERT_EQ(closure.dat, sameClosure.dat);
   });
   
   /*

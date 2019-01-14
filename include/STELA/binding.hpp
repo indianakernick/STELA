@@ -55,7 +55,7 @@ Array<Elem> makeArrayOf(Args &&... args) {
 }
 
 template <size_t Size>
-Array<Char> makeString(const char (&value)[Size]) {
+Array<Char> makeString(const char (&value)[Size]) noexcept {
   constexpr size_t strSize = Size - 1;
   Array<Char> string = makeArray<Char>(strSize);
   std::copy_n(value, strSize, string->dat);
@@ -73,6 +73,9 @@ struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
   
   static type unwrap(const T &arg) noexcept {
     return &arg;
+  }
+  static T wrap(const type arg) noexcept {
+    return *arg;
   }
   
   static constexpr bool nontrivial = true;
@@ -149,6 +152,20 @@ struct pass_traits<Array<Elem>> {
   static constexpr bool nontrivial = true;
 };
 
+template <typename Fun>
+struct Closure;
+
+template <typename Fun>
+struct pass_traits<Closure<Fun>> {
+  using type = const Closure<Fun> *;
+  
+  static type unwrap(const Closure<Fun> &arg) noexcept {
+    return &arg;
+  }
+  
+  static constexpr bool nontrivial = true;
+};
+
 /// A wrapper around a compiled stela function. Acts as an ABI adapter to call
 /// Stela functions using the Stela ABI
 template <typename Fun, bool Member = false>
@@ -211,6 +228,8 @@ public:
   
   explicit Function(const uint64_t addr) noexcept
     : ptr{reinterpret_cast<type *>(addr)} {}
+  explicit Function(type *const ptr) noexcept
+    : ptr{ptr} {}
   
   template <typename... Args>
   inline Ret operator()(Args &&... args) noexcept {
@@ -222,6 +241,89 @@ public:
 private:
   type *ptr;
 };
+
+struct ClosureData : ref_count {
+  // uint64_t ref
+  void (*dtor)(void *);
+};
+
+template <typename Ret, typename... Params>
+struct Closure<Ret(Params...)> {
+  using Func = Function<Ret(ClosureData *, Params...), true>;
+  
+  template <typename... Args>
+  inline auto operator()(Args &&... args) noexcept {
+    return Func{fun}(dat.get(), std::forward<Args>(args)...);
+  }
+  
+  Closure() = delete;
+  explicit Closure(typename Func::type *fun) noexcept
+    : fun{fun}, dat{nullptr} {}
+  
+  typename Func::type *fun;
+  retain_ptr<ClosureData> dat;
+};
+
+namespace detail {
+
+template <typename Fun>
+struct is_noexcept;
+
+template <typename Ret, typename... Params, bool Noexcept>
+struct is_noexcept<Ret(Params...) noexcept(Noexcept)> {
+  static constexpr bool value = Noexcept;
+  using type = Ret(Params...);
+};
+
+template <auto FunPtr, typename Ret, typename... Params>
+struct ClosureFunWrapParamRet {
+  template <typename Param>
+  using pass_type = typename pass_traits<Param>::type;
+  
+  static void call(ClosureData *, pass_type<Params>... params, Ret *ret) noexcept {
+    new (ret) Ret{FunPtr(pass_traits<Ret>::wrap(params)...)};
+  }
+};
+
+template <auto FunPtr, typename Ret, typename... Params>
+struct ClosureFunWrapNormalRet {
+  template <typename Param>
+  using pass_type = typename pass_traits<Param>::type;
+  
+  static pass_type<Ret> call(ClosureData *, pass_type<Params>... params) noexcept {
+    if constexpr (std::is_void_v<Ret>) {
+      FunPtr(pass_traits<Ret>::wrap(params)...);
+    } else {
+      return pass_traits<Ret>::unwrap(
+        FunPtr(pass_traits<Params>::wrap(params)...)
+      );
+    }
+  }
+};
+
+template <typename Sig, auto FunPtr>
+struct ClosureFunWrap;
+
+template <auto FunPtr, typename Ret, typename... Params>
+struct ClosureFunWrap<Ret(Params...), FunPtr> {
+  using type = std::conditional_t<
+    pass_traits<Ret>::nontrivial,
+    ClosureFunWrapParamRet<FunPtr, Ret, Params...>,
+    ClosureFunWrapNormalRet<FunPtr, Ret, Params...>
+  >;
+};
+
+}
+
+template <auto FunPtr>
+auto makeClosureFromFunc() noexcept {
+  using Sig = std::remove_pointer_t<decltype(FunPtr)>;
+  static_assert(detail::is_noexcept<Sig>::value, "Stela cannot handle exceptions");
+  using SigWithoutNoexcept = typename detail::is_noexcept<Sig>::type;
+  return Closure<SigWithoutNoexcept>{
+    detail::ClosureFunWrap<SigWithoutNoexcept, FunPtr>::type::call
+  };
+}
 
 }
 

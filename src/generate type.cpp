@@ -48,7 +48,7 @@ public:
   }
   void visit(ast::FuncType &type) override {
     llvmType = llvm::StructType::get(ctx, {
-      generateSig(ctx, getSignature(type)),
+      generateSig(ctx, getSignature(type))->getPointerTo(),
       ptrToCloDataTy(ctx)
     });
   }

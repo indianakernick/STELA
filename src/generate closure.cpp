@@ -161,15 +161,26 @@ llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) 
   FuncBuilder builder{func};
   
   /*
-  ptr_dtor(clo.dat.dtor, bitcast clo.dat)
+  if clo.dat != null
+    ptr_dtor(clo.dat.dtor, bitcast clo.dat)
   */
   
+  llvm::BasicBlock *dtorBlock = builder.makeBlock();
+  llvm::BasicBlock *doneBlock = builder.makeBlock();
   llvm::Value *cloPtr = func->arg_begin();
   llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  llvm::Value *cloDatDtor = getDtor(builder.ir, cloDatPtr);
+  llvm::Value *cloDat = builder.ir.CreateLoad(cloDatPtr);
+  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(cloDat);
+  builder.ir.CreateCondBr(datNotNull, dtorBlock, doneBlock);
+  
+  builder.setCurr(dtorBlock);
+  llvm::Value *cloDatDtor = loadStructElem(builder.ir, cloDat, clodat_idx_dtor);
   llvm::Value *cloDatRefPtr = refPtrPtrCast(builder.ir, cloDatPtr);
   llvm::Function *ptrDtor = data.inst.get<FGI::ptr_dtor>();
   builder.ir.CreateCall(ptrDtor, {cloDatDtor, cloDatRefPtr});
+  builder.ir.CreateBr(doneBlock);
+  
+  builder.setCurr(doneBlock);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -229,18 +240,28 @@ llvm::Function *cloAsgn(
   
   /*
   left.fun = right.fun
-  ptrAsgn(left.dat.dtor, bitcast left.dat, bitcast right.dat)
+  if left.dat != null
+    ptrAsgn(left.dat.dtor, bitcast left.dat, bitcast right.dat)
   */
   
+  llvm::BasicBlock *asgnBlock = builder.makeBlock();
+  llvm::BasicBlock *doneBlock = builder.makeBlock();
   llvm::Value *leftPtr = func->arg_begin();
   llvm::Value *rightPtr = func->arg_begin() + 1;
   assignFun(builder.ir, leftPtr, rightPtr);
   llvm::Value *leftDatPtr = builder.ir.CreateStructGEP(leftPtr, clo_idx_dat);
   llvm::Value *leftDat = builder.ir.CreateLoad(leftDatPtr);
+  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(leftDat);
+  builder.ir.CreateCondBr(datNotNull, asgnBlock, doneBlock);
+  
+  builder.setCurr(asgnBlock);
   llvm::Value *leftDatDtor = loadStructElem(builder.ir, leftDat, clodat_idx_dtor);
   llvm::Value *leftDatRefPtr = refPtrPtrCast(builder.ir, leftDatPtr);
   llvm::Value *rightDatRefPtr = getDatRefPtr(builder.ir, rightPtr);
   builder.ir.CreateCall(ptrAsgn, {leftDatDtor, leftDatRefPtr, rightDatRefPtr});
+  builder.ir.CreateBr(doneBlock);
+  
+  builder.setCurr(doneBlock);
   builder.ir.CreateRetVoid();
   
   return func;
