@@ -115,33 +115,6 @@ llvm::Function *stela::genFn<PFGI::clo_lam_ctor>(InstData data, ast::FuncType *c
 }
 
 template <>
-llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) {
-  llvm::LLVMContext &ctx = data.mod->getContext();
-  llvm::Type *type = generateType(ctx, clo);
-  llvm::FunctionType *sig = llvm::FunctionType::get(
-    voidTy(ctx), {type->getPointerTo()}, false
-  );
-  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_dtor");
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  FuncBuilder builder{func};
-  
-  /*
-  ptr_dtor(clo.dat.dtor, bitcast clo)
-  */
-  
-  llvm::Value *cloPtr = func->arg_begin();
-  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  llvm::Value *cloDat = builder.ir.CreateLoad(cloDatPtr);
-  llvm::Value *cloDatDtor = loadStructElem(builder.ir, cloDat, clodat_idx_dtor);
-  llvm::Value *refPtr = refPtrPtrCast(builder.ir, cloDatPtr);
-  llvm::Function *ptrDtor = data.inst.get<FGI::ptr_dtor>();
-  builder.ir.CreateCall(ptrDtor, {cloDatDtor, refPtr});
-  builder.ir.CreateRetVoid();
-  
-  return func;
-}
-
-template <>
 llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *clo) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, clo);
@@ -166,6 +139,133 @@ llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *c
   builder.ir.CreateRetVoid();
   
   return func;
+}
+
+namespace {
+
+llvm::Value *getDtor(llvm::IRBuilder<> &ir, llvm::Value *cloDatPtr) {
+  return loadStructElem(ir, ir.CreateLoad(cloDatPtr), clodat_idx_dtor);
+}
+
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidTy(ctx), {type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_dtor");
+  assignUnaryCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  ptr_dtor(clo.dat.dtor, bitcast clo.dat)
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  llvm::Value *cloDatDtor = getDtor(builder.ir, cloDatPtr);
+  llvm::Value *cloDatRefPtr = refPtrPtrCast(builder.ir, cloDatPtr);
+  llvm::Function *ptrDtor = data.inst.get<FGI::ptr_dtor>();
+  builder.ir.CreateCall(ptrDtor, {cloDatDtor, cloDatRefPtr});
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+namespace {
+
+void assignFun(llvm::IRBuilder<> &ir, llvm::Value *leftPtr, llvm::Value *rightPtr) {
+  llvm::Value *leftFunPtr = ir.CreateStructGEP(leftPtr, clo_idx_fun);
+  llvm::Value *rightFun = loadStructElem(ir, rightPtr, clo_idx_fun);
+  ir.CreateStore(rightFun, leftFunPtr);
+}
+
+llvm::Value *getDatRefPtr(llvm::IRBuilder<> &ir, llvm::Value *cloPtr) {
+  return refPtrPtrCast(ir, ir.CreateStructGEP(cloPtr, clo_idx_dat));
+}
+
+llvm::Function *cloCtor(
+  InstData data,
+  ast::FuncType *clo,
+  llvm::Function *ptrCtor,
+  const llvm::Twine &name
+) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), name);
+  assignBinaryCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  clo.fun = other.fun
+  ptrCtor(bitcast clo.dat, bitcast other.dat)
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *otherPtr = func->arg_begin() + 1;
+  assignFun(builder.ir, cloPtr, otherPtr);
+  llvm::Value *cloDatRefPtr = getDatRefPtr(builder.ir, cloPtr);
+  llvm::Value *otherDatRefPtr = getDatRefPtr(builder.ir, otherPtr);
+  builder.ir.CreateCall(ptrCtor, {cloDatRefPtr, otherDatRefPtr});
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+llvm::Function *cloAsgn(
+  InstData data,
+  ast::FuncType *clo,
+  llvm::Function *ptrAsgn,
+  const llvm::Twine &name
+) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::Function *func = makeInternalFunc(data.mod, binaryCtorFor(type), name);
+  assignBinaryAliasCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  left.fun = right.fun
+  ptrAsgn(left.dat.dtor, bitcast left.dat, bitcast right.dat)
+  */
+  
+  llvm::Value *leftPtr = func->arg_begin();
+  llvm::Value *rightPtr = func->arg_begin() + 1;
+  assignFun(builder.ir, leftPtr, rightPtr);
+  llvm::Value *leftDatPtr = builder.ir.CreateStructGEP(leftPtr, clo_idx_dat);
+  llvm::Value *leftDat = builder.ir.CreateLoad(leftDatPtr);
+  llvm::Value *leftDatDtor = loadStructElem(builder.ir, leftDat, clodat_idx_dtor);
+  llvm::Value *leftDatRefPtr = refPtrPtrCast(builder.ir, leftDatPtr);
+  llvm::Value *rightDatRefPtr = getDatRefPtr(builder.ir, rightPtr);
+  builder.ir.CreateCall(ptrAsgn, {leftDatDtor, leftDatRefPtr, rightDatRefPtr});
+  builder.ir.CreateRetVoid();
+  
+  return func;
+}
+
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_cop_ctor>(InstData data, ast::FuncType *clo) {
+  return cloCtor(data, clo, data.inst.get<FGI::ptr_cop_ctor>(), "clo_cop_ctor");
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_cop_asgn>(InstData data, ast::FuncType *clo) {
+  return cloAsgn(data, clo, data.inst.get<FGI::ptr_cop_asgn>(), "clo_cop_asgn");
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_mov_ctor>(InstData data, ast::FuncType *clo) {
+  return cloCtor(data, clo, data.inst.get<FGI::ptr_mov_ctor>(), "clo_mov_ctor");
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_mov_asgn>(InstData data, ast::FuncType *clo) {
+  return cloAsgn(data, clo, data.inst.get<FGI::ptr_mov_asgn>(), "clo_mov_asgn");
 }
 
 template <>
