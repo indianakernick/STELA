@@ -40,6 +40,8 @@ llvm::Value *CompareExpr::equal(ast::Type *type, gen::Expr left, gen::Expr right
     INT_FLOAT_OP(CreateICmpEQ, CreateFCmpOEQ);
   } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::arr_eq>(arr), {left.obj, right.obj});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    return ir.CreateCall(inst.get<PFGI::clo_eq>(clo), {left.obj, right.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::srt_eq>(srt), {left.obj, right.obj});
   } else {
@@ -57,6 +59,8 @@ llvm::Value *CompareExpr::less(ast::Type *type, gen::Expr left, gen::Expr right)
     SIGNED_UNSIGNED_FLOAT_OP(CreateICmpSLT, CreateICmpULT, CreateFCmpOLT);
   } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::arr_lt>(arr), {left.obj, right.obj});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    return ir.CreateCall(inst.get<PFGI::clo_lt>(clo), {left.obj, right.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::srt_lt>(srt), {left.obj, right.obj});
   } else {

@@ -19,13 +19,7 @@ LifetimeExpr::LifetimeExpr(FuncInst &inst, llvm::IRBuilder<> &ir)
 
 void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *defCtor = inst.get<PFGI::arr_def_ctor>(arr);
-    ir.CreateCall(defCtor, {obj});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *defCtor = inst.get<PFGI::srt_def_ctor>(srt);
-    ir.CreateCall(defCtor, {obj});
-  } else if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
+  if (auto *btn = dynamic_cast<ast::BtnType *>(concrete)) {
     llvm::Type *objType = obj->getType()->getPointerElementType();
     llvm::Value *value = nullptr;
     switch (btn->value) {
@@ -46,12 +40,12 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
         UNREACHABLE();
     }
     ir.CreateStore(value, obj);
-  } else if (dynamic_cast<ast::FuncType *>(concrete)) {
-    //str += generateMakeFunc(ctx, type);
-    //str += "(&";
-    //str += generateNullFunc(ctx, type);
-    //str += ")";
-    assert(false);
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_def_ctor>(arr), {obj});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall( inst.get<PFGI::clo_def_ctor>(clo), {obj});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_def_ctor>(srt), {obj});
   } else {
     UNREACHABLE();
   }
@@ -60,14 +54,14 @@ void LifetimeExpr::defConstruct(ast::Type *type, llvm::Value *obj) {
 
 void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
   ast::Type *concrete = concreteType(type);
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copCtor = inst.get<PFGI::arr_cop_ctor>(arr);
-    ir.CreateCall(copCtor, {obj, other});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *copCtor = inst.get<PFGI::srt_cop_ctor>(srt);
-    ir.CreateCall(copCtor, {obj, other});
-  } else if (dynamic_cast<ast::BtnType *>(concrete)) {
+  if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_cop_ctor>(arr), {obj, other});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::clo_cop_ctor>(clo), {obj, other});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_cop_ctor>(srt), {obj, other});
   } else {
     UNREACHABLE();
   }
@@ -76,14 +70,14 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
 
 void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value *other) {
   ast::Type *concrete = concreteType(type);
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movCtor = inst.get<PFGI::arr_mov_ctor>(arr);
-    ir.CreateCall(movCtor, {obj, other});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *movCtor = inst.get<PFGI::srt_mov_ctor>(srt);
-    ir.CreateCall(movCtor, {obj, other});
-  } else if (dynamic_cast<ast::BtnType *>(concrete)) {
+  if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(other), obj);
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_mov_ctor>(arr), {obj, other});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::clo_mov_ctor>(clo), {obj, other});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_mov_ctor>(srt), {obj, other});
   } else {
     UNREACHABLE();
   }
@@ -93,14 +87,14 @@ void LifetimeExpr::moveConstruct(ast::Type *type, llvm::Value *obj, llvm::Value 
 void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
   ast::Type *concrete = concreteType(type);
   // @TODO visitor?
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *copAsgn = inst.get<PFGI::arr_cop_asgn>(arr);
-    ir.CreateCall(copAsgn, {left, right});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *copAsgn = inst.get<PFGI::srt_cop_asgn>(srt);
-    ir.CreateCall(copAsgn, {left, right});
-  } else if (dynamic_cast<ast::BtnType *>(concrete)) {
+  if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_cop_asgn>(arr), {left, right});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::clo_cop_asgn>(clo), {left, right});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_cop_asgn>(srt), {left, right});
   } else {
     UNREACHABLE();
   }
@@ -108,14 +102,14 @@ void LifetimeExpr::copyAssign(ast::Type *type, llvm::Value *left, llvm::Value *r
 
 void LifetimeExpr::moveAssign(ast::Type *type, llvm::Value *left, llvm::Value *right) {
   ast::Type *concrete = concreteType(type);
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *movAsgn = inst.get<PFGI::arr_mov_asgn>(arr);
-    ir.CreateCall(movAsgn, {left, right});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *movAsgn = inst.get<PFGI::srt_mov_asgn>(srt);
-    ir.CreateCall(movAsgn, {left, right});
-  } else if (dynamic_cast<ast::BtnType *>(concrete)) {
+  if (dynamic_cast<ast::BtnType *>(concrete)) {
     ir.CreateStore(ir.CreateLoad(right), left);
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_mov_asgn>(arr), {left, right});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::clo_mov_asgn>(clo), {left, right});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_mov_asgn>(srt), {left, right});
   } else {
     UNREACHABLE();
   }
@@ -133,14 +127,14 @@ void LifetimeExpr::relocate(ast::Type *type, llvm::Value *obj, llvm::Value *othe
 
 void LifetimeExpr::destroy(ast::Type *type, llvm::Value *obj) {
   ast::Type *concrete = concreteType(type);
-  if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
-    llvm::Function *dtor = inst.get<PFGI::arr_dtor>(arr);
-    ir.CreateCall(dtor, {obj});
-  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
-    llvm::Function *dtor = inst.get<PFGI::srt_dtor>(srt);
-    ir.CreateCall(dtor, {obj});
-  } else if (dynamic_cast<ast::BtnType *>(concrete)) {
+  if (dynamic_cast<ast::BtnType *>(concrete)) {
     // do nothing
+  } else if (auto *arr = dynamic_cast<ast::ArrayType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::arr_dtor>(arr), {obj});
+  } else if (auto *clo = dynamic_cast<ast::FuncType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::clo_dtor>(clo), {obj});
+  } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
+    ir.CreateCall(inst.get<PFGI::srt_dtor>(srt), {obj});
   } else {
     UNREACHABLE();
   }
