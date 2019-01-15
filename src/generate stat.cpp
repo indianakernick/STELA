@@ -34,8 +34,8 @@ public:
   Visitor(gen::Ctx ctx, FuncCtx funcCtx)
     : ctx{ctx},
       builder{funcCtx.builder},
-      funcCtx{funcCtx.ctx},
-      lifetime{ctx.inst, builder.ir} {}
+      lifetime{ctx.inst, builder.ir},
+      funcCtx{funcCtx.ctx} {}
 
   gen::Expr genValue(ast::Expression *expr) {
     return generateValueExpr(scopes.back(), ctx, {builder, funcCtx}, expr);

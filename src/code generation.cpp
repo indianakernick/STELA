@@ -10,7 +10,6 @@
 
 #include "llvm.hpp"
 #include "log output.hpp"
-#include "generate ids.hpp"
 #include "generate decl.hpp"
 #include <llvm/IR/Verifier.h>
 #include "optimize module.hpp"
@@ -26,7 +25,6 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   // module->setDataLayout(machine->createDataLayout());
   FuncInst inst{module.get()};
   gen::Ctx ctx {module->getContext(), module.get(), inst, log};
-  generateIDs(syms.decls);
   generateDecl(ctx, module.get(), syms.decls);
   
   std::string str;

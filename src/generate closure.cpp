@@ -173,14 +173,6 @@ llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *c
   return func;
 }
 
-namespace {
-
-llvm::Value *getDtor(llvm::IRBuilder<> &ir, llvm::Value *cloDatPtr) {
-  return loadStructElem(ir, ir.CreateLoad(cloDatPtr), clodat_idx_dtor);
-}
-
-}
-
 template <>
 llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) {
   llvm::LLVMContext &ctx = data.mod->getContext();

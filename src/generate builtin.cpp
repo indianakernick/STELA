@@ -37,7 +37,7 @@ llvm::Function *iterImpl(InstData data, ast::Type *obj, IterType iterType) {
     if (iterType == IterType::construct) {
       llvm::Value *dat = func->arg_begin();
       llvm::Value *len = func->arg_begin() + 1;
-      llvm::DataLayout layout{""};
+      llvm::DataLayout layout{data.mod};
       const unsigned align = layout.getPrefTypeAlignment(type);
       const uint64_t size = layout.getTypeAllocSize(type);
       llvm::Value *byteLen = builder.ir.CreateNSWMul(len, constantFor(len, size));
@@ -132,7 +132,7 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
     llvm::Value *src = func->arg_begin();
     llvm::Value *len = func->arg_begin() + 1;
     llvm::Value *dst = func->arg_begin() + 2;
-    llvm::DataLayout layout{""};
+    llvm::DataLayout layout{data.mod};
     const unsigned align = layout.getPrefTypeAlignment(type);
     const uint64_t size = layout.getTypeAllocSize(type);
     llvm::Value *byteLen = builder.ir.CreateNSWMul(len, constantFor(len, size));

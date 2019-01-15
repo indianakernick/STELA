@@ -55,7 +55,6 @@
 		45816F4B21B0B6A700712CA3 /* generate decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4921B0B6A700712CA3 /* generate decl.cpp */; };
 		45816F4E21B0BF9500712CA3 /* generate type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4C21B0BF9500712CA3 /* generate type.cpp */; };
 		45816F5321B1049300712CA3 /* func instantiations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5221B1049300712CA3 /* func instantiations.cpp */; };
-		45816F5621B128EC00712CA3 /* generate ids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5421B128EC00712CA3 /* generate ids.cpp */; };
 		45816F5921B1E68700712CA3 /* generate expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F5721B1E68700712CA3 /* generate expr.cpp */; };
 		45816F6221B3583D00712CA3 /* generate func.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F6021B3583C00712CA3 /* generate func.cpp */; };
 		45816F6621B6249200712CA3 /* c standard library.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F6521B6249200712CA3 /* c standard library.cpp */; };
@@ -219,8 +218,6 @@
 		45816F4F21B0EBE100712CA3 /* gen context.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen context.hpp"; sourceTree = "<group>"; };
 		45816F5121B1032500712CA3 /* func instantiations.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "func instantiations.hpp"; sourceTree = "<group>"; };
 		45816F5221B1049300712CA3 /* func instantiations.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "func instantiations.cpp"; sourceTree = "<group>"; };
-		45816F5421B128EC00712CA3 /* generate ids.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate ids.cpp"; sourceTree = "<group>"; };
-		45816F5521B128EC00712CA3 /* generate ids.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate ids.hpp"; sourceTree = "<group>"; };
 		45816F5721B1E68700712CA3 /* generate expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate expr.cpp"; sourceTree = "<group>"; };
 		45816F5821B1E68700712CA3 /* generate expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate expr.hpp"; sourceTree = "<group>"; };
 		45816F6021B3583C00712CA3 /* generate func.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate func.cpp"; sourceTree = "<group>"; };
@@ -405,8 +402,6 @@
 				45816F4D21B0BF9500712CA3 /* generate type.hpp */,
 				45816F5721B1E68700712CA3 /* generate expr.cpp */,
 				45816F5821B1E68700712CA3 /* generate expr.hpp */,
-				45816F5421B128EC00712CA3 /* generate ids.cpp */,
-				45816F5521B128EC00712CA3 /* generate ids.hpp */,
 				454B744521C3947900BB4BD0 /* lower expressions.cpp */,
 				454B744621C3947900BB4BD0 /* lower expressions.hpp */,
 				454B744821C4A5B700BB4BD0 /* function builder.cpp */,
@@ -789,7 +784,6 @@
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
 				455DADAC21BE29920012A261 /* generate stat.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
-				45816F5621B128EC00712CA3 /* generate ids.cpp in Sources */,
 				45816F6621B6249200712CA3 /* c standard library.cpp in Sources */,
 				455DADB021C0899F0012A261 /* check missing return.cpp in Sources */,
 				45DF194C21D5D80E00FA28A8 /* categories.cpp in Sources */,

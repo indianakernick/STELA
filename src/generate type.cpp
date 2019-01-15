@@ -85,10 +85,6 @@ llvm::Type *stela::generateType(llvm::LLVMContext &ctx, ast::Type *type) {
 
 namespace {
 
-ast::ParamType convert(const ast::FuncParam &param) {
-  return {param.ref, param.type};
-}
-
 ast::ParamType convert(const sym::ExprType &param) {
   return {static_cast<ast::ParamRef>(param.ref), param.type};
 }

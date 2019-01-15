@@ -2547,6 +2547,77 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(zero1(), 0.0f);
   });
   
+  TEST(Modules, {
+    const char *sourceA = R"(
+      module glm;
+
+      type vec2 struct {
+        x: real;
+        y: real;
+      };
+
+      func add(a: vec2, b: vec2) -> vec2 {
+        return make vec2 {a.x + b.x, a.y + b.y};
+      }
+
+      // We don't have a builtin sqrt function yet so this will have to do
+      func mag2(v: vec2) -> real {
+        return v.x * v.x + v.y * v.y;
+      }
+    )";
+    
+    const char *sourceB = R"(
+      // Optional
+      // module main;
+
+      import glm;
+
+      extern func five() {
+        let one_two = make vec2 {1.0, 2.0};
+        let three_four = make vec2 {3.0, 4.0};
+        let four_six = add(one_two, three_four);
+        return mag2(one_two);
+      }
+    )";
+    
+    Symbols syms = initModules(log);
+    ASTs asts;
+    asts.push_back(createAST(sourceB, log));
+    asts.push_back(createAST(sourceA, log));
+    const ModuleOrder order = findModuleOrder(asts, log);
+    compileModules(syms, order, asts, log);
+    
+    auto *engine = generate(syms, log);
+    
+    auto five = GET_FUNC("five", Real());
+    ASSERT_EQ(five(), 5.0f);
+  });
+  
+  TEST(Closure conversion to bool, {
+    ASSERT_SUCCEEDS(R"(
+      extern func passed() {
+        var nullFn: func();
+        if (nullFn) return false;
+        //for (;nullFn;) return false;
+        while (nullFn) return false;
+        let two = nullFn ? 6 : 2;
+        if (two != 2) return false;
+        /*let troo = !make bool nullFn;
+        if (!troo) return false;
+        let tru = !nullFn;
+        if (!tru) return false;
+        let fls = true && nullFn;
+        if (fls) return false;
+        let fols = false || nullFn;
+        if (fols) return false;*/
+        return true;
+      }
+    )");
+    
+    auto passed = GET_FUNC("passed", Bool());
+    ASSERT_TRUE(passed());
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

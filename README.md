@@ -23,8 +23,7 @@ static typing.
 
 ## Examples
 
-The LLVM backend is underway. Lambdas are not supported yet. It's still very experimental.
-Part of the C++ backend is still in the code but commented out.
+The LLVM backend is underway. It's still very experimental.
 
 The CLI is not implemented yet so here is an example of compiling a Stela program to LLVM IR and executing it. See the **Building** section.
 
@@ -79,8 +78,7 @@ int main() {
 }
 ```
 
-~~Here's some programs you can try out!~~ Lambdas are not supported yet so not all of the tests
-can be compiled with the LLVM backend.
+Here's some programs you can try out! The LLVM backend is capable of compiling all of the tests but is still very unfinished.
 
 ### Lambdas
 
