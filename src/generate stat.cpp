@@ -31,17 +31,20 @@ struct FlowData {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, llvm::Function *func)
-    : ctx{ctx}, builder{func}, lifetime{ctx.inst, builder.ir} {}
+  Visitor(gen::Ctx ctx, FuncCtx funcCtx)
+    : ctx{ctx},
+      builder{funcCtx.builder},
+      funcCtx{funcCtx.ctx},
+      lifetime{ctx.inst, builder.ir} {}
 
   gen::Expr genValue(ast::Expression *expr) {
-    return generateValueExpr(scopes.back(), ctx, builder, expr);
+    return generateValueExpr(scopes.back(), ctx, {builder, funcCtx}, expr);
   }
   void genExpr(ast::Expression *expr, llvm::Value *result) {
-    generateExpr(scopes.back(), ctx, builder, expr, result);
+    generateExpr(scopes.back(), ctx, {builder, funcCtx}, expr, result);
   }
   gen::Expr genExpr(ast::Expression *expr) {
-    return generateExpr(scopes.back(), ctx, builder, expr, nullptr);
+    return generateExpr(scopes.back(), ctx, {builder, funcCtx}, expr, nullptr);
   }
   void genCondBr(
     ast::Expression *cond,
@@ -357,19 +360,20 @@ private:
   FlowData flow;
   std::vector<Scope> scopes;
   LifetimeExpr lifetime;
+  llvm::Value *funcCtx;
 };
 
 }
 
 void stela::generateStat(
   gen::Ctx ctx,
-  llvm::Function *func,
+  FuncCtx funcCtx,
   ast::Receiver &rec,
   ast::FuncParams &params,
   ast::Block &block
 ) {
   lowerExpressions(block);
-  Visitor visitor{ctx, func};
+  Visitor visitor{ctx, funcCtx};
   visitor.enterScope();
   // @TODO maybe do parameter insersion in a separate function
   if (rec) {

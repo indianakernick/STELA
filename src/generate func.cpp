@@ -6,10 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "ast.hpp"
 #include "inst data.hpp"
 #include "gen types.hpp"
-#include "gen context.hpp"
 #include "gen helpers.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
@@ -17,103 +15,6 @@
 #include "func instantiations.hpp"
 
 using namespace stela;
-
-// create function object from function
-std::string generateMakeFunc(gen::Ctx ctx, ast::FuncType &type) {
-  /*gen::String name;
-  name += "f_makefunc_";
-  name += generateFuncName(ctx, type);
-  if (ctx.inst.funcNotInst(name)) {
-    ctx.func += "static ";
-    ctx.func += generateType(ctx, &type);
-    ctx.func += " ";
-    ctx.func += name;
-    ctx.func += "(const ";
-    ctx.func += generateFuncSig(ctx, type);
-    ctx.func += R"( func) noexcept {
-auto *ptr = static_cast<FuncClosureData *>(allocate(sizeof(FuncClosureData)));
-new (ptr) FuncClosureData(); // setup virtual destructor
-ptr->count = 1;
-return {func, ClosureDataPtr{static_cast<ClosureData *>(ptr)}};
-}
-)";
-  }
-  return name;*/
-  return {};
-}
-
-// body of a lambda
-std::string generateLambda(gen::Ctx ctx, const ast::Lambda &lambda) {
-  /*gen::String func;
-  func += "static ";
-  func += generateType(ctx, lambda.ret.get());
-  func += " ";
-  gen::String name;
-  name += "f_lam_";
-  name += lambda.id;
-  func += name;
-  func += "(";
-  func += generateLambdaCapture(ctx, lambda);
-  func += " &capture";
-  sym::Lambda *symbol = lambda.symbol;
-  for (size_t p = 0; p != symbol->params.size(); ++p) {
-    func += ", ";
-    func += generateType(ctx, symbol->params[p].type.get());
-    func += ' ';
-    if (symbol->params[p].ref == sym::ValueRef::ref) {
-      func += '&';
-    }
-    func += "p_";
-    func += (p + 1);
-  }
-  func += ") noexcept {\n";
-  func += generateDecl(ctx, lambda.body);
-  func += "}\n";
-  ctx.func += func;
-  return name;*/
-  return {};
-}
-
-// create function object from lambda
-std::string generateMakeLam(gen::Ctx ctx, const ast::Lambda &lambda) {
-  /*gen::String func;
-  func += "static inline ";
-  func += generateType(ctx, lambda.exprType.get());
-  func += " ";
-  gen::String name;
-  name += "f_makelam_";
-  name += lambda.id;
-  func += name;
-  func += "(";
-  const gen::String capture = generateLambdaCapture(ctx, lambda);
-  func += capture;
-  func += " capture) noexcept {\n";
-  
-  func += "auto *ptr = static_cast<";
-  func += capture;
-  func += " *>(allocate(sizeof(";
-  func += capture;
-  func += ")));\n";
-  
-  func += "new (ptr) ";
-  func += capture;
-  func += "(capture);\n";
-  
-  func += "ptr->count = 1;\n";
-  
-  func += "return {reinterpret_cast<";
-  auto *funcType = assertDownCast<ast::FuncType>(lambda.exprType.get());
-  func += generateFuncSig(ctx, *funcType);
-  func += ">(";
-  func += generateLambda(ctx, lambda);
-  func += "), ClosureDataPtr{static_cast<ClosureData *>(ptr)}};\n";
-  
-  func += "}\n";
-  
-  ctx.func += func;
-  return name;*/
-  return {};
-}
 
 template <>
 llvm::Function *stela::genFn<FGI::panic>(InstData data) {

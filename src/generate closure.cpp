@@ -6,9 +6,13 @@
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
+#include "generate closure.hpp"
+
 #include "gen types.hpp"
 #include "gen helpers.hpp"
 #include "generate type.hpp"
+#include "generate stat.hpp"
+#include "lifetime exprs.hpp"
 #include "function builder.hpp"
 #include "func instantiations.hpp"
 
@@ -21,6 +25,7 @@ constexpr unsigned clo_idx_dat = 1;
 
 // constexpr unsigned clodat_idx_ref = 0;
 constexpr unsigned clodat_idx_dtor = 1;
+constexpr unsigned clodat_idx_cap = 2;
 
 void stubAttributes(llvm::Function *func) {
   const size_t args = func->arg_size();
@@ -50,6 +55,32 @@ llvm::Function *stela::genFn<PFGI::clo_stub>(InstData data, ast::FuncType *clo) 
   FuncBuilder builder{func};
   llvm::Function *panic = data.inst.get<FGI::panic>();
   callPanic(builder.ir, panic, "Calling null function pointer");
+  return func;
+}
+
+template <>
+llvm::Function *stela::genFn<PFGI::clo_bool>(InstData data, ast::FuncType *clo) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, clo);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    llvm::Type::getInt1Ty(ctx), {type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_bool");
+  func->addParamAttr(0, llvm::Attribute::NonNull);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addAttribute(0, llvm::Attribute::ZExt);
+  FuncBuilder builder{func};
+  
+  /*
+  return clo.fun != stub
+  */
+  
+  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *cloFun = loadStructElem(builder.ir, cloPtr, clo_idx_fun);
+  llvm::Value *stub = data.inst.get<PFGI::clo_stub>(clo);
+  llvm::Value *notStub = builder.ir.CreateICmpNE(cloFun, stub);
+  builder.ir.CreateRet(notStub);
+  
   return func;
 }
 
@@ -89,7 +120,7 @@ llvm::Function *stela::genFn<PFGI::clo_lam_ctor>(InstData data, ast::FuncType *c
   llvm::Type *funTy = type->getStructElementType(clo_idx_fun);
   llvm::Type *datTy = type->getStructElementType(clo_idx_dat);
   llvm::FunctionType *sig = llvm::FunctionType::get(
-    voidTy(ctx), {type->getPointerTo(), funTy, datTy}, false
+    voidTy(ctx), {type->getPointerTo(), funTy, voidPtrTy(ctx)}, false
   );
   llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_lam_ctor");
   func->addParamAttr(0, llvm::Attribute::NonNull);
@@ -108,7 +139,8 @@ llvm::Function *stela::genFn<PFGI::clo_lam_ctor>(InstData data, ast::FuncType *c
   llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
   builder.ir.CreateStore(fun, cloFunPtr);
   llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  builder.ir.CreateStore(dat, cloDatPtr);
+  llvm::Value *opaqueDat = builder.ir.CreatePointerCast(dat, datTy);
+  builder.ir.CreateStore(opaqueDat, cloDatPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -333,4 +365,50 @@ llvm::Function *stela::genFn<PFGI::clo_lt>(InstData data, ast::FuncType *clo) {
   builder.ir.CreateRet(equal);
   
   return func;
+}
+
+llvm::Function *stela::genLambdaBody(gen::Ctx ctx, ast::Lambda &lam) {
+  const Signature sig = getSignature(lam);
+  llvm::FunctionType *fnType = generateSig(ctx.llvm, sig);
+  llvm::Function *func = makeInternalFunc(ctx.mod, fnType, "lam_body");
+  assignAttrs(func, sig);
+  FuncBuilder builder{func};
+  llvm::Type *capTy = generateLambdaCapture(ctx.llvm, lam)->getPointerTo();
+  llvm::Value *funcCtx = builder.ir.CreatePointerCast(func->arg_begin(), capTy);
+  ast::Receiver rec;
+  generateStat(ctx, {builder, funcCtx}, rec, lam.params, lam.body);
+  return func;
+}
+
+llvm::Value *stela::closureCapAddr(FuncBuilder &builder, llvm::Value *captures, const uint32_t index) {
+  return builder.ir.CreateStructGEP(captures, clodat_idx_cap + index);
+}
+
+llvm::Value *stela::closureFun(FuncBuilder &builder, llvm::Value *closure) {
+  return loadStructElem(builder.ir, closure, clo_idx_fun);
+}
+
+llvm::Value *stela::closureDat(FuncBuilder &builder, llvm::Value *closure) {
+  llvm::Value *dat = loadStructElem(builder.ir, closure, clo_idx_dat);
+  return builder.ir.CreatePointerCast(dat, voidPtrTy(closure->getContext()));
+}
+
+llvm::Function *stela::getVirtualDtor(gen::Ctx ctx, const ast::Lambda &lambda) {
+  llvm::Function *func = makeInternalFunc(ctx.mod, dtorTy(ctx.llvm), "clo_cap_dtor");
+  FuncBuilder builder{func};
+  llvm::Type *clodatTy = generateLambdaCapture(ctx.llvm, lambda);
+  llvm::Type *clodatPtrTy = clodatTy->getPointerTo();
+  llvm::Value *clodat = builder.ir.CreatePointerCast(func->arg_begin(), clodatPtrTy);
+  LifetimeExpr lifetime{ctx.inst, builder.ir};
+  const std::vector<sym::ClosureCap> &caps = lambda.symbol->captures;
+  for (uint32_t c = 0; c != caps.size(); ++c) {
+    lifetime.destroy(caps[c].type.get(), closureCapAddr(builder, clodat, c));
+  }
+  builder.ir.CreateRetVoid();
+  return func;
+}
+
+void stela::setDtor(FuncBuilder &builder, llvm::Value *captures, llvm::Function *dtor) {
+  llvm::Value *dtorPtr = builder.ir.CreateStructGEP(captures, clodat_idx_dtor);
+  builder.ir.CreateStore(dtor, dtorPtr);
 }

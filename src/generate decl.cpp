@@ -39,8 +39,8 @@ public:
       module
     );
     assignAttrs(func.llvmFunc, sig);
-    
-    generateStat(ctx, func.llvmFunc, func.receiver, func.params, func.body);
+    FuncBuilder builder{func.llvmFunc};
+    generateStat(ctx, {builder, nullptr}, func.receiver, func.params, func.body);
   }
   
   llvm::Twine ctorName(const llvm::StringRef &objName) {
@@ -90,7 +90,7 @@ public:
     LifetimeExpr ctorLife{ctx.inst, ctorBuilder.ir};
     if (expr) {
       Scope temps;
-      generateExpr(temps, ctx, ctorBuilder, expr, llvmAddr);
+      generateExpr(temps, ctx, {ctorBuilder, nullptr}, expr, llvmAddr);
       for (const Object obj : rev_range(temps)) {
         ctorLife.destroy(obj.type, obj.addr);
       }

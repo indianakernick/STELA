@@ -239,6 +239,7 @@ void ExprLookup::lookupIdent(ast::Identifier &ident) {
       stack.pushFunc(sym::Name{ident.name});
     } else {
       ident.definition = pushFunPtr(scope, sym::Name{ident.name}, ident.loc);
+      ident.exprType = stack.topType();
     }
     return;
   }

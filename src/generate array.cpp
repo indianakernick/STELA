@@ -261,11 +261,17 @@ llvm::Function *stela::genFn<PFGI::arr_strg_dtor>(InstData data, ast::ArrayType 
   assignUnaryCtorAttrs(func);
   FuncBuilder builder{func};
   
+  /*
+  destroy_n(storage.dat, storage.len)
+  free(storage.dat)
+  */
+  
   llvm::Value *storage = builder.ir.CreatePointerCast(func->arg_begin(), type);
   llvm::Value *len = loadStructElem(builder.ir, storage, array_idx_len);
   llvm::Value *dat = loadStructElem(builder.ir, storage, array_idx_dat);
   llvm::Value *destroy_n = data.inst.get<PFGI::destroy_n>(arr->elem.get());
   builder.ir.CreateCall(destroy_n, {dat, len});
+  callFree(builder.ir, data.inst.get<FGI::free>(), dat);
   
   builder.ir.CreateRetVoid();
   return func;

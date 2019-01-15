@@ -243,6 +243,10 @@ private:
 };
 
 struct ClosureData : ref_count {
+  ~ClosureData() {
+    dtor(this);
+  }
+  
   // uint64_t ref
   void (*dtor)(void *);
 };

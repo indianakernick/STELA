@@ -15,6 +15,7 @@
 namespace llvm {
 
 class LLVMContext;
+class Module;
 
 }
 
@@ -22,6 +23,7 @@ namespace stela::gen {
 
 struct Ctx {
   llvm::LLVMContext &llvm;
+  llvm::Module *mod;
   FuncInst &inst;
   Log &log;
 };

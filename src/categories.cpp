@@ -67,8 +67,12 @@ public:
       cat = ValueCat::xvalue;
     }
   }
-  void visit(ast::Identifier &) override {
-    cat = ValueCat::lvalue;
+  void visit(ast::Identifier &ident) override {
+    if (dynamic_cast<ast::Func *>(ident.definition)) {
+      cat = ValueCat::prvalue;
+    } else {
+      cat = ValueCat::lvalue;
+    }
   }
   void visit(ast::Ternary &tern) override {
     tern.troo->accept(*this);

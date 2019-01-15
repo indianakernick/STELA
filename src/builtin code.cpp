@@ -303,13 +303,13 @@ T &index(Array<T> &array, const t_sint index) noexcept {
   }
 }*/
 
-struct ClosureData : ref_count {
+/*struct ClosureData : ref_count {
   virtual ~ClosureData() = default;
 };
 
 using ClosureDataPtr = retain_ptr<ClosureData>;
 
-struct FuncClosureData : ClosureData {};
+struct FuncClosureData : ClosureData {};*/
 
 }
 

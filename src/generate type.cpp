@@ -217,7 +217,7 @@ llvm::StructType *stela::generateLambdaCapture(llvm::LLVMContext &ctx, const ast
   std::vector<llvm::Type *> types;
   types.reserve(2 + numCaptures);
   types.push_back(refTy(ctx));
-  types.push_back(dtorTy(ctx));
+  types.push_back(ptrToDtorTy(ctx));
   for (const sym::ClosureCap &cap : symbol->captures) {
     types.push_back(generateType(ctx, cap.type.get()));
   }

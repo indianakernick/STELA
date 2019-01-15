@@ -2299,6 +2299,254 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(closure.dat, sameClosure.dat);
   });
   
+  TEST(Function pointers, {
+    ASSERT_SUCCEEDS(R"(
+      extern func fn(first: sint, second: real) -> bool {
+        return (make real first) == second;
+      }
+      
+      extern func fols() {
+        var def: func(sint, ref real) -> bool;
+        return def ? true : false;
+      }
+      
+      extern func troo() {
+        let ptr = fn;
+        if (ptr) {
+          return ptr(4, 4.0);
+        }
+        return false;
+      }
+    )");
+    
+    auto fols = GET_FUNC("fols", Bool());
+    ASSERT_FALSE(fols());
+    
+    auto troo = GET_FUNC("troo", Bool());
+    ASSERT_TRUE(troo());
+  });
+  
+  TEST(Lambda, {
+    ASSERT_SUCCEEDS(R"(
+      extern func doNothing() {
+        let empty = func(){};
+        empty();
+      }
+    
+      extern func three() {
+        let add = func(a: sint, b: sint) {
+          return a + b;
+        };
+        return add(1, 2);
+      }
+    )");
+    
+    auto nothing = GET_FUNC("doNothing", Void());
+    nothing();
+    
+    auto three = GET_FUNC("three", Sint());
+    ASSERT_EQ(three(), 3);
+  });
+  
+  TEST(Stateful lambda, {
+    ASSERT_SUCCEEDS(R"(
+      func makeIDgen(first: sint) {
+        return func() {
+          let id = first;
+          first++;
+          return id;
+        };
+      }
+
+      extern func getProduct() {
+        var product = 1;
+        let gen = makeIDgen(4);
+        product *= gen(); // 4
+        product *= gen(); // 5
+        product *= gen(); // 6
+        let otherGen = gen;
+        product *= otherGen(); // 7
+        product *= gen(); // 8
+        product *= otherGen(); // 9
+        return product;
+      }
+    )");
+    
+    auto getProduct = GET_FUNC("getProduct", Sint());
+    ASSERT_EQ(getProduct(), 4 * 5 * 6 * 7 * 8 * 9);
+  });
+  
+  TEST(Immediately invoked lambda, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getNine() {
+        return func(){
+          return 4 + 5;
+        }();
+      }
+    )");
+    
+    auto getNine = GET_FUNC("getNine", Sint());
+    ASSERT_EQ(getNine(), 9);
+  });
+  
+  TEST(Nested lambda, {
+    ASSERT_SUCCEEDS(R"(
+      func makeAdd(a: char) {
+        // lam_0: a - p_1
+        // cap a has no index
+        return func(b: real) {
+          // lam_1: a - c_0, b - p_1
+          // cap a has index 0
+          // cap b has no index
+          return func(c: sint) {
+            // c_0 + c_1 + p_1
+            // a has index 0
+            // b has index 1
+            // c has no index
+            return (make sint a) + (make sint b) + c;
+          };
+        };
+      }
+      
+      extern func six() {
+        let add_1 = makeAdd(1c);
+        let add_1_2 = add_1(2.0);
+        return add_1_2(3);
+      }
+    )");
+    
+    auto six = GET_FUNC("six", Sint());
+    ASSERT_EQ(six(), 6);
+  });
+  
+  TEST(Nested nested lambda, {
+    ASSERT_SUCCEEDS(R"(
+      func makeAdd(a: sint) {
+        // lam_0: a - p_1
+        // cap a has no index
+        var other0 = 0;
+        return func(b: struct { m: uint; }) {
+          // lam_1: a - c_0, b - p_1
+          // cap a has index 0
+          // cap b has no index
+          other0++;
+          var other1 = 1;
+          var other2 = 2;
+          a *= 2;
+          return func(c: byte) {
+            other0++;
+            other1++;
+            c = make byte (make sint c * 2);
+            other2++;
+            other1++;
+            // lam_2: a - c_0, b - c_0, c - p_1
+            // cap a has index 0
+            // cap b has index 1
+            // cap c has no index
+            return func(d: char) {
+              d *= 2c;
+              other1++;
+              b.m *= 2u;
+              other0++;
+              // c_0 + c_1 + c_2 + p_1
+              // a has index 0
+              // b has index 1
+              // c has index 2
+              // d has no index
+              let sum = make real a +
+                        make real b.m +
+                        make real c +
+                        make real d;
+              // sum is 20.0
+              // other0 is 3
+              // other1 is 4
+              // other2 is 3
+              return sum *
+                     make real other0 *
+                     make real other1 *
+                     make real other2;
+            };
+          };
+        };
+      }
+      
+      extern func get() {
+        let add_1 = makeAdd(1);
+        let add_1_2 = add_1(make struct { m: uint; } {2u});
+        let add_1_2_3 = add_1_2(3b);
+        return add_1_2_3(4c);
+      }
+    )");
+    
+    auto get = GET_FUNC("get", Real());
+    ASSERT_EQ(get(), 20.0f * 3.0f * 4.0f * 3.0f);
+  });
+  
+  TEST(Arrays, {
+    ASSERT_SUCCEEDS(R"(
+      extern func squares(count: uint) -> [uint] {
+        var array: [uint];
+        reserve(array, count);
+        for (i := 0u; i < count; i++) {
+          push_back(array, i * i);
+        }
+        return array;
+      }
+
+      extern func zero3() {
+        return [[[0.0]]][0][0][0];
+      }
+      
+      extern func zero2() {
+        return [[0.0]][0][0];
+      }
+      
+      extern func zero1() {
+        return [0.0][0];
+      }
+    )");
+    
+    auto squares = GET_FUNC("squares", Array<Uint>(Uint));
+    
+    Array<Uint> empty = squares(0);
+    ASSERT_TRUE(empty);
+    ASSERT_EQ(empty.use_count(), 1);
+    ASSERT_EQ(empty->len, 0);
+    
+    Array<Uint> zero_one_four_nine = squares(4);
+    ASSERT_TRUE(zero_one_four_nine);
+    ASSERT_EQ(zero_one_four_nine.use_count(), 1);
+    ASSERT_EQ(zero_one_four_nine->len, 4);
+    ASSERT_EQ(zero_one_four_nine->cap, 4);
+    ASSERT_TRUE(zero_one_four_nine->dat);
+    ASSERT_EQ(zero_one_four_nine->dat[0], 0.0f);
+    ASSERT_EQ(zero_one_four_nine->dat[1], 1.0f);
+    ASSERT_EQ(zero_one_four_nine->dat[2], 4.0f);
+    ASSERT_EQ(zero_one_four_nine->dat[3], 9.0f);
+    
+    const Uint lots = 1000;
+    
+    Array<Uint> lotsSquares = squares(lots);
+    ASSERT_TRUE(lotsSquares);
+    ASSERT_EQ(lotsSquares.use_count(), 1);
+    ASSERT_EQ(lotsSquares->len, lots);
+    ASSERT_EQ(lotsSquares->cap, lots);
+    ASSERT_TRUE(lotsSquares->dat);
+    
+    for (Uint n = 0; n != lots; ++n) {
+      ASSERT_EQ(lotsSquares->dat[n], n * n);
+    }
+    
+    auto zero3 = GET_FUNC("zero3", Real());
+    ASSERT_EQ(zero3(), 0.0f);
+    
+    auto zero2 = GET_FUNC("zero2", Real());
+    ASSERT_EQ(zero2(), 0.0f);
+    
+    auto zero1 = GET_FUNC("zero1", Real());
+    ASSERT_EQ(zero1(), 0.0f);
+  });
+  
   /*
   TEST(Vars, {
     ASSERT_COMPILES(R"(

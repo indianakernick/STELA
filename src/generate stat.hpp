@@ -11,16 +11,24 @@
 
 #include "ast.hpp"
 #include "gen context.hpp"
+#include "generate expr.hpp"
 
 namespace llvm {
 
 class Function;
+class Value;
 
 }
 
 namespace stela {
 
-void generateStat(gen::Ctx, llvm::Function *, ast::Receiver &, ast::FuncParams &, ast::Block &);
+void generateStat(
+  gen::Ctx,
+  FuncCtx,
+  ast::Receiver &,
+  ast::FuncParams &,
+  ast::Block &
+);
 
 }
 

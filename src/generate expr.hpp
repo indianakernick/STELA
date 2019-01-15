@@ -22,8 +22,13 @@ struct Object {
 };
 using Scope = std::vector<Object>;
 
-gen::Expr generateValueExpr(Scope &, gen::Ctx, FuncBuilder &, ast::Expression *);
-gen::Expr generateExpr(Scope &, gen::Ctx, FuncBuilder &, ast::Expression *, llvm::Value *);
+struct FuncCtx {
+  FuncBuilder &builder;
+  llvm::Value *ctx;
+};
+
+gen::Expr generateValueExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *);
+gen::Expr generateExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *, llvm::Value *);
 
 }
 

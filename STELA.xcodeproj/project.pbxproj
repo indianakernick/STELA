@@ -119,6 +119,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		450DA3A321ED4B950012574A /* generate closure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate closure.hpp"; sourceTree = "<group>"; };
 		450E327720E65D5400F222F1 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		450E327C20E88E1900F222F1 /* context stack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "context stack.cpp"; sourceTree = "<group>"; };
 		450E327D20E88E1A00F222F1 /* context stack.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "context stack.hpp"; sourceTree = "<group>"; };
@@ -313,6 +314,7 @@
 				4525049421E83DE5004AE038 /* generate pointer.cpp */,
 				4525049C21E993B6004AE038 /* generate builtin.cpp */,
 				455EDB7121EB0BFB00B7278E /* generate closure.cpp */,
+				450DA3A321ED4B950012574A /* generate closure.hpp */,
 			);
 			name = Functions;
 			sourceTree = "<group>";

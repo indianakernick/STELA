@@ -13,10 +13,12 @@
 #include "gen types.hpp"
 #include "categories.hpp"
 #include "unreachable.hpp"
+#include "gen helpers.hpp"
 #include "generate type.hpp"
 #include "operator name.hpp"
 #include "compare exprs.hpp"
 #include "lifetime exprs.hpp"
+#include "generate closure.hpp"
 
 using namespace stela;
 
@@ -24,8 +26,12 @@ namespace {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(Scope &temps, gen::Ctx ctx, FuncBuilder &builder)
-    : temps{temps}, ctx{ctx}, builder{builder}, lifetime{ctx.inst, builder.ir} {}
+  Visitor(Scope &temps, gen::Ctx ctx, FuncBuilder &builder, llvm::Value *closure)
+    : temps{temps},
+      ctx{ctx},
+      builder{builder},
+      lifetime{ctx.inst, builder.ir},
+      closure{closure} {}
 
   gen::Expr visitValue(ast::Expression *expr) {
     result = nullptr;
@@ -242,8 +248,43 @@ public:
   }
   void visit(ast::FuncCall &call) override {
     if (call.definition == nullptr) {
-      // call a function pointer
-      assert(false);
+      llvm::Value *resultAddr = result;
+      const gen::Expr func = visitExpr(call.func.get(), nullptr);
+      std::vector<llvm::Value *> args;
+      args.reserve(1 + call.args.size());
+      ast::FuncType *funcType = assertDownCast<ast::FuncType>(call.func->exprType.get());
+      const Signature sig = getSignature(*funcType);
+      llvm::FunctionType *fnType = generateSig(ctx.llvm, sig);
+      std::vector<Object> dtors;
+      dtors.resize(call.args.size());
+      llvm::Value *fun = closureFun(builder, func.obj);
+      args.push_back(closureDat(builder, func.obj));
+      for (size_t a = 0; a != call.args.size(); ++a) {
+        const ast::ParamType &param = funcType->params[a];
+        args.push_back(visitParam(
+          param.type.get(), param.ref, call.args[a].get(), &dtors[a]
+        ));
+      }
+      if (fnType->getNumParams() == args.size() + 1) {
+        if (resultAddr) {
+          args.push_back(resultAddr);
+          builder.ir.CreateCall(fun, args);
+          value = nullptr;
+        } else {
+          llvm::Type *retType = fnType->params().back()->getPointerElementType();
+          llvm::Value *retAddr = builder.alloc(retType);
+          args.push_back(retAddr);
+          builder.ir.CreateCall(fun, args);
+          value = retAddr;
+        }
+      } else {
+        value = builder.ir.CreateCall(fun, args);
+        constructResultFromValue(resultAddr, &call);
+      }
+      destroyArgs(dtors);
+      if (func.cat == ValueCat::prvalue) {
+        lifetime.destroy(funcType, func.obj);
+      }
     } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
       llvm::Value *resultAddr = result;
       std::vector<llvm::Value *> args;
@@ -260,7 +301,7 @@ public:
       }
       pushArgs(args, call.args, func->params, dtors);
       
-      if (funcType->params().size() == args.size() + 1) {
+      if (funcType->getNumParams() == args.size() + 1) {
         if (resultAddr) {
           args.push_back(resultAddr);
           builder.ir.CreateCall(func->llvmFunc, args);
@@ -299,16 +340,6 @@ public:
       constructResultFromValue(resultAddr, &call);
       destroyArgs(dtors);
     }
-    /*if (call.definition == nullptr) {
-      call.func->accept(*this);
-      gen::String func = std::move(str);
-      str += func;
-      str += ".func(";
-      str += func;
-      str += ".data.get()";
-      pushArgs(call.args, {});
-      str += ")";
-    }*/
   }
   
   llvm::Value *materialize(ast::Expression *expr) {
@@ -348,80 +379,68 @@ public:
     
     constructResultFromValue(resultAddr, &sub);
   }
-  /*
-  void writeID(ast::Statement *definition, ast::Type *exprType, ast::Type *expectedType) {
-    assert(definition);
-    gen::String name;
+  
+  void constructIdent(
+    ast::Statement *definition,
+    ast::Type *exprType,
+    ast::Type *expectedType,
+    llvm::Value *resultAddr
+  ) {
+    value = nullptr;
     if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
-      //str += "(";
-      //if (param->ref == ast::ParamRef::ref) {
-      //  str += "*";
-      //}
-      name += "p_";
-      name += param->index;
-      //str += ")";
+      value = param->llvmAddr;
     } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
-      name += "v_";
-      name += decl->id;
+      value = decl->llvmAddr;
     } else if (auto *var = dynamic_cast<ast::Var *>(definition)) {
-      name += "v_";
-      name += var->id;
+      value = var->llvmAddr;
     } else if (auto *let = dynamic_cast<ast::Let *>(definition)) {
-      name += "v_";
-      name += let->id;
+      value = let->llvmAddr;
     }
-    if (!name.empty()) {
+    if (value) {
       auto *funcType = concreteType<ast::FuncType>(exprType);
       auto *btnType = concreteType<ast::BtnType>(expectedType);
       if (funcType && btnType && btnType->value == ast::BtnTypeEnum::Bool) {
-        str += "(";
-        str += name;
-        str += ".func != &";
-        str += generateNullFunc(ctx, *funcType);
-        str += ")";
-        return;
+        llvm::Function *boolConv = ctx.inst.get<PFGI::clo_bool>(funcType);
+        value = builder.ir.CreateCall(boolConv, {value});
+        storeValueAsResult(resultAddr);
+      } else {
+        if (resultAddr) {
+          lifetime.construct(exprType, resultAddr, {value, ValueCat::lvalue});
+          value = nullptr;
+        }
       }
-      str += name;
-    }
-    if (auto *func = dynamic_cast<ast::Func *>(definition)) {
-      auto *funcType = assertDownCast<ast::FuncType>(exprType);
-      str += generateMakeFunc(ctx, *funcType);
-      str += "(&f_";
-      str += func->id;
-      str += ")";
       return;
     }
-    assert(!name.empty());
-  }
-  bool writeCapture(const uint32_t index) {
-    if (index == ~uint32_t{}) {
-      return false;
-    } else {
-      str += "capture.c_";
-      str += index;
-      return true;
+    // @TODO convert function to bool
+    if (auto *func = dynamic_cast<ast::Func *>(definition)) {
+      auto *funcType = assertDownCast<ast::FuncType>(exprType);
+      llvm::Function *funCtor = ctx.inst.get<PFGI::clo_fun_ctor>(funcType);
+      if (resultAddr) {
+        builder.ir.CreateCall(funCtor, {resultAddr, func->llvmFunc});
+        value = nullptr;
+      } else {
+        llvm::Value *fnAddr = builder.alloc(generateType(ctx.llvm, funcType));
+        builder.ir.CreateCall(funCtor, {fnAddr, func->llvmFunc});
+        value = fnAddr;
+      }
+      // @TODO lifetime.startLife
     }
-  }
-  */
-  
-  llvm::Value *getAddr(ast::Statement *definition) {
-    if (auto *param = dynamic_cast<ast::FuncParam *>(definition)) {
-      return param->llvmAddr;
-    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(definition)) {
-      return decl->llvmAddr;
-    } else if (auto *var = dynamic_cast<ast::Var *>(definition)) {
-      return var->llvmAddr;
-    } else if (auto *let = dynamic_cast<ast::Let *>(definition)) {
-      return let->llvmAddr;
-    }
-    return nullptr;
   }
   void visit(ast::Identifier &ident) override {
-    /*if (!writeCapture(ident.captureIndex)) {
-      writeID(ident.definition, ident.exprType.get(), ident.expectedType.get());
-    }*/
-    value = getAddr(ident.definition);
-    constructResultFromValue(result, &ident);
+    llvm::Value *resultAddr = result;
+    if (ident.captureIndex == ~uint32_t{}) {
+      constructIdent(
+        ident.definition,
+        ident.exprType.get(),
+        ident.expectedType.get(),
+        resultAddr
+      );
+    } else {
+      assert(closure);
+      // @TODO convert capture to bool
+      value = closureCapAddr(builder, closure, ident.captureIndex);
+      constructResultFromValue(resultAddr, &ident);
+    }
   }
   void visit(ast::Ternary &tern) override {
     auto *condBlock = builder.nextEmpty();
@@ -480,6 +499,7 @@ public:
       make.expr->accept(*this);
       return;
     }
+    // @TODO conversion to bool
     llvm::Type *type = generateType(ctx.llvm, make.type.get());
     llvm::Value *resultAddr = result;
     gen::Expr srcVal = visitValue(make.expr.get());
@@ -625,36 +645,53 @@ public:
       }
     }
   }
-  /*
-  void writeCapture(const sym::ClosureCap &cap) {
-    if (!writeCapture(cap.index)) {
-      writeID(cap.object, cap.type.get(), nullptr);
-    }
-  }
+
   void visit(ast::Lambda &lambda) override {
-    // prvalue
-  
-    str += generateMakeLam(ctx, lambda);
-    str += "({";
-    sym::Lambda *symbol = lambda.symbol;
-    if (symbol->captures.empty()) {
-      str += "})";
-      return;
+    llvm::Value *resultAddr = result;
+    llvm::Function *body = genLambdaBody(ctx, lambda);
+    llvm::Function *alloc = ctx.inst.get<FGI::alloc>();
+    llvm::Type *capTy = generateLambdaCapture(ctx.llvm, lambda);
+    llvm::Value *captures = callAlloc(builder.ir, alloc, capTy);
+    initRefCount(builder.ir, captures);
+    std::vector<sym::ClosureCap> &caps = lambda.symbol->captures;
+    llvm::Function *dtor = getVirtualDtor(ctx, lambda);
+    setDtor(builder, captures, dtor);
+    for (uint32_t c = 0; c != caps.size(); ++c) {
+      llvm::Value *capAddr = closureCapAddr(builder, captures, c);
+      sym::ClosureCap &cap = caps[c];
+      if (cap.index == ~uint32_t{}) {
+        constructIdent(
+          cap.object,
+          cap.type.get(),
+          nullptr,
+          capAddr
+        );
+      } else {
+        assert(closure);
+        // @TODO convert capture to bool
+        llvm::Value *recapture = closureCapAddr(builder, closure, cap.index);
+        lifetime.construct(cap.type.get(), capAddr, {recapture, ValueCat::lvalue});
+      }
+    }
+    ast::FuncType *funType = assertDownCast<ast::FuncType>(lambda.exprType.get());
+    llvm::Function *lamCtor = ctx.inst.get<PFGI::clo_lam_ctor>(funType);
+    if (resultAddr) {
+      value = nullptr;
     } else {
-      writeCapture(symbol->captures[0]);
+      resultAddr = builder.alloc(generateType(ctx.llvm, funType));
+      value = resultAddr;
     }
-    for (auto c = symbol->captures.cbegin() + 1; c != symbol->captures.cend(); ++c) {
-      str += ", ";
-      writeCapture(*c);
-    }
-    str += "})";
-  }*/
+    llvm::Value *opaqueCaptures = builder.ir.CreatePointerCast(captures, voidPtrTy(ctx.llvm));
+    builder.ir.CreateCall(lamCtor, {resultAddr, body, opaqueCaptures});
+    // @TODO lifetime.startLife
+  }
 
 private:
   Scope &temps;
   gen::Ctx ctx;
   FuncBuilder &builder;
   LifetimeExpr lifetime;
+  llvm::Value *closure = nullptr;
   llvm::Value *value = nullptr;
   llvm::Value *result = nullptr;
   
@@ -680,20 +717,20 @@ private:
 gen::Expr stela::generateValueExpr(
   Scope &temps,
   gen::Ctx ctx,
-  FuncBuilder &builder,
+  FuncCtx funcCtx,
   ast::Expression *expr
 ) {
-  Visitor visitor{temps, ctx, builder};
+  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
   return visitor.visitValue(expr);
 }
 
 gen::Expr stela::generateExpr(
   Scope &temps,
   gen::Ctx ctx,
-  FuncBuilder &builder,
+  FuncCtx funcCtx,
   ast::Expression *expr,
   llvm::Value *result
 ) {
-  Visitor visitor{temps, ctx, builder};
+  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
   return visitor.visitExpr(expr, result);
 }

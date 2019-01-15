@@ -25,7 +25,7 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   // module->setTargetTriple(machine->getTargetTriple().str());
   // module->setDataLayout(machine->createDataLayout());
   FuncInst inst{module.get()};
-  gen::Ctx ctx {module->getContext(), inst, log};
+  gen::Ctx ctx {module->getContext(), module.get(), inst, log};
   generateIDs(syms.decls);
   generateDecl(ctx, module.get(), syms.decls);
   
