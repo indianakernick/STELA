@@ -58,7 +58,6 @@ public:
       CASE(mul);
       CASE(div);
       CASE(mod);
-      CASE(pow);
       CASE(bit_or);
       CASE(bit_xor);
       CASE(bit_and);

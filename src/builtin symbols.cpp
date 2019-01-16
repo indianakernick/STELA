@@ -109,7 +109,7 @@ bool isOrderOp(const ast::BinOp op) {
 }
 
 bool isArithOp(const ast::BinOp op) {
-  return +ast::BinOp::add <= +op && +op <= +ast::BinOp::pow;
+  return +ast::BinOp::add <= +op && +op <= +ast::BinOp::mod;
 }
 
 bool isBitwiseOp(const ast::AssignOp op) {
@@ -117,7 +117,7 @@ bool isBitwiseOp(const ast::AssignOp op) {
 }
 
 bool isArithOp(const ast::AssignOp op) {
-  return +ast::AssignOp::add <= +op && +op <= +ast::AssignOp::pow;
+  return +ast::AssignOp::add <= +op && +op <= +ast::AssignOp::mod;
 }
 
 }

@@ -64,7 +64,7 @@ TEST_GROUP(Lexer, {
   });
 
   TEST(Hello world, {
-    const Tokens tokens = tokenize(R"(func main(argc: Int) {
+    const Tokens tokens = tokenize(R"(func main(argc: sint) {
       print("Hello world!");
       return 0;
     })", log);
@@ -94,7 +94,7 @@ TEST_GROUP(Lexer, {
     ASSERT_VIEW(2, "(");
     ASSERT_VIEW(3, "argc");
     ASSERT_VIEW(4, ":");
-    ASSERT_VIEW(5, "Int");
+    ASSERT_VIEW(5, "sint");
     ASSERT_VIEW(6, ")");
     ASSERT_VIEW(7, "{");
     ASSERT_VIEW(8, "print");

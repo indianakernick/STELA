@@ -179,8 +179,6 @@ public:
         SIGNED_UNSIGNED_FLOAT_OP(CreateSDiv, CreateUDiv, CreateFDiv);
       case ast::BinOp::mod:
         SIGNED_UNSIGNED_FLOAT_OP(CreateSRem, CreateURem, CreateFRem);
-      case ast::BinOp::pow:
-        assert(false);
       default: UNREACHABLE();
     }
     

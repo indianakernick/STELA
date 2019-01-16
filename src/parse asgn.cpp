@@ -66,7 +66,6 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   CHECK(*=, mul)
   CHECK(/=, div)
   CHECK(%=, mod)
-  CHECK(**=, pow)
   CHECK(<<=, bit_shl)
   CHECK(>>=, bit_shr)
   CHECK(&=, bit_and)

@@ -938,16 +938,15 @@ TEST_GROUP(Syntax, {
      /   \
     3    div
        /     \
-    mul       pow1
-   /   \     /    \
-  4     2 sub      pow2
-         /   \    /    \
-        1    mod 2      3
-            /   \
-           5     6
+    mul       sub
+   /   \     /   \
+  4     2   1     mod
+                 /   \
+                5     6
+     
     */
   
-    const char *source = "let a = 3 + 4 * 2 / (1 - 5 % 6) ** 2 ** 3;";
+    const char *source = "let a = 3 + 4 * 2 / (1 - 5 % 6);";
     const AST ast = createAST(source, log);
     ASSERT_EQ(ast.global.size(), 1);
     auto *let = ASSERT_DOWN_CAST(const Let, ast.global[0]);
@@ -957,15 +956,11 @@ TEST_GROUP(Syntax, {
           auto *mul = IS_BOP(div->left, mul);
             IS_NUM(mul->left, "4");
             IS_NUM(mul->right, "2");
-          auto *pow1 = IS_BOP(div->right, pow);
-            auto *sub = IS_BOP(pow1->left, sub);
-              IS_NUM(sub->left, "1");
-              auto *mod = IS_BOP(sub->right, mod);
-                IS_NUM(mod->left, "5");
-                IS_NUM(mod->right, "6");
-            auto *pow2 = IS_BOP(pow1->right, pow);
-              IS_NUM(pow2->left, "2");
-              IS_NUM(pow2->right, "3");
+          auto *sub = IS_BOP(div->right, sub);
+            IS_NUM(sub->left, "1");
+            auto *mod = IS_BOP(sub->right, mod);
+              IS_NUM(mod->left, "5");
+              IS_NUM(mod->right, "6");
   });
   
   TEST(Expr - assign and compare, {
@@ -1238,7 +1233,6 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         a %= b;
-        a **= b;
         a <<= b;
         a >>= b;
         a &= b;
@@ -1250,27 +1244,24 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0]);
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 7);
+    ASSERT_EQ(block.size(), 6);
     
     auto *mod = IS_AOP(block[0], mod);
       IS_ID(mod->left, "a");
       IS_ID(mod->right, "b");
-    auto *pow = IS_AOP(block[1], pow);
-      IS_ID(pow->left, "a");
-      IS_ID(pow->right, "b");
-    auto *shl = IS_AOP(block[2], bit_shl);
+    auto *shl = IS_AOP(block[1], bit_shl);
       IS_ID(shl->left, "a");
       IS_ID(shl->right, "b");
-    auto *shr = IS_AOP(block[3], bit_shr);
+    auto *shr = IS_AOP(block[2], bit_shr);
       IS_ID(shr->left, "a");
       IS_ID(shr->right, "b");
-    auto *band = IS_AOP(block[4], bit_and);
+    auto *band = IS_AOP(block[3], bit_and);
       IS_ID(band->left, "a");
       IS_ID(band->right, "b");
-    auto *bxor = IS_AOP(block[5], bit_xor);
+    auto *bxor = IS_AOP(block[4], bit_xor);
       IS_ID(bxor->left, "a");
       IS_ID(bxor->right, "b");
-    auto *bor = IS_AOP(block[6], bit_or);
+    auto *bor = IS_AOP(block[5], bit_or);
       IS_ID(bor->left, "a");
       auto *ge = IS_BOP(bor->right, ge);
         auto *gt = IS_BOP(ge->left, gt);

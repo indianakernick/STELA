@@ -23,8 +23,6 @@ std::string_view stela::opName(const ast::AssignOp op) {
       return "/=";
     case ast::AssignOp::mod:
       return "%=";
-    case ast::AssignOp::pow:
-      return "**=";
     case ast::AssignOp::bit_or:
       return "|=";
     case ast::AssignOp::bit_xor:
@@ -79,8 +77,6 @@ std::string_view stela::opName(const ast::BinOp op) {
       return "/";
     case ast::BinOp::mod:
       return "%";
-    case ast::BinOp::pow:
-      return "**";
     /* LCOV_EXCL_END */
   }
   UNREACHABLE();

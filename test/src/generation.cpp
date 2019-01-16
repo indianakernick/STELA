@@ -1790,10 +1790,6 @@ TEST_GROUP(Generation, {
   TEST(Sort strings, {
     ASSERT_SUCCEEDS(R"(
       func swap(a: ref [char], b: ref [char]) {
-        // @TODO this is where it would be useful to have a move keyword
-        // let t = move a;
-        // a = move b;
-        // b = move t;
         let t = a;
         a = b;
         b = t;

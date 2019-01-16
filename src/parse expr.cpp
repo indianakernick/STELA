@@ -125,23 +125,9 @@ ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr left, ast::ExprPtr r
   return bin;
 }
 
-ast::ExprPtr parsePow(ParseTokens &tok) {
-  // 4
-  ast::ExprPtr left = parseUnary(tok);
-  if (!left) {
-    return nullptr;
-  }
-  if (!tok.checkOp("**")) {
-    return left;
-  }
-  return makeBinary(
-    ast::BinOp::pow, std::move(left), expectExpr(tok, parsePow)
-  );
-}
-
 ast::ExprPtr parseMul(ParseTokens &tok) {
   // 5
-  ast::ExprPtr left = parsePow(tok);
+  ast::ExprPtr left = parseUnary(tok);
   if (!left) {
     return nullptr;
   }
@@ -156,7 +142,7 @@ ast::ExprPtr parseMul(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parsePow));
+    left = makeBinary(op, std::move(left), expectExpr(tok, parseUnary));
   }
   return left;
 }

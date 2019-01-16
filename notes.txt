@@ -75,8 +75,6 @@ the other?
 think about the rules for function overloading and shadowing. Overload across modules?
 manually instantiate builtin functions
 should mutability be part of the type system properly? What we have now just lets use make variables constant
-maybe a move keyword that does a similar job to std::move
-remove the power operator **
 deal with user types void *
 functional switch
 clean up () in switch
@@ -111,14 +109,12 @@ organize the src directory (folder references instead of groups)
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)
-bool conversion
 maybe ast::Type uniquing?
 maybe we shouldn't inline so aggressively
 swap operator? :=:
 expose reference counted pointers
 arrays should be value types
 cref
-remove that damn power operator
 
 separate function signature from functions, lambdas and function types
   there are a lot of functions that only need to know the function signature

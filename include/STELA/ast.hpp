@@ -89,13 +89,13 @@ using Name = std::string_view;
 
 enum class BtnTypeEnum {
   // builtin symbols.cpp depends on the order
-  Void,
-  Bool,
-  Byte,
-  Char,
-  Real,
-  Sint,
-  Uint
+  Void, //
+  Bool, //
+  Byte, //       bitwise
+  Char, // arith
+  Real, // arith
+  Sint, // arith
+  Uint  // arith bitwise
 };
 
 struct BtnType final : Type {
@@ -162,7 +162,7 @@ enum class BinOp {
   bool_or, bool_and,
   bit_or, bit_xor, bit_and, bit_shl, bit_shr,
   eq, ne, lt, le, gt, ge,
-  add, sub, mul, div, mod, pow
+  add, sub, mul, div, mod
 };
 
 /// Unary operator
@@ -406,7 +406,7 @@ struct TypeAlias final : Declaration {
 /// Assignment operator
 enum class AssignOp {
   // builtin symbols.cpp depends on the order
-  add, sub, mul, div, mod, pow,
+  add, sub, mul, div, mod,
   bit_or, bit_xor, bit_and, bit_shl, bit_shr
 };
 
