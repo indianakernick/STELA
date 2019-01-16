@@ -1288,13 +1288,13 @@ TEST_GROUP(Syntax, {
   TEST(Expr - Unary +, {
     const char *source = R"(
       func dummy() {
-        let a = +;
+        let a = +b;
       }
     )";
     ASSERT_THROWS(createAST(source, log), FatalError);
   });
   
-  TEST(Factorial, {
+  TEST(Expr - Factorial, {
     /*
     
           fac
@@ -1315,7 +1315,7 @@ TEST_GROUP(Syntax, {
     
     */
     const char *source = R"(
-      func fac(n: Int) {
+      func fac(n: sint) {
         return n == 0 ? 1 : n * fac(n - 1);
       }
     )";
@@ -1326,8 +1326,8 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(func->params.size(), 1);
       ASSERT_EQ(func->params[0].name, "n");
       ASSERT_EQ(func->params[0].ref, ParamRef::val);
-      auto *inttype = ASSERT_DOWN_CAST(const NamedType, func->params[0].type);
-        ASSERT_EQ(inttype->name, "Int");
+      auto *sint = ASSERT_DOWN_CAST(const NamedType, func->params[0].type);
+        ASSERT_EQ(sint->name, "sint");
     ASSERT_FALSE(func->ret);
     const auto &block = func->body.nodes;
     ASSERT_EQ(block.size(), 1);

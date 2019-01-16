@@ -79,7 +79,6 @@ functional switch
 use google test and maybe google benchmark
 cache some stuff in the AST. Benchmark
 consider using ORC
-maybe make semicolons optional
 help optimizer with switch on global let
 trivially relocatable optimizations
 
