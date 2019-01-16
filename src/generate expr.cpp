@@ -86,7 +86,9 @@ public:
     
     builder.setCurr(rightBlock);
     gen::Expr rightExpr = visitBool(right);
-    builder.branch(doneBlock);
+    builder.ir.CreateBr(doneBlock);
+    
+    builder.setCurr(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);
@@ -104,7 +106,9 @@ public:
     
     builder.setCurr(rightBlock);
     gen::Expr rightExpr = visitBool(right);
-    builder.branch(doneBlock);
+    builder.ir.CreateBr(doneBlock);
+    
+    builder.setCurr(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
     phi->addIncoming(rightExpr.obj, rightBlock);

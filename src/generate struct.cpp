@@ -34,8 +34,8 @@ llvm::Function *unarySrt(
     llvm::Value *memPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     (lifetime.*memFun)(srt->fields[m].type.get(), memPtr);
   }
-  
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
@@ -61,8 +61,8 @@ llvm::Function *binarySrt(
     llvm::Value *srcPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     (lifetime.*memFun)(srt->fields[m].type.get(), dstPtr, srcPtr);
   }
-  
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
@@ -130,6 +130,7 @@ llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) 
   returnBool(builder.ir, true);
   builder.setCurr(diffBlock);
   returnBool(builder.ir, false);
+  
   return func;
 }
 
@@ -175,5 +176,6 @@ llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) 
   returnBool(builder.ir, true);
   builder.setCurr(geBlock);
   returnBool(builder.ir, false);
+  
   return func;
 }

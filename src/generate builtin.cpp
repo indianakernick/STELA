@@ -66,8 +66,9 @@ llvm::Function *iterImpl(InstData data, ast::Type *obj, IterType iterType) {
   llvm::BasicBlock *doneBlock = builder.makeBlock();
   llvm::Value *datPtr = builder.allocStore(func->arg_begin());
   llvm::Value *lenPtr = builder.allocStore(func->arg_begin() + 1);
+  builder.ir.CreateBr(headBlock);
   
-  builder.branch(headBlock);
+  builder.setCurr(headBlock);
   llvm::Value *len = builder.ir.CreateLoad(lenPtr);
   llvm::Value *lenNotZero = builder.ir.CreateICmpNE(len, constantFor(len, 0));
   builder.ir.CreateCondBr(lenNotZero, bodyBlock, doneBlock);
@@ -88,6 +89,7 @@ llvm::Function *iterImpl(InstData data, ast::Type *obj, IterType iterType) {
   
   builder.setCurr(doneBlock);
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
@@ -164,8 +166,9 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
   llvm::Value *srcPtr = builder.allocStore(func->arg_begin());
   llvm::Value *lenPtr = builder.allocStore(func->arg_begin() + 1);
   llvm::Value *dstPtr = builder.allocStore(func->arg_begin() + 2);
+  builder.ir.CreateBr(headBlock);
   
-  builder.branch(headBlock);
+  builder.setCurr(headBlock);
   llvm::Value *len = builder.ir.CreateLoad(lenPtr);
   llvm::Value *lenNotZero = builder.ir.CreateICmpNE(len, constantFor(len, 0));
   builder.ir.CreateCondBr(lenNotZero, bodyBlock, doneBlock);
@@ -190,6 +193,7 @@ llvm::Function *copyImpl(InstData data, ast::Type *obj, CopyType copyType) {
   
   builder.setCurr(doneBlock);
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
@@ -241,8 +245,8 @@ llvm::Function *stela::genFn<PFGI::reallocate>(InstData data, ast::ArrayType *ar
   builder.ir.CreateStore(newDat, datPtr);
   llvm::Value *capPtr = builder.ir.CreateStructGEP(array, array_idx_cap);
   builder.ir.CreateStore(cap, capPtr);
-  
   builder.ir.CreateRetVoid();
+  
   return func;
 }
 
@@ -263,6 +267,7 @@ llvm::Function *stela::genFn<PFGI::btn_capacity>(InstData data, ast::ArrayType *
   
   llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
   builder.ir.CreateRet(loadStructElem(builder.ir, array, array_idx_cap));
+  
   return func;
 }
 
@@ -283,6 +288,7 @@ llvm::Function *stela::genFn<PFGI::btn_size>(InstData data, ast::ArrayType *arr)
   
   llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
   builder.ir.CreateRet(loadStructElem(builder.ir, array, array_idx_len));
+  
   return func;
 }
 

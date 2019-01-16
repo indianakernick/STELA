@@ -108,7 +108,7 @@ llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   llvm::Value *bits = constantFor(type, bitSize);
   llvm::Value *log2 = builder.ir.CreateNSWSub(bits, leadingZeros);
   llvm::Value *ceiled = builder.ir.CreateShl(constantFor(type, 1), log2);
-  
   builder.ir.CreateRet(ceiled);
+  
   return func;
 }

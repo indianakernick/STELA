@@ -72,13 +72,13 @@ llvm::Function *stela::genFn<PFGI::clo_bool>(InstData data, ast::FuncType *clo) 
   FuncBuilder builder{func};
   
   /*
-  return clo.fun != stub
+  return obj.fun != stub
   */
   
-  llvm::Value *cloPtr = func->arg_begin();
-  llvm::Value *cloFun = loadStructElem(builder.ir, cloPtr, clo_idx_fun);
+  llvm::Value *objPtr = func->arg_begin();
+  llvm::Value *objFun = loadStructElem(builder.ir, objPtr, clo_idx_fun);
   llvm::Value *stub = data.inst.get<PFGI::clo_stub>(clo);
-  llvm::Value *notStub = builder.ir.CreateICmpNE(cloFun, stub);
+  llvm::Value *notStub = builder.ir.CreateICmpNE(objFun, stub);
   builder.ir.CreateRet(notStub);
   
   return func;
@@ -98,16 +98,16 @@ llvm::Function *stela::genFn<PFGI::clo_fun_ctor>(InstData data, ast::FuncType *c
   FuncBuilder builder{func};
   
   /*
-  clo.fun = fun
-  clo.dat = null
+  obj.fun = fun
+  obj.dat = null
   */
   
-  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *objPtr = func->arg_begin();
   llvm::Value *fun = func->arg_begin() + 1;
-  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
-  builder.ir.CreateStore(fun, cloFunPtr);
-  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  setNull(builder.ir, cloDatPtr);
+  llvm::Value *objFunPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_fun);
+  builder.ir.CreateStore(fun, objFunPtr);
+  llvm::Value *objDatPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_dat);
+  setNull(builder.ir, objDatPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -129,18 +129,18 @@ llvm::Function *stela::genFn<PFGI::clo_lam_ctor>(InstData data, ast::FuncType *c
   FuncBuilder builder{func};
   
   /*
-  clo.fun = fun
-  clo.dat = dat
+  obj.fun = fun
+  obj.dat = dat
   */
   
-  llvm::Value *cloPtr = func->arg_begin();
+  llvm::Value *objPtr = func->arg_begin();
   llvm::Value *fun = func->arg_begin() + 1;
   llvm::Value *dat = func->arg_begin() + 2;
-  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
-  builder.ir.CreateStore(fun, cloFunPtr);
-  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
+  llvm::Value *objFunPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_fun);
+  builder.ir.CreateStore(fun, objFunPtr);
+  llvm::Value *objDatPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_dat);
   llvm::Value *opaqueDat = builder.ir.CreatePointerCast(dat, datTy);
-  builder.ir.CreateStore(opaqueDat, cloDatPtr);
+  builder.ir.CreateStore(opaqueDat, objDatPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -158,16 +158,16 @@ llvm::Function *stela::genFn<PFGI::clo_def_ctor>(InstData data, ast::FuncType *c
   FuncBuilder builder{func};
   
   /*
-  clo.fun = stub
-  clo.dat = null
+  obj.fun = stub
+  obj.dat = null
   */
   
-  llvm::Value *cloPtr = func->arg_begin();
-  llvm::Value *cloFunPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_fun);
+  llvm::Value *objPtr = func->arg_begin();
+  llvm::Value *objFunPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_fun);
   llvm::Function *stub = data.inst.get<PFGI::clo_stub>(clo);
-  builder.ir.CreateStore(stub, cloFunPtr);
-  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  setNull(builder.ir, cloDatPtr);
+  builder.ir.CreateStore(stub, objFunPtr);
+  llvm::Value *objDatPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_dat);
+  setNull(builder.ir, objDatPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -185,23 +185,23 @@ llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) 
   FuncBuilder builder{func};
   
   /*
-  if clo.dat != null
-    ptr_dtor(clo.dat.dtor, bitcast clo.dat)
+  if obj.dat != null
+    ptr_dtor(obj.dat.dtor, bitcast obj.dat)
   */
   
   llvm::BasicBlock *dtorBlock = builder.makeBlock();
   llvm::BasicBlock *doneBlock = builder.makeBlock();
-  llvm::Value *cloPtr = func->arg_begin();
-  llvm::Value *cloDatPtr = builder.ir.CreateStructGEP(cloPtr, clo_idx_dat);
-  llvm::Value *cloDat = builder.ir.CreateLoad(cloDatPtr);
-  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(cloDat);
+  llvm::Value *objPtr = func->arg_begin();
+  llvm::Value *objDatPtr = builder.ir.CreateStructGEP(objPtr, clo_idx_dat);
+  llvm::Value *objDat = builder.ir.CreateLoad(objDatPtr);
+  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(objDat);
   builder.ir.CreateCondBr(datNotNull, dtorBlock, doneBlock);
   
   builder.setCurr(dtorBlock);
-  llvm::Value *cloDatDtor = loadStructElem(builder.ir, cloDat, clodat_idx_dtor);
-  llvm::Value *cloDatRefPtr = refPtrPtrCast(builder.ir, cloDatPtr);
+  llvm::Value *objDatDtor = loadStructElem(builder.ir, objDat, clodat_idx_dtor);
+  llvm::Value *objDatRefPtr = refPtrPtrCast(builder.ir, objDatPtr);
   llvm::Function *ptrDtor = data.inst.get<FGI::ptr_dtor>();
-  builder.ir.CreateCall(ptrDtor, {cloDatDtor, cloDatRefPtr});
+  builder.ir.CreateCall(ptrDtor, {objDatDtor, objDatRefPtr});
   builder.ir.CreateBr(doneBlock);
   
   builder.setCurr(doneBlock);
@@ -212,10 +212,10 @@ llvm::Function *stela::genFn<PFGI::clo_dtor>(InstData data, ast::FuncType *clo) 
 
 namespace {
 
-void assignFun(llvm::IRBuilder<> &ir, llvm::Value *leftPtr, llvm::Value *rightPtr) {
-  llvm::Value *leftFunPtr = ir.CreateStructGEP(leftPtr, clo_idx_fun);
-  llvm::Value *rightFun = loadStructElem(ir, rightPtr, clo_idx_fun);
-  ir.CreateStore(rightFun, leftFunPtr);
+void assignFun(llvm::IRBuilder<> &ir, llvm::Value *dstPtr, llvm::Value *srcPtr) {
+  llvm::Value *dstFunPtr = ir.CreateStructGEP(dstPtr, clo_idx_fun);
+  llvm::Value *srcFun = loadStructElem(ir, srcPtr, clo_idx_fun);
+  ir.CreateStore(srcFun, dstFunPtr);
 }
 
 llvm::Value *getDatRefPtr(llvm::IRBuilder<> &ir, llvm::Value *cloPtr) {
@@ -235,16 +235,16 @@ llvm::Function *cloCtor(
   FuncBuilder builder{func};
   
   /*
-  clo.fun = other.fun
-  ptrCtor(bitcast clo.dat, bitcast other.dat)
+  dst.fun = src.fun
+  ptrCtor(bitcast dst.dat, bitcast src.dat)
   */
   
-  llvm::Value *cloPtr = func->arg_begin();
-  llvm::Value *otherPtr = func->arg_begin() + 1;
-  assignFun(builder.ir, cloPtr, otherPtr);
-  llvm::Value *cloDatRefPtr = getDatRefPtr(builder.ir, cloPtr);
-  llvm::Value *otherDatRefPtr = getDatRefPtr(builder.ir, otherPtr);
-  builder.ir.CreateCall(ptrCtor, {cloDatRefPtr, otherDatRefPtr});
+  llvm::Value *dstPtr = func->arg_begin();
+  llvm::Value *srcPtr = func->arg_begin() + 1;
+  assignFun(builder.ir, dstPtr, srcPtr);
+  llvm::Value *dstDatRefPtr = getDatRefPtr(builder.ir, dstPtr);
+  llvm::Value *srcDatRefPtr = getDatRefPtr(builder.ir, srcPtr);
+  builder.ir.CreateCall(ptrCtor, {dstDatRefPtr, srcDatRefPtr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -263,26 +263,26 @@ llvm::Function *cloAsgn(
   FuncBuilder builder{func};
   
   /*
-  left.fun = right.fun
-  if left.dat != null
-    ptrAsgn(left.dat.dtor, bitcast left.dat, bitcast right.dat)
+  dst.fun = src.fun
+  if dst.dat != null
+    ptrAsgn(dst.dat.dtor, bitcast dst.dat, bitcast src.dat)
   */
   
   llvm::BasicBlock *asgnBlock = builder.makeBlock();
   llvm::BasicBlock *doneBlock = builder.makeBlock();
-  llvm::Value *leftPtr = func->arg_begin();
-  llvm::Value *rightPtr = func->arg_begin() + 1;
-  assignFun(builder.ir, leftPtr, rightPtr);
-  llvm::Value *leftDatPtr = builder.ir.CreateStructGEP(leftPtr, clo_idx_dat);
-  llvm::Value *leftDat = builder.ir.CreateLoad(leftDatPtr);
-  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(leftDat);
+  llvm::Value *dstPtr = func->arg_begin();
+  llvm::Value *srcPtr = func->arg_begin() + 1;
+  assignFun(builder.ir, dstPtr, srcPtr);
+  llvm::Value *dstDatPtr = builder.ir.CreateStructGEP(dstPtr, clo_idx_dat);
+  llvm::Value *dstDat = builder.ir.CreateLoad(dstDatPtr);
+  llvm::Value *datNotNull = builder.ir.CreateIsNotNull(dstDat);
   builder.ir.CreateCondBr(datNotNull, asgnBlock, doneBlock);
   
   builder.setCurr(asgnBlock);
-  llvm::Value *leftDatDtor = loadStructElem(builder.ir, leftDat, clodat_idx_dtor);
-  llvm::Value *leftDatRefPtr = refPtrPtrCast(builder.ir, leftDatPtr);
-  llvm::Value *rightDatRefPtr = getDatRefPtr(builder.ir, rightPtr);
-  builder.ir.CreateCall(ptrAsgn, {leftDatDtor, leftDatRefPtr, rightDatRefPtr});
+  llvm::Value *dstDatDtor = loadStructElem(builder.ir, dstDat, clodat_idx_dtor);
+  llvm::Value *dstDatRefPtr = refPtrPtrCast(builder.ir, dstDatPtr);
+  llvm::Value *srcDatRefPtr = getDatRefPtr(builder.ir, srcPtr);
+  builder.ir.CreateCall(ptrAsgn, {dstDatDtor, dstDatRefPtr, srcDatRefPtr});
   builder.ir.CreateBr(doneBlock);
   
   builder.setCurr(doneBlock);

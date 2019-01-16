@@ -148,15 +148,15 @@ llvm::Function *stela::genFn<FGI::ptr_cop_ctor>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  inc other
-  obj = other
+  inc src
+  dst = src
   */
   
-  llvm::Value *objPtr = func->arg_begin();
-  llvm::Value *other = builder.ir.CreateLoad(func->arg_begin() + 1);
+  llvm::Value *dstPtr = func->arg_begin();
+  llvm::Value *src = builder.ir.CreateLoad(func->arg_begin() + 1);
   llvm::Function *inc = data.inst.get<FGI::ptr_inc>();
-  builder.ir.CreateCall(inc, {other});
-  builder.ir.CreateStore(other, objPtr);
+  builder.ir.CreateCall(inc, {src});
+  builder.ir.CreateStore(src, dstPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -178,20 +178,20 @@ llvm::Function *stela::genFn<FGI::ptr_cop_asgn>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  inc right
-  dec left
-  left = right
+  inc src
+  dec dst
+  dst = src
   */
   
   llvm::Value *dtor = func->arg_begin();
-  llvm::Value *leftPtr = func->arg_begin() + 1;
-  llvm::Value *left = builder.ir.CreateLoad(leftPtr);
-  llvm::Value *right = builder.ir.CreateLoad(func->arg_begin() + 2);
+  llvm::Value *dstPtr = func->arg_begin() + 1;
+  llvm::Value *dst = builder.ir.CreateLoad(dstPtr);
+  llvm::Value *src = builder.ir.CreateLoad(func->arg_begin() + 2);
   llvm::Function *inc = data.inst.get<FGI::ptr_inc>();
-  builder.ir.CreateCall(inc, {right});
+  builder.ir.CreateCall(inc, {src});
   llvm::Function *dec = data.inst.get<FGI::ptr_dec>();
-  builder.ir.CreateCall(dec, {dtor, left});
-  builder.ir.CreateStore(right, leftPtr);
+  builder.ir.CreateCall(dec, {dtor, dst});
+  builder.ir.CreateStore(src, dstPtr);
   builder.ir.CreateRetVoid();
   
   return func;
@@ -213,13 +213,13 @@ llvm::Function *stela::genFn<FGI::ptr_mov_ctor>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  obj = other
-  other = null
+  dst = src
+  src = null
   */
   
-  llvm::Value *otherPtr = func->arg_begin() + 1;
-  builder.ir.CreateStore(builder.ir.CreateLoad(otherPtr), func->arg_begin());
-  setNull(builder.ir, otherPtr);
+  llvm::Value *srcPtr = func->arg_begin() + 1;
+  builder.ir.CreateStore(builder.ir.CreateLoad(srcPtr), func->arg_begin());
+  setNull(builder.ir, srcPtr);
   
   builder.ir.CreateRetVoid();
   return func;
@@ -243,18 +243,18 @@ llvm::Function *stela::genFn<FGI::ptr_mov_asgn>(InstData data) {
   FuncBuilder builder{func};
   
   /*
-  dec left
-  left = right
-  right = null
+  dec dst
+  dst = src
+  src = null
   */
   
   llvm::Value *dtor = func->arg_begin();
-  llvm::Value *leftPtr = func->arg_begin() + 1;
-  llvm::Value *rightPtr = func->arg_begin() + 2;
+  llvm::Value *dstPtr = func->arg_begin() + 1;
+  llvm::Value *srcPtr = func->arg_begin() + 2;
   llvm::Function *dec = data.inst.get<FGI::ptr_dec>();
-  builder.ir.CreateCall(dec, {dtor, builder.ir.CreateLoad(leftPtr)});
-  builder.ir.CreateStore(builder.ir.CreateLoad(rightPtr), leftPtr);
-  setNull(builder.ir, rightPtr);
+  builder.ir.CreateCall(dec, {dtor, builder.ir.CreateLoad(dstPtr)});
+  builder.ir.CreateStore(builder.ir.CreateLoad(srcPtr), dstPtr);
+  setNull(builder.ir, srcPtr);
   
   builder.ir.CreateRetVoid();
   return func;

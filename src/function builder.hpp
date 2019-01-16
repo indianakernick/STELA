@@ -41,9 +41,6 @@ public:
   void terminate(llvm::BasicBlock *);
   /// Similar to terminate but lazily create the destination block and return it
   llvm::BasicBlock *terminateLazy(llvm::BasicBlock *);
-  /// Insert an unconditional branch instruction to the given block and set
-  /// the current block
-  void branch(llvm::BasicBlock *);
   
   /// Get the function arguments
   llvm::MutableArrayRef<llvm::Argument> args() const;

@@ -121,8 +121,6 @@ separate function signature from functions, lambdas and function types
   but actually take sym::FuncParams or ast::Func.
   This is a mess!
 consistent naming
-  left -> dst
-  right -> src
-  obj -> dst
-  other -> src
+  left -> lhs
+  right -> rhs
   Type -> Ty
