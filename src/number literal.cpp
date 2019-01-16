@@ -100,6 +100,7 @@ bool hasValidSuffix(const char suffix, const Number num, const Loc loc, Log &log
     if (inRange<Real>(num)) {
       return true;
     } else {
+      // @TODO this is not reachable
       log.error(loc) << "Number literal cannot be represented as real" << fatal;
     }
   }

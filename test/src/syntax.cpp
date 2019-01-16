@@ -249,7 +249,7 @@ TEST_GROUP(Syntax, {
   TEST(Stat - If, {
     const char *source = R"(
       func dummy() {
-        if (expr) {
+        if expr {
           var dummy0 = expr;
         }
         
@@ -354,6 +354,7 @@ TEST_GROUP(Syntax, {
     const char *source = R"(
       func dummy() {
         while (expr) {}
+        while expr {}
         for (i := expr; expr; i++) {}
         for (; expr; i++) {}
         for (; expr; ) {}
@@ -364,7 +365,7 @@ TEST_GROUP(Syntax, {
     ASSERT_EQ(ast.global.size(), 1);
     auto *func = ASSERT_DOWN_CAST(const Func, ast.global[0]);
     const auto &block = func->body.nodes;
-    ASSERT_EQ(block.size(), 4);
+    ASSERT_EQ(block.size(), 5);
     
     {
       auto *whileNode = ASSERT_DOWN_CAST(const While, block[0]);
@@ -372,21 +373,26 @@ TEST_GROUP(Syntax, {
       ASSERT_DOWN_CAST(const Block, whileNode->body);
     }
     {
-      auto *forNode = ASSERT_DOWN_CAST(const For, block[1]);
+      auto *whileNode = ASSERT_DOWN_CAST(const While, block[1]);
+      ASSERT_TRUE(whileNode->cond);
+      ASSERT_DOWN_CAST(const Block, whileNode->body);
+    }
+    {
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[2]);
       ASSERT_DOWN_CAST(const DeclAssign, forNode->init);
       ASSERT_TRUE(forNode->cond);
       ASSERT_DOWN_CAST(const IncrDecr, forNode->incr);
       ASSERT_DOWN_CAST(const Block, forNode->body);
     }
     {
-      auto *forNode = ASSERT_DOWN_CAST(const For, block[2]);
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[3]);
       ASSERT_FALSE(forNode->init);
       ASSERT_TRUE(forNode->cond);
       ASSERT_DOWN_CAST(const IncrDecr, forNode->incr);
       ASSERT_DOWN_CAST(const Block, forNode->body);
     }
     {
-      auto *forNode = ASSERT_DOWN_CAST(const For, block[3]);
+      auto *forNode = ASSERT_DOWN_CAST(const For, block[4]);
       ASSERT_FALSE(forNode->init);
       ASSERT_TRUE(forNode->cond);
       ASSERT_FALSE(forNode->incr);
@@ -399,12 +405,12 @@ TEST_GROUP(Syntax, {
       func dummy() {
         switch (expr) {}
         
-        switch (expr) {
-          case (expr) {
+        switch expr {
+          case expr {
             expr++;
             continue;
           }
-          case (expr) {
+          case expr {
             expr++;
             break;
           }

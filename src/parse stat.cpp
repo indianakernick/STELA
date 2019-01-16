@@ -23,9 +23,7 @@ ast::StatPtr parseIf(ParseTokens &tok) {
   Context ctx = tok.context("in if statement");
   auto ifNode = make_retain<ast::If>();
   ifNode->loc = tok.lastLoc();
-  tok.expectOp("(");
   ifNode->cond = tok.expectNode(parseExpr, "condition expression");
-  tok.expectOp(")");
   ifNode->body = tok.expectNode(parseStat, "statement or block");
   if (tok.checkKeyword("else")) {
     ifNode->elseBody = tok.expectNode(parseStat, "statement or block");
@@ -40,18 +38,14 @@ ast::StatPtr parseSwitch(ParseTokens &tok) {
   Context ctx = tok.context("in switch statement");
   auto switchNode = make_retain<ast::Switch>();
   switchNode->loc = tok.lastLoc();
-  tok.expectOp("(");
   switchNode->expr = tok.expectNode(parseExpr, "expression");
-  tok.expectOp(")");
   tok.expectOp("{");
   
   while (!tok.checkOp("}")) {
     if (tok.checkKeyword("case")) {
       ast::SwitchCase scase;
       scase.loc = tok.lastLoc();
-      tok.expectOp("(");
       scase.expr = tok.expectNode(parseExpr, "expression");
-      tok.expectOp(")");
       scase.body = tok.expectNode(parseStat, "statement or block");
       switchNode->cases.push_back(std::move(scase));
     } else if (tok.checkKeyword("default")) {
@@ -114,9 +108,7 @@ ast::StatPtr parseWhile(ParseTokens &tok) {
   Context ctx = tok.context("in while statement");
   auto whileNode = make_retain<ast::While>();
   whileNode->loc = tok.lastLoc();
-  tok.expectOp("(");
   whileNode->cond = tok.expectNode(parseExpr, "condition expression");
-  tok.expectOp(")");
   whileNode->body = tok.expectNode(parseStat, "statement or block");
   return whileNode;
 }

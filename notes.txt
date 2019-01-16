@@ -73,13 +73,10 @@ the other?
 --------------------------------------------------------------------------------
 
 think about the rules for function overloading and shadowing. Overload across modules?
-manually instantiate builtin functions
 should mutability be part of the type system properly? What we have now just lets use make variables constant
 deal with user types void *
 functional switch
-clean up () in switch
 use google test and maybe google benchmark
-maybe remove () from a few places
 cache some stuff in the AST. Benchmark
 consider using ORC
 maybe make semicolons optional

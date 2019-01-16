@@ -131,14 +131,14 @@ TEST_GROUP(Generation, {
   TEST(Switch with default, {
     ASSERT_SUCCEEDS(R"(
       extern func test(value: sint) -> real {
-        switch (value) {
-          case (0) {
+        switch value {
+          case 0 {
             return 0.0;
           }
-          case (1) {
+          case 1 {
             return 1.0;
           }
-          case (2) {
+          case 2 {
             return 2.0;
           }
           default {
@@ -162,10 +162,10 @@ TEST_GROUP(Generation, {
         let zero = 0;
         let one = 1;
         let two = 2;
-        switch (value) {
-          case (zero) return 0.0;
-          case (one) return 1.0;
-          case (two) return 2.0;
+        switch value {
+          case zero return 0.0;
+          case one return 1.0;
+          case two return 2.0;
         }
         return 10.0;
       }
@@ -183,8 +183,8 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       extern func test(value: sint) -> sint {
         var sum = 0;
-        switch (value) {
-          case (4) {
+        switch value {
+          case 4 {
             sum = sum + 8;
             continue;
           }
@@ -192,11 +192,11 @@ TEST_GROUP(Generation, {
             sum = sum - value;
             break;
           }
-          case (16) {
+          case 16 {
             sum = sum + 2;
             continue;
           }
-          case (8) {
+          case 8 {
             sum = sum + 4;
           }
         }
@@ -862,11 +862,11 @@ TEST_GROUP(Generation, {
       let Dir_left = make Dir 3;
       
       extern func classify(dir: Dir) {
-        switch (dir) {
-          case (Dir_up) return 11;
-          case (Dir_right) return 22;
-          case (Dir_down) return 33;
-          case (Dir_left) return 44;
+        switch dir {
+          case Dir_up return 11;
+          case Dir_right return 22;
+          case Dir_down return 33;
+          case Dir_left return 44;
           default return 0;
         }
       }
@@ -981,17 +981,17 @@ TEST_GROUP(Generation, {
     ASSERT_SUCCEEDS(R"(
       extern func get_1_ref(val: sint) {
         var array: [real];
-        switch (val) {
-          case (0) {
+        switch val {
+          case 0 {
             let retain = array;
             {
               continue;
             }
           }
-          case (1) {
+          case 1 {
             break;
           }
-          case (2) {
+          case 2 {
             return array;
           }
           default {
@@ -1036,10 +1036,10 @@ TEST_GROUP(Generation, {
         //   default -> -1.0;
         // };
       
-        switch (str) {
-          case ("no") return 0.0;
-          case ("maybe") return 0.5;
-          case ("yes") return 1.0;
+        switch str {
+          case "no" return 0.0;
+          case "maybe" return 0.5;
+          case "yes" return 1.0;
           default return -1.0;
         }
       }
@@ -1377,7 +1377,7 @@ TEST_GROUP(Generation, {
       };
       
       extern func test() {
-        switch ((make S {}).a) {}
+        switch (make S {}).a {}
         return 0;
       }
     )");
