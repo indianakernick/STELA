@@ -33,11 +33,6 @@ enum class TypeCat {
   /// Only needs an address when used as an lvalue.
   trivially_copyable,
   
-  // @TODO rework this
-  // maybe we should just treat trivially relocatable types the same as
-  // nontrivial types. We'll let the compile inline constructors and maybe
-  // it will be able to figure out trivially relocatation.
-  
   /// Arrays
   /// Requires calls to special functions but can be relocated.
   /// Moving and then destroying is the same as copying.

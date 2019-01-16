@@ -501,7 +501,6 @@ struct Lambda final : Literal {
   Block body;
   
   sym::Lambda *symbol = nullptr;
-  uint32_t id = ~uint32_t{};
   
   void accept(Visitor &) override;
 };

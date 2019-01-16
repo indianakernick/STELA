@@ -165,16 +165,19 @@ public:
   void visit(ast::Var &var) override {
     sym::ExprType etype = sym::makeVarVal(objectType(var.type, var.expr, var.loc));
     auto *varSym = insert<sym::Object>(ctx, var);
+    varSym->scope = ctx.man.cur();
     varSym->etype = std::move(etype);
   }
   void visit(ast::Let &let) override {
     sym::ExprType etype = sym::makeLetVal(objectType(let.type, let.expr, let.loc));
     auto *letSym = insert<sym::Object>(ctx, let);
+    letSym->scope = ctx.man.cur();
     letSym->etype = std::move(etype);
   }
   void visit(ast::TypeAlias &alias) override {
     validateType(ctx, alias.type);
     auto *aliasSym = insert<sym::TypeAlias>(ctx, alias);
+    aliasSym->scope = ctx.man.cur();
     aliasSym->node = {retain, &alias};
   }
   
@@ -217,6 +220,7 @@ public:
   void visit(ast::DeclAssign &as) override {
     sym::ExprType etype = sym::makeVarVal(objectType(nullptr, as.expr, as.loc));
     auto *varSym = insert<sym::Object>(ctx, as);
+    varSym->scope = ctx.man.cur();
     varSym->etype = etype;
   }
   void visit(ast::CallAssign &as) override {

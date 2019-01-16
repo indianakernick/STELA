@@ -16,11 +16,13 @@
 
 namespace stela::sym {
 
+struct Scope;
+
 struct Symbol {
   virtual ~Symbol();
 
+  Scope *scope = nullptr;
   Loc loc;
-  // for detecting things like: unused variable, unused function, etc
   bool referenced = false;
 };
 using SymbolPtr = std::unique_ptr<Symbol>;
@@ -126,7 +128,6 @@ struct Func final : Symbol {
   
   ExprType ret;
   FuncParams params;
-  Scope *scope;
   retain_ptr<ast::Func> node;
 };
 using FuncPtr = std::unique_ptr<Func>;
@@ -141,7 +142,6 @@ struct Lambda final : Symbol {
   
   ExprType ret;
   FuncParams params;
-  Scope *scope;
   retain_ptr<ast::Lambda> node;
   std::vector<ClosureCap> captures;
 };

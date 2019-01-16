@@ -17,9 +17,10 @@ using namespace stela;
 
 namespace {
 
-auto makeParam(const sym::ExprType &etype, ast::FuncParam &param) {
+auto makeParam(const sym::ExprType &etype, ast::FuncParam &param, sym::Scope *scope) {
   auto paramSym = std::make_unique<sym::Object>();
   param.symbol = paramSym.get();
+  paramSym->scope = scope;
   paramSym->loc = param.loc;
   paramSym->etype = etype;
   paramSym->node = {retain, &param};
@@ -137,17 +138,18 @@ sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
 }
 
 void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
+  sym::Scope *scope = funcSym->scope;
   for (size_t i = 0; i != func.params.size(); ++i) {
-    funcSym->scope->table.insert({
+    scope->table.insert({
       sym::Name{func.params[i].name},
-      makeParam(funcSym->params[i + 1], func.params[i])
+      makeParam(funcSym->params[i + 1], func.params[i], scope)
     });
   }
   if (func.receiver) {
     ast::FuncParam &param = *func.receiver;
-    funcSym->scope->table.insert({
+    scope->table.insert({
       sym::Name{param.name},
-      makeParam(funcSym->params[0], param)
+      makeParam(funcSym->params[0], param, scope)
     });
   }
 }
@@ -173,10 +175,11 @@ sym::Lambda *stela::insert(sym::Ctx ctx, ast::Lambda &lam) {
 }
 
 void stela::enterLambdaScope(sym::Lambda *lamSym, ast::Lambda &lam) {
+  sym::Scope *scope = lamSym->scope;
   for (size_t i = 0; i != lam.params.size(); ++i) {
-    lamSym->scope->table.insert({
+    scope->table.insert({
       sym::Name{lam.params[i].name},
-      makeParam(lamSym->params[i], lam.params[i])
+      makeParam(lamSym->params[i], lam.params[i], scope)
     });
   }
 }

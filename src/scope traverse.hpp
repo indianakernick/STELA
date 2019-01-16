@@ -9,7 +9,6 @@
 #ifndef stela_scope_traverse_hpp
 #define stela_scope_traverse_hpp
 
-#include <cassert>
 #include "symbols.hpp"
 #include "unreachable.hpp"
 
