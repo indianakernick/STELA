@@ -88,6 +88,8 @@ public:
   void visit(ast::Make &make) override {
     if (make.cast) {
       cat = ValueCat::prvalue;
+    } else if (isBoolCast(make.type.get(), make.expr->exprType.get())) {
+      cat = ValueCat::prvalue;
     } else {
       make.expr->accept(*this);
     }

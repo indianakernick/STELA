@@ -37,8 +37,8 @@ public:
       lifetime{ctx.inst, builder.ir},
       funcCtx{funcCtx.ctx} {}
 
-  gen::Expr genValue(ast::Expression *expr) {
-    return generateValueExpr(scopes.back(), ctx, {builder, funcCtx}, expr);
+  gen::Expr genBool(ast::Expression *expr) {
+    return generateBoolExpr(scopes.back(), ctx, {builder, funcCtx}, expr);
   }
   void genExpr(ast::Expression *expr, llvm::Value *result) {
     generateExpr(scopes.back(), ctx, {builder, funcCtx}, expr, result);
@@ -52,7 +52,7 @@ public:
     llvm::BasicBlock *fols
   ) {
     const size_t exprScope = enterScope();
-    llvm::Value *condExpr = genValue(cond).obj;
+    llvm::Value *condExpr = genBool(cond).obj;
     destroy(exprScope);
     leaveScope();
     builder.ir.CreateCondBr(condExpr, troo, fols);
@@ -272,8 +272,8 @@ public:
     builder.setCurr(incr);
     if (four.incr) {
       four.incr->accept(*this);
-      builder.ir.CreateBr(cond);
     }
+    builder.ir.CreateBr(cond);
     builder.setCurr(done);
     destroy(outerIndex);
     leaveScope();
@@ -284,7 +284,12 @@ public:
     llvm::Value *addr = builder.alloc(generateType(ctx.llvm, type));
     if (expr) {
       const size_t exprScope = enterScope();
-      genExpr(expr, addr);
+      if (isBoolCast(type, expr->exprType.get())) {
+        builder.ir.CreateStore(genBool(expr).obj, addr);
+        // @TODO lifetime.startLife
+      } else {
+        genExpr(expr, addr);
+      }
       destroy(exprScope);
       leaveScope();
     } else {

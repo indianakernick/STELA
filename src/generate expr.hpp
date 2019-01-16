@@ -22,12 +22,15 @@ struct Object {
 };
 using Scope = std::vector<Object>;
 
+// @TODO rename this
 struct FuncCtx {
   FuncBuilder &builder;
+  // and this
   llvm::Value *ctx;
 };
 
 gen::Expr generateValueExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *);
+gen::Expr generateBoolExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *);
 gen::Expr generateExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *, llvm::Value *);
 
 }

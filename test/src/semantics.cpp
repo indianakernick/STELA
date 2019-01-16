@@ -1816,6 +1816,7 @@ TEST_GROUP(Semantics, {
         let tru = !nullFn;
         let fls = true && nullFn;
         let fols = false || nullFn;
+        let fals: bool = nullFn;
       }
     )");
   });

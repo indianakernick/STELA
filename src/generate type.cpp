@@ -89,15 +89,6 @@ ast::ParamType convert(const sym::ExprType &param) {
   return {static_cast<ast::ParamRef>(param.ref), param.type};
 }
 
-bool isBool(ast::Type *type) {
-  if (auto *btn = concreteType<ast::BtnType>(type)) {
-    if (btn->value == ast::BtnTypeEnum::Bool) {
-      return true;
-    }
-  }
-  return false;
-}
-
 }
 
 llvm::FunctionType *stela::generateSig(llvm::LLVMContext &ctx, const Signature &sig) {
@@ -167,7 +158,7 @@ void assignParamAttrs(
     if (idx != retParam && param.ref != ast::ParamRef::ref) {
       func->addParamAttr(idx, llvm::Attribute::NoAlias);
     }
-  } else if (idx != retParam && isBool(param.type.get())) {
+  } else if (idx != retParam && isBoolType(param.type.get())) {
     func->addParamAttr(idx, llvm::Attribute::ZExt);
   }
 }
@@ -185,7 +176,7 @@ void stela::assignAttrs(llvm::Function *func, const Signature &sig) {
   if (retParam) {
     func->addParamAttr(retParam, llvm::Attribute::NoAlias);
     func->addParamAttr(retParam, llvm::Attribute::WriteOnly);
-  } else if (isBool(sig.ret.get())) {
+  } else if (isBoolType(sig.ret.get())) {
     func->addAttribute(0, llvm::Attribute::ZExt);
   }
   func->addFnAttr(llvm::Attribute::NoUnwind);
@@ -198,6 +189,19 @@ llvm::Type *stela::convertParam(llvm::LLVMContext &ctx, const ast::ParamType &pa
     paramType = paramType->getPointerTo();
   }
   return paramType;
+}
+
+bool stela::isBoolType(ast::Type *type) {
+  if (auto *btn = concreteType<ast::BtnType>(type)) {
+    if (btn->value == ast::BtnTypeEnum::Bool) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool stela::isBoolCast(ast::Type *to, ast::Type *from) {
+  return to && from && isBoolType(to) && !isBoolType(from);
 }
 
 ast::Type *stela::concreteType(ast::Type *type) {

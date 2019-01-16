@@ -43,6 +43,7 @@ public:
     if (four.init) {
       visitPtr(four.init);
     }
+    visitPtr(four.body);
     if (four.incr) {
       visitPtr(four.incr);
     }

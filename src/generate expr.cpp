@@ -49,18 +49,43 @@ public:
     expr->accept(*this);
     return {value, classifyValue(expr)};
   }
+  gen::Expr visitBool(ast::Expression *expr) {
+    result = nullptr;
+    expr->accept(*this);
+    const ValueCat valueCat = classifyValue(expr);
+    return {convertToBool(expr->exprType.get(), {value, valueCat}), ValueCat::prvalue};
+  }
+  
+  llvm::Value *convertToBool(ast::Type *exprType, gen::Expr expr) {
+    if (isBoolType(exprType)) {
+      if (glvalue(expr.cat)) {
+        return builder.ir.CreateLoad(expr.obj);
+      } else {
+        return expr.obj;
+      }
+    }
+    
+    auto *funcType = concreteType<ast::FuncType>(exprType);
+    assert(funcType);
+    llvm::Function *conv = ctx.inst.get<PFGI::clo_bool>(funcType);
+    llvm::Value *boolValue = builder.ir.CreateCall(conv, {expr.obj});
+    if (expr.cat == ValueCat::prvalue) {
+      lifetime.destroy(exprType, expr.obj);
+    }
+    return boolValue;
+  }
   
   llvm::Value *boolOr(ast::Expression *left, ast::Expression *right) {
     llvm::BasicBlock *leftBlock = builder.ir.GetInsertBlock();
     llvm::BasicBlock *rightBlock = builder.makeBlock();
     llvm::BasicBlock *doneBlock = builder.makeBlock();
     
-    gen::Expr leftExpr = visitValue(left);
+    gen::Expr leftExpr = visitBool(left);
     llvm::Type *boolType = leftExpr.obj->getType();
     builder.ir.CreateCondBr(leftExpr.obj, doneBlock, rightBlock);
     
     builder.setCurr(rightBlock);
-    gen::Expr rightExpr = visitValue(right);
+    gen::Expr rightExpr = visitBool(right);
     builder.branch(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
@@ -73,12 +98,12 @@ public:
     llvm::BasicBlock *rightBlock = builder.makeBlock();
     llvm::BasicBlock *doneBlock = builder.makeBlock();
     
-    gen::Expr leftExpr = visitValue(left);
+    gen::Expr leftExpr = visitBool(left);
     llvm::Type *boolType = leftExpr.obj->getType();
     builder.ir.CreateCondBr(leftExpr.obj, rightBlock, doneBlock);
     
     builder.setCurr(rightBlock);
-    gen::Expr rightExpr = visitValue(right);
+    gen::Expr rightExpr = visitBool(right);
     builder.branch(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
     phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
@@ -165,11 +190,10 @@ public:
   }
   void visit(ast::UnaryExpr &expr) override {
     llvm::Value *resultAddr = result;
-    gen::Expr operand = visitValue(expr.expr.get());
-    const ArithCat arith = classifyArith(expr.expr.get());
-    
     switch (expr.oper) {
-      case ast::UnOp::neg:
+      case ast::UnOp::neg: {
+        gen::Expr operand = visitValue(expr.expr.get());
+        const ArithCat arith = classifyArith(expr.expr.get());
         if (arith == ArithCat::signed_int) {
           value = builder.ir.CreateNSWNeg(operand.obj);
         } else if (arith == ArithCat::unsigned_int) {
@@ -178,9 +202,17 @@ public:
           value = builder.ir.CreateFNeg(operand.obj);
         }
         break;
-      case ast::UnOp::bool_not:
-      case ast::UnOp::bit_not:
-        value = builder.ir.CreateNot(operand.obj); break;
+      }
+      case ast::UnOp::bool_not: {
+        gen::Expr operand = visitBool(expr.expr.get());
+        value = builder.ir.CreateNot(operand.obj);
+        break;
+      }
+      case ast::UnOp::bit_not: {
+        gen::Expr operand = visitValue(expr.expr.get());
+        value = builder.ir.CreateNot(operand.obj);
+        break;
+      }
       default: UNREACHABLE();
     }
     storeValueAsResult(resultAddr);
@@ -247,6 +279,7 @@ public:
     }
   }
   void visit(ast::FuncCall &call) override {
+    // @TODO refactor
     if (call.definition == nullptr) {
       llvm::Value *resultAddr = result;
       const gen::Expr func = visitExpr(call.func.get(), nullptr);
@@ -383,7 +416,6 @@ public:
   void constructIdent(
     ast::Statement *definition,
     ast::Type *exprType,
-    ast::Type *expectedType,
     llvm::Value *resultAddr
   ) {
     value = nullptr;
@@ -397,21 +429,12 @@ public:
       value = let->llvmAddr;
     }
     if (value) {
-      auto *funcType = concreteType<ast::FuncType>(exprType);
-      auto *btnType = concreteType<ast::BtnType>(expectedType);
-      if (funcType && btnType && btnType->value == ast::BtnTypeEnum::Bool) {
-        llvm::Function *boolConv = ctx.inst.get<PFGI::clo_bool>(funcType);
-        value = builder.ir.CreateCall(boolConv, {value});
-        storeValueAsResult(resultAddr);
-      } else {
-        if (resultAddr) {
-          lifetime.construct(exprType, resultAddr, {value, ValueCat::lvalue});
-          value = nullptr;
-        }
+      if (resultAddr) {
+        lifetime.construct(exprType, resultAddr, {value, ValueCat::lvalue});
+        value = nullptr;
       }
       return;
     }
-    // @TODO convert function to bool
     if (auto *func = dynamic_cast<ast::Func *>(definition)) {
       auto *funcType = assertDownCast<ast::FuncType>(exprType);
       llvm::Function *funCtor = ctx.inst.get<PFGI::clo_fun_ctor>(funcType);
@@ -432,12 +455,10 @@ public:
       constructIdent(
         ident.definition,
         ident.exprType.get(),
-        ident.expectedType.get(),
         resultAddr
       );
     } else {
       assert(closure);
-      // @TODO convert capture to bool
       value = closureCapAddr(builder, closure, ident.captureIndex);
       constructResultFromValue(resultAddr, &ident);
     }
@@ -450,7 +471,7 @@ public:
     llvm::Value *resultAddr = result;
     
     builder.setCurr(condBlock);
-    builder.ir.CreateCondBr(visitValue(tern.cond.get()).obj, trooBlock, folsBlock);
+    builder.ir.CreateCondBr(visitBool(tern.cond.get()).obj, trooBlock, folsBlock);
   
     gen::Expr troo{nullptr, {}};
     gen::Expr fols{nullptr, {}};
@@ -499,9 +520,14 @@ public:
       make.expr->accept(*this);
       return;
     }
-    // @TODO conversion to bool
-    llvm::Type *type = generateType(ctx.llvm, make.type.get());
     llvm::Value *resultAddr = result;
+    ast::Type *exprType = make.expr->exprType.get();
+    if (isBoolType(make.type.get()) && !concreteType<ast::BtnType>(exprType)) {
+      value = visitBool(make.expr.get()).obj;
+      storeValueAsResult(resultAddr);
+      return;
+    }
+    llvm::Type *type = generateType(ctx.llvm, make.type.get());
     gen::Expr srcVal = visitValue(make.expr.get());
     const ArithCat dst = classifyArith(make.type.get());
     const ArithCat src = classifyArith(make.expr.get());
@@ -663,12 +689,10 @@ public:
         constructIdent(
           cap.object,
           cap.type.get(),
-          nullptr,
           capAddr
         );
       } else {
         assert(closure);
-        // @TODO convert capture to bool
         llvm::Value *recapture = closureCapAddr(builder, closure, cap.index);
         lifetime.construct(cap.type.get(), capAddr, {recapture, ValueCat::lvalue});
       }
@@ -722,6 +746,16 @@ gen::Expr stela::generateValueExpr(
 ) {
   Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
   return visitor.visitValue(expr);
+}
+
+gen::Expr stela::generateBoolExpr(
+  Scope &temps,
+  gen::Ctx ctx,
+  FuncCtx funcCtx,
+  ast::Expression *expr
+) {
+  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
+  return visitor.visitBool(expr);
 }
 
 gen::Expr stela::generateExpr(

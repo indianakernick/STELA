@@ -26,7 +26,7 @@ class LLVMContext;
 
 namespace stela {
 
-// @TODO Use signature in more places
+// @TODO Use Signature in more places
 struct Signature {
   ast::ParamType receiver;
   ast::ParamTypes params;
@@ -45,6 +45,8 @@ llvm::Type *convertParam(llvm::LLVMContext &, const ast::ParamType &);
 std::string generateFuncName(gen::Ctx, const ast::FuncType &);
 
 ast::Type *concreteType(ast::Type *);
+bool isBoolType(ast::Type *);
+bool isBoolCast(ast::Type *, ast::Type *);
 
 template <typename Concrete>
 Concrete *concreteType(ast::Type *type) {
