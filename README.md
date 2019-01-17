@@ -66,22 +66,22 @@ I plan on implementing a few more features after the long refactoring period (se
 
 ## Future language features
 
-* Type traits and generics. A system similar to Rust Traits, Swift Protocols or C++ Concepts.
+* **Type traits and generics**. A system similar to Rust Traits, Swift Protocols or C++ Concepts.
   This will make it possible to reimplement arrays (and other future data structures) in Stela
   instead of generating LLVM. (See `generate builtin.cpp`. I'd like to remove that file).
-* More data structures. Things like hash tables and sets could be implemented in Stela
+* **More data structures**. Things like hash tables and sets could be implemented in Stela
   when I generics are available. It could rely of traits like `Hashable` and `EqualityComparable`.
-* A swap `:=:` operator. This will make algorithms (like sorting and partitioning) a bit faster because
+* **A swap operator**. This will make algorithms (like sorting and partitioning) a bit faster because
   Stela doesn't make an equivilent of `std::move`. I don't want to provide `std::move`-like
   functionality because you could end up accessing a moved-from object.
-* Ranged for loops. I might implement this in a similar way that C++ does. I could define a
+* **Ranged based for loops**. I might implement this in a similar way that C++ does. I could define a
   `Range` trait which checks for begin/end iterators. Maybe I could have things similar to
   iterator categories in C++ but for ranges and then define a library of algorithms on ranges.
   I bet I'll be able to do that years before Xcode implements Ranges TS!
-* Operator overloading. I might be able to implement operators on builtin types in Stela. 
+* **Operator overloading**. I might be able to implement operators on builtin types in Stela. 
   Maybe I could make inline LLVM IR possible (similar to inline asm in C++). I'm not sure if
   this is a good idea.
-* References to const objects with `cref`. This will be a little smarter than C++ `const &`.
+* **References to const objects with `cref`**. This will be a little smarter than C++ `const &`.
   If the parameter happens to be trivially copyable, it will be passed by value, otherwise it
   will be passed by reference. This is really useful for generic programming.
 
