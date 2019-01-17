@@ -1,3 +1,54 @@
+A type trait checks for functions that are defined for a particular type.
+A Hashable trait might be implemented like this:
+
+trait Hashable<T> {
+  func hash(cref T) -> uint;
+};
+
+This says that a type T is Hashable if there exists a hash function that takes
+a cref to T and returns an uint.
+
+We could allow for binary traits this
+
+trait SwappableWith<T, U> {
+  func swap(ref T, ref U);
+};
+
+I'm not sure if there is any use for binary traits.
+
+Traits can be composed. You might want your hashable type to be comparable.
+
+trait Hashable<T> {
+  func hash(cref T) -> uint;
+  trait EqualityComparable;
+};
+
+Maybe you want a function to find the index of an element in a hash table
+You might do something like this:
+
+func hashIndex<Key: Hashable>(key: cref Key, size: uint) {
+  return hash(key) % size;
+}
+
+You cannot pass this function an object that doesn't have the Hashable trait.
+This function only knows that the key is Hashable so it cannot assume that
+the type has any other traits. For example,
+
+func hashIndexInt<Key: Integral>(key: Key, size: uint) {
+  return (make uint key) % size;
+}
+func hashIndex<Key: Hashable>(key: cref Key, size: uint) {
+  // this is invalid even if hashIndex is called with an integer
+  return hashIndexUint(key, size);
+}
+
+The traits required by hashIndexInt would have to be a subset of Hashable for
+this to work. Using traits instead of the C++ way templates work (duck typing)
+means that a generic function doesn't need to be type checked every time it is
+instantiated.
+
+--------------------------------------------------------------------------------
+
 An interface defines the interface of a generic type. A generic function says
 "I accept types that implement this interface" so whenever you try to call a
 function with a type, the compiler will check if the type satisfies the
@@ -112,6 +163,10 @@ swap operator? :=:
 expose reference counted pointers
 arrays should be value types
 cref
+  maybe cref could be a little smarter than const &
+  for generic programming, it would be really handy if cref sint just passed
+  sint by value.
+  cref can bind to an rvalue like it can in C++
 
 separate function signature from functions, lambdas and function types
   there are a lot of functions that only need to know the function signature
@@ -125,3 +180,5 @@ consistent naming
 is ptr_union a good idea?
   we can remove a few dynamic casts
   malloc returns a pointer with alignment of std::max_align_t
+
+range for loops might speed up iteration
