@@ -366,9 +366,10 @@ llvm::Function *stela::genLambdaBody(gen::Ctx ctx, ast::Lambda &lam) {
   assignAttrs(func, sig);
   FuncBuilder builder{func};
   llvm::Type *capTy = generateLambdaCapture(ctx.llvm, lam)->getPointerTo();
-  llvm::Value *funcCtx = builder.ir.CreatePointerCast(func->arg_begin(), capTy);
+  llvm::Value *closure = builder.ir.CreatePointerCast(func->arg_begin(), capTy);
   ast::Receiver rec;
-  generateStat(ctx, {builder, funcCtx}, rec, lam.params, lam.body);
+  gen::Func genFunc{builder, closure, lam.symbol};
+  generateStat(ctx, genFunc, rec, lam.params, lam.body);
   return func;
 }
 

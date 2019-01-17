@@ -743,30 +743,30 @@ private:
 gen::Expr stela::generateValueExpr(
   Scope &temps,
   gen::Ctx ctx,
-  FuncCtx funcCtx,
+  gen::Func func,
   ast::Expression *expr
 ) {
-  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
+  Visitor visitor{temps, ctx, func.builder, func.closure};
   return visitor.visitValue(expr);
 }
 
 gen::Expr stela::generateBoolExpr(
   Scope &temps,
   gen::Ctx ctx,
-  FuncCtx funcCtx,
+  gen::Func func,
   ast::Expression *expr
 ) {
-  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
+  Visitor visitor{temps, ctx, func.builder, func.closure};
   return visitor.visitBool(expr);
 }
 
 gen::Expr stela::generateExpr(
   Scope &temps,
   gen::Ctx ctx,
-  FuncCtx funcCtx,
+  gen::Func func,
   ast::Expression *expr,
   llvm::Value *result
 ) {
-  Visitor visitor{temps, ctx, funcCtx.builder, funcCtx.ctx};
+  Visitor visitor{temps, ctx, func.builder, func.closure};
   return visitor.visitExpr(expr, result);
 }

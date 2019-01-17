@@ -24,7 +24,7 @@ namespace stela {
 
 void generateStat(
   gen::Ctx,
-  FuncCtx,
+  gen::Func,
   ast::Receiver &,
   ast::FuncParams &,
   ast::Block &

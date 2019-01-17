@@ -16,6 +16,7 @@
 #include "generate expr.hpp"
 #include "iterator range.hpp"
 #include "lifetime exprs.hpp"
+#include "scope traverse.hpp"
 #include "function builder.hpp"
 #include "lower expressions.hpp"
 
@@ -31,20 +32,24 @@ struct FlowData {
 
 class Visitor final : public ast::Visitor {
 public:
-  Visitor(gen::Ctx ctx, FuncCtx funcCtx)
+  Visitor(gen::Ctx ctx, gen::Func func)
     : ctx{ctx},
-      builder{funcCtx.builder},
+      builder{func.builder},
       lifetime{ctx.inst, builder.ir},
-      funcCtx{funcCtx.ctx} {}
+      closure{func.closure},
+      symbol{func.symbol} {}
 
+  gen::Func makeFunc() {
+    return {builder, closure, symbol};
+  }
   gen::Expr genBool(ast::Expression *expr) {
-    return generateBoolExpr(scopes.back(), ctx, {builder, funcCtx}, expr);
+    return generateBoolExpr(scopes.back(), ctx, makeFunc(), expr);
   }
   void genExpr(ast::Expression *expr, llvm::Value *result) {
-    generateExpr(scopes.back(), ctx, {builder, funcCtx}, expr, result);
+    generateExpr(scopes.back(), ctx, makeFunc(), expr, result);
   }
   gen::Expr genExpr(ast::Expression *expr) {
-    return generateExpr(scopes.back(), ctx, {builder, funcCtx}, expr, nullptr);
+    return generateExpr(scopes.back(), ctx, makeFunc(), expr, nullptr);
   }
   void genCondBr(
     ast::Expression *cond,
@@ -187,38 +192,54 @@ public:
     destroy(flow.scopeIndex);
     builder.ir.CreateBr(flow.continueBlock);
   }
+  llvm::Value *trivialReturnObject(ast::Expression *expr) {
+    gen::Expr evalExpr = genExpr(expr);
+    if (glvalue(evalExpr.cat)) {
+      return builder.ir.CreateLoad(evalExpr.obj);
+    } else { // prvalue
+      return evalExpr.obj;
+    }
+  }
+  sym::Object *getObject(ast::Statement *def) {
+    if (auto *param = dynamic_cast<ast::FuncParam *>(def)) {
+      if (param->ref == ast::ParamRef::val) {
+        return param->symbol;
+      } else {
+        return nullptr;
+      }
+    } else if (auto *decl = dynamic_cast<ast::DeclAssign *>(def)) {
+      return decl->symbol;
+    } else if (auto *var = dynamic_cast<ast::Var *>(def)) {
+      return var->symbol;
+    } else if (auto *let = dynamic_cast<ast::Let *>(def)) {
+      return let->symbol;
+    }
+    UNREACHABLE();
+  }
+  bool canMoveReturn(sym::Object *object) {
+    sym::Scope *objectScope = object->scope;
+    assert(objectScope);
+    sym::Scope *funcScope = symbol->scope;
+    assert(funcScope);
+    return findNearest(funcScope->type, objectScope) == funcScope;
+  }
   llvm::Value *createReturnObject(ast::Expression *expr, const TypeCat cat) {
-    llvm::Value *retObj = nullptr;
     if (cat == TypeCat::trivially_copyable) {
-      gen::Expr evalExpr = genExpr(expr);
-      if (glvalue(evalExpr.cat)) {
-        retObj = builder.ir.CreateLoad(evalExpr.obj);
-      } else { // prvalue
-        retObj = evalExpr.obj;
-      }
-    } else if (ast::Identifier *ident = rootLvalue(expr)) {
-      // @TODO this is correct but not very efficient
-      // maybe we could check the sym::Scope of the definition and the function.
-      // we'd also have to check if the identifier refers to a reference parameter
-      // lambda captures might complicate things
-      llvm::Value *rootAddr = genExpr(ident).obj;
-      for (const Scope &scope : scopes) {
-        for (const Object obj : scope) {
-          if (obj.addr == rootAddr) {
-            retObj = &builder.args().back();
-            lifetime.moveConstruct(expr->exprType.get(), retObj, genExpr(expr).obj);
-            break;
-          }
-        }
+      return trivialReturnObject(expr);
+    }
+    if (ast::Identifier *ident = rootLvalue(expr)) {
+      sym::Object *object = getObject(ident->definition);
+      if (object && canMoveReturn(object)) {
+        llvm::Value *retObj = &builder.args().back();
+        lifetime.moveConstruct(expr->exprType.get(), retObj, genExpr(expr).obj);
+        return retObj;
       }
     }
-    if (retObj == nullptr) {
-      retObj = &builder.args().back();
-      // @TODO NRVO
-      // if there is one object that is always returned from a function,
-      //   treat the return pointer as an lvalue of that object
-      genExpr(expr, retObj);
-    }
+    llvm::Value *retObj = &builder.args().back();
+    // @TODO NRVO
+    // if there is one object that is always returned from a function,
+    //   treat the return pointer as an lvalue of that object
+    genExpr(expr, retObj);
     return retObj;
   }
   void returnObject(llvm::Value *retObj, const TypeCat cat) {
@@ -366,20 +387,21 @@ private:
   FlowData flow;
   std::vector<Scope> scopes;
   LifetimeExpr lifetime;
-  llvm::Value *funcCtx;
+  llvm::Value *closure;
+  sym::Symbol *symbol;
 };
 
 }
 
 void stela::generateStat(
   gen::Ctx ctx,
-  FuncCtx funcCtx,
+  gen::Func func,
   ast::Receiver &rec,
   ast::FuncParams &params,
   ast::Block &block
 ) {
   lowerExpressions(block);
-  Visitor visitor{ctx, funcCtx};
+  Visitor visitor{ctx, func};
   visitor.enterScope();
   // @TODO maybe do parameter insersion in a separate function
   if (rec) {

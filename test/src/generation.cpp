@@ -2750,6 +2750,29 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(continues(5), 9);
     ASSERT_EQ(continues(6), 9);
   });
+  
+  TEST(No move return lambda captures, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getClosure(arr: [real]) {
+        return func() {
+          return arr;
+        };
+      }
+    )");
+    
+    auto getClosure = GET_FUNC("getClosure", Closure<Array<Real>()>(Array<Real>));
+    
+    Array<Real> array = makeEmptyArray<Real>();
+    ASSERT_EQ(array.use_count(), 1);
+    auto closure = getClosure(array);
+    ASSERT_EQ(array.use_count(), 2);
+    Array<Real> arrayCop = closure();
+    ASSERT_EQ(array.use_count(), 3);
+    ASSERT_EQ(arrayCop, array);
+    Array<Real> arrayCop1 = closure();
+    ASSERT_EQ(array.use_count(), 4);
+    ASSERT_EQ(arrayCop1, array);
+  });
 });
 
 #undef ASSERT_FAILS

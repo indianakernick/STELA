@@ -10,6 +10,7 @@
 #define stela_generate_expr_hpp
 
 #include "ast.hpp"
+#include "symbols.hpp"
 #include "categories.hpp"
 #include "gen context.hpp"
 #include "function builder.hpp"
@@ -22,16 +23,20 @@ struct Object {
 };
 using Scope = std::vector<Object>;
 
-// @TODO rename this
-struct FuncCtx {
+namespace gen {
+
+struct Func {
   FuncBuilder &builder;
-  // and this
-  llvm::Value *ctx;
+  llvm::Value *closure;
+  // sym::Func or sym::Lambda
+  sym::Symbol *symbol;
 };
 
-gen::Expr generateValueExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *);
-gen::Expr generateBoolExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *);
-gen::Expr generateExpr(Scope &, gen::Ctx, FuncCtx, ast::Expression *, llvm::Value *);
+}
+
+gen::Expr generateValueExpr(Scope &, gen::Ctx, gen::Func, ast::Expression *);
+gen::Expr generateBoolExpr(Scope &, gen::Ctx, gen::Func, ast::Expression *);
+gen::Expr generateExpr(Scope &, gen::Ctx, gen::Func, ast::Expression *, llvm::Value *);
 
 }
 
