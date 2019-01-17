@@ -126,7 +126,9 @@ public:
     mem.object->accept(*this);
   }
   void visit(ast::Identifier &ident) override {
-    root = &ident;
+    if (dynamic_cast<ast::Func *>(ident.definition) == nullptr) {
+      root = &ident;
+    }
   }
   
   ast::Identifier *root = nullptr;

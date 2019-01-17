@@ -207,6 +207,7 @@ public:
           if (obj.addr == rootAddr) {
             retObj = &builder.args().back();
             lifetime.moveConstruct(expr->exprType.get(), retObj, genExpr(expr).obj);
+            break;
           }
         }
       }

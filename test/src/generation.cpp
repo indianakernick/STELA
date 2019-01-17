@@ -2628,6 +2628,38 @@ TEST_GROUP(Generation, {
     ASSERT_TRUE(passed());
   });
   
+  TEST(Return function, {
+    ASSERT_SUCCEEDS(R"(
+      extern func five() {
+        return 5;
+      }
+      
+      extern func getFive() {
+        return five;
+      }
+    )");
+    
+    auto getFive = GET_FUNC("getFive", Closure<Sint()>());
+    auto five = getFive();
+    ASSERT_EQ(five(), 5);
+  });
+  
+  TEST(Return lambda, {
+    ASSERT_SUCCEEDS(R"(
+      extern func getFive() {
+        return func() {
+          return 5;
+        };
+      }
+    )");
+    
+    auto getFive = GET_FUNC("getFive", Closure<Sint()>());
+    auto five = getFive();
+    ASSERT_TRUE(five.dat);
+    ASSERT_EQ(five.dat.use_count(), 1);
+    ASSERT_EQ(five(), 5);
+  });
+  
   TEST(Compound operator, {
     ASSERT_SUCCEEDS(R"(
       extern func fac(param: sint) {
