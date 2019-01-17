@@ -7,19 +7,89 @@
 
 A scripting language built for speed in world where JavaScript runs on web servers.
 
-**Disclamer:**
-I'm calling this a "scripting language built for speed" but does that really
-make sense? If you want speed, you need control. You need to be able to do
+## Table of Contents
+* [Status](#status)
+* [Implementation notes](#implementation-notes)
+* [Future language features](#future-language-features)
+* [Safety vs Performance](#safety-vs-performance)
+* [Examples](#examples)
+  * [Lambda](#lambdas)
+  * [Modules](#modules)
+  * [Arrays](#arrays)
+  * [Get a pointer to function](#get-a-pointer-to-function)
+  * [Tag dispatch](#tag-dispatch)
+  * [Member functions](#member-functions)
+  * [Enums](#enums)
+  * [Building](#building)
+  * [Install LLVM](#install-llvm)
+
+## Status
+
+A minimal version of the language has been implemented. I'm in the process of refactoring
+and fixing bugs. It isn't possible to bind C++ functions to Stela (but you can use a `stela::Closure`)
+or bind C++ types to Stela (but you can declare compatible aggregate structs in both languages).
+
+I plan on implementing a few more features after the long refactoring period (see [Future Features](#future-features)).
+
+## Implementation notes
+
+* **LLVM JIT backend**. Stela is damn quick because of LLVM. A Stela program can approach
+  the speed of the equivilent C++ program because the LLVM optimizer is so powerful.
+* **Stela closures are faster than std::function**. The Stela calling convention is actually tuned
+  to make calling closures almost as fast as calling a function pointer in C.
+* **Calling Stela functions from C++ is almost as fast as a function pointer**. A C++ compiler
+  will pass small trivially copyable structs as integers and non-trivial structs by pointer. Stela
+  always passes structs by pointer but this is on the TODO list.
+* **Same value semantics as C++17**. This means that the rules for determining when to call
+  copy/move ctors and dtors is the same as C++17. This includes guaranteed copy elision
+  and move returns. (NRVO is on the TODO list).
+* **Seemless interop with C++**. If an aggregate is defined in Stela...
+  ```Go
+  type Agg struct {
+    a: [real];
+    b: func(sint);   
+  };
+  ```
+  ...and the same aggregate is defined in C++
+  ```C++
+  struct Agg {
+    stela::Array<stela::Real> a;
+    stela::Closure<void(stela::Sint)> b;
+  };
+  ```
+  ...objects of type `Agg` can be seemlessly passed across the language barrier without having
+  to manually declare anything. Of course, you could use some kind of reflection to automatically
+  declare the Stela version of the struct. `stela::Array` and `stela::Closure` are implemented in
+  the same way in both languages.
+* **Usable on any system that LLVM supports**. A list of all target architectures supported
+  by LLVM can be found [here](https://stackoverflow.com/a/18576360/4093378).
+
+## Future language features
+
+* Type traits and generics. A system similar to Rust Traits, Swift Protocols or C++ Concepts.
+  This will make it possible to reimplement arrays (and other future data structures) in Stela
+  instead of generating LLVM. (See `generate builtin.cpp`. I'd like to remove that file).
+* More data structures. Things like hash tables and sets could be implemented in Stela
+  when I generics are available. It could rely of traits like `Hashable` and `EqualityComparable`.
+* A swap `:=:` operator. This will make algorithms (like sorting and partitioning) a bit faster because
+  Stela doesn't make an equivilent of `std::move`. I don't want to provide `std::move`-like
+  functionality because you could end up accessing a moved-from object.
+* Ranged for loops. I might implement this in a similar way that C++ does. I could define a
+  `Range` trait which checks for begin/end iterators. Maybe I could have things similar to
+  iterator categories in C++ but for ranges and then define a library of algorithms on ranges.
+  I bet I'll be able to do that years before Xcode implements Ranges TS!
+* Operator overloading. I might be able to implement operators on builtin types in Stela. 
+  Maybe I could make inline LLVM IR possible (similar to inline asm in C++). I'm not sure if
+  this is a good idea.
+
+## Safety vs Performance
+
+If you want speed, you need control. You need to be able to do
 unsafe things. `std::string_view` is fast but `std::string_view` is also unsafe. It
 could hold a dangling pointer if you're not careful. `operator[]` is fast but it's
 unsafe. `operator[]` doesn't do bounds checking. I've never used `.at()` and I never
 will! I know what I'm doing. I know not to access memory outside the bounds of
 an array.
-
-Being safe costs performance. Scripting languages are meant to be safe. I'll
-try to get as much safety and speed as I can. Even if I don't make this as fast
-as I would like, it will still be much faster than Lua simply due to LLVM and
-static typing.
 
 ## Examples
 
@@ -230,10 +300,10 @@ func main() {
 
 ### Arrays
 
-Arrays in Stela behave like `std::vector`.
+Arrays in Stela behave like `std::shared_ptr<std::vector>`. (I plan on changing that to `std::vector`)
 If you're worried about passing a big array to a function, you can pass by reference.
 I haven't implemented `const &` yet but I plan to. I'm not aware of any way to leak memory or access a nullptr.
-There's no way of creating a circular reference because there's no way for a lambda to point to itself.
+There's no way of creating a circular reference because there's no way for a lambda to capture itself.
 
 ```go
 func squares(count: uint) -> [uint] {
@@ -366,31 +436,12 @@ type Choice = sint;
 let Choice_no  = 0;
 let Choice_yes = 1;
 ```
-
-## Progress
- * The lexical analyser is done.
- * The syntax analyser is done.
- * The semantic analyser is done. It can:
-   * check the type of variables
-   * check types of assignments and expressions
-   * lookup overloaded functions
-   * lookup struct members and functions
-   * deal with statements (if, while, for, ...)
-   * handle arrays (literals, subscripting)
-   * handle modules
-   * initialize structs
-   * cast between compatible types
-   * check that the return expression matches return type
-   * handle lambdas and function pointers
-   * produce unused symbol warnings
-   * lookup builtin types and builtin functions
- * LLVM code generation is underway.
  
 ## Building
 
 This project depends on [Simpleton](https://github.com/Kerndog73/Simpleton-Engine) as a build-time dependency. 
 CMake will automatically download Simpleton so you don't have to worry about it.
-Another dependency (that you *do* have to worry about) is LLVM. See the **Install LLVM** section for details.
+Another dependency (that you *do* have to worry about) is LLVM. See the [Install LLVM](#install-llvm) section for details.
 
 ```bash
 cd build
