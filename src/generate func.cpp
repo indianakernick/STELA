@@ -86,8 +86,10 @@ llvm::Function *stela::genFn<FGI::free>(InstData data) {
 
 template <>
 llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
-  // this returns 2 when the input is 1
-  // we could subtract val == 1 but that's just more instructions for no reason!
+  // @TODO maybe optimize this
+  // can we deal with 1 without UB or branching?
+  // undefined behaviour when input is 0
+  // might return 0 when input is 0
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = lenTy(ctx);
   llvm::FunctionType *fnType = llvm::FunctionType::get(
@@ -104,7 +106,7 @@ llvm::Function *stela::genFn<FGI::ceil_to_pow_2>(InstData data) {
   llvm::Twine name = llvm::Twine{"llvm.ctlz.i"} + llvm::Twine{bitSize};
   llvm::Function *ctlz = declareCFunc(data.mod, ctlzType, name);
   llvm::Value *minus1 = builder.ir.CreateNSWSub(func->arg_begin(), constantFor(type, 1));
-  llvm::Value *leadingZeros = builder.ir.CreateCall(ctlz, {minus1, builder.ir.getTrue()});
+  llvm::Value *leadingZeros = builder.ir.CreateCall(ctlz, {minus1, builder.ir.getFalse()});
   llvm::Value *bits = constantFor(type, bitSize);
   llvm::Value *log2 = builder.ir.CreateNSWSub(bits, leadingZeros);
   llvm::Value *ceiled = builder.ir.CreateShl(constantFor(type, 1), log2);

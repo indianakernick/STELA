@@ -2173,7 +2173,7 @@ TEST_GROUP(Generation, {
     ASSERT_EQ(arr1.use_count(), 1);
     ASSERT_EQ(str0.use_count(), 3);
     ASSERT_EQ(arr1->len, 1);
-    ASSERT_EQ(arr1->cap, 2); // ceil_to_pow_2(1) == 2
+    ASSERT_EQ(arr1->cap, 1);
     ASSERT_EQ(arr1->dat[0], str0);
     
     pushChr(str0, 'y');
@@ -2217,7 +2217,7 @@ TEST_GROUP(Generation, {
     
     ASSERT_EQ(arr0.use_count(), 1);
     ASSERT_EQ(arr0->len, 1);
-    ASSERT_EQ(arr0->cap, 2); // ceil_to_pow_2(1) == 2
+    ASSERT_EQ(arr0->cap, 1);
     ASSERT_EQ(arr0->dat[0].use_count(), 1);
     
     Array<Char> str0 = arr0->dat[0];
