@@ -50,14 +50,14 @@ I plan on implementing a few more features after the long refactoring period (se
     b: func(sint);   
   };
   ```
-  ...and the same aggregate is defined in C++
+  and the same aggregate is defined in C++
   ```C++
   struct Agg {
     stela::Array<stela::Real> a;
-    stela::Closure<void(stela::Sint)> b;
+    stela::Closure<stela::Void(stela::Sint)> b;
   };
   ```
-  ...objects of type `Agg` can be seemlessly passed across the language barrier without having
+  objects of type `Agg` can be seemlessly passed across the language barrier without having
   to manually declare anything. Of course, you could use some kind of reflection to automatically
   declare the Stela version of the struct. `stela::Array` and `stela::Closure` are implemented in
   the same way in both languages.
@@ -81,6 +81,9 @@ I plan on implementing a few more features after the long refactoring period (se
 * Operator overloading. I might be able to implement operators on builtin types in Stela. 
   Maybe I could make inline LLVM IR possible (similar to inline asm in C++). I'm not sure if
   this is a good idea.
+* References to const objects with `cref`. This will be a little smarter than C++ `const &`.
+  If the parameter happens to be trivially copyable, it will be passed by value, otherwise it
+  will be passed by reference. This is really useful for generic programming.
 
 ## Safety vs Performance
 
