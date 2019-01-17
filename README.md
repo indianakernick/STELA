@@ -20,8 +20,8 @@ A scripting language built for speed in world where JavaScript runs on web serve
   * [Tag dispatch](#tag-dispatch)
   * [Member functions](#member-functions)
   * [Enums](#enums)
-  * [Building](#building)
-  * [Install LLVM](#install-llvm)
+* [Building](#building)
+* [Install LLVM](#install-llvm)
 
 ## Status
 
