@@ -32,13 +32,11 @@
 		455DADB021C0899F0012A261 /* check missing return.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455DADAE21C0899F0012A261 /* check missing return.cpp */; };
 		455EDB7321EB0BFB00B7278E /* generate closure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455EDB7121EB0BFB00B7278E /* generate closure.cpp */; };
 		455F4187217BF0CF00C62BBF /* modules.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 455F4186217BF0CF00C62BBF /* modules.cpp */; };
-		4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
 		4572CA6A20F32DB000EA1A56 /* semantic analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */; };
 		4572CA6D20F35B3E00EA1A56 /* ast.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6C20F35B3E00EA1A56 /* ast.cpp */; };
 		4572CA7320F4732C00EA1A56 /* traverse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7120F4732C00EA1A56 /* traverse.cpp */; };
 		4572CA8020F9987500EA1A56 /* format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA7F20F9987500EA1A56 /* format.cpp */; };
 		4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8220F9FF6000EA1A56 /* console format.cpp */; };
-		4572CA8620FB0C7000EA1A56 /* format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8420FB0C7000EA1A56 /* format.cpp */; };
 		4572CA8920FB25EE00EA1A56 /* html format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8820FB25EE00EA1A56 /* html format.cpp */; };
 		4572CA8C20FB33CF00EA1A56 /* scope manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8A20FB33CF00EA1A56 /* scope manager.cpp */; };
 		4572CA8F20FB4CEC00EA1A56 /* infer type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8D20FB4CEC00EA1A56 /* infer type.cpp */; };
@@ -59,34 +57,44 @@
 		45816F6221B3583D00712CA3 /* generate func.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F6021B3583C00712CA3 /* generate func.cpp */; };
 		45816F6621B6249200712CA3 /* c standard library.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F6521B6249200712CA3 /* c standard library.cpp */; };
 		458F144921E42D8800AF0D78 /* compare exprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 458F144721E42D8800AF0D78 /* compare exprs.cpp */; };
-		45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45BBA40420D6418B006108C1 /* lexical analysis.cpp */; };
 		45BBA40A20D65340006108C1 /* libSTELA.a in Copy Files */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		45C7FADF21C74D9100995B7D /* gen types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FADD21C74D9100995B7D /* gen types.cpp */; };
 		45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */; };
+		45C9190F21F30CE900F3FF60 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3720E3AB1600CC3289 /* syntax.cpp */; };
+		45C9191021F30CF000F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45C9191121F30D3A00F3FF60 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C918F821F30B0400F3FF60 /* libgtest_main.a */; };
+		45C9192D21F30EB900F3FF60 /* semantics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA6620F32D3C00EA1A56 /* semantics.cpp */; };
+		45C9192E21F30EBE00F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45C9193121F30ED900F3FF60 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C918F821F30B0400F3FF60 /* libgtest_main.a */; };
+		45C9193F21F30F2E00F3FF60 /* generation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F3D21AF637400712CA3 /* generation.cpp */; };
+		45C9194021F30F3300F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45C9194121F30F4000F3FF60 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C918F821F30B0400F3FF60 /* libgtest_main.a */; };
+		45C9194F21F30F8500F3FF60 /* format.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CA8420FB0C7000EA1A56 /* format.cpp */; };
+		45C9195021F30F8A00F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45C9195121F30F9B00F3FF60 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C918F821F30B0400F3FF60 /* libgtest_main.a */; };
+		45C9196A21F312DE00F3FF60 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3520E3AB1600CC3289 /* lexer.cpp */; };
+		45C9196B21F312E300F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45C9196C21F312F500F3FF60 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C9195B21F3122000F3FF60 /* libgtest.a */; };
+		45C9196D21F312F500F3FF60 /* libgtest_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C918F821F30B0400F3FF60 /* libgtest_main.a */; };
+		45C9197921F3135300F3FF60 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3920E3AB1600CC3289 /* main.cpp */; };
+		45C9198421F313B900F3FF60 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C9195B21F3122000F3FF60 /* libgtest.a */; };
+		45C9198521F313CD00F3FF60 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C9195B21F3122000F3FF60 /* libgtest.a */; };
+		45C9198621F313DD00F3FF60 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C9195B21F3122000F3FF60 /* libgtest.a */; };
+		45C9198721F313EB00F3FF60 /* libgtest.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45C9195B21F3122000F3FF60 /* libgtest.a */; };
+		45C9198821F314AA00F3FF60 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
 		45DF194C21D5D80E00FA28A8 /* categories.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45DF194A21D5D80E00FA28A8 /* categories.cpp */; };
 		45EE9C1220DCF19400CC3289 /* log.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1020DCF14F00CC3289 /* log.cpp */; };
 		45EE9C1320DCF19400CC3289 /* syntax analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */; };
 		45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1B20DE72D400CC3289 /* log output.cpp */; };
 		45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C1E20DF19BD00CC3289 /* parse tokens.cpp */; };
 		45EE9C2520E23D1C00CC3289 /* number literal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C2320E23D1C00CC3289 /* number literal.cpp */; };
-		45EE9C3A20E3AB1600CC3289 /* log counter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3320E3AB1600CC3289 /* log counter.cpp */; };
-		45EE9C3B20E3AB1600CC3289 /* lexer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3520E3AB1600CC3289 /* lexer.cpp */; };
-		45EE9C3C20E3AB1600CC3289 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3720E3AB1600CC3289 /* syntax.cpp */; };
-		45EE9C3D20E3AB1600CC3289 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C3920E3AB1600CC3289 /* main.cpp */; };
 		45EE9C4220E3AB5900CC3289 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45EE9C4120E3AB5900CC3289 /* main.cpp */; };
 		45F4435E213F898300B28F05 /* parse asgn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45F4435C213F898300B28F05 /* parse asgn.cpp */; };
 		45F44361213FC49B00B28F05 /* compare types.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45F4435F213FC49B00B28F05 /* compare types.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		454B36E521BA231B00485BA4 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 45BBA43320D7AFB8006108C1;
-			remoteInfo = CLI;
-		};
 		4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
@@ -94,12 +102,75 @@
 			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
 			remoteInfo = STELA;
 		};
-		45BBA40020D640F0006108C1 /* PBXContainerItemProxy */ = {
+		45C9190D21F30CCF00F3FF60 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
 			remoteInfo = STELA;
+		};
+		45C9192F21F30EC300F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45C9193D21F30F2500F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45C9194D21F30F6A00F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45C9196821F312D700F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45C9197A21F3137200F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45C9190121F30C9500F3FF60;
+			remoteInfo = Syntax;
+		};
+		45C9197C21F3137200F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45C9192521F30E9E00F3FF60;
+			remoteInfo = Semantics;
+		};
+		45C9197E21F3137200F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45C9193521F30F1500F3FF60;
+			remoteInfo = Generation;
+		};
+		45C9198021F3137200F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45C9194521F30F5B00F3FF60;
+			remoteInfo = Format;
+		};
+		45C9198221F3137200F3FF60 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45C9196021F312BC00F3FF60;
+			remoteInfo = Lexer;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -114,6 +185,60 @@
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9190021F30C9500F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45C9192421F30E9E00F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45C9193421F30F1500F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45C9194421F30F5B00F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45C9195F21F312BC00F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45C9197021F3133B00F3FF60 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -175,7 +300,6 @@
 		455F4186217BF0CF00C62BBF /* modules.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = modules.cpp; sourceTree = "<group>"; };
 		4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "semantic analysis.hpp"; sourceTree = "<group>"; };
 		4572CA6620F32D3C00EA1A56 /* semantics.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = semantics.cpp; sourceTree = "<group>"; };
-		4572CA6720F32D3C00EA1A56 /* semantics.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = semantics.hpp; sourceTree = "<group>"; };
 		4572CA6920F32DB000EA1A56 /* semantic analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "semantic analysis.cpp"; sourceTree = "<group>"; };
 		4572CA6B20F32DEA00EA1A56 /* symbols.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = symbols.hpp; sourceTree = "<group>"; };
 		4572CA6C20F35B3E00EA1A56 /* ast.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ast.cpp; sourceTree = "<group>"; };
@@ -186,7 +310,6 @@
 		4572CA8120F9FE1B00EA1A56 /* console format.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "console format.hpp"; sourceTree = "<group>"; };
 		4572CA8220F9FF6000EA1A56 /* console format.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "console format.cpp"; sourceTree = "<group>"; };
 		4572CA8420FB0C7000EA1A56 /* format.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = format.cpp; sourceTree = "<group>"; };
-		4572CA8520FB0C7000EA1A56 /* format.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = format.hpp; sourceTree = "<group>"; };
 		4572CA8720FB254600EA1A56 /* html format.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "html format.hpp"; sourceTree = "<group>"; };
 		4572CA8820FB25EE00EA1A56 /* html format.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "html format.cpp"; sourceTree = "<group>"; };
 		4572CA8A20FB33CF00EA1A56 /* scope manager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "scope manager.cpp"; sourceTree = "<group>"; };
@@ -205,7 +328,6 @@
 		4572CAAD210EF61100EA1A56 /* scope lookup.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope lookup.hpp"; sourceTree = "<group>"; };
 		4572CAAF210EFDFE00EA1A56 /* symbols.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = symbols.cpp; sourceTree = "<group>"; };
 		45816F3D21AF637400712CA3 /* generation.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = generation.cpp; sourceTree = "<group>"; };
-		45816F3E21AF637400712CA3 /* generation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = generation.hpp; sourceTree = "<group>"; };
 		45816F4021AF645200712CA3 /* code generation.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "code generation.hpp"; sourceTree = "<group>"; };
 		45816F4121AF64F100712CA3 /* code generation.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "code generation.cpp"; sourceTree = "<group>"; };
 		45816F4521AF857500712CA3 /* unreachable.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = unreachable.hpp; sourceTree = "<group>"; };
@@ -229,13 +351,20 @@
 		45A723372129525700BFE7FB /* scope traverse.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "scope traverse.hpp"; sourceTree = "<group>"; };
 		45BBA3EC20D63E3D006108C1 /* libSTELA.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libSTELA.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA3F420D64086006108C1 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
-		45BBA3F920D640EA006108C1 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		45BBA40420D6418B006108C1 /* lexical analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lexical analysis.cpp"; sourceTree = "<group>"; };
 		45BBA43420D7AFB8006108C1 /* CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = CLI; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C7FADD21C74D9100995B7D /* gen types.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen types.cpp"; sourceTree = "<group>"; };
 		45C7FADE21C74D9100995B7D /* gen types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen types.hpp"; sourceTree = "<group>"; };
 		45C7FAE321D1F3CA00995B7D /* lifetime exprs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "lifetime exprs.cpp"; sourceTree = "<group>"; };
 		45C7FAE421D1F3CA00995B7D /* lifetime exprs.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "lifetime exprs.hpp"; sourceTree = "<group>"; };
+		45C918F821F30B0400F3FF60 /* libgtest_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest_main.a; path = build/lib/libgtest_main.a; sourceTree = "<group>"; };
+		45C9190221F30C9500F3FF60 /* Syntax */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Syntax; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C9192621F30E9E00F3FF60 /* Semantics */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Semantics; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C9193621F30F1500F3FF60 /* Generation */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Generation; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C9194621F30F5B00F3FF60 /* Format */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Format; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C9195B21F3122000F3FF60 /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest.a; path = build/lib/libgtest.a; sourceTree = "<group>"; };
+		45C9196121F312BC00F3FF60 /* Lexer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Lexer; sourceTree = BUILT_PRODUCTS_DIR; };
+		45C9197221F3133B00F3FF60 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
 		45DF194A21D5D80E00FA28A8 /* categories.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = categories.cpp; sourceTree = "<group>"; };
 		45DF194B21D5D80E00FA28A8 /* categories.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = categories.hpp; sourceTree = "<group>"; };
 		45EE9C0820DB421A00CC3289 /* syntax analysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "syntax analysis.cpp"; sourceTree = "<group>"; };
@@ -253,11 +382,8 @@
 		45EE9C2E20E3AAE300CC3289 /* log.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = log.hpp; sourceTree = "<group>"; };
 		45EE9C2F20E3AAE300CC3289 /* ast.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ast.hpp; sourceTree = "<group>"; };
 		45EE9C3020E3AAF500CC3289 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
-		45EE9C3220E3AB1600CC3289 /* syntax.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = syntax.hpp; sourceTree = "<group>"; };
 		45EE9C3320E3AB1600CC3289 /* log counter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "log counter.cpp"; sourceTree = "<group>"; };
-		45EE9C3420E3AB1600CC3289 /* macros.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = macros.hpp; sourceTree = "<group>"; };
 		45EE9C3520E3AB1600CC3289 /* lexer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lexer.cpp; sourceTree = "<group>"; };
-		45EE9C3620E3AB1600CC3289 /* lexer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lexer.hpp; sourceTree = "<group>"; };
 		45EE9C3720E3AB1600CC3289 /* syntax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = syntax.cpp; sourceTree = "<group>"; };
 		45EE9C3820E3AB1600CC3289 /* log counter.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = "log counter.hpp"; sourceTree = "<group>"; };
 		45EE9C3920E3AB1600CC3289 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -278,19 +404,69 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		45BBA3F620D640EA006108C1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				45BBA40320D6410E006108C1 /* libSTELA.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		45BBA43120D7AFB8006108C1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				4572CAA2210716A800EA1A56 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C918FF21F30C9500F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9198421F313B900F3FF60 /* libgtest.a in Frameworks */,
+				45C9191121F30D3A00F3FF60 /* libgtest_main.a in Frameworks */,
+				45C9191021F30CF000F3FF60 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9192321F30E9E00F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9198521F313CD00F3FF60 /* libgtest.a in Frameworks */,
+				45C9193121F30ED900F3FF60 /* libgtest_main.a in Frameworks */,
+				45C9192E21F30EBE00F3FF60 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9193321F30F1500F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9198621F313DD00F3FF60 /* libgtest.a in Frameworks */,
+				45C9194121F30F4000F3FF60 /* libgtest_main.a in Frameworks */,
+				45C9194021F30F3300F3FF60 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9194321F30F5B00F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9198721F313EB00F3FF60 /* libgtest.a in Frameworks */,
+				45C9195121F30F9B00F3FF60 /* libgtest_main.a in Frameworks */,
+				45C9195021F30F8A00F3FF60 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9195E21F312BC00F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9196C21F312F500F3FF60 /* libgtest.a in Frameworks */,
+				45C9196D21F312F500F3FF60 /* libgtest_main.a in Frameworks */,
+				45C9196B21F312E300F3FF60 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9196F21F3133B00F3FF60 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9198821F314AA00F3FF60 /* libSTELA.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -443,8 +619,13 @@
 			isa = PBXGroup;
 			children = (
 				45BBA3EC20D63E3D006108C1 /* libSTELA.a */,
-				45BBA3F920D640EA006108C1 /* Test */,
 				45BBA43420D7AFB8006108C1 /* CLI */,
+				45C9190221F30C9500F3FF60 /* Syntax */,
+				45C9192621F30E9E00F3FF60 /* Semantics */,
+				45C9193621F30F1500F3FF60 /* Generation */,
+				45C9194621F30F5B00F3FF60 /* Format */,
+				45C9196121F312BC00F3FF60 /* Lexer */,
+				45C9197221F3133B00F3FF60 /* Test */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -475,6 +656,8 @@
 		45BBA40220D6410E006108C1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				45C9195B21F3122000F3FF60 /* libgtest.a */,
+				45C918F821F30B0400F3FF60 /* libgtest_main.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -525,17 +708,11 @@
 		45EE9C3120E3AB1600CC3289 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				45EE9C3420E3AB1600CC3289 /* macros.hpp */,
 				45EE9C3520E3AB1600CC3289 /* lexer.cpp */,
-				45EE9C3620E3AB1600CC3289 /* lexer.hpp */,
 				45EE9C3720E3AB1600CC3289 /* syntax.cpp */,
-				45EE9C3220E3AB1600CC3289 /* syntax.hpp */,
 				4572CA6620F32D3C00EA1A56 /* semantics.cpp */,
-				4572CA6720F32D3C00EA1A56 /* semantics.hpp */,
 				45816F3D21AF637400712CA3 /* generation.cpp */,
-				45816F3E21AF637400712CA3 /* generation.hpp */,
 				4572CA8420FB0C7000EA1A56 /* format.cpp */,
-				4572CA8520FB0C7000EA1A56 /* format.hpp */,
 				45EE9C3320E3AB1600CC3289 /* log counter.cpp */,
 				45EE9C3820E3AB1600CC3289 /* log counter.hpp */,
 				45EE9C3920E3AB1600CC3289 /* main.cpp */,
@@ -618,24 +795,6 @@
 			productReference = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		45BBA3F820D640EA006108C1 /* Test */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 45BBA3FD20D640EA006108C1 /* Build configuration list for PBXNativeTarget "Test" */;
-			buildPhases = (
-				45BBA3F520D640EA006108C1 /* Sources */,
-				45BBA3F620D640EA006108C1 /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				454B36E621BA231B00485BA4 /* PBXTargetDependency */,
-				45BBA40120D640F0006108C1 /* PBXTargetDependency */,
-			);
-			name = Test;
-			productName = Test;
-			productReference = 45BBA3F920D640EA006108C1 /* Test */;
-			productType = "com.apple.product-type.tool";
-		};
 		45BBA43320D7AFB8006108C1 /* CLI */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 45BBA43820D7AFB8006108C1 /* Build configuration list for PBXNativeTarget "CLI" */;
@@ -654,6 +813,118 @@
 			productReference = 45BBA43420D7AFB8006108C1 /* CLI */;
 			productType = "com.apple.product-type.tool";
 		};
+		45C9190121F30C9500F3FF60 /* Syntax */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9190621F30C9500F3FF60 /* Build configuration list for PBXNativeTarget "Syntax" */;
+			buildPhases = (
+				45C918FE21F30C9500F3FF60 /* Sources */,
+				45C918FF21F30C9500F3FF60 /* Frameworks */,
+				45C9190021F30C9500F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9190E21F30CCF00F3FF60 /* PBXTargetDependency */,
+			);
+			name = Syntax;
+			productName = Syntax;
+			productReference = 45C9190221F30C9500F3FF60 /* Syntax */;
+			productType = "com.apple.product-type.tool";
+		};
+		45C9192521F30E9E00F3FF60 /* Semantics */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9192A21F30E9F00F3FF60 /* Build configuration list for PBXNativeTarget "Semantics" */;
+			buildPhases = (
+				45C9192221F30E9E00F3FF60 /* Sources */,
+				45C9192321F30E9E00F3FF60 /* Frameworks */,
+				45C9192421F30E9E00F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9193021F30EC300F3FF60 /* PBXTargetDependency */,
+			);
+			name = Semantics;
+			productName = Semantics;
+			productReference = 45C9192621F30E9E00F3FF60 /* Semantics */;
+			productType = "com.apple.product-type.tool";
+		};
+		45C9193521F30F1500F3FF60 /* Generation */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9193A21F30F1500F3FF60 /* Build configuration list for PBXNativeTarget "Generation" */;
+			buildPhases = (
+				45C9193221F30F1500F3FF60 /* Sources */,
+				45C9193321F30F1500F3FF60 /* Frameworks */,
+				45C9193421F30F1500F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9193E21F30F2500F3FF60 /* PBXTargetDependency */,
+			);
+			name = Generation;
+			productName = Generation;
+			productReference = 45C9193621F30F1500F3FF60 /* Generation */;
+			productType = "com.apple.product-type.tool";
+		};
+		45C9194521F30F5B00F3FF60 /* Format */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9194A21F30F5B00F3FF60 /* Build configuration list for PBXNativeTarget "Format" */;
+			buildPhases = (
+				45C9194221F30F5B00F3FF60 /* Sources */,
+				45C9194321F30F5B00F3FF60 /* Frameworks */,
+				45C9194421F30F5B00F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9194E21F30F6A00F3FF60 /* PBXTargetDependency */,
+			);
+			name = Format;
+			productName = Format;
+			productReference = 45C9194621F30F5B00F3FF60 /* Format */;
+			productType = "com.apple.product-type.tool";
+		};
+		45C9196021F312BC00F3FF60 /* Lexer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9196521F312BD00F3FF60 /* Build configuration list for PBXNativeTarget "Lexer" */;
+			buildPhases = (
+				45C9195D21F312BC00F3FF60 /* Sources */,
+				45C9195E21F312BC00F3FF60 /* Frameworks */,
+				45C9195F21F312BC00F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9196921F312D700F3FF60 /* PBXTargetDependency */,
+			);
+			name = Lexer;
+			productName = Lexer;
+			productReference = 45C9196121F312BC00F3FF60 /* Lexer */;
+			productType = "com.apple.product-type.tool";
+		};
+		45C9197121F3133B00F3FF60 /* Test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45C9197621F3133B00F3FF60 /* Build configuration list for PBXNativeTarget "Test" */;
+			buildPhases = (
+				45C9196E21F3133B00F3FF60 /* Sources */,
+				45C9196F21F3133B00F3FF60 /* Frameworks */,
+				45C9197021F3133B00F3FF60 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45C9198321F3137200F3FF60 /* PBXTargetDependency */,
+				45C9197B21F3137200F3FF60 /* PBXTargetDependency */,
+				45C9197D21F3137200F3FF60 /* PBXTargetDependency */,
+				45C9197F21F3137200F3FF60 /* PBXTargetDependency */,
+				45C9198121F3137200F3FF60 /* PBXTargetDependency */,
+			);
+			name = Test;
+			productName = Test;
+			productReference = 45C9197221F3133B00F3FF60 /* Test */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -667,11 +938,26 @@
 						CreatedOnToolsVersion = 9.4;
 						LastSwiftMigration = 0940;
 					};
-					45BBA3F820D640EA006108C1 = {
-						CreatedOnToolsVersion = 9.4;
-					};
 					45BBA43320D7AFB8006108C1 = {
 						CreatedOnToolsVersion = 9.4;
+					};
+					45C9190121F30C9500F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45C9192521F30E9E00F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45C9193521F30F1500F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45C9194521F30F5B00F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45C9196021F312BC00F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45C9197121F3133B00F3FF60 = {
+						CreatedOnToolsVersion = 10.1;
 					};
 				};
 			};
@@ -688,8 +974,13 @@
 			projectRoot = "";
 			targets = (
 				45BBA3EB20D63E3D006108C1 /* STELA */,
-				45BBA3F820D640EA006108C1 /* Test */,
 				45BBA43320D7AFB8006108C1 /* CLI */,
+				45C9196021F312BC00F3FF60 /* Lexer */,
+				45C9190121F30C9500F3FF60 /* Syntax */,
+				45C9192521F30E9E00F3FF60 /* Semantics */,
+				45C9193521F30F1500F3FF60 /* Generation */,
+				45C9194521F30F5B00F3FF60 /* Format */,
+				45C9197121F3133B00F3FF60 /* Test */,
 			);
 		};
 /* End PBXProject section */
@@ -793,19 +1084,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		45BBA3F520D640EA006108C1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				45EE9C3B20E3AB1600CC3289 /* lexer.cpp in Sources */,
-				45EE9C3A20E3AB1600CC3289 /* log counter.cpp in Sources */,
-				4572CA6820F32D3C00EA1A56 /* semantics.cpp in Sources */,
-				45EE9C3D20E3AB1600CC3289 /* main.cpp in Sources */,
-				4572CA8620FB0C7000EA1A56 /* format.cpp in Sources */,
-				45EE9C3C20E3AB1600CC3289 /* syntax.cpp in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		45BBA43020D7AFB8006108C1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -814,23 +1092,111 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		45C918FE21F30C9500F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9190F21F30CE900F3FF60 /* syntax.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9192221F30E9E00F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9192D21F30EB900F3FF60 /* semantics.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9193221F30F1500F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9193F21F30F2E00F3FF60 /* generation.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9194221F30F5B00F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9194F21F30F8500F3FF60 /* format.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9195D21F312BC00F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9196A21F312DE00F3FF60 /* lexer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45C9196E21F3133B00F3FF60 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45C9197921F3135300F3FF60 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		454B36E621BA231B00485BA4 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 45BBA43320D7AFB8006108C1 /* CLI */;
-			targetProxy = 454B36E521BA231B00485BA4 /* PBXContainerItemProxy */;
-		};
 		4572CAA1210716A300EA1A56 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
 			targetProxy = 4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */;
 		};
-		45BBA40120D640F0006108C1 /* PBXTargetDependency */ = {
+		45C9190E21F30CCF00F3FF60 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
-			targetProxy = 45BBA40020D640F0006108C1 /* PBXContainerItemProxy */;
+			targetProxy = 45C9190D21F30CCF00F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9193021F30EC300F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45C9192F21F30EC300F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9193E21F30F2500F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45C9193D21F30F2500F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9194E21F30F6A00F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45C9194D21F30F6A00F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9196921F312D700F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45C9196821F312D700F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9197B21F3137200F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45C9190121F30C9500F3FF60 /* Syntax */;
+			targetProxy = 45C9197A21F3137200F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9197D21F3137200F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45C9192521F30E9E00F3FF60 /* Semantics */;
+			targetProxy = 45C9197C21F3137200F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9197F21F3137200F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45C9193521F30F1500F3FF60 /* Generation */;
+			targetProxy = 45C9197E21F3137200F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9198121F3137200F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45C9194521F30F5B00F3FF60 /* Format */;
+			targetProxy = 45C9198021F3137200F3FF60 /* PBXContainerItemProxy */;
+		};
+		45C9198321F3137200F3FF60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45C9196021F312BC00F3FF60 /* Lexer */;
+			targetProxy = 45C9198221F3137200F3FF60 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1035,164 +1401,9 @@
 					"-D__STDC_FORMAT_MACROS",
 					"-D__STDC_LIMIT_MACROS",
 				);
-				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
-			};
-			name = Release;
-		};
-		45BBA3FE20D640EA006108C1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = QY44MADGVC;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
-				LIBRARY_SEARCH_PATHS = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-Wall",
-					"-Wextra",
-					"-Weffc++",
-					"-Wpedantic",
-					"-Wno-documentation",
-					"-Wnull-dereference",
-					"-Woverloaded-virtual",
-					"-Wconversion",
-					"-Wreturn-type",
-					"-Wweak-vtables",
-					"-Wnonportable-include-path",
-					"-D__STDC_CONSTANT_MACROS",
-					"-D__STDC_FORMAT_MACROS",
-					"-D__STDC_LIMIT_MACROS",
-					"-isystem/usr/local/opt/llvm/include",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
-					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
-					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
-					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
-					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
-					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
-					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
-					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
-					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
-					/usr/local/opt/llvm/lib/libLLVMTarget.a,
-					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
-					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
-					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
-					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
-					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
-					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
-					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
-					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
-					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
-					/usr/local/opt/llvm/lib/libLLVMObject.a,
-					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
-					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
-					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
-					/usr/local/opt/llvm/lib/libLLVMMC.a,
-					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
-					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
-					/usr/local/opt/llvm/lib/libLLVMCore.a,
-					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
-					/usr/local/opt/llvm/lib/libLLVMSupport.a,
-					"-lz",
-					"-lcurses",
-					"-lm",
-					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
-					/usr/local/opt/llvm/lib/libLLVMLinker.a,
-					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
-					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
-					/usr/local/opt/llvm/lib/libLLVMipo.a,
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		45BBA3FF20D640EA006108C1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = QY44MADGVC;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
-				LIBRARY_SEARCH_PATHS = "";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
-				OTHER_CPLUSPLUSFLAGS = (
-					"$(OTHER_CFLAGS)",
-					"-Wall",
-					"-Wextra",
-					"-Weffc++",
-					"-Wpedantic",
-					"-Wno-documentation",
-					"-Wnull-dereference",
-					"-Woverloaded-virtual",
-					"-Wconversion",
-					"-Wreturn-type",
-					"-Wweak-vtables",
-					"-Wnonportable-include-path",
-					"-D__STDC_CONSTANT_MACROS",
-					"-D__STDC_FORMAT_MACROS",
-					"-D__STDC_LIMIT_MACROS",
-					"-isystem/usr/local/opt/llvm/include",
-				);
-				OTHER_LDFLAGS = (
-					"-Wl,-search_paths_first",
-					"-Wl,-headerpad_max_install_names",
-					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
-					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
-					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
-					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
-					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
-					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
-					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
-					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
-					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
-					/usr/local/opt/llvm/lib/libLLVMTarget.a,
-					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
-					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
-					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
-					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
-					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
-					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
-					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
-					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
-					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
-					/usr/local/opt/llvm/lib/libLLVMObject.a,
-					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
-					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
-					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
-					/usr/local/opt/llvm/lib/libLLVMMC.a,
-					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
-					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
-					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
-					/usr/local/opt/llvm/lib/libLLVMCore.a,
-					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
-					/usr/local/opt/llvm/lib/libLLVMSupport.a,
-					"-lz",
-					"-lcurses",
-					"-lm",
-					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
-					/usr/local/opt/llvm/lib/libLLVMLinker.a,
-					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
-					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
-					/usr/local/opt/llvm/lib/libLLVMipo.a,
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -1240,6 +1451,622 @@
 			};
 			name = Release;
 		};
+		45C9190721F30C9500F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9190821F30C9500F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45C9192B21F30E9F00F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9192C21F30E9F00F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45C9193B21F30F1500F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9193C21F30F1500F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45C9194B21F30F5B00F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9194C21F30F5B00F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45C9196621F312BD00F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9196721F312BD00F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googletest/src/googletest/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/build/lib",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45C9197721F3133B00F3FF60 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45C9197821F3133B00F3FF60 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/include";
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wweak-vtables",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1261,20 +2088,65 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		45BBA3FD20D640EA006108C1 /* Build configuration list for PBXNativeTarget "Test" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				45BBA3FE20D640EA006108C1 /* Debug */,
-				45BBA3FF20D640EA006108C1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		45BBA43820D7AFB8006108C1 /* Build configuration list for PBXNativeTarget "CLI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				45BBA43920D7AFB8006108C1 /* Debug */,
 				45BBA43A20D7AFB8006108C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9190621F30C9500F3FF60 /* Build configuration list for PBXNativeTarget "Syntax" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9190721F30C9500F3FF60 /* Debug */,
+				45C9190821F30C9500F3FF60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9192A21F30E9F00F3FF60 /* Build configuration list for PBXNativeTarget "Semantics" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9192B21F30E9F00F3FF60 /* Debug */,
+				45C9192C21F30E9F00F3FF60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9193A21F30F1500F3FF60 /* Build configuration list for PBXNativeTarget "Generation" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9193B21F30F1500F3FF60 /* Debug */,
+				45C9193C21F30F1500F3FF60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9194A21F30F5B00F3FF60 /* Build configuration list for PBXNativeTarget "Format" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9194B21F30F5B00F3FF60 /* Debug */,
+				45C9194C21F30F5B00F3FF60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9196521F312BD00F3FF60 /* Build configuration list for PBXNativeTarget "Lexer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9196621F312BD00F3FF60 /* Debug */,
+				45C9196721F312BD00F3FF60 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45C9197621F3133B00F3FF60 /* Build configuration list for PBXNativeTarget "Test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45C9197721F3133B00F3FF60 /* Debug */,
+				45C9197821F3133B00F3FF60 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

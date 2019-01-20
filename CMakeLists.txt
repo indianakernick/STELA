@@ -139,12 +139,27 @@ set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 ExternalProject_Add(
     Simpleton
     GIT_REPOSITORY https://github.com/Kerndog73/Simpleton-Engine.git
-    UPDATE_COMMAND ${GIT_EXECUTABLE} pull origin master
+    UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
 )
 ExternalProject_Get_Property(Simpleton SOURCE_DIR)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+set(GTEST_DIR ${PROJECT_SOURCE_DIR}/deps/googletest)
+configure_file(${PROJECT_SOURCE_DIR}/cmake/in/googletest.in ${GTEST_DIR}/CMakeLists.txt)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . 
+    WORKING_DIRECTORY ${GTEST_DIR}
+)
+execute_process(
+    COMMAND ${CMAKE_COMMAND} --build . 
+    WORKING_DIRECTORY ${GTEST_DIR}
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 target_include_directories(STELA
     INTERFACE
@@ -203,5 +218,8 @@ install(TARGETS STELA
     PUBLIC_HEADER DESTINATION include/STELA
 )
 
-add_subdirectory(test)
 add_subdirectory(CLI)
+add_subdirectory(${GTEST_DIR}/src ${GTEST_DIR}/build)
+add_library(GTest::Main ALIAS gtest_main)
+enable_testing()
+add_subdirectory(test)

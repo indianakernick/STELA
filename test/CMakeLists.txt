@@ -1,27 +1,20 @@
 cmake_minimum_required(VERSION 3.2)
 
-add_executable(Test
-    "src/lexer.cpp"
-    "src/lexer.hpp"
-    "src/log counter.cpp"
-    "src/log counter.hpp"
-    "src/macros.hpp"
-    "src/main.cpp"
-    "src/syntax.cpp"
-    "src/syntax.hpp"
-    "src/semantics.cpp"
-    "src/semantics.hpp"
-    "src/format.cpp"
-    "src/format.hpp"
-    "src/generation.cpp"
-    "src/generation.hpp"
-)
+include(ExternalProject)
 
-set_target_properties(Test
-    PROPERTIES OUTPUT_NAME "suite"
-)
+macro(SETUP_TEST NAME SOURCE)
+    add_executable(${NAME} "${SOURCE}")
+    target_link_libraries(${NAME}
+        PRIVATE
+        STELA
+        GTest::Main 
+        Threads::Threads
+    )
+    add_test(NAME ${NAME} COMMAND ${NAME})
+endmacro()
 
-target_link_libraries(Test
-    PRIVATE
-    STELA
-)
+SETUP_TEST(Lexer "src/lexer.cpp")
+SETUP_TEST(Syntax "src/syntax.cpp")
+SETUP_TEST(Semantics "src/semantics.cpp")
+SETUP_TEST(Generation "src/generation.cpp")
+SETUP_TEST(Format "src/format.cpp")

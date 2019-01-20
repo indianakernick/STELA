@@ -456,7 +456,7 @@ This will build a static library, a command-line tool and a test suite. Optional
 
 ```bash
 # might want to run the tests before installing
-test/suite
+make CTEST_OUTPUT_ON_FAILURE=1 test
 make install
 ```
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0940"
+   LastUpgradeVersion = "1010"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "45BBA3F820D640EA006108C1"
+               BlueprintIdentifier = "45C9197121F3133B00F3FF60"
                BuildableName = "Test"
                BlueprintName = "Test"
                ReferencedContainer = "container:STELA.xcodeproj">
@@ -32,7 +32,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "45BBA3F820D640EA006108C1"
+            BlueprintIdentifier = "45C9197121F3133B00F3FF60"
             BuildableName = "Test"
             BlueprintName = "Test"
             ReferencedContainer = "container:STELA.xcodeproj">
@@ -55,19 +55,18 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "45BBA3F820D640EA006108C1"
+            BlueprintIdentifier = "45C9197121F3133B00F3FF60"
             BuildableName = "Test"
             BlueprintName = "Test"
             ReferencedContainer = "container:STELA.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "CXX"
-            value = "clang++"
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "$(TARGET_BUILD_DIR)"
             isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -81,7 +80,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "45BBA3F820D640EA006108C1"
+            BlueprintIdentifier = "45C9197121F3133B00F3FF60"
             BuildableName = "Test"
             BlueprintName = "Test"
             ReferencedContainer = "container:STELA.xcodeproj">

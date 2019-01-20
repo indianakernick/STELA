@@ -47,6 +47,58 @@ this to work. Using traits instead of the C++ way templates work (duck typing)
 means that a generic function doesn't need to be type checked every time it is
 instantiated.
 
+You could use a function to tag a type and detect the function in the trait.
+
+type T struct {};
+
+func myCoolTag(T) {}
+
+trait HasCoolTag<T> {
+  func myCoolTag(T);
+};
+
+These tags could be used to describe a type. Since the functions are never,
+actually called, they will be omitted from the executable.
+
+Need some way of associating a type with another type.
+
+type A struct {
+  first: sint;
+};
+type B struct {
+  first: real;
+};
+
+type FirstType<type A> = sint;
+type FirstType<type B> = real;
+
+Template specialization. This needs to be a part of traits somehow.
+We need some way of referencing the associated type in the trait.
+How do Rust and Swift do this?
+
+Maybe...
+
+assoc type FirstType{A} = sint;
+assoc type FirstType{B} = real;
+
+assoc let FirstTypeName{A} = "sint";
+assoc let FirstTypeName{B} = "real";
+
+trait HasFirst{T} {
+  type FirstType{T};
+  let FirstTypeName{T};
+};
+
+func getFirstName{T: HasFirst}() {
+  // access associated let
+  return FirstTypeName{T};
+}
+
+// access associated type in parametized type alias
+type FT{T: HasFirst} = FirstType{T};
+
+Maybe have a look at one of the Go generics proposals
+
 --------------------------------------------------------------------------------
 
 An interface defines the interface of a generic type. A generic function says
@@ -176,9 +228,20 @@ consistent naming
   left -> lhs
   right -> rhs
   Type -> Ty
+  member function -> method
+  member variable -> field
 
 is ptr_union a good idea?
   we can remove a few dynamic casts
   malloc returns a pointer with alignment of std::max_align_t
 
 range for loops might speed up iteration
+
+
+IDE extensions
+  pretty printing
+  syntax highlighing
+  separate the two
+  intellisense
+  
+Have a look at Wren and Crystal

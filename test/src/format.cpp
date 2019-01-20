@@ -6,17 +6,16 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "format.hpp"
-
 #include <fstream>
-#include "macros.hpp"
+#include <gtest/gtest.h>
 #include <STELA/html format.hpp>
 #include <STELA/plain format.hpp>
 #include <STELA/console format.hpp>
 #include <STELA/syntax analysis.hpp>
 
-TEST_GROUP(Format, {
-  const char *source = R"(
+namespace {
+
+const char *source = R"(
 type Rational = struct {
   n: sint;
   d: sint;
@@ -156,58 +155,65 @@ func anotherDummy(dir: Dir) -> uint {
 }
 )";
 
-  stela::StreamSink stream;
-  stela::FilterSink log{stream, stela::LogPri::info};
-  stela::fmt::Tokens tokens;
-  
-  TEST(Get tokens, {
-    tokens = stela::format(source, log);
-    ASSERT_FALSE(tokens.empty());
-  });
-  
-  TEST(Plain string, {
-    std::string str = stela::plainFormat(tokens, 4);
-    ASSERT_FALSE(str.empty());
-    std::cout << str;
-  });
-  
-  TEST(Plain stream first node, {
-    const stela::AST ast = stela::createAST(source, log);
-    stela::fmt::Tokens nodeTokens = stela::format(ast.global[0].get());
-    stela::plainFormat(std::cout, nodeTokens, 4);
-    std::cout << '\n';
-  });
-  
-  TEST(Plain stream inline second node, {
-    const stela::AST ast = stela::createAST(source, log);
-    stela::fmt::Tokens nodeTokens = stela::format(ast.global[1].get());
-    stela::plainFormatInline(std::cout, nodeTokens);
-    std::cout << '\n';
-  });
-  
-  TEST(Console, {
-    stela::conFormat(tokens);
-  });
-  
-  TEST(HTML default styles, {
-    stela::HTMLstyles styles;
-    styles.doc = true;
-    styles.def = true;
-    const std::string html = stela::htmlFormat(tokens, styles);
-    ASSERT_FALSE(html.empty());
-    std::ofstream file("default.html", std::ios::ate);
-    ASSERT_TRUE(file.is_open());
-    file << html;
-  });
-  
-  TEST(HTML non-default styles, {
-    stela::HTMLstyles styles;
-    styles.doc = true;
-    styles.def = false;
-    const std::string html = stela::htmlFormat(tokens, styles);
-    ASSERT_FALSE(html.empty());
-    std::ofstream file("not default.html", std::ios::ate);
-    ASSERT_TRUE(file.is_open());
-    file << html;
-  });
-})
+stela::LogSink &log() {
+  static stela::StreamSink stream;
+  static stela::FilterSink filter{stream, stela::LogPri::info};
+  return filter;
+}
+
+TEST(Basic, Get_tokens) {
+  stela::fmt::Tokens tokens = stela::format(source, log());
+  EXPECT_FALSE(tokens.empty());
+}
+
+TEST(Plain, String) {
+  stela::fmt::Tokens tokens = stela::format(source, log());
+  std::string str = stela::plainFormat(tokens, 4);
+  ASSERT_FALSE(str.empty());
+  std::cout << str;
+}
+
+TEST(Plain, Stream_first_node) {
+  const stela::AST ast = stela::createAST(source, log());
+  stela::fmt::Tokens nodeTokens = stela::format(ast.global[0].get());
+  stela::plainFormat(std::cout, nodeTokens, 4);
+  std::cout << '\n';
+}
+
+TEST(Plain, Stream_inline_second_node) {
+  const stela::AST ast = stela::createAST(source, log());
+  stela::fmt::Tokens nodeTokens = stela::format(ast.global[1].get());
+  stela::plainFormatInline(std::cout, nodeTokens);
+  std::cout << '\n';
+}
+
+TEST(Console, Regular) {
+  stela::fmt::Tokens tokens = stela::format(source, log());
+  stela::conFormat(tokens);
+}
+
+TEST(HTML, Default_styles) {
+  stela::fmt::Tokens tokens = stela::format(source, log());
+  stela::HTMLstyles styles;
+  styles.doc = true;
+  styles.def = true;
+  const std::string html = stela::htmlFormat(tokens, styles);
+  ASSERT_FALSE(html.empty());
+  std::ofstream file("default.html", std::ios::ate);
+  ASSERT_TRUE(file.is_open());
+  file << html;
+}
+
+TEST(HTML, Non_default_styles) {
+  stela::fmt::Tokens tokens = stela::format(source, log());
+  stela::HTMLstyles styles;
+  styles.doc = true;
+  styles.def = false;
+  const std::string html = stela::htmlFormat(tokens, styles);
+  ASSERT_FALSE(html.empty());
+  std::ofstream file("not default.html", std::ios::ate);
+  ASSERT_TRUE(file.is_open());
+  file << html;
+}
+
+}

@@ -6,16 +6,8 @@
 //  Copyright © 2018 Indi Kernick. All rights reserved.
 //
 
-#include "macros.hpp"
-
-#include "lexer.hpp"
-#include "syntax.hpp"
-#include "format.hpp"
-#include "semantics.hpp"
-#include "generation.hpp"
-
-#include <iostream>
 #include <memory>
+#include <iostream>
 
 #include <STELA/llvm.hpp>
 
@@ -35,7 +27,7 @@ void foo() {
   std::cout << "foo()\n";
 }
 
-int main() {
+int main(int, const char **argv) {
   stela::initLLVM();
   llvm::LLVMContext &context = stela::getLLVM();
   
@@ -101,23 +93,39 @@ int main() {
     std::cerr << "Error getting function\n";
   }
 
-  int failures = 0;
-  failures += testFormat();
-  failures += testLexer();
-  failures += testSyntax();
-  failures += testSemantics();
-  failures += testGeneration();
   stela::quitLLVM();
+  
+  std::string exec = argv[1];
+  exec.push_back('/');
+  const size_t buildDirSize = exec.size();
+
+  int failures = 0;
+
+  exec.append("Format");
+  failures += std::system(exec.c_str());
+  exec.erase(buildDirSize);
+
+  exec.append("Lexer");
+  failures += std::system(exec.c_str());
+  exec.erase(buildDirSize);
+  
+  exec.append("Syntax");
+  failures += std::system(exec.c_str());
+  exec.erase(buildDirSize);
+  
+  exec.append("Semantics");
+  failures += std::system(exec.c_str());
+  exec.erase(buildDirSize);
+  
+  exec.append("Generation");
+  failures += std::system(exec.c_str());
+  exec.erase(buildDirSize);
+  
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";
-  } else if (failures == 1) {
-    std::cout << "1 TEST FAILED!\n";
+    return 0;
   } else {
-    std::cout << failures << " TESTS FAILED!\n";
-  }
-  if (failures > 255) {
-    return 255;
-  } else {
-    return failures;
+    std::cout << "SOME FAILED!\n";
+    return 1;
   }
 }
