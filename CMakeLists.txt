@@ -139,7 +139,9 @@ set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 ExternalProject_Add(
     Simpleton
     GIT_REPOSITORY https://github.com/Kerndog73/Simpleton-Engine.git
-    UPDATE_COMMAND ${GIT_EXECUTABLE} pull origin master
+    GIT_TAG master
+    DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/simpleton"
+    UPDATE_COMMAND ""
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
