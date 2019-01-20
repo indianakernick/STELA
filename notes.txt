@@ -179,7 +179,6 @@ think about the rules for function overloading and shadowing. Overload across mo
 should mutability be part of the type system properly? What we have now just lets use make variables constant
 deal with user types void *
 functional switch
-use google test and maybe google benchmark
 cache some stuff in the AST. Benchmark
 consider using ORC
 help optimizer with switch on global let
@@ -245,3 +244,9 @@ IDE extensions
   intellisense
   
 Have a look at Wren and Crystal
+
+Write some programs to benchmark the compiler
+Write some programs to benchmark the language
+Use a stack allocator for the AST
+
+64 bit floats and ints

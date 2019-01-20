@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		45071DCF21F474F900BF82B1 /* compiler benchmark.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45071DBB21F46F0C00BF82B1 /* compiler benchmark.cpp */; };
+		45071DD021F4750000BF82B1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45071DD321F475DA00BF82B1 /* libbenchmark_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45071DD121F475DA00BF82B1 /* libbenchmark_main.a */; };
+		45071DD421F475DA00BF82B1 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45071DD221F475DA00BF82B1 /* libbenchmark.a */; };
+		45071DE221F4760500BF82B1 /* language benchmark.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45071DBE21F46F4900BF82B1 /* language benchmark.cpp */; };
+		45071DE321F4760B00BF82B1 /* libSTELA.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45BBA3EC20D63E3D006108C1 /* libSTELA.a */; };
+		45071DE421F4762000BF82B1 /* libbenchmark_main.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45071DD121F475DA00BF82B1 /* libbenchmark_main.a */; };
+		45071DE521F4762000BF82B1 /* libbenchmark.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45071DD221F475DA00BF82B1 /* libbenchmark.a */; };
 		450E329020E89D2F00F222F1 /* parse expr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328E20E89D2F00F222F1 /* parse expr.cpp */; };
 		450E329120E89D6100F222F1 /* context stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E327C20E88E1900F222F1 /* context stack.cpp */; };
 		450E329220E89D6100F222F1 /* parse type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E327F20E8989300F222F1 /* parse type.cpp */; };
@@ -95,6 +103,34 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		45071DCB21F4700200BF82B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45071DCD21F4700B00BF82B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45071DC321F46FEF00BF82B1;
+			remoteInfo = Compiler;
+		};
+		45071DE021F475FA00BF82B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45BBA3EB20D63E3D006108C1;
+			remoteInfo = STELA;
+		};
+		45071DE621F4772B00BF82B1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 45071DD821F475EB00BF82B1;
+			remoteInfo = Language;
+		};
 		4572CAA0210716A300EA1A56 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 45BBA3E420D63E3D006108C1 /* Project object */;
@@ -175,6 +211,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		45071DC221F46FEF00BF82B1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+		45071DD721F475EB00BF82B1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		45BBA40920D65331006108C1 /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -243,6 +297,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		45071DBB21F46F0C00BF82B1 /* compiler benchmark.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "compiler benchmark.cpp"; sourceTree = "<group>"; };
+		45071DBE21F46F4900BF82B1 /* language benchmark.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "language benchmark.cpp"; sourceTree = "<group>"; };
+		45071DC421F46FEF00BF82B1 /* Compiler */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Compiler; sourceTree = BUILT_PRODUCTS_DIR; };
+		45071DD121F475DA00BF82B1 /* libbenchmark_main.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark_main.a; path = deps/googlebenchmark/build/src/libbenchmark_main.a; sourceTree = "<group>"; };
+		45071DD221F475DA00BF82B1 /* libbenchmark.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libbenchmark.a; path = deps/googlebenchmark/build/src/libbenchmark.a; sourceTree = "<group>"; };
+		45071DD921F475EB00BF82B1 /* Language */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Language; sourceTree = BUILT_PRODUCTS_DIR; };
 		450DA3A321ED4B950012574A /* generate closure.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "generate closure.hpp"; sourceTree = "<group>"; };
 		450E327720E65D5400F222F1 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = "<group>"; };
 		450E327C20E88E1900F222F1 /* context stack.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "context stack.cpp"; sourceTree = "<group>"; };
@@ -405,6 +465,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		45071DC121F46FEF00BF82B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45071DD321F475DA00BF82B1 /* libbenchmark_main.a in Frameworks */,
+				45071DD421F475DA00BF82B1 /* libbenchmark.a in Frameworks */,
+				45071DD021F4750000BF82B1 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45071DD621F475EB00BF82B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45071DE421F4762000BF82B1 /* libbenchmark_main.a in Frameworks */,
+				45071DE521F4762000BF82B1 /* libbenchmark.a in Frameworks */,
+				45071DE321F4760B00BF82B1 /* libSTELA.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45BBA3E920D63E3D006108C1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -636,6 +716,8 @@
 				45C9194621F30F5B00F3FF60 /* Format */,
 				45C9196121F312BC00F3FF60 /* Lexer */,
 				45C9197221F3133B00F3FF60 /* Test */,
+				45071DC421F46FEF00BF82B1 /* Compiler */,
+				45071DD921F475EB00BF82B1 /* Language */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -666,6 +748,8 @@
 		45BBA40220D6410E006108C1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				45071DD121F475DA00BF82B1 /* libbenchmark_main.a */,
+				45071DD221F475DA00BF82B1 /* libbenchmark.a */,
 				45C9195B21F3122000F3FF60 /* libgtest.a */,
 				45C918F821F30B0400F3FF60 /* libgtest_main.a */,
 			);
@@ -787,6 +871,8 @@
 				4572CA8420FB0C7000EA1A56 /* format.cpp */,
 				45EE9C3320E3AB1600CC3289 /* log counter.cpp */,
 				45EE9C3820E3AB1600CC3289 /* log counter.hpp */,
+				45071DBB21F46F0C00BF82B1 /* compiler benchmark.cpp */,
+				45071DBE21F46F4900BF82B1 /* language benchmark.cpp */,
 				45EE9C3920E3AB1600CC3289 /* main.cpp */,
 			);
 			path = src;
@@ -849,6 +935,42 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		45071DC321F46FEF00BF82B1 /* Compiler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45071DC821F46FEF00BF82B1 /* Build configuration list for PBXNativeTarget "Compiler" */;
+			buildPhases = (
+				45071DC021F46FEF00BF82B1 /* Sources */,
+				45071DC121F46FEF00BF82B1 /* Frameworks */,
+				45071DC221F46FEF00BF82B1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45071DCC21F4700200BF82B1 /* PBXTargetDependency */,
+			);
+			name = Compiler;
+			productName = Compiler;
+			productReference = 45071DC421F46FEF00BF82B1 /* Compiler */;
+			productType = "com.apple.product-type.tool";
+		};
+		45071DD821F475EB00BF82B1 /* Language */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 45071DDD21F475EB00BF82B1 /* Build configuration list for PBXNativeTarget "Language" */;
+			buildPhases = (
+				45071DD521F475EB00BF82B1 /* Sources */,
+				45071DD621F475EB00BF82B1 /* Frameworks */,
+				45071DD721F475EB00BF82B1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45071DE121F475FA00BF82B1 /* PBXTargetDependency */,
+			);
+			name = Language;
+			productName = Language;
+			productReference = 45071DD921F475EB00BF82B1 /* Language */;
+			productType = "com.apple.product-type.tool";
+		};
 		45BBA3EB20D63E3D006108C1 /* STELA */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 45BBA3F020D63E3D006108C1 /* Build configuration list for PBXNativeTarget "STELA" */;
@@ -986,6 +1108,8 @@
 			buildRules = (
 			);
 			dependencies = (
+				45071DE721F4772B00BF82B1 /* PBXTargetDependency */,
+				45071DCE21F4700B00BF82B1 /* PBXTargetDependency */,
 				45C9198321F3137200F3FF60 /* PBXTargetDependency */,
 				45C9197B21F3137200F3FF60 /* PBXTargetDependency */,
 				45C9197D21F3137200F3FF60 /* PBXTargetDependency */,
@@ -1006,6 +1130,12 @@
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = "Indi Kernick";
 				TargetAttributes = {
+					45071DC321F46FEF00BF82B1 = {
+						CreatedOnToolsVersion = 10.1;
+					};
+					45071DD821F475EB00BF82B1 = {
+						CreatedOnToolsVersion = 10.1;
+					};
 					45BBA3EB20D63E3D006108C1 = {
 						CreatedOnToolsVersion = 9.4;
 						LastSwiftMigration = 0940;
@@ -1053,6 +1183,8 @@
 				45C9193521F30F1500F3FF60 /* Generation */,
 				45C9194521F30F5B00F3FF60 /* Format */,
 				45C9197121F3133B00F3FF60 /* Test */,
+				45071DC321F46FEF00BF82B1 /* Compiler */,
+				45071DD821F475EB00BF82B1 /* Language */,
 			);
 		};
 /* End PBXProject section */
@@ -1089,6 +1221,22 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		45071DC021F46FEF00BF82B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45071DCF21F474F900BF82B1 /* compiler benchmark.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		45071DD521F475EB00BF82B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45071DE221F4760500BF82B1 /* language benchmark.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		45BBA3E820D63E3D006108C1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1215,6 +1363,26 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		45071DCC21F4700200BF82B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45071DCB21F4700200BF82B1 /* PBXContainerItemProxy */;
+		};
+		45071DCE21F4700B00BF82B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45071DC321F46FEF00BF82B1 /* Compiler */;
+			targetProxy = 45071DCD21F4700B00BF82B1 /* PBXContainerItemProxy */;
+		};
+		45071DE121F475FA00BF82B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
+			targetProxy = 45071DE021F475FA00BF82B1 /* PBXContainerItemProxy */;
+		};
+		45071DE721F4772B00BF82B1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 45071DD821F475EB00BF82B1 /* Language */;
+			targetProxy = 45071DE621F4772B00BF82B1 /* PBXContainerItemProxy */;
+		};
 		4572CAA1210716A300EA1A56 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 45BBA3EB20D63E3D006108C1 /* STELA */;
@@ -1273,6 +1441,348 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		45071DC921F46FEF00BF82B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googlebenchmark/src/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/deps/googlebenchmark/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45071DCA21F46FEF00BF82B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googlebenchmark/src/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/deps/googlebenchmark/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		45071DDE21F475EB00BF82B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googlebenchmark/src/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/deps/googlebenchmark/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		45071DDF21F475EB00BF82B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = QY44MADGVC;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/include",
+					"$(PROJECT_DIR)/deps/googlebenchmark/src/include",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/deps/googlebenchmark/build/src",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_FAST_MATH = YES;
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wall",
+					"-Wextra",
+					"-Weffc++",
+					"-Wpedantic",
+					"-Wshadow",
+					"-Wno-documentation",
+					"-Wnull-dereference",
+					"-Woverloaded-virtual",
+					"-Wconversion",
+					"-Wreturn-type",
+					"-Wnonportable-include-path",
+					"-isystem/usr/local/include",
+					"-isystem/usr/local/opt/llvm/include",
+					"-fPIC",
+					"-D__STDC_CONSTANT_MACROS",
+					"-D__STDC_FORMAT_MACROS",
+					"-D__STDC_LIMIT_MACROS",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/usr/local/opt/llvm/lib/libLLVMMCJIT.a,
+					/usr/local/opt/llvm/lib/libLLVMExecutionEngine.a,
+					/usr/local/opt/llvm/lib/libLLVMRuntimeDyld.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86CodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMAsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMGlobalISel.a,
+					/usr/local/opt/llvm/lib/libLLVMSelectionDAG.a,
+					/usr/local/opt/llvm/lib/libLLVMCodeGen.a,
+					/usr/local/opt/llvm/lib/libLLVMTarget.a,
+					/usr/local/opt/llvm/lib/libLLVMBitWriter.a,
+					/usr/local/opt/llvm/lib/libLLVMScalarOpts.a,
+					/usr/local/opt/llvm/lib/libLLVMAggressiveInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMInstCombine.a,
+					/usr/local/opt/llvm/lib/libLLVMTransformUtils.a,
+					/usr/local/opt/llvm/lib/libLLVMAnalysis.a,
+					/usr/local/opt/llvm/lib/libLLVMProfileData.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmParser.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Desc.a,
+					/usr/local/opt/llvm/lib/libLLVMX86AsmPrinter.a,
+					/usr/local/opt/llvm/lib/libLLVMObject.a,
+					/usr/local/opt/llvm/lib/libLLVMMCParser.a,
+					/usr/local/opt/llvm/lib/libLLVMBitReader.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Disassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMCDisassembler.a,
+					/usr/local/opt/llvm/lib/libLLVMMC.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoCodeView.a,
+					/usr/local/opt/llvm/lib/libLLVMDebugInfoMSF.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Info.a,
+					/usr/local/opt/llvm/lib/libLLVMX86Utils.a,
+					/usr/local/opt/llvm/lib/libLLVMCore.a,
+					/usr/local/opt/llvm/lib/libLLVMBinaryFormat.a,
+					/usr/local/opt/llvm/lib/libLLVMSupport.a,
+					"-lz",
+					"-lcurses",
+					"-lm",
+					/usr/local/opt/llvm/lib/libLLVMDemangle.a,
+					/usr/local/opt/llvm/lib/libLLVMLinker.a,
+					/usr/local/opt/llvm/lib/libLLVMInstrumentation.a,
+					/usr/local/opt/llvm/lib/libLLVMVectorize.a,
+					/usr/local/opt/llvm/lib/libLLVMipo.a,
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		45BBA3EE20D63E3D006108C1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1415,6 +1925,7 @@
 					"-Wconversion",
 					"-Wreturn-type",
 					"-Wnonportable-include-path",
+					"-Wstrict-aliasing",
 					"-isystem/usr/local/include",
 					"-isystem/usr/local/opt/llvm/include",
 					"-fPIC",
@@ -1466,6 +1977,7 @@
 					"-Wconversion",
 					"-Wreturn-type",
 					"-Wnonportable-include-path",
+					"-Wstrict-aliasing",
 					"-isystem/usr/local/include",
 					"-isystem/usr/local/opt/llvm/include",
 					"-fPIC",
@@ -2130,6 +2642,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		45071DC821F46FEF00BF82B1 /* Build configuration list for PBXNativeTarget "Compiler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45071DC921F46FEF00BF82B1 /* Debug */,
+				45071DCA21F46FEF00BF82B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		45071DDD21F475EB00BF82B1 /* Build configuration list for PBXNativeTarget "Language" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45071DDE21F475EB00BF82B1 /* Debug */,
+				45071DDF21F475EB00BF82B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		45BBA3E720D63E3D006108C1 /* Build configuration list for PBXProject "STELA" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

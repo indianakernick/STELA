@@ -73,3 +73,7 @@ llvm::LLVMContext &stela::getLLVM() {
   assert(globalContext);
   return *globalContext;
 }
+
+bool stela::hasLLVM() {
+  return bool{globalContext};
+}

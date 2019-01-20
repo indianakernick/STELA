@@ -27,6 +27,14 @@ void foo() {
   std::cout << "foo()\n";
 }
 
+int runTest(std::string &exec, const char *name) {
+  const size_t buildDirSize = exec.size();
+  exec.append(name);
+  const int ret = std::system(exec.c_str());
+  exec.erase(buildDirSize);
+  return ret;
+}
+
 int main(int, const char **argv) {
   stela::initLLVM();
   llvm::LLVMContext &context = stela::getLLVM();
@@ -97,29 +105,16 @@ int main(int, const char **argv) {
   
   std::string exec = argv[1];
   exec.push_back('/');
-  const size_t buildDirSize = exec.size();
 
   int failures = 0;
 
-  exec.append("Format");
-  failures += std::system(exec.c_str());
-  exec.erase(buildDirSize);
-
-  exec.append("Lexer");
-  failures += std::system(exec.c_str());
-  exec.erase(buildDirSize);
-  
-  exec.append("Syntax");
-  failures += std::system(exec.c_str());
-  exec.erase(buildDirSize);
-  
-  exec.append("Semantics");
-  failures += std::system(exec.c_str());
-  exec.erase(buildDirSize);
-  
-  exec.append("Generation");
-  failures += std::system(exec.c_str());
-  exec.erase(buildDirSize);
+  failures += runTest(exec, "Format");
+  failures += runTest(exec, "Lexer");
+  failures += runTest(exec, "Syntax");
+  failures += runTest(exec, "Semantics");
+  failures += runTest(exec, "Generation");
+  failures += runTest(exec, "Compiler");
+  failures += runTest(exec, "Language");
   
   if (failures == 0) {
     std::cout << "ALL PASSED!\n";

@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.2)
+project(googlebenchmark-download NONE)
+
+include(ExternalProject)
+
+ExternalProject_Add(
+    googlebenchmark
+    GIT_REPOSITORY https://github.com/google/benchmark.git
+    GIT_TAG master
+    DOWNLOAD_DIR ${GBENCH_DIR}
+    TMP_DIR ${GBENCH_DIR}/tmp
+    STAMP_DIR ${GBENCH_DIR}/stamp
+    SOURCE_DIR ${GBENCH_DIR}/src
+    BINARY_DIR ${GBENCH_DIR}/build
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND ""
+)

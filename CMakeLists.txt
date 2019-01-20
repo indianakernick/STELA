@@ -136,21 +136,6 @@ add_library(STELA STATIC
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
 set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-
-set(GTEST_DIR ${PROJECT_SOURCE_DIR}/deps/googletest)
-configure_file(${PROJECT_SOURCE_DIR}/cmake/in/googletest.in ${GTEST_DIR}/CMakeLists.txt)
-execute_process(
-    COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" . 
-    WORKING_DIRECTORY ${GTEST_DIR}
-)
-execute_process(
-    COMMAND ${CMAKE_COMMAND} --build . 
-    WORKING_DIRECTORY ${GTEST_DIR}
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
 target_include_directories(STELA
     INTERFACE
     include
@@ -209,7 +194,5 @@ install(TARGETS STELA
 )
 
 add_subdirectory(CLI)
-add_subdirectory(${GTEST_DIR}/src ${GTEST_DIR}/build)
-add_library(GTest::Main ALIAS gtest_main)
 enable_testing()
 add_subdirectory(test)

@@ -20,6 +20,7 @@ namespace stela {
 void initLLVM();
 void quitLLVM();
 [[nodiscard]] llvm::LLVMContext &getLLVM();
+[[nodiscard]] bool hasLLVM();
 
 }
 
