@@ -136,18 +136,6 @@ add_library(STELA STATIC
 file(GLOB HEADERS_LIST "${CMAKE_CURRENT_SOURCE_DIR}/include/STELA/*.hpp")
 set_target_properties(STELA PROPERTIES PUBLIC_HEADER "${HEADERS_LIST}")
 
-ExternalProject_Add(
-    Simpleton
-    GIT_REPOSITORY https://github.com/Kerndog73/Simpleton-Engine.git
-    GIT_TAG master
-    DOWNLOAD_DIR "${PROJECT_SOURCE_DIR}/deps/simpleton"
-    UPDATE_COMMAND ""
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-)
-ExternalProject_Get_Property(Simpleton SOURCE_DIR)
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
@@ -172,7 +160,7 @@ target_include_directories(STELA
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/STELA>
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/deps/simpleton/include
 )
 
 target_compile_definitions(STELA
