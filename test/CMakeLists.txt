@@ -51,10 +51,12 @@ execute_process(
     COMMAND ${CMAKE_COMMAND} --build . 
     WORKING_DIRECTORY ${GBENCH_DIR}
 )
+set(BENCHMARK_ENABLE_LTO YES CACHE BOOL "Enable link time optimisation of the benchmark library.")
+set(BENCHMARK_ENABLE_TESTING NO CACHE BOOL "Enable testing of the benchmark library.")
+set(CMAKE_BUILD_TYPE_SAVED "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE Release)
-set(BENCHMARK_ENABLE_LTO YES)
-set(BENCHMARK_ENABLE_TESTING NO)
 add_subdirectory(${GBENCH_DIR}/src ${GBENCH_DIR}/build)
+set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE_SAVED}")
 
 SETUP_TEST(Lexer "src/lexer.cpp")
 SETUP_TEST(Syntax "src/syntax.cpp")
