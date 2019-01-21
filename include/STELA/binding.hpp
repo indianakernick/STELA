@@ -10,6 +10,7 @@
 #define stela_binding_hpp
 
 #include <tuple>
+#include <memory>
 #include <algorithm>
 #include "number.hpp"
 #include <type_traits>
