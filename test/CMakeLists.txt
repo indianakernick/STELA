@@ -7,7 +7,8 @@ macro(SETUP_TEST NAME SOURCE)
     target_link_libraries(${NAME}
         PRIVATE
         STELA
-        GTest::Main 
+        gtest
+        gtest_main
         Threads::Threads
     )
     add_test(NAME ${NAME} COMMAND ${NAME})
@@ -39,7 +40,6 @@ execute_process(
 )
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory(${GTEST_DIR}/src ${GTEST_DIR}/build)
-add_library(GTest::Main ALIAS gtest_main)
 
 set(GBENCH_DIR ${PROJECT_SOURCE_DIR}/deps/googlebenchmark)
 configure_file(${PROJECT_SOURCE_DIR}/cmake/in/googlebenchmark.in ${GBENCH_DIR}/CMakeLists.txt)
@@ -51,8 +51,9 @@ execute_process(
     COMMAND ${CMAKE_COMMAND} --build . 
     WORKING_DIRECTORY ${GBENCH_DIR}
 )
-set(BENCHMARK_ENABLE_LTO YES CACHE BOOL "Enable link time optimisation of the benchmark library.")
-set(BENCHMARK_ENABLE_TESTING NO CACHE BOOL "Enable testing of the benchmark library.")
+set(BENCHMARK_ENABLE_LTO YES)
+set(BENCHMARK_ENABLE_TESTING NO)
+set(BENCHMARK_ENABLE_GTEST_TESTS NO)
 set(CMAKE_BUILD_TYPE_SAVED "${CMAKE_BUILD_TYPE}")
 set(CMAKE_BUILD_TYPE Release)
 add_subdirectory(${GBENCH_DIR}/src ${GBENCH_DIR}/build)
