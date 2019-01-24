@@ -280,100 +280,97 @@ public:
       }
     }
   }
+  void genCall(
+    llvm::Value *func,
+    llvm::FunctionType *type,
+    std::vector<llvm::Value *> &args,
+    llvm::Value *resultAddr,
+    ast::Expression *expr
+  ) {
+    if (type->getNumParams() == args.size() + 1) {
+      if (resultAddr) {
+        args.push_back(resultAddr);
+        builder.ir.CreateCall(func, args);
+        value = nullptr;
+      } else {
+        llvm::Type *retType = type->params().back()->getPointerElementType();
+        llvm::Value *retAddr = builder.alloc(retType);
+        args.push_back(retAddr);
+        builder.ir.CreateCall(func, args);
+        value = retAddr;
+      }
+    } else {
+      value = builder.ir.CreateCall(func, args);
+      constructResultFromValue(resultAddr, expr);
+    }
+  }
+  void callFuncPtr(ast::FuncCall &call, llvm::Value *resultAddr) {
+    const gen::Expr func = visitExpr(call.func.get(), nullptr);
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + call.args.size());
+    ast::FuncType *funcType = assertDownCast<ast::FuncType>(call.func->exprType.get());
+    const Signature sig = getSignature(*funcType);
+    llvm::FunctionType *fnType = generateSig(ctx.llvm, sig);
+    std::vector<Object> dtors;
+    dtors.resize(call.args.size());
+    llvm::Value *fun = closureFun(builder, func.obj);
+    args.push_back(closureDat(builder, func.obj));
+    for (size_t a = 0; a != call.args.size(); ++a) {
+      const ast::ParamType &param = funcType->params[a];
+      args.push_back(visitParam(
+        param.type.get(), param.ref, call.args[a].get(), &dtors[a]
+      ));
+    }
+    genCall(fun, fnType, args, resultAddr, &call);
+    destroyArgs(dtors);
+    if (func.cat == ValueCat::prvalue) {
+      lifetime.destroy(funcType, func.obj);
+    }
+  }
+  void callFunc(ast::FuncCall &call, ast::Func *func, llvm::Value *resultAddr) {
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + call.args.size());
+    llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
+    std::vector<Object> dtors;
+    dtors.resize(1 + call.args.size());
+    if (func->receiver) {
+      ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
+      ast::FuncParam &rec = *func->receiver;
+      args.push_back(visitParam(rec.type.get(), rec.ref, self, &dtors[0]));
+    } else {
+      args.push_back(llvm::UndefValue::get(voidPtrTy(ctx.llvm)));
+    }
+    pushArgs(args, call.args, func->params, dtors);
+    genCall(func->llvmFunc, funcType, args, resultAddr, &call);
+    destroyArgs(dtors);
+  }
+  void callBtnFunc(ast::FuncCall &call, ast::BtnFunc *btnFunc, llvm::Value *resultAddr) {
+    ast::ArrayType *arr = concreteType<ast::ArrayType>(call.args[0]->exprType.get());
+    std::vector<llvm::Value *> args;
+    args.reserve(call.args.size());
+    std::vector<Object> dtors;
+    dtors.resize(call.args.size());
+    if (btnFunc->value == ast::BtnFuncEnum::capacity || btnFunc->value == ast::BtnFuncEnum::size) {
+      args.push_back(visitParam(arr, ast::ParamRef::val, call.args[0].get(), &dtors[0]));
+    } else {
+      args.push_back(visitParam(arr, ast::ParamRef::ref, call.args[0].get(), &dtors[0]));
+    }
+    if (call.args.size() == 2) {
+      ast::Type *secType = call.args[1]->exprType.get();
+      args.push_back(visitParam(secType, ast::ParamRef::val, call.args[1].get(), &dtors[1]));
+    }
+    value = builder.ir.CreateCall(getBtnFunc(btnFunc->value, arr), args);
+    constructResultFromValue(resultAddr, &call);
+    destroyArgs(dtors);
+  }
+  
   void visit(ast::FuncCall &call) override {
-    // @TODO refactor
     if (call.definition == nullptr) {
-      llvm::Value *resultAddr = result;
-      const gen::Expr func = visitExpr(call.func.get(), nullptr);
-      std::vector<llvm::Value *> args;
-      args.reserve(1 + call.args.size());
-      ast::FuncType *funcType = assertDownCast<ast::FuncType>(call.func->exprType.get());
-      const Signature sig = getSignature(*funcType);
-      llvm::FunctionType *fnType = generateSig(ctx.llvm, sig);
-      std::vector<Object> dtors;
-      dtors.resize(call.args.size());
-      llvm::Value *fun = closureFun(builder, func.obj);
-      args.push_back(closureDat(builder, func.obj));
-      for (size_t a = 0; a != call.args.size(); ++a) {
-        const ast::ParamType &param = funcType->params[a];
-        args.push_back(visitParam(
-          param.type.get(), param.ref, call.args[a].get(), &dtors[a]
-        ));
-      }
-      if (fnType->getNumParams() == args.size() + 1) {
-        if (resultAddr) {
-          args.push_back(resultAddr);
-          builder.ir.CreateCall(fun, args);
-          value = nullptr;
-        } else {
-          llvm::Type *retType = fnType->params().back()->getPointerElementType();
-          llvm::Value *retAddr = builder.alloc(retType);
-          args.push_back(retAddr);
-          builder.ir.CreateCall(fun, args);
-          value = retAddr;
-        }
-      } else {
-        value = builder.ir.CreateCall(fun, args);
-        constructResultFromValue(resultAddr, &call);
-      }
-      destroyArgs(dtors);
-      if (func.cat == ValueCat::prvalue) {
-        lifetime.destroy(funcType, func.obj);
-      }
+      callFuncPtr(call, result);
     } else if (auto *func = dynamic_cast<ast::Func *>(call.definition)) {
-      llvm::Value *resultAddr = result;
-      std::vector<llvm::Value *> args;
-      args.reserve(1 + call.args.size());
-      llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
-      std::vector<Object> dtors;
-      dtors.resize(1 + call.args.size());
-      if (func->receiver) {
-        ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
-        ast::FuncParam &rec = *func->receiver;
-        args.push_back(visitParam(rec.type.get(), rec.ref, self, &dtors[0]));
-      } else {
-        args.push_back(llvm::UndefValue::get(voidPtrTy(ctx.llvm)));
-      }
-      pushArgs(args, call.args, func->params, dtors);
-      
-      if (funcType->getNumParams() == args.size() + 1) {
-        if (resultAddr) {
-          args.push_back(resultAddr);
-          builder.ir.CreateCall(func->llvmFunc, args);
-          value = nullptr;
-        } else {
-          llvm::Type *retType = funcType->params().back()->getPointerElementType();
-          llvm::Value *retAddr = builder.alloc(retType);
-          args.push_back(retAddr);
-          builder.ir.CreateCall(func->llvmFunc, args);
-          value = retAddr;
-        }
-      } else {
-        value = builder.ir.CreateCall(func->llvmFunc, args);
-        constructResultFromValue(resultAddr, &call);
-      }
-      
-      destroyArgs(dtors);
+      callFunc(call, func, result);
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
-      // @TODO this is highly dependent on the array builtin functions
-      llvm::Value *resultAddr = result;
-      ast::ArrayType *arr = concreteType<ast::ArrayType>(call.args[0]->exprType.get());
-      std::vector<llvm::Value *> args;
-      args.reserve(call.args.size());
-      std::vector<Object> dtors;
-      dtors.resize(call.args.size());
-      if (btnFunc->value == ast::BtnFuncEnum::capacity || btnFunc->value == ast::BtnFuncEnum::size) {
-        args.push_back(visitParam(arr, ast::ParamRef::val, call.args[0].get(), &dtors[0]));
-      } else {
-        args.push_back(visitParam(arr, ast::ParamRef::ref, call.args[0].get(), &dtors[0]));
-      }
-      if (call.args.size() == 2) {
-        ast::Type *secType = call.args[1]->exprType.get();
-        args.push_back(visitParam(secType, ast::ParamRef::val, call.args[1].get(), &dtors[1]));
-      }
-      value = builder.ir.CreateCall(getBtnFunc(btnFunc->value, arr), args);
-      constructResultFromValue(resultAddr, &call);
-      destroyArgs(dtors);
+      callBtnFunc(call, btnFunc, result);
     }
   }
   
@@ -660,13 +657,12 @@ public:
       for (unsigned e = 0; e != list.exprs.size(); ++e) {
         visitExpr(list.exprs[e].get(), builder.ir.CreateStructGEP(addr, e));
       }
+      // @TODO lifetime.startLife
     }
     if (resultAddr) {
       value = nullptr;
     } else {
       if (classifyType(type) == TypeCat::trivially_copyable) {
-        // @TODO don't do this loading and storing for trivially copyable types
-        // maybe something like lifetime.defValue
         value = builder.ir.CreateLoad(addr);
       } else {
         value = addr;
