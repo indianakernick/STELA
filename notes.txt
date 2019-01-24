@@ -203,6 +203,8 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 
 
+deduce the type of InitList in all places that C++ can
+a closure can capture the array that contains it
 organize the src directory (folder references instead of groups)
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
@@ -236,7 +238,6 @@ is ptr_union a good idea?
 
 range for loops might speed up iteration
 
-
 IDE extensions
   pretty printing
   syntax highlighing
@@ -245,8 +246,78 @@ IDE extensions
   
 Have a look at Wren and Crystal
 
-Write some programs to benchmark the compiler
-Write some programs to benchmark the language
+Write some programs to benchmark the compiler and language
+  Project Euler
+  Computer Language Benchmarks Game
+  Physics simulation
+  Genetic algorithm
+
 Use a stack allocator for the AST
 
 64 bit floats and ints
+
+Iterators know when they have reached their end
+  A pseudo random number generator could have an interface like an iterator
+  This would allow you to do something like std::copy to fill an array with
+  random numbers.
+
+  An array iterator will store two pointers. This means that algorithms don't
+  need to take two iterators.
+
+trait RandomAccessIterator<T> {
+  type value_type;
+  func next(cref T) -> T;
+  func next(cref T, sint) -> T;
+  func prev(cref T) -> T;
+  func prev(cref T, sint) -> T;
+  func good(cref T) -> bool;
+  func size(cref T) -> sint;
+  func get(ref T) -> value_type<T>;
+  func set(cref T, cref value_type<T>);
+}
+
+trait RandomAccessRange<T> {
+  type iterator: RandomAccessIterator;
+  func iter(T) -> iterator<T>;
+}
+
+for (i := iter(array); good(i); i = next(i)) {
+
+}
+
+for i in array.iter() {
+
+}
+
+trait InputIterator<T> {
+  type value_type;
+  func next(cref T) -> T;
+  func good(cref T) -> bool;
+  func get(ref T) -> value_type<T>;
+}
+
+struct MTrand {
+  curr: uint;
+};
+
+assoc type value_type<MTrand> = uint;
+
+func next(gen: MTrand) {
+  return make MTrand {gen.curr * 786784};
+}
+
+func good(gen: MTrand) {
+  return true;
+}
+
+func get(gen: MTrand) {
+  return gen.curr;
+}
+
+impl InputIterator MTrand;
+
+var array: [uint];
+resize(array, 1000);
+copy(make MTrand {16}, array);
+
+push_back iterator?

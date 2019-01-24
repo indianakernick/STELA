@@ -291,6 +291,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
     if (expType && !compareTypes(ctx, expType, funcType)) {
       ctx.log.error(loc) << "Function \"" << name << "\" does not match signature" << fatal;
     }
+    funcSym->referenced = true;
     stack.pushExpr(sym::makeLetVal(std::move(funcType)));
     return funcSym->node.get();
   } else {
@@ -302,6 +303,7 @@ ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, cons
       auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
       if (compareTypes(ctx, expType, funcType)) {
         stack.pushExpr(sym::makeLetVal(std::move(funcType)));
+        funcSym->referenced = true;
         return funcSym->node.get();
       }
     }
