@@ -326,4 +326,42 @@ mandelbrot_cpp<float, int32_t>/256/100        16.0 ms         15.9 ms           
 mandelbrot_cpp<float, int32_t>/512/100        63.7 ms         63.5 ms           10
 */
 
+Sint operation(const Sint arg) noexcept {
+  return static_cast<Sint>(std::sqrt(arg));
+}
+
+void closures_stela(::benchmark::State &state) {
+  GENERATE(R"(
+    extern func apply(fn: func(sint) -> sint, arg: sint) {
+      return fn(arg);
+    }
+  )");
+  
+  auto apply = GET_FUNC("apply", Sint(Closure<Sint(Sint)>, Sint));
+  auto fn = makeClosureFromFunc<operation>();
+  ::benchmark::ClobberMemory();
+  
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(apply(fn, state.range()));
+  }
+}
+
+BENCHMARK(closures_stela)->Arg(64);
+
+Sint apply(std::function<Sint(Sint)> fn, Sint arg) {
+  return fn(arg);
+}
+
+void closures_cpp(::benchmark::State &state) {
+  volatile auto *op = operation;
+  std::function<Sint(Sint)> fn = op;
+  ::benchmark::ClobberMemory();
+  
+  for (auto _ : state) {
+    ::benchmark::DoNotOptimize(apply(fn, static_cast<Sint>(state.range())));
+  }
+}
+
+BENCHMARK(closures_cpp)->Arg(64);
+
 }
