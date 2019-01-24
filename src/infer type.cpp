@@ -44,7 +44,7 @@ public:
     }
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
-        if (auto retType = validOp(ctx.btn, bin.oper, builtinLeft, builtinRight)) {
+        if (auto retType = validOp(bin.oper, builtinLeft, builtinRight)) {
           bin.exprType = retType;
           lkp.setExpr(sym::makeLetVal(std::move(retType)));
           return;

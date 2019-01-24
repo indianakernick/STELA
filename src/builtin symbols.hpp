@@ -25,7 +25,6 @@ bool compOp(ast::BinOp);
 bool validIncr(const ast::BtnTypePtr &);
 bool validOp(ast::UnOp, const ast::BtnTypePtr &);
 retain_ptr<ast::BtnType> validOp(
-  const sym::Builtins &,
   ast::BinOp,
   const ast::BtnTypePtr &,
   const ast::BtnTypePtr &

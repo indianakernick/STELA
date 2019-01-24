@@ -155,7 +155,6 @@ ast::BtnTypePtr checkType(bool(*category)(ast::BtnTypeEnum), const ast::BtnTypeP
 }
 
 ast::BtnTypePtr stela::validOp(
-  const sym::Builtins &btn,
   const ast::BinOp op,
   const ast::BtnTypePtr &left,
   const ast::BtnTypePtr &right
