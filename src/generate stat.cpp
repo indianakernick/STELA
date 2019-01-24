@@ -111,11 +111,71 @@ public:
       builder.setCurr(done);
     }
   }
+  
+  using Blocks = std::vector<llvm::BasicBlock *>;
+  static constexpr size_t nodefault = ~size_t{};
+  
+  size_t findDefault(ast::Switch &swich) {
+    for (size_t c = 0; c != swich.cases.size(); ++c) {
+      if (swich.cases[c].expr == nullptr) {
+        return c;
+      }
+    }
+    return nodefault;
+  }
+  bool pastDefaultCase(const size_t caseIndex, const size_t defaultIndex) {
+    return defaultIndex != nodefault && caseIndex > defaultIndex;
+  }
+  size_t checkIndexOfCase(const size_t caseIndex, const size_t defaultIndex) {
+    return caseIndex - pastDefaultCase(caseIndex, defaultIndex);
+  }
+  
+  void emitCaseChecks(
+    ast::Switch &swich,
+    const Blocks &checkBlocks,
+    const Blocks &caseBlocks,
+    llvm::BasicBlock *done,
+    llvm::Value *value,
+    const size_t defaultIndex
+  ) {
+    llvm::Type *type = value->getType()->getPointerElementType();
+    for (size_t c = 0; c != swich.cases.size(); ++c) {
+      ast::Expression *expr = swich.cases[c].expr.get();
+      if (!expr) continue;
+      
+      const size_t checkIndex = checkIndexOfCase(c, defaultIndex);
+      builder.setCurr(checkBlocks[checkIndex]);
+      llvm::Value *cond = equalTo(value, expr, type);
+    
+      llvm::BasicBlock *nextCheck;
+      if (!pastDefaultCase(c, defaultIndex) && c == swich.cases.size() - 1) {
+        nextCheck = done;
+      } else {
+        nextCheck = checkBlocks[checkIndex + 1];
+      }
+    
+      builder.ir.CreateCondBr(cond, caseBlocks[c], nextCheck);
+    }
+  }
+  void emitCaseBodies(
+    ast::Switch &swich,
+    const Blocks &blocks,
+    llvm::BasicBlock *done,
+    const size_t scope
+  ) {
+    const size_t last = swich.cases.size() - 1;
+    for (size_t c = 0; c != swich.cases.size(); ++c) {
+      builder.setCurr(blocks[c]);
+      enterScope();
+      llvm::BasicBlock *next = (c == last ? nullptr : blocks[c + 1]);
+      visitFlow(swich.cases[c].body.get(), {done, next, scope});
+      leaveScope();
+      builder.terminate(done);
+    }
+  }
   void visit(ast::Switch &swich) override {
-    // @TODO I can't fit this whole function on my screen
     const size_t exprScope = enterScope();
-    ast::Type *exprType = swich.expr->exprType.get();
-    llvm::Type *type = generateType(ctx.llvm, exprType);
+    llvm::Type *type = generateType(ctx.llvm, swich.expr->exprType.get());
     llvm::Value *value = builder.alloc(type);
     genExpr(swich.expr.get(), value);
     if (swich.cases.empty()) {
@@ -128,48 +188,16 @@ public:
     auto checkBlocks = builder.makeBlocks(swich.cases.size());
     auto caseBlocks = builder.makeBlocks(swich.cases.size());
     llvm::BasicBlock *done = builder.makeBlock();
-    size_t defaultIndex = ~size_t{};
-    bool foundDefault = false;
     builder.ir.CreateBr(checkBlocks[0]);
     
-    for (size_t c = 0; c != swich.cases.size(); ++c) {
-      ast::Expression *expr = swich.cases[c].expr.get();
-      if (!expr) {
-        defaultIndex = c;
-        foundDefault = true;
-        continue;
-      }
-      const size_t checkIndex = c - foundDefault;
-      const size_t caseIndex = c;
-      
-      builder.setCurr(checkBlocks[checkIndex]);
-      llvm::Value *cond = equalTo(value, expr, type);
-      
-      llvm::BasicBlock *nextCheck;
-      if (!foundDefault && c == swich.cases.size() - 1) {
-        nextCheck = done;
-      } else {
-        nextCheck = checkBlocks[checkIndex + 1];
-      }
-      
-      builder.ir.CreateCondBr(cond, caseBlocks[caseIndex], nextCheck);
-    }
+    const size_t defaultIndex = findDefault(swich);
+    emitCaseChecks(swich, checkBlocks, caseBlocks, done, value, defaultIndex);
     
-    if (foundDefault) {
+    if (defaultIndex != nodefault) {
       builder.link(checkBlocks.back(), caseBlocks[defaultIndex]);
     }
     
-    for (size_t c = 0; c != swich.cases.size(); ++c) {
-      builder.setCurr(caseBlocks[c]);
-      llvm::BasicBlock *nextBlock = nullptr;
-      if (c != swich.cases.size() - 1) {
-        nextBlock = caseBlocks[c + 1];
-      }
-      enterScope();
-      visitFlow(swich.cases[c].body.get(), {done, nextBlock, caseScope});
-      leaveScope();
-      builder.terminate(done);
-    }
+    emitCaseBodies(swich, caseBlocks, done, caseScope);
     
     builder.setCurr(done);
     if (swich.alwaysReturns) {
