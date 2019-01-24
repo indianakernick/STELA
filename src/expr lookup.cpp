@@ -154,6 +154,12 @@ sym::Scope *findParentClosure(sym::Scope *closureScope) {
   return findNearest(sym::ScopeType::closure, closureScope->parent);
 }
 
+uint32_t pushCapture(sym::Lambda *lamSym, sym::ClosureCap cap) {
+  const uint32_t captureIndex = static_cast<uint32_t>(lamSym->captures.size());
+  lamSym->captures.push_back(std::move(cap));
+  return captureIndex;
+}
+
 bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scope, sym::Scope *currentScope) {
   // @TODO this function is huge!
   if (scope->type == sym::ScopeType::ns) {
@@ -189,12 +195,11 @@ bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scop
           // this closure captures the captured variable
           sym::ClosureCap cap;
           cap.object = ident.definition;
-          // the capture ident refers to the captured object in the parent
+          // the capture index refers to the captured object in the parent
           cap.index = static_cast<uint32_t>(c);
           cap.type = object->etype.type;
           // the identifier refers to the captured object in this closure
-          ident.captureIndex = static_cast<uint32_t>(lamSym->captures.size());
-          lamSym->captures.push_back(std::move(cap));
+          ident.captureIndex = pushCapture(lamSym, std::move(cap));
           return true;
         }
       }
@@ -204,14 +209,14 @@ bool lambdaCapture(ast::Identifier &ident, sym::Object *object, sym::Scope *scop
       UNREACHABLE();
     }
   }
+  // this closure captures an identifier
   sym::ClosureCap cap;
   cap.object = ident.definition;
-  // capture ident refers to a local variable in the parent scope
+  // capture does not refer to a captured object
   cap.index = ~uint32_t{};
   cap.type = object->etype.type;
   // identifier refers to the captured object in this closure
-  ident.captureIndex = static_cast<uint32_t>(lamSym->captures.size());
-  lamSym->captures.push_back(std::move(cap));
+  ident.captureIndex = pushCapture(lamSym, std::move(cap));
   return true;
 }
 

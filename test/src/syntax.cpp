@@ -68,7 +68,7 @@ TEST(Basic, End_of_input) {
 }
 
 TEST(Basic, Silent_logger) {
-  std::cerr << "Testing silent log()ger\n";
+  std::cerr << "Testing silent logger\n";
   const char *source = R"(
     ;;;
   
@@ -601,8 +601,7 @@ TEST(Decl, Extern_local) {
   EXPECT_THROW(createAST(source, log()), FatalError);
 }
 
-// @TODO why is it named Global?
-TEST(Decl, Global) {
+TEST(Stat, Global) {
   const char *source = R"(
     module my_awesome_module;
   
@@ -610,8 +609,8 @@ TEST(Decl, Global) {
   
     if (expr) {} // that's not a declaration
   )";
-  // good test for the color log()ger because all priorities are used
-  // can't use color log()ger for everything because Xcode Console doesn't
+  // good test for the color logger because all priorities are used
+  // can't use color logger for everything because Xcode Console doesn't
   // support color. ;-(
   ColorSink colorLog;
   EXPECT_THROW(createAST(source, colorLog), FatalError);
