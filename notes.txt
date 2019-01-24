@@ -205,6 +205,10 @@ USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
 
 deduce the type of InitList in all places that C++ can
 a closure can capture the array that contains it
+if closure creates wrapper functions for storing function pointers,
+  the wrapped function will be inlined and calls directly to the wrapped
+  function will be faster
+  can we inline a particular function call?
 organize the src directory (folder references instead of groups)
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers

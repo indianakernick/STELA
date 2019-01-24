@@ -9,6 +9,8 @@
 #ifndef stela_optimize_module_hpp
 #define stela_optimize_module_hpp
 
+#include "code generation.hpp"
+
 namespace llvm {
 
 class TargetMachine;
@@ -18,7 +20,7 @@ class Module;
 
 namespace stela {
 
-void optimizeModule(llvm::TargetMachine *, llvm::Module *);
+void optimizeModule(llvm::TargetMachine *, llvm::Module *, OptFlags);
 
 }
 

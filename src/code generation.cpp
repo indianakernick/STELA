@@ -37,23 +37,38 @@ std::unique_ptr<llvm::Module> stela::generateIR(const Symbols &syms, LogSink &si
   return module;
 }
 
-llvm::ExecutionEngine *stela::generateCode(std::unique_ptr<llvm::Module> module, LogSink &sink) {
+namespace {
+
+llvm::CodeGenOpt::Level codeGenOpt(const bool optimize) {
+  return optimize ? llvm::CodeGenOpt::Aggressive : llvm::CodeGenOpt::None;
+}
+
+}
+
+llvm::ExecutionEngine *stela::generateCode(
+  std::unique_ptr<llvm::Module> module,
+  LogSink &sink,
+  const OptFlags opt
+) {
   Log log{sink, LogCat::generate};
   
   std::string str;
   llvm::Module *modulePtr = module.get();
   auto engine = llvm::EngineBuilder(std::move(module))
                 .setErrorStr(&str)
-                .setOptLevel(llvm::CodeGenOpt::Aggressive)
+                .setOptLevel(codeGenOpt(opt.optimizeASM))
                 .setEngineKind(llvm::EngineKind::JIT)
                 .create();
   if (engine == nullptr) {
     log.error() << str << fatal;
   }
   
-  optimizeModule(engine->getTargetMachine(), modulePtr);
+  if (opt.optimizeIR) {
+    optimizeModule(engine->getTargetMachine(), modulePtr, opt);
+  }
   engine->finalizeObject();
   
+  // @TODO don't forget to call destructors
   engine->runStaticConstructorsDestructors(false);
   
   return engine;
