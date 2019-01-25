@@ -91,7 +91,6 @@ struct pass_traits<T &> {
   static type unwrap(T &arg) noexcept {
     return &arg;
   }
-  
   static T &wrap(type arg) noexcept {
     return *arg;
   }
@@ -107,7 +106,6 @@ struct pass_traits<T *> {
   static type unwrap(T *arg) noexcept {
     return arg;
   }
-  
   static T *wrap(type arg) noexcept {
     return arg;
   }

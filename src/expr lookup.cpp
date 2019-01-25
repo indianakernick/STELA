@@ -280,36 +280,52 @@ void ExprLookup::expected(const ast::TypePtr &type) {
   expType = type;
 }
 
-ast::Func *ExprLookup::popCallPushRet(sym::Func *const func) {
+ast::Declaration *ExprLookup::popCallPushRet(sym::Func *const func) {
   stack.popCall();
   stack.pushExpr(func->ret);
   assert(func->node);
   return func->node.get();
 }
 
+namespace {
+
+ast::Func *addressOfFunc(sym::Func *symbol, Log &log, Loc loc) {
+  ast::Declaration *node = symbol->node.get();
+  if (dynamic_cast<ast::ExtFunc *>(node)) {
+    log.error(loc) << "Cannot take the address of an external function" << fatal;
+  } else if (ast::Func *func = dynamic_cast<ast::Func *>(node)) {
+    return func;
+  }
+  UNREACHABLE();
+}
+
+}
+
 ast::Func *ExprLookup::pushFunPtr(sym::Scope *scope, const sym::Name &name, const Loc loc) {
   const auto [begin, end] = scope->table.equal_range(name);
   assert(begin != end);
   if (std::next(begin) == end) {
-    auto *funcSym = assertDownCast<sym::Func>(begin->second.get());
-    auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
+    sym::Func *funcSym = assertDownCast<sym::Func>(begin->second.get());
+    ast::Func *funcNode = addressOfFunc(funcSym, ctx.log, loc);
+    ast::TypePtr funcType = getFuncType(ctx.log, *funcNode, loc);
     if (expType && !compareTypes(ctx, expType, funcType)) {
       ctx.log.error(loc) << "Function \"" << name << "\" does not match signature" << fatal;
     }
     funcSym->referenced = true;
     stack.pushExpr(sym::makeLetVal(std::move(funcType)));
-    return funcSym->node.get();
+    return funcNode;
   } else {
     if (!expType) {
       ctx.log.error(loc) << "Ambiguous reference to overloaded function \"" << name << '"' << fatal;
     }
     for (auto f = begin; f != end; ++f) {
-      auto *funcSym = assertDownCast<sym::Func>(f->second.get());
-      auto funcType = getFuncType(ctx.log, *funcSym->node, loc);
+      sym::Func *funcSym = assertDownCast<sym::Func>(f->second.get());
+      ast::Func *funcNode = addressOfFunc(funcSym, ctx.log, loc);
+      ast::TypePtr funcType = getFuncType(ctx.log, *funcNode, loc);
       if (compareTypes(ctx, expType, funcType)) {
         stack.pushExpr(sym::makeLetVal(std::move(funcType)));
         funcSym->referenced = true;
-        return funcSym->node.get();
+        return funcNode;
       }
     }
     ctx.log.error(loc) << "No overload of function \"" << name << "\" matches signature" << fatal;

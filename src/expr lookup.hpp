@@ -116,7 +116,7 @@ private:
   ast::TypePtr expType;
   ExprStack stack;
   
-  ast::Func *popCallPushRet(sym::Func *);
+  ast::Declaration *popCallPushRet(sym::Func *);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &);
   sym::Func *lookupFun(sym::Scope *, const FunKey &, Loc);

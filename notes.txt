@@ -260,6 +260,8 @@ Use a stack allocator for the AST
 
 64 bit floats and ints
 
+--------------------------------------------------------------------------------
+
 Iterators know when they have reached their end
   A pseudo random number generator could have an interface like an iterator
   This would allow you to do something like std::copy to fill an array with
@@ -267,6 +269,8 @@ Iterators know when they have reached their end
 
   An array iterator will store two pointers. This means that algorithms don't
   need to take two iterators.
+
+--------------------------------------------------------------------------------
 
 trait RandomAccessIterator<T> {
   type value_type;
@@ -325,3 +329,32 @@ resize(array, 1000);
 copy(make MTrand {16}, array);
 
 push_back iterator?
+
+--------------------------------------------------------------------------------
+
+A trait contains a list of:
+  other traits
+  function signatures
+  associated types (possibly constrained)
+
+functions can be declared
+types can be associated with other types
+
+generic functions have template parameters that are constrained
+these template parameters can be deduced from the function call
+
+generic types have template parameters that are constained
+deducing template parameters might be tricky
+
+the user can assert that a type satisfies a trait
+
+associating a type is different to specializing a generic type
+  specializing a generic type requires that the generic type is already declared
+  it might be possible for a trait to required a type specialzation which
+  requires the same trait so the two must be separate.
+
+the compiler must determine
+  when a type satisfies a trait
+  whether the usage of a generic parameter matches the trait
+  whether a trait is a subset of another (when a generic function calls another
+  generic function)

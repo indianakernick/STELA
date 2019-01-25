@@ -141,6 +141,9 @@ public:
     ctx.man.leaveScope();
     checkMissingRet(ctx, func.body, func.ret, func.loc);
   }
+  void visit(ast::ExtFunc &func) override {
+    insert(ctx, func);
+  }
   ast::TypePtr objectType(
     const ast::TypePtr &type,
     const ast::ExprPtr &expr,

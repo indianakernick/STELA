@@ -101,10 +101,10 @@ enum class BtnTypeEnum {
 struct BtnType final : Type {
   explicit BtnType(const BtnTypeEnum value)
     : value{value} {}
-
-  void accept(Visitor &) override;
   
   const BtnTypeEnum value;
+  
+  void accept(Visitor &) override;
 };
 using BtnTypePtr = retain_ptr<BtnType>;
 
@@ -348,6 +348,18 @@ struct Func final : Declaration {
   void accept(Visitor &) override;
 };
 
+struct ExtFunc final : Declaration {
+  Name name;
+  ParamType receiver;
+  ParamTypes params;
+  TypePtr ret;
+  
+  sym::Func *symbol = nullptr;
+  llvm::Function *llvmFunc = nullptr;
+  
+  void accept(Visitor &) override;
+};
+
 enum class BtnFuncEnum {
   capacity,
   size,
@@ -543,6 +555,7 @@ public:
   
   // declarations
   virtual void visit(Func &) {}
+  virtual void visit(ExtFunc &) {}
   virtual void visit(BtnFunc &) {}
   virtual void visit(Var &) {}
   virtual void visit(Let &) {}

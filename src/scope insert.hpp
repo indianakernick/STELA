@@ -26,6 +26,8 @@ sym::Lambda *insert(sym::Ctx, ast::Lambda &);
 void enterLambdaScope(sym::Lambda *, ast::Lambda &);
 void leaveLambdaScope(sym::Ctx, sym::Lambda *, ast::Lambda &);
 
+void insert(sym::Ctx, ast::ExtFunc &);
+
 inline bool external(ast::Var &var) {
   return var.external;
 }

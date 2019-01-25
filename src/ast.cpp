@@ -62,6 +62,7 @@ ACCEPT(While)
 ACCEPT(For)
 
 ACCEPT(Func)
+ACCEPT(ExtFunc)
 ACCEPT(BtnFunc)
 ACCEPT(Var)
 ACCEPT(Let)

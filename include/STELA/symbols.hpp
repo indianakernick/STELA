@@ -27,6 +27,7 @@ struct Symbol {
 };
 using SymbolPtr = std::unique_ptr<Symbol>;
 
+// @TODO std::string_view?
 using Name = std::string;
 using Table = std::unordered_multimap<Name, SymbolPtr>;
 
@@ -128,7 +129,8 @@ struct Func final : Symbol {
   
   ExprType ret;
   FuncParams params;
-  retain_ptr<ast::Func> node;
+  // ast::Func or ast::ExtFunc
+  retain_ptr<ast::Declaration> node;
 };
 using FuncPtr = std::unique_ptr<Func>;
 

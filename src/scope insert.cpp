@@ -66,6 +66,23 @@ sym::FuncParams convertParams(
   return symParams;
 }
 
+sym::FuncParams convertParams(
+  sym::Ctx ctx,
+  const ast::ParamType &receiver,
+  const ast::ParamTypes &params
+) {
+  sym::FuncParams symParams;
+  if (receiver.type) {
+    symParams.push_back(convert(ctx, receiver.type, receiver.ref));
+  } else {
+    symParams.push_back(sym::null_type);
+  }
+  for (const ast::ParamType &param : params) {
+    symParams.push_back(convert(ctx, param.type, param.ref));
+  }
+  return symParams;
+}
+
 }
 
 sym::ExprType stela::convert(sym::Ctx ctx, const ast::TypePtr &type, const ast::ParamRef ref) {
@@ -95,46 +112,67 @@ void stela::insert(sym::Ctx ctx, const sym::Name &name, sym::SymbolPtr symbol) {
   }
 }
 
+namespace {
+
+void checkMethodCollide(sym::Ctx ctx, ast::Name name, const ast::TypePtr &receiver, Loc loc) {
+  if (auto strut = lookupConcrete<ast::StructType>(ctx, receiver)) {
+    for (const ast::Field &field : strut->fields) {
+      if (field.name == name) {
+        ctx.log.error(loc) << "Colliding function and field \"" << name << "\"" << fatal;
+      }
+    }
+  }
+}
+
+void checkFuncCollide(sym::Ctx ctx, ast::Name name, sym::Func *funcSym) {
+  const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name{name});
+  for (auto s = beg; s != end; ++s) {
+    sym::Symbol *const symbol = s->second.get();
+    sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
+    if (dupFunc) {
+      if (sameParams(ctx, dupFunc->params, funcSym->params)) {
+        ctx.log.error(funcSym->loc) << "Redefinition of function \"" << name
+          << "\" previously declared at " << moduleName(ctx.man.cur()) << ':'
+          << symbol->loc << fatal;
+      }
+    } else {
+      ctx.log.error(funcSym->loc) << "Redefinition of function \"" << name
+        << "\" previously declared (as a different kind of symbol) at "
+        << moduleName(ctx.man.cur()) << ':' << symbol->loc << fatal;
+    }
+  }
+}
+
+template <typename FuncNode>
+sym::Func *insertFunc(
+  sym::Ctx ctx,
+  std::unique_ptr<sym::Func> funcSym,
+  FuncNode &func
+) {
+  funcSym->params = convertParams(ctx, func.receiver, func.params);
+  funcSym->ret = convertNullable(ctx, func.ret, ast::ParamRef::val);
+  funcSym->node = {retain, &func};
+  funcSym->loc = func.loc;
+  func.symbol = funcSym.get();
+  checkFuncCollide(ctx, func.name, funcSym.get());
+  checkIdentShadow(ctx, sym::Name{func.name}, func.loc);
+  sym::Func *const ret = funcSym.get();
+  ctx.man.cur()->table.insert({sym::Name{func.name}, std::move(funcSym)});
+  return ret;
+}
+
+}
+
 sym::Func *stela::insert(sym::Ctx ctx, ast::Func &func) {
   if (ctx.man.cur()->type != sym::ScopeType::ns) {
     ctx.log.error(func.loc) << "Functions must appear at global scope" << fatal;
   }
   auto funcSym = std::make_unique<sym::Func>();
   funcSym->referenced = func.external;
-  func.symbol = funcSym.get();
-  funcSym->loc = func.loc;
   if (func.receiver) {
-    if (auto strut = lookupConcrete<ast::StructType>(ctx, func.receiver->type)) {
-      for (const ast::Field &field : strut->fields) {
-        if (field.name == func.name) {
-          ctx.log.error(func.loc) << "Colliding function and field \"" << func.name << "\"" << fatal;
-        }
-      }
-    }
+    checkMethodCollide(ctx, func.name, func.receiver->type, func.loc);
   }
-  funcSym->params = convertParams(ctx, func.receiver, func.params);
-  funcSym->ret = convertNullable(ctx, func.ret, ast::ParamRef::val);
-  funcSym->node = {retain, &func};
-  const auto [beg, end] = ctx.man.cur()->table.equal_range(sym::Name{func.name});
-  for (auto s = beg; s != end; ++s) {
-    sym::Symbol *const symbol = s->second.get();
-    sym::Func *const dupFunc = dynamic_cast<sym::Func *>(symbol);
-    if (dupFunc) {
-      if (sameParams(ctx, dupFunc->params, funcSym->params)) {
-        ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
-          << "\" previously declared at " << moduleName(ctx.man.cur()) << ':'
-          << symbol->loc << fatal;
-      }
-    } else {
-      ctx.log.error(funcSym->loc) << "Redefinition of function \"" << func.name
-        << "\" previously declared (as a different kind of symbol) at "
-        << moduleName(ctx.man.cur()) << ':' << symbol->loc << fatal;
-    }
-  }
-  checkIdentShadow(ctx, sym::Name{func.name}, func.loc);
-  sym::Func *const ret = funcSym.get();
-  ctx.man.cur()->table.insert({sym::Name{func.name}, std::move(funcSym)});
-  return ret;
+  return insertFunc(ctx, std::move(funcSym), func);
 }
 
 void stela::enterFuncScope(sym::Func *funcSym, ast::Func &func) {
@@ -189,4 +227,16 @@ void stela::leaveLambdaScope(sym::Ctx ctx, sym::Lambda *lamSym, ast::Lambda &lam
     lamSym->ret.type = ctx.btn.Void;
   }
   lam.ret = lamSym->ret.type;
+}
+
+void stela::insert(sym::Ctx ctx, ast::ExtFunc &func) {
+  if (ctx.man.cur()->type != sym::ScopeType::ns) {
+    ctx.log.error(func.loc) << "External functions must appear at global scope" << fatal;
+  }
+  auto funcSym = std::make_unique<sym::Func>();
+  funcSym->referenced = false;
+  if (func.receiver.type) {
+    checkMethodCollide(ctx, func.name, func.receiver.type, func.loc);
+  }
+  insertFunc(ctx, std::move(funcSym), func);
 }

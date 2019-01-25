@@ -2292,6 +2292,100 @@ TEST(Flow, Empty_switch_no_return) {
   )");
 }
 
+retain_ptr<ast::ExtFunc> makeSqrt(sym::Builtins &btn) {
+  auto sqrt = make_retain<ast::ExtFunc>();
+  sqrt->name = "sqrt";
+  sqrt->params.push_back({ast::ParamRef::val, btn.Real});
+  sqrt->ret = btn.Real;
+  return sqrt;
+}
+
+AST makeCmath(sym::Builtins &btn) {
+  AST cmath;
+  cmath.name = "cmath";
+  cmath.global.push_back(makeSqrt(btn));
+  return cmath;
+}
+
+TEST(External_Func, Basic) {
+  const char *source = R"(
+    import cmath;
+  
+    type Vec2 struct {
+      x: real;
+      y: real;
+    };
+  
+    func mag(v: Vec2) -> real {
+      return sqrt(v.x*v.x + v.y*v.y);
+    }
+  )";
+
+  Symbols syms = initModules(log());
+  ASTs asts;
+  
+  asts.push_back(createAST(source, log()));
+  asts.push_back(makeCmath(syms.builtins));
+
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+}
+
+TEST(External_Func, Method) {
+  const char *source = R"(
+    import cmath;
+  
+    func min(x: real, y: real) {
+      return x.isless(y) ? x : y;
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  
+  asts.push_back(createAST(source, log()));
+  
+  AST cmath;
+  cmath.name = "cmath";
+  auto isless = make_retain<ast::ExtFunc>();
+  isless->name = "isless";
+  isless->receiver = {ast::ParamRef::val, syms.builtins.Real};
+  isless->params.push_back({ast::ParamRef::val, syms.builtins.Real});
+  isless->ret = syms.builtins.Bool;
+  cmath.global.push_back(std::move(isless));
+  asts.push_back(std::move(cmath));
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+}
+
+TEST(External_Func, Address) {
+  const char *source = R"(
+    import cmath;
+  
+    let ptr = sqrt;
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  
+  asts.push_back(createAST(source, log()));
+  asts.push_back(makeCmath(syms.builtins));
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  EXPECT_THROW(compileModules(syms, order, asts, log()), FatalError);
+}
+
+TEST(External_Func, Inside_func) {
+  Symbols syms = initModules(log());
+  auto func = make_retain<ast::Func>();
+  func->name = "func";
+  func->body.nodes.push_back(makeSqrt(syms.builtins));
+  AST cmath;
+  cmath.global.push_back(std::move(func));
+  EXPECT_THROW(compileModule(syms, cmath, log()), FatalError);
+}
+
 #undef EXPECT_SUCCEEDS
 #undef EXPECT_FAILS
 
