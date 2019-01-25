@@ -111,6 +111,19 @@ llvm::FunctionType *stela::generateSig(llvm::LLVMContext &ctx, const Signature &
   }
 }
 
+llvm::FunctionType *stela::generateSig(llvm::LLVMContext &ctx, const ast::ExtFunc &func) {
+  std::vector<llvm::Type *> params;
+  params.reserve((func.receiver.type ? 1 : 0) + func.params.size());
+  if (func.receiver.type) {
+    params.push_back(convertParam(ctx, func.receiver));
+  }
+  for (const ast::ParamType &param : func.params) {
+    params.push_back(convertParam(ctx, param));
+  }
+  llvm::Type *ret = generateType(ctx, func.ret.get());
+  return llvm::FunctionType::get(ret, params, false);
+}
+
 Signature stela::getSignature(const ast::Func &func) {
   Signature sig;
   sig.receiver = convert(func.symbol->params[0]);

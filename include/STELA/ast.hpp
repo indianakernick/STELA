@@ -356,6 +356,8 @@ struct ExtFunc final : Declaration {
   
   sym::Func *symbol = nullptr;
   llvm::Function *llvmFunc = nullptr;
+  Name mangledName;
+  uint64_t impl = 0;
   
   void accept(Visitor &) override;
 };

@@ -46,9 +46,9 @@ int main(int, const char **argv) {
   auto footype = llvm::FunctionType::get(builder.getVoidTy(), false);
   // create a foo function
   // extern linkage so that it can be called from the module
-  auto foofunc = llvm::Function::Create(footype, llvm::Function::ExternalLinkage, "foo", module.get());
+  auto foofunc = llvm::Function::Create(footype, llvm::Function::ExternalLinkage, "_Z3foov", module.get());
   // make the foo symbol available via dynamic symbol lookup
-  llvm::sys::DynamicLibrary::AddSymbol("foo", reinterpret_cast<void *>(foo));
+  //llvm::sys::DynamicLibrary::AddSymbol("foo", reinterpret_cast<void *>(foo));
   
   // a function that accepts no parameters and returns int32
   auto functype = llvm::FunctionType::get(builder.getInt32Ty(), false);

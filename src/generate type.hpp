@@ -35,6 +35,8 @@ struct Signature {
 
 llvm::Type *generateType(llvm::LLVMContext &, ast::Type *);
 llvm::FunctionType *generateSig(llvm::LLVMContext &, const Signature &);
+// @TODO this probably won't be necessary if we remove void * from regular functions
+llvm::FunctionType *generateSig(llvm::LLVMContext &, const ast::ExtFunc &);
 
 Signature getSignature(const ast::Func &);
 Signature getSignature(const ast::Lambda &);

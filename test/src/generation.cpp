@@ -2785,6 +2785,55 @@ TEST(Closure, No_move_return_captures) {
   EXPECT_EQ(arrayCop1, array);
 }
 
+retain_ptr<ast::ExtFunc> makeSqrt(sym::Builtins &btn) {
+  auto sqrt = make_retain<ast::ExtFunc>();
+  sqrt->name = "sqrt";
+  sqrt->mangledName = "stela_ext_fun_sqrt_0";
+  sqrt->params.push_back({ast::ParamRef::val, btn.Real});
+  sqrt->ret = btn.Real;
+  sqrt->impl = reinterpret_cast<uint64_t>(static_cast<Real(*)(Real)>(&std::sqrt));
+  return sqrt;
+}
+
+AST makeCmath(sym::Builtins &btn) {
+  AST cmath;
+  cmath.name = "cmath";
+  cmath.global.push_back(makeSqrt(btn));
+  return cmath;
+}
+
+TEST(External_Func, Basic) {
+  const char *source = R"(
+    import cmath;
+  
+    type Vec2 struct {
+      x: real;
+      y: real;
+    };
+  
+    func mag(v: Vec2) -> real {
+      return sqrt(v.x*v.x + v.y*v.y);
+    }
+  
+    extern func five() {
+      return mag(make Vec2 {3.0, 4.0});
+    }
+  )";
+
+  Symbols syms = initModules(log());
+  ASTs asts;
+  
+  asts.push_back(createAST(source, log()));
+  asts.push_back(makeCmath(syms.builtins));
+
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto five = GET_FUNC("five", Real());
+  EXPECT_EQ(five(), 5.0f);
+}
+
 #undef EXPECT_FAILS
 #undef EXPECT_SUCCEEDS
 #undef GET_MEM_FUNC

@@ -15,6 +15,7 @@
 #include <llvm/IR/Function.h>
 #include "lifetime exprs.hpp"
 #include "iterator range.hpp"
+#include <llvm/Support/DynamicLibrary.h>
 
 using namespace stela;
 
@@ -28,6 +29,9 @@ public:
   llvm::GlobalObject::LinkageTypes linkage(const bool ext) {
     return ext ? llvm::GlobalObject::ExternalLinkage : llvm::GlobalObject::InternalLinkage;
   }
+  llvm::StringRef toStringRef(const std::string_view str) {
+    return {str.data(), str.size()};
+  }
   
   void visit(ast::Func &func) override {
     const Signature sig = getSignature(func);
@@ -35,13 +39,26 @@ public:
     func.llvmFunc = llvm::Function::Create(
       fnType,
       linkage(func.external),
-      llvm::StringRef{func.name.data(), func.name.size()},
+      toStringRef(func.name),
       module
     );
     assignAttrs(func.llvmFunc, sig);
     FuncBuilder builder{func.llvmFunc};
     gen::Func genFunc{builder, nullptr, func.symbol};
     generateStat(ctx, genFunc, func.receiver, func.params, func.body);
+  }
+  void visit(ast::ExtFunc &func) override {
+    llvm::FunctionType *fnType = generateSig(ctx.llvm, func);
+    func.llvmFunc = llvm::Function::Create(
+      fnType,
+      llvm::GlobalObject::ExternalLinkage,
+      toStringRef(func.mangledName),
+      module
+    );
+    llvm::sys::DynamicLibrary::AddSymbol(
+      toStringRef(func.mangledName),
+      reinterpret_cast<void *>(func.impl)
+    );
   }
   
   llvm::Twine ctorName(const llvm::StringRef &objName) {

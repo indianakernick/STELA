@@ -363,6 +363,26 @@ public:
     constructResultFromValue(resultAddr, &call);
     destroyArgs(dtors);
   }
+  void callExtFunc(ast::FuncCall &call, ast::ExtFunc *func, llvm::Value *resultAddr) {
+    std::vector<llvm::Value *> args;
+    args.reserve(1 + call.args.size());
+    llvm::FunctionType *funcType = func->llvmFunc->getFunctionType();
+    std::vector<Object> dtors;
+    dtors.resize(1 + call.args.size());
+    if (func->receiver.type) {
+      ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get());
+      ast::ParamType &rec = func->receiver;
+      args.push_back(visitParam(rec.type.get(), rec.ref, self, &dtors[0]));
+    }
+    for (size_t a = 0; a != call.args.size(); ++a) {
+      const ast::ParamType &param = func->params[a];
+      args.push_back(visitParam(
+        param.type.get(), param.ref, call.args[a].get(), &dtors[a]
+      ));
+    }
+    genCall(func->llvmFunc, funcType, args, resultAddr, &call);
+    destroyArgs(dtors);
+  }
   
   void visit(ast::FuncCall &call) override {
     if (call.definition == nullptr) {
@@ -371,6 +391,8 @@ public:
       callFunc(call, func, result);
     } else if (auto *btnFunc = dynamic_cast<ast::BtnFunc *>(call.definition)) {
       callBtnFunc(call, btnFunc, result);
+    } else if (auto *extFunc = dynamic_cast<ast::ExtFunc *>(call.definition)) {
+      callExtFunc(call, extFunc, result);
     }
   }
   
