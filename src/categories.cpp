@@ -33,7 +33,7 @@ public:
   void visit(ast::StructType &) override {
     // @TODO some structs can be trivially copyable
     // if the struct can fit in a register and
-    // all of its members are trivially copyable then
+    // all of its fields are trivially copyable then
     //   the struct is trivially copyable
     // otherwise
     //   the struct is nontrivial

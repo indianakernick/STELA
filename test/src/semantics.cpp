@@ -256,7 +256,7 @@ TEST_F(Modules, Import_function) {
   compileModules(syms, order, asts, log());
 }
 
-TEST_F(Modules, Import_member_function) {
+TEST_F(Modules, Import_method) {
   const char *sourceA = R"(
     module ModA;
   
@@ -693,7 +693,7 @@ TEST(Struct, More) {
   )");
 }
 
-TEST(Struct, Dup_member_function) {
+TEST(Struct, Dup_method) {
   EXPECT_FAILS(R"(
     type MyStruct struct {};
   
@@ -725,7 +725,7 @@ TEST(Struct, Colliding_func_field) {
   )");
 }
 
-TEST(Struct, Dup_member) {
+TEST(Struct, Dup_field) {
   EXPECT_FAILS(R"(
     type MyStruct struct {
       m: sint;
@@ -1455,7 +1455,7 @@ TEST(Func_addr, Overloaded) {
   )");
 }
 
-TEST(Func_addr, Single_member_function) {
+TEST(Func_addr, Single_method) {
   EXPECT_FAILS(R"(
     func (self: sint) memfun(param: real) -> real {
       return make real self * param;
@@ -1465,7 +1465,7 @@ TEST(Func_addr, Single_member_function) {
   )");
 }
 
-TEST(Func_addr, Overloaded_member_function) {
+TEST(Func_addr, Overloaded_method) {
   EXPECT_FAILS(R"(
     func (self: sint) memfun(param: real) -> real {
       return make real self * param;
@@ -1547,7 +1547,7 @@ TEST(Expr, Compare_anything) {
   )");
 }
 
-TEST(Func, Undefined_member_function) {
+TEST(Func, Undefined_method) {
   EXPECT_FAILS(R"(
     func test() {
       let x = 10;
@@ -1950,7 +1950,7 @@ TEST(Btn_func, Int_stack) {
   )");
 }
 
-TEST(Expr, Bad_call_to_member_function) {
+TEST(Expr, Bad_call_to_method) {
   EXPECT_FAILS(R"(
     let thing = 11;
     let val = make struct{} {};
@@ -1970,7 +1970,7 @@ TEST(Lambda, Void_return) {
   )");
 }
 
-TEST(Shadow, Struct_member_type) {
+TEST(Shadow, Struct_field_type) {
   EXPECT_SUCCEEDS(R"(
     type t = sint;
     func test() {

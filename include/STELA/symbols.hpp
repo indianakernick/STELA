@@ -86,7 +86,7 @@ inline ValueRef common(const ValueRef a, const ValueRef b) {
   return a == ValueRef::val ? a : b;
 }
 
-inline ExprType memberType(const ExprType &obj, const ast::TypePtr &mem) {
+inline ExprType fieldType(const ExprType &obj, const ast::TypePtr &mem) {
   return {mem, obj.mut, obj.ref};
 }
 

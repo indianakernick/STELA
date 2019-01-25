@@ -457,7 +457,7 @@ TEST(Func, Member_function_call) {
   EXPECT_EQ(func(8), 32);
 }
 
-TEST(Func, Void_member_function_call) {
+TEST(Func, Void_method_call) {
   EXPECT_SUCCEEDS(R"(
     func (val: ref real) increase() {
       val = val * 2.0;
@@ -1315,7 +1315,7 @@ TEST(Lifetime, Nontrivial_global_variable) {
   EXPECT_EQ(a.use_count(), 2);
 }
 
-TEST(Lifetime, Access_materialized_struct_member) {
+TEST(Lifetime, Access_materialized_field) {
   EXPECT_SUCCEEDS(R"(
     type Inner struct {
       arr: [real];

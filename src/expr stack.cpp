@@ -26,7 +26,7 @@ void ExprStack::pushMember(const sym::Name &name) {
 }
 
 void ExprStack::pushMemberExpr(const ast::TypePtr &type) {
-  pushExpr(memberType(exprType, type));
+  pushExpr(fieldType(exprType, type));
 }
 
 void ExprStack::pushFunc(const sym::Name &name) {

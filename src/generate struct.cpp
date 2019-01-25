@@ -29,8 +29,8 @@ llvm::Function *unarySrt(
   FuncBuilder builder{func};
   LifetimeExpr lifetime{data.inst, builder.ir};
   
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
+  const unsigned fields = type->getNumContainedTypes();
+  for (unsigned m = 0; m != fields; ++m) {
     llvm::Value *memPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     (lifetime.*memFun)(srt->fields[m].type.get(), memPtr);
   }
@@ -55,8 +55,8 @@ llvm::Function *binarySrt(
   FuncBuilder builder{func};
   LifetimeExpr lifetime{data.inst, builder.ir};
   
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
+  const unsigned fields = type->getNumContainedTypes();
+  for (unsigned m = 0; m != fields; ++m) {
     llvm::Value *dstPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     llvm::Value *srcPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     (lifetime.*memFun)(srt->fields[m].type.get(), dstPtr, srcPtr);
@@ -116,8 +116,8 @@ llvm::Function *stela::genFn<PFGI::srt_eq>(InstData data, ast::StructType *srt) 
   return true
   */
   
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
+  const unsigned fields = type->getNumContainedTypes();
+  for (unsigned m = 0; m != fields; ++m) {
     llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();
@@ -156,8 +156,8 @@ llvm::Function *stela::genFn<PFGI::srt_lt>(InstData data, ast::StructType *srt) 
   return false
   */
   
-  const unsigned members = type->getNumContainedTypes();
-  for (unsigned m = 0; m != members; ++m) {
+  const unsigned fields = type->getNumContainedTypes();
+  for (unsigned m = 0; m != fields; ++m) {
     llvm::Value *lPtr = builder.ir.CreateStructGEP(func->arg_begin(), m);
     llvm::Value *rPtr = builder.ir.CreateStructGEP(func->arg_begin() + 1, m);
     ast::Type *field = srt->fields[m].type.get();

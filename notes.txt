@@ -233,8 +233,6 @@ consistent naming
   left -> lhs
   right -> rhs
   Type -> Ty
-  member function -> method
-  member variable -> field
 
 is ptr_union a good idea?
   we can remove a few dynamic casts

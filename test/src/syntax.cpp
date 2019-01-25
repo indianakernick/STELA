@@ -688,7 +688,7 @@ TEST(Struct, Functions) {
   EXPECT_FALSE(func->ret);
 }
 
-TEST(Struct, Bad_member) {
+TEST(Struct, Bad_field) {
   const char *source = R"(
     struct C {
       int x;

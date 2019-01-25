@@ -71,11 +71,11 @@ public:
     //   pop expr
     //   pop member
     //   pop call
-    //   member function lookup
+    //   method lookup
     //   push expr
     // freeFun()
     //   pop stuff
-    //   free function lookup
+    //   function lookup
     //   push expr
   
   void member(const sym::Name &);
@@ -83,7 +83,7 @@ public:
     // memVarExpr(expr)
     //   pop expr
     //   pop member
-    //   member variable lookup
+    //   field lookup
     //   push expr
     //   return object
     // else

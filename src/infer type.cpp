@@ -93,7 +93,7 @@ public:
       if (validSubscript(builtinIdx)) {
         if (auto array = lookupConcrete<ast::ArrayType>(ctx, obj.type)) {
           sub.exprType = lookupStrongType(ctx, array->elem);
-          lkp.setExpr(sym::memberType(obj, sub.exprType));
+          lkp.setExpr(sym::fieldType(obj, sub.exprType));
           return;
         }
         ctx.log.error(sub.object->loc) << "Subscripted value is not an array" << fatal;
