@@ -185,13 +185,13 @@ public:
   }
   
   void visit(ast::CompAssign &as) override {
-    const sym::ExprType left = getExprType(ctx, as.left, nullptr);
-    const sym::ExprType right = getExprType(ctx, as.right, left.type);
-    if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, left.type)) {
-      if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, right.type)) {
+    const sym::ExprType dst = getExprType(ctx, as.dst, nullptr);
+    const sym::ExprType src = getExprType(ctx, as.src, dst.type);
+    if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, dst.type)) {
+      if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, src.type)) {
         assert(builtinLeft == builtinRight);
         if (validOp(as.oper, builtinLeft)) {
-          if (left.mut == sym::ValueMut::var) {
+          if (dst.mut == sym::ValueMut::var) {
             return;
           } else {
             ctx.log.error(as.loc) << "Left side of compound assignment must be mutable" << fatal;
@@ -214,9 +214,9 @@ public:
     ctx.log.error(as.loc) << "Invalid operand to unary operator " << (as.incr ? "++" : "--") << fatal;
   }
   void visit(ast::Assign &as) override {
-    const sym::ExprType left = getExprType(ctx, as.left, nullptr);
-    const sym::ExprType right = getExprType(ctx, as.right, left.type);
-    if (left.mut == sym::ValueMut::let) {
+    const sym::ExprType dst = getExprType(ctx, as.dst, nullptr);
+    const sym::ExprType src = getExprType(ctx, as.src, dst.type);
+    if (dst.mut == sym::ValueMut::let) {
       ctx.log.error(as.loc) << "Left side of assignment must be mutable" << fatal;
     }
   }

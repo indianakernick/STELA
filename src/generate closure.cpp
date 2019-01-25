@@ -323,14 +323,14 @@ llvm::Function *stela::genFn<PFGI::clo_eq>(InstData data, ast::FuncType *clo) {
   FuncBuilder builder{func};
   
   /*
-  return left.fun == right.fun
+  return lhs.fun == rhs.fun
   */
   
-  llvm::Value *leftPtr = func->arg_begin();
-  llvm::Value *rightPtr = func->arg_begin() + 1;
-  llvm::Value *leftFun = loadStructElem(builder.ir, leftPtr, clo_idx_fun);
-  llvm::Value *rightFun = loadStructElem(builder.ir, rightPtr, clo_idx_fun);
-  llvm::Value *equal = builder.ir.CreateICmpEQ(leftFun, rightFun);
+  llvm::Value *lhsPtr = func->arg_begin();
+  llvm::Value *rhsPtr = func->arg_begin() + 1;
+  llvm::Value *lhsFun = loadStructElem(builder.ir, lhsPtr, clo_idx_fun);
+  llvm::Value *rhsFun = loadStructElem(builder.ir, rhsPtr, clo_idx_fun);
+  llvm::Value *equal = builder.ir.CreateICmpEQ(lhsFun, rhsFun);
   builder.ir.CreateRet(equal);
   
   return func;
@@ -346,14 +346,14 @@ llvm::Function *stela::genFn<PFGI::clo_lt>(InstData data, ast::FuncType *clo) {
   FuncBuilder builder{func};
   
   /*
-  return left.fun < right.fun
+  return lhs.fun < rhs.fun
   */
   
-  llvm::Value *leftPtr = func->arg_begin();
-  llvm::Value *rightPtr = func->arg_begin() + 1;
-  llvm::Value *leftFun = loadStructElem(builder.ir, leftPtr, clo_idx_fun);
-  llvm::Value *rightFun = loadStructElem(builder.ir, rightPtr, clo_idx_fun);
-  llvm::Value *equal = builder.ir.CreateICmpULT(leftFun, rightFun);
+  llvm::Value *lhsPtr = func->arg_begin();
+  llvm::Value *rhsPtr = func->arg_begin() + 1;
+  llvm::Value *lhsFun = loadStructElem(builder.ir, lhsPtr, clo_idx_fun);
+  llvm::Value *rhsFun = loadStructElem(builder.ir, rhsPtr, clo_idx_fun);
+  llvm::Value *equal = builder.ir.CreateICmpULT(lhsFun, rhsFun);
   builder.ir.CreateRet(equal);
   
   return func;

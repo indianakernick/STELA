@@ -158,20 +158,20 @@ ast::BtnTypePtr checkType(bool(*category)(ast::BtnTypeEnum), const ast::BtnTypeP
 
 ast::BtnTypePtr stela::validOp(
   const ast::BinOp op,
-  const ast::BtnTypePtr &left,
-  const ast::BtnTypePtr &right
+  const ast::BtnTypePtr &lhs,
+  const ast::BtnTypePtr &rhs
 ) {
-  if (left != right) {
+  if (lhs != rhs) {
     return nullptr;
   }
   assert(!isEqualOp(op));
   assert(!isOrderOp(op));
   if (isBoolOp(op)) {
-    return checkType(isBoolType, left);
+    return checkType(isBoolType, lhs);
   } else if (isBitwiseOp(op)) {
-    return checkType(isBitwiseType, left);
+    return checkType(isBitwiseType, lhs);
   } else if (isArithOp(op)) {
-    return checkType(isArithType, left);
+    return checkType(isArithType, lhs);
   }
   UNREACHABLE();
 }

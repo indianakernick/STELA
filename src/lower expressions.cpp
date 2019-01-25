@@ -72,12 +72,12 @@ public:
   
   void visit(ast::CompAssign &compAssign) override {
     auto binExpr = make_retain<ast::BinaryExpr>();
-    binExpr->left = compAssign.left;
-    binExpr->right = compAssign.right;
+    binExpr->lhs = compAssign.dst;
+    binExpr->rhs = compAssign.src;
     binExpr->oper = convert(compAssign.oper);
     auto assign = make_retain<ast::Assign>();
-    assign->left = compAssign.left;
-    assign->right = std::move(binExpr);
+    assign->dst = compAssign.dst;
+    assign->src = std::move(binExpr);
     changePtr(assign);
   }
   
@@ -102,16 +102,16 @@ public:
     one->value = getOne(type->value);
     one->exprType = incrDecr.expr->exprType;
     auto binExpr = make_retain<ast::BinaryExpr>();
-    binExpr->left = incrDecr.expr;
-    binExpr->right = std::move(one);
+    binExpr->lhs = incrDecr.expr;
+    binExpr->rhs = std::move(one);
     if (incrDecr.incr) {
       binExpr->oper = ast::BinOp::add;
     } else {
       binExpr->oper = ast::BinOp::sub;
     }
     auto assign = make_retain<ast::Assign>();
-    assign->left = incrDecr.expr;
-    assign->right = std::move(binExpr);
+    assign->dst = incrDecr.expr;
+    assign->src = std::move(binExpr);
     changePtr(assign);
   }
 

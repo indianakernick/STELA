@@ -75,104 +75,104 @@ public:
     return boolValue;
   }
   
-  llvm::Value *boolOr(ast::Expression *left, ast::Expression *right) {
-    llvm::BasicBlock *leftBlock = builder.ir.GetInsertBlock();
-    llvm::BasicBlock *rightBlock = builder.makeBlock();
+  llvm::Value *boolOr(ast::Expression *lhs, ast::Expression *rhs) {
+    llvm::BasicBlock *lhsBlock = builder.ir.GetInsertBlock();
+    llvm::BasicBlock *rhsBlock = builder.makeBlock();
     llvm::BasicBlock *doneBlock = builder.makeBlock();
     
-    gen::Expr leftExpr = visitBool(left);
-    llvm::Type *boolType = leftExpr.obj->getType();
-    builder.ir.CreateCondBr(leftExpr.obj, doneBlock, rightBlock);
+    gen::Expr lhsExpr = visitBool(lhs);
+    llvm::Type *boolType = lhsExpr.obj->getType();
+    builder.ir.CreateCondBr(lhsExpr.obj, doneBlock, rhsBlock);
     
-    builder.setCurr(rightBlock);
-    gen::Expr rightExpr = visitBool(right);
+    builder.setCurr(rhsBlock);
+    gen::Expr rhsExpr = visitBool(rhs);
     builder.ir.CreateBr(doneBlock);
     
     builder.setCurr(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
-    phi->addIncoming(llvm::ConstantInt::getTrue(boolType), leftBlock);
-    phi->addIncoming(rightExpr.obj, rightBlock);
+    phi->addIncoming(llvm::ConstantInt::getTrue(boolType), lhsBlock);
+    phi->addIncoming(rhsExpr.obj, rhsBlock);
     return phi;
   }
   
-  llvm::Value *boolAnd(ast::Expression *left, ast::Expression *right) {
-    llvm::BasicBlock *leftBlock = builder.ir.GetInsertBlock();
-    llvm::BasicBlock *rightBlock = builder.makeBlock();
+  llvm::Value *boolAnd(ast::Expression *lhs, ast::Expression *rhs) {
+    llvm::BasicBlock *lhsBlock = builder.ir.GetInsertBlock();
+    llvm::BasicBlock *rhsBlock = builder.makeBlock();
     llvm::BasicBlock *doneBlock = builder.makeBlock();
     
-    gen::Expr leftExpr = visitBool(left);
-    llvm::Type *boolType = leftExpr.obj->getType();
-    builder.ir.CreateCondBr(leftExpr.obj, rightBlock, doneBlock);
+    gen::Expr lhsExpr = visitBool(lhs);
+    llvm::Type *boolType = lhsExpr.obj->getType();
+    builder.ir.CreateCondBr(lhsExpr.obj, rhsBlock, doneBlock);
     
-    builder.setCurr(rightBlock);
-    gen::Expr rightExpr = visitBool(right);
+    builder.setCurr(rhsBlock);
+    gen::Expr rhsExpr = visitBool(rhs);
     builder.ir.CreateBr(doneBlock);
     
     builder.setCurr(doneBlock);
     llvm::PHINode *phi = builder.ir.CreatePHI(boolType, 2);
-    phi->addIncoming(llvm::ConstantInt::getFalse(boolType), leftBlock);
-    phi->addIncoming(rightExpr.obj, rightBlock);
+    phi->addIncoming(llvm::ConstantInt::getFalse(boolType), lhsBlock);
+    phi->addIncoming(rhsExpr.obj, rhsBlock);
     return phi;
   }
 
   void visit(ast::BinaryExpr &expr) override {
     llvm::Value *resultAddr = result;
     if (expr.oper == ast::BinOp::bool_or) {
-      value = boolOr(expr.left.get(), expr.right.get());
+      value = boolOr(expr.lhs.get(), expr.rhs.get());
       storeValueAsResult(resultAddr);
       return;
     } else if (expr.oper == ast::BinOp::bool_and) {
-      value = boolAnd(expr.left.get(), expr.right.get());
+      value = boolAnd(expr.lhs.get(), expr.rhs.get());
       storeValueAsResult(resultAddr);
       return;
     }
     
-    gen::Expr left = visitValue(expr.left.get());
-    gen::Expr right = visitValue(expr.right.get());
-    left.cat = ValueCat::prvalue;
-    right.cat = ValueCat::prvalue;
+    gen::Expr lhs = visitValue(expr.lhs.get());
+    gen::Expr rhs = visitValue(expr.rhs.get());
+    lhs.cat = ValueCat::prvalue;
+    rhs.cat = ValueCat::prvalue;
     
     #define SIGNED_UNSIGNED_FLOAT_OP(S_OP, U_OP, F_OP)                          \
       {                                                                         \
-        const ArithCat arith = classifyArith(expr.left.get());                  \
+        const ArithCat arith = classifyArith(expr.lhs.get());                   \
         if (arith == ArithCat::signed_int) {                                    \
-          value = builder.ir.S_OP(left.obj, right.obj);                         \
+          value = builder.ir.S_OP(lhs.obj, rhs.obj);                            \
         } else if (arith == ArithCat::unsigned_int) {                           \
-          value = builder.ir.U_OP(left.obj, right.obj);                         \
+          value = builder.ir.U_OP(lhs.obj, rhs.obj);                            \
         } else {                                                                \
-          value = builder.ir.F_OP(left.obj, right.obj);                         \
+          value = builder.ir.F_OP(lhs.obj, rhs.obj);                            \
         }                                                                       \
       }                                                                         \
       break
     
     CompareExpr compare{ctx.inst, builder.ir};
-    ast::Type *type = expr.left->exprType.get();
+    ast::Type *type = expr.lhs->exprType.get();
     
     switch (expr.oper) {
       case ast::BinOp::bool_or:
       case ast::BinOp::bit_or:
-        value = builder.ir.CreateOr(left.obj, right.obj); break;
+        value = builder.ir.CreateOr(lhs.obj, rhs.obj); break;
       case ast::BinOp::bit_xor:
-        value = builder.ir.CreateXor(left.obj, right.obj); break;
+        value = builder.ir.CreateXor(lhs.obj, rhs.obj); break;
       case ast::BinOp::bool_and:
       case ast::BinOp::bit_and:
-        value = builder.ir.CreateAnd(left.obj, right.obj); break;
+        value = builder.ir.CreateAnd(lhs.obj, rhs.obj); break;
       case ast::BinOp::bit_shl:
-        value = builder.ir.CreateShl(left.obj, right.obj); break;
+        value = builder.ir.CreateShl(lhs.obj, rhs.obj); break;
       case ast::BinOp::bit_shr:
-        value = builder.ir.CreateLShr(left.obj, right.obj); break;
+        value = builder.ir.CreateLShr(lhs.obj, rhs.obj); break;
       case ast::BinOp::eq:
-        value = compare.eq(type, left, right); break;
+        value = compare.eq(type, lhs, rhs); break;
       case ast::BinOp::ne:
-        value = compare.ne(type, left, right); break;
+        value = compare.ne(type, lhs, rhs); break;
       case ast::BinOp::lt:
-        value = compare.lt(type, left, right); break;
+        value = compare.lt(type, lhs, rhs); break;
       case ast::BinOp::le:
-        value = compare.le(type, left, right); break;
+        value = compare.le(type, lhs, rhs); break;
       case ast::BinOp::gt:
-        value = compare.gt(type, left, right); break;
+        value = compare.gt(type, lhs, rhs); break;
       case ast::BinOp::ge:
-        value = compare.ge(type, left, right); break;
+        value = compare.ge(type, lhs, rhs); break;
       case ast::BinOp::add:
         SIGNED_UNSIGNED_FLOAT_OP(CreateNSWAdd, CreateAdd, CreateFAdd);
       case ast::BinOp::sub:

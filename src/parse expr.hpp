@@ -15,7 +15,7 @@
 namespace stela {
 
 // parse an expression that is probably an lvalue
-// appropriate for left-hand side of assignment
+// appropriate for dst of assignment
 // a is an lvalue
 // a.b is an lvalue
 // a[b] is an lvalue

@@ -75,12 +75,12 @@ llvm::Function *stela::genFn<PFGI::arr_cop_ctor>(InstData data, ast::ArrayType *
   FuncBuilder builder{func};
   
   /*
-  ptr_cop_ctor(bitcast obj, bitcast other)
+  ptr_cop_ctor(bitcast dst, bitcast src)
   */
   
-  llvm::Value *objPtr = refPtrPtrCast(builder.ir, func->arg_begin());
-  llvm::Value *otherPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
-  builder.ir.CreateCall(data.inst.get<FGI::ptr_cop_ctor>(), {objPtr, otherPtr});
+  llvm::Value *dstPtr = refPtrPtrCast(builder.ir, func->arg_begin());
+  llvm::Value *srcPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
+  builder.ir.CreateCall(data.inst.get<FGI::ptr_cop_ctor>(), {dstPtr, srcPtr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -94,13 +94,13 @@ llvm::Function *stela::genFn<PFGI::arr_cop_asgn>(InstData data, ast::ArrayType *
   FuncBuilder builder{func};
   
   /*
-  ptr_cop_asgn(arr_strg_dtor, bitcast left, bitcast right)
+  ptr_cop_asgn(arr_strg_dtor, bitcast dst, bitcast src)
   */
   
   llvm::Function *strgDtor = data.inst.get<PFGI::arr_strg_dtor>(arr);
-  llvm::Value *leftPtr = refPtrPtrCast(builder.ir, func->arg_begin());
-  llvm::Value *rightPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
-  builder.ir.CreateCall(data.inst.get<FGI::ptr_cop_asgn>(), {strgDtor, leftPtr, rightPtr});
+  llvm::Value *dstPtr = refPtrPtrCast(builder.ir, func->arg_begin());
+  llvm::Value *srcPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
+  builder.ir.CreateCall(data.inst.get<FGI::ptr_cop_asgn>(), {strgDtor, dstPtr, srcPtr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -114,12 +114,12 @@ llvm::Function *stela::genFn<PFGI::arr_mov_ctor>(InstData data, ast::ArrayType *
   FuncBuilder builder{func};
   
   /*
-  ptr_mov_ctor(bitcast obj, bitcast other)
+  ptr_mov_ctor(bitcast dst, bitcast src)
   */
   
-  llvm::Value *objPtr = refPtrPtrCast(builder.ir, func->arg_begin());
-  llvm::Value *otherPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
-  builder.ir.CreateCall(data.inst.get<FGI::ptr_mov_ctor>(), {objPtr, otherPtr});
+  llvm::Value *dstPtr = refPtrPtrCast(builder.ir, func->arg_begin());
+  llvm::Value *srcPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
+  builder.ir.CreateCall(data.inst.get<FGI::ptr_mov_ctor>(), {dstPtr, srcPtr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -133,13 +133,13 @@ llvm::Function *stela::genFn<PFGI::arr_mov_asgn>(InstData data, ast::ArrayType *
   FuncBuilder builder{func};
   
   /*
-  ptr_mov_asgn(arr_strg_dtor, bitcast left, bitcast right)
+  ptr_mov_asgn(arr_strg_dtor, bitcast dst, bitcast src)
   */
   
   llvm::Function *strgDtor = data.inst.get<PFGI::arr_strg_dtor>(arr);
-  llvm::Value *leftPtr = refPtrPtrCast(builder.ir, func->arg_begin());
-  llvm::Value *rightPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
-  builder.ir.CreateCall(data.inst.get<FGI::ptr_mov_asgn>(), {strgDtor, leftPtr, rightPtr});
+  llvm::Value *dstPtr = refPtrPtrCast(builder.ir, func->arg_begin());
+  llvm::Value *srcPtr = refPtrPtrCast(builder.ir, func->arg_begin() + 1);
+  builder.ir.CreateCall(data.inst.get<FGI::ptr_mov_asgn>(), {strgDtor, dstPtr, srcPtr});
   builder.ir.CreateRetVoid();
   
   return func;
@@ -286,47 +286,47 @@ namespace {
 
 struct ArrPairLoop {
   llvm::BasicBlock *loop;
-  llvm::Value *left;
-  llvm::Value *right;
-  llvm::Value *leftEnd;
-  llvm::Value *rightEnd;
+  llvm::Value *lhs;
+  llvm::Value *rhs;
+  llvm::Value *lhsEnd;
+  llvm::Value *rhsEnd;
 };
 
 ArrPairLoop iterArrPair(
   FuncBuilder &builder,
-  llvm::Value *left,
-  llvm::Value *right,
+  llvm::Value *lhs,
+  llvm::Value *rhs,
   llvm::BasicBlock *done
 ) {
   llvm::BasicBlock *head = builder.makeBlock();
   llvm::BasicBlock *body = builder.makeBlock();
   llvm::BasicBlock *tail = builder.makeBlock();
   
-  llvm::Value *leftDat = loadStructElem(builder.ir, left, array_idx_dat);
-  llvm::Value *rightDat = loadStructElem(builder.ir, right, array_idx_dat);
-  llvm::Value *leftLen = loadStructElem(builder.ir, left, array_idx_len);
-  llvm::Value *rightLen = loadStructElem(builder.ir, right, array_idx_len);
-  llvm::Value *leftEnd = arrayIndex(builder.ir, leftDat, leftLen);
-  llvm::Value *rightEnd = arrayIndex(builder.ir, rightDat, rightLen);
-  llvm::Value *leftElemPtr = builder.allocStore(leftDat);
-  llvm::Value *rightElemPtr = builder.allocStore(rightDat);
+  llvm::Value *lhsDat = loadStructElem(builder.ir, lhs, array_idx_dat);
+  llvm::Value *rhsDat = loadStructElem(builder.ir, rhs, array_idx_dat);
+  llvm::Value *lhsLen = loadStructElem(builder.ir, lhs, array_idx_len);
+  llvm::Value *rhsLen = loadStructElem(builder.ir, rhs, array_idx_len);
+  llvm::Value *lhsEnd = arrayIndex(builder.ir, lhsDat, lhsLen);
+  llvm::Value *rhsEnd = arrayIndex(builder.ir, rhsDat, rhsLen);
+  llvm::Value *lhsElemPtr = builder.allocStore(lhsDat);
+  llvm::Value *rhsElemPtr = builder.allocStore(rhsDat);
   builder.ir.CreateBr(head);
   
   builder.setCurr(head);
-  llvm::Value *leftElem = builder.ir.CreateLoad(leftElemPtr);
-  llvm::Value *rightElem = builder.ir.CreateLoad(rightElemPtr);
-  llvm::Value *rightAtEnd = builder.ir.CreateICmpEQ(rightElem, rightEnd);
-  builder.ir.CreateCondBr(rightAtEnd, done, body);
+  llvm::Value *lhsElem = builder.ir.CreateLoad(lhsElemPtr);
+  llvm::Value *rhsElem = builder.ir.CreateLoad(rhsElemPtr);
+  llvm::Value *rhsAtEnd = builder.ir.CreateICmpEQ(rhsElem, rhsEnd);
+  builder.ir.CreateCondBr(rhsAtEnd, done, body);
   
   builder.setCurr(tail);
-  llvm::Value *leftElemNext = builder.ir.CreateConstInBoundsGEP1_64(leftElem, 1);
-  llvm::Value *rightElemNext = builder.ir.CreateConstInBoundsGEP1_64(rightElem, 1);
-  builder.ir.CreateStore(leftElemNext, leftElemPtr);
-  builder.ir.CreateStore(rightElemNext, rightElemPtr);
+  llvm::Value *lhsElemNext = builder.ir.CreateConstInBoundsGEP1_64(lhsElem, 1);
+  llvm::Value *rhsElemNext = builder.ir.CreateConstInBoundsGEP1_64(rhsElem, 1);
+  builder.ir.CreateStore(lhsElemNext, lhsElemPtr);
+  builder.ir.CreateStore(rhsElemNext, rhsElemPtr);
   builder.ir.CreateBr(head);
   
   builder.setCurr(body);
-  return {tail, leftElem, rightElem, leftEnd, rightEnd};
+  return {tail, lhsElem, rhsElem, lhsEnd, rhsEnd};
 }
 
 }
@@ -340,9 +340,9 @@ llvm::Function *stela::genFn<PFGI::arr_eq>(InstData data, ast::ArrayType *arr) {
   FuncBuilder builder{func};
   
   /*
-  if left.len == right.len
-    for leftElem, rightElem in left, right
-      if leftElem == rightElem
+  if lhs.len == rhs.len
+    for lhsElem, rhsElem in lhs, rhs
+      if lhsElem == rhsElem
         continue
       else
         return false
@@ -354,17 +354,17 @@ llvm::Function *stela::genFn<PFGI::arr_eq>(InstData data, ast::ArrayType *arr) {
   llvm::BasicBlock *compareBlock = builder.makeBlock();
   llvm::BasicBlock *equalBlock = builder.makeBlock();
   llvm::BasicBlock *diffBlock = builder.makeBlock();
-  llvm::Value *left = builder.ir.CreateLoad(func->arg_begin());
-  llvm::Value *right = builder.ir.CreateLoad(func->arg_begin() + 1);
-  llvm::Value *leftLen = loadStructElem(builder.ir, left, array_idx_len);
-  llvm::Value *rightLen = loadStructElem(builder.ir, right, array_idx_len);
-  llvm::Value *sameLen = builder.ir.CreateICmpEQ(leftLen, rightLen);
+  llvm::Value *lhs = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *rhs = builder.ir.CreateLoad(func->arg_begin() + 1);
+  llvm::Value *lhsLen = loadStructElem(builder.ir, lhs, array_idx_len);
+  llvm::Value *rhsLen = loadStructElem(builder.ir, rhs, array_idx_len);
+  llvm::Value *sameLen = builder.ir.CreateICmpEQ(lhsLen, rhsLen);
   builder.ir.CreateCondBr(sameLen, compareBlock, diffBlock);
   
   builder.setCurr(compareBlock);
-  ArrPairLoop comp = iterArrPair(builder, left, right, equalBlock);
+  ArrPairLoop comp = iterArrPair(builder, lhs, rhs, equalBlock);
   CompareExpr compare{data.inst, builder.ir};
-  llvm::Value *eq = compare.eq(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  llvm::Value *eq = compare.eq(arr->elem.get(), lvalue(comp.lhs), lvalue(comp.rhs));
   builder.ir.CreateCondBr(eq, comp.loop, diffBlock);
   
   builder.setCurr(equalBlock);
@@ -384,12 +384,12 @@ llvm::Function *stela::genFn<PFGI::arr_lt>(InstData data, ast::ArrayType *arr) {
   FuncBuilder builder{func};
   
   /*
-  for leftElem, rightElem in left, right
-    if leftElem == leftEnd
+  for lhsElem, rhsElem in lhs, rhs
+    if lhsElem == lhsEnd
       return true
-    else if leftElem < rightElem
+    else if lhsElem < rhsElem
       return true
-    else if rightElem < leftElem
+    else if rhsElem < lhsElem
       return false
     else
       continue
@@ -400,20 +400,20 @@ llvm::Function *stela::genFn<PFGI::arr_lt>(InstData data, ast::ArrayType *arr) {
   llvm::BasicBlock *geBlock = builder.makeBlock();
   llvm::BasicBlock *notEndBlock = builder.makeBlock();
   llvm::BasicBlock *notLtBlock = builder.makeBlock();
-  llvm::Value *left = builder.ir.CreateLoad(func->arg_begin());
-  llvm::Value *right = builder.ir.CreateLoad(func->arg_begin() + 1);
-  ArrPairLoop comp = iterArrPair(builder, left, right, geBlock);
+  llvm::Value *lhs = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *rhs = builder.ir.CreateLoad(func->arg_begin() + 1);
+  ArrPairLoop comp = iterArrPair(builder, lhs, rhs, geBlock);
   
-  llvm::Value *leftAtEnd = builder.ir.CreateICmpEQ(comp.left, comp.leftEnd);
-  builder.ir.CreateCondBr(leftAtEnd, ltBlock, notEndBlock);
+  llvm::Value *lhsAtEnd = builder.ir.CreateICmpEQ(comp.lhs, comp.lhsEnd);
+  builder.ir.CreateCondBr(lhsAtEnd, ltBlock, notEndBlock);
   
   builder.setCurr(notEndBlock);
   CompareExpr compare{data.inst, builder.ir};
-  llvm::Value *lt = compare.lt(arr->elem.get(), lvalue(comp.left), lvalue(comp.right));
+  llvm::Value *lt = compare.lt(arr->elem.get(), lvalue(comp.lhs), lvalue(comp.rhs));
   builder.ir.CreateCondBr(lt, ltBlock, notLtBlock);
   
   builder.setCurr(notLtBlock);
-  llvm::Value *gt = compare.lt(arr->elem.get(), lvalue(comp.right), lvalue(comp.left));
+  llvm::Value *gt = compare.lt(arr->elem.get(), lvalue(comp.rhs), lvalue(comp.lhs));
   builder.ir.CreateCondBr(gt, geBlock, comp.loop);
   
   builder.setCurr(ltBlock);

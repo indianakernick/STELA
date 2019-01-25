@@ -75,11 +75,11 @@ public:
   }
   
   void visit(ast::BinaryExpr &bin) override {
-    bin.left->accept(*this);
+    bin.lhs->accept(*this);
     pushSpace();
     pushOp(opName(bin.oper));
     pushSpace();
-    bin.right->accept(*this);
+    bin.rhs->accept(*this);
   }
   void visit(ast::UnaryExpr &un) override {
     pushOp(opName(un.oper));
@@ -298,11 +298,11 @@ public:
   }
   
   void visit(ast::CompAssign &as) override {
-    as.left->accept(*this);
+    as.dst->accept(*this);
     pushSpace();
     pushOp(opName(as.oper));
     pushSpace();
-    as.right->accept(*this);
+    as.src->accept(*this);
     pushOp(";");
   }
   void visit(ast::IncrDecr &incrDecr) override {
@@ -315,11 +315,11 @@ public:
     pushOp(";");
   }
   void visit(ast::Assign &as) override {
-    as.left->accept(*this);
+    as.dst->accept(*this);
     pushSpace();
     pushOp("=");
     pushSpace();
-    as.right->accept(*this);
+    as.src->accept(*this);
     pushOp(";");
   }
   void visit(ast::DeclAssign &as) override {

@@ -927,11 +927,11 @@ TEST(Expr, Make) {
     ASSERT_DOWN_CAST(let, Let, ast.global[3]);
     EXPECT_EQ(let->name, "two");
     IS_BOP(div, let->expr, div);
-      ASSERT_DOWN_CAST(make_real, Make, div->left);
+      ASSERT_DOWN_CAST(make_real, Make, div->lhs);
         ASSERT_DOWN_CAST(real, NamedType, make_real->type);
           EXPECT_EQ(real->name, "real");
         IS_NUM(make_real->expr, "6");
-      IS_NUM(div->right, "3.0");
+      IS_NUM(div->rhs, "3.0");
   }
 }
 
@@ -955,16 +955,16 @@ TEST(Expr, Math) {
   EXPECT_EQ(ast.global.size(), 1);
   ASSERT_DOWN_CAST(let, Let, ast.global[0]);
     IS_BOP(add, let->expr, add);
-      IS_NUM(add->left, "3");
-      IS_BOP(div, add->right, div);
-        IS_BOP(mul, div->left, mul);
-          IS_NUM(mul->left, "4");
-          IS_NUM(mul->right, "2");
-        IS_BOP(sub, div->right, sub);
-          IS_NUM(sub->left, "1");
-          IS_BOP(mod, sub->right, mod);
-            IS_NUM(mod->left, "5");
-            IS_NUM(mod->right, "6");
+      IS_NUM(add->lhs, "3");
+      IS_BOP(div, add->rhs, div);
+        IS_BOP(mul, div->lhs, mul);
+          IS_NUM(mul->lhs, "4");
+          IS_NUM(mul->rhs, "2");
+        IS_BOP(sub, div->rhs, sub);
+          IS_NUM(sub->lhs, "1");
+          IS_BOP(mod, sub->rhs, mod);
+            IS_NUM(mod->lhs, "5");
+            IS_NUM(mod->rhs, "6");
 }
 
 TEST(Expr, Assign_and_compare) {
@@ -992,14 +992,14 @@ yeah        bool_and
   EXPECT_EQ(block.size(), 1);
   
   IS_AOP(assign_add, block[0], add);
-    IS_ID(assign_add->left, "yeah");
-    IS_BOP(bool_and, assign_add->right, bool_and);
-      IS_BOP(eq, bool_and->left, eq);
-        IS_NUM(eq->left, "1");
-        IS_ID(eq->right, "two");
-      IS_BOP(lt, bool_and->right, lt);
-        IS_ID(lt->left, "four");
-        IS_NUM(lt->right, "5");
+    IS_ID(assign_add->dst, "yeah");
+    IS_BOP(bool_and, assign_add->src, bool_and);
+      IS_BOP(eq, bool_and->lhs, eq);
+        IS_NUM(eq->lhs, "1");
+        IS_ID(eq->rhs, "two");
+      IS_BOP(lt, bool_and->rhs, lt);
+        IS_ID(lt->lhs, "four");
+        IS_NUM(lt->rhs, "5");
 }
 
 TEST(Expr, Unary) {
@@ -1037,15 +1037,15 @@ TEST(Expr, Unary) {
   ASSERT_DOWN_CAST(decr, IncrDecr, block[1]);
   EXPECT_FALSE(decr->incr);
   IS_AOP(assign, block[2], sub);
-    IS_ID(assign->left, "n");
-    IS_BOP(sub, assign->right, sub);
-      IS_UOP(lneg, sub->left, neg);
+    IS_ID(assign->dst, "n");
+    IS_BOP(sub, assign->src, sub);
+      IS_UOP(lneg, sub->lhs, neg);
         IS_ID(lneg->expr, "n");
-      IS_UOP(rneg, sub->right, neg);
+      IS_UOP(rneg, sub->rhs, neg);
         IS_BOP(add, rneg->expr, add);
-          IS_UOP(bitNot, add->left, bit_not);
+          IS_UOP(bitNot, add->lhs, bit_not);
             IS_NUM(bitNot->expr, "5");
-          IS_UOP(boolNot, add->right, bool_not);
+          IS_UOP(boolNot, add->rhs, bool_not);
             IS_NUM(boolNot->expr, "0");
 }
 
@@ -1074,15 +1074,15 @@ TEST(Expr, Ternary) {
   EXPECT_EQ(block.size(), 1);
   
   IS_AOP(assignMul, block[0], mul);
-    IS_ID(assignMul->left, "e");
-    ASSERT_DOWN_CAST(tern, Ternary, assignMul->right);
+    IS_ID(assignMul->dst, "e");
+    ASSERT_DOWN_CAST(tern, Ternary, assignMul->src);
       IS_BOP(le, tern->cond, le);
-        IS_ID(le->left, "a");
-        IS_ID(le->right, "d");
+        IS_ID(le->lhs, "a");
+        IS_ID(le->rhs, "d");
       IS_ID(tern->troo, "a");
       IS_BOP(div, tern->fols, div);
-        IS_ID(div->left, "a");
-        IS_ID(div->right, "d");
+        IS_ID(div->lhs, "a");
+        IS_ID(div->rhs, "d");
 }
 
 TEST(Expr, Member_and_subscript) {
@@ -1155,21 +1155,21 @@ TEST(Expr, Bits) {
   ASSERT_DOWN_CAST(let, Let, block[0]);
   
   IS_BOP(boolOr, let->expr, bool_or);
-    IS_BOP(ne, boolOr->left, ne);
-      IS_UOP(bnot, ne->left, bit_not);
+    IS_BOP(ne, boolOr->lhs, ne);
+      IS_UOP(bnot, ne->lhs, bit_not);
         IS_ID(bnot->expr, "a");
-      IS_BOP(shr, ne->right, bit_shr);
-        IS_BOP(shl, shr->left, bit_shl);
-          IS_ID(shl->left, "b");
-          IS_NUM(shl->right, "2");
-        IS_NUM(shr->right, "3");
-    IS_BOP(bor, boolOr->right, bit_or);
-      IS_BOP(band, bor->left, bit_and);
-        IS_ID(band->left, "c");
-        IS_ID(band->right, "d");
-      IS_BOP(bxor, bor->right, bit_xor);
-        IS_ID(bxor->left, "e");
-        IS_ID(bxor->right, "f");
+      IS_BOP(shr, ne->rhs, bit_shr);
+        IS_BOP(shl, shr->lhs, bit_shl);
+          IS_ID(shl->lhs, "b");
+          IS_NUM(shl->rhs, "2");
+        IS_NUM(shr->rhs, "3");
+    IS_BOP(bor, boolOr->rhs, bit_or);
+      IS_BOP(band, bor->lhs, bit_and);
+        IS_ID(band->lhs, "c");
+        IS_ID(band->rhs, "d");
+      IS_BOP(bxor, bor->rhs, bit_xor);
+        IS_ID(bxor->lhs, "e");
+        IS_ID(bxor->rhs, "f");
 }
 
 TEST(Expr, Function_call) {
@@ -1251,27 +1251,27 @@ TEST(Expr, Assign) {
   EXPECT_EQ(block.size(), 6);
   
   IS_AOP(mod, block[0], mod);
-    IS_ID(mod->left, "a");
-    IS_ID(mod->right, "b");
+    IS_ID(mod->dst, "a");
+    IS_ID(mod->src, "b");
   IS_AOP(shl, block[1], bit_shl);
-    IS_ID(shl->left, "a");
-    IS_ID(shl->right, "b");
+    IS_ID(shl->dst, "a");
+    IS_ID(shl->src, "b");
   IS_AOP(shr, block[2], bit_shr);
-    IS_ID(shr->left, "a");
-    IS_ID(shr->right, "b");
+    IS_ID(shr->dst, "a");
+    IS_ID(shr->src, "b");
   IS_AOP(band, block[3], bit_and);
-    IS_ID(band->left, "a");
-    IS_ID(band->right, "b");
+    IS_ID(band->dst, "a");
+    IS_ID(band->src, "b");
   IS_AOP(bxor, block[4], bit_xor);
-    IS_ID(bxor->left, "a");
-    IS_ID(bxor->right, "b");
+    IS_ID(bxor->dst, "a");
+    IS_ID(bxor->src, "b");
   IS_AOP(bor, block[5], bit_or);
-    IS_ID(bor->left, "a");
-    IS_BOP(ge, bor->right, ge);
-      IS_BOP(gt, ge->left, gt);
-        IS_ID(gt->left, "b");
-        IS_ID(gt->right, "c");
-      IS_ID(ge->right, "d");
+    IS_ID(bor->dst, "a");
+    IS_BOP(ge, bor->src, ge);
+      IS_BOP(gt, ge->lhs, gt);
+        IS_ID(gt->lhs, "b");
+        IS_ID(gt->rhs, "c");
+      IS_ID(ge->rhs, "d");
 }
 
 TEST(Expr, Result_unused) {
@@ -1332,17 +1332,17 @@ n  val Int  ternary
   ASSERT_DOWN_CAST(ret, Return, block[0]);
     ASSERT_DOWN_CAST(ternary, Ternary, ret->expr);
       IS_BOP(eq, ternary->cond, eq);
-        IS_ID(eq->left, "n");
-        IS_NUM(eq->right, "0");
+        IS_ID(eq->lhs, "n");
+        IS_NUM(eq->rhs, "0");
       IS_NUM(ternary->troo, "1");
       IS_BOP(mul, ternary->fols, mul);
-        IS_ID(mul->left, "n");
-        ASSERT_DOWN_CAST(call, FuncCall, mul->right);
+        IS_ID(mul->lhs, "n");
+        ASSERT_DOWN_CAST(call, FuncCall, mul->rhs);
           IS_ID(call->func, "fac");
           EXPECT_EQ(call->args.size(), 1);
             IS_BOP(sub, call->args[0], sub);
-              IS_ID(sub->left, "n");
-              IS_NUM(sub->right, "1");
+              IS_ID(sub->lhs, "n");
+              IS_NUM(sub->rhs, "1");
 }
 
 #undef IS_ID

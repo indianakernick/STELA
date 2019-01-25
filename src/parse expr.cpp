@@ -48,36 +48,36 @@ ast::ExprPtr parseTerm(ParseTokens &tok) {
 
 ast::ExprPtr stela::parseNested(ParseTokens &tok) {
   // 2
-  ast::ExprPtr left = parseTerm(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseTerm(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
     if (tok.checkOp("(")) {
       auto call = make_retain<ast::FuncCall>();
       call->loc = tok.loc();
-      call->func = std::move(left);
+      call->func = std::move(lhs);
       Context ctx = tok.context("in function argument list");
       call->args = parseExprList(tok, ")");
-      left = std::move(call);
+      lhs = std::move(call);
     } else if (tok.checkOp("[")) {
       auto sub = make_retain<ast::Subscript>();
       sub->loc = tok.lastLoc();
-      sub->object = std::move(left);
+      sub->object = std::move(lhs);
       sub->index = expectExpr(tok, parseExpr);
       tok.expectOp("]");
-      left = std::move(sub);
+      lhs = std::move(sub);
     } else if (tok.checkOp(".")) {
       auto mem = make_retain<ast::MemberIdent>();
       mem->loc = tok.lastLoc();
-      mem->object = std::move(left);
+      mem->object = std::move(lhs);
       mem->member = tok.expectID();
-      left = std::move(mem);
+      lhs = std::move(mem);
     } else {
       break;
     }
   }
-  return left;
+  return lhs;
 }
 
 namespace {
@@ -116,19 +116,19 @@ ast::ExprPtr parseUnary(ParseTokens &tok) {
   }
 }
 
-ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr left, ast::ExprPtr right) {
+ast::ExprPtr makeBinary(const ast::BinOp oper, ast::ExprPtr lhs, ast::ExprPtr rhs) {
   auto bin = make_retain<ast::BinaryExpr>();
-  bin->loc = left->loc;
-  bin->left = std::move(left);
+  bin->loc = lhs->loc;
+  bin->lhs = std::move(lhs);
   bin->oper = oper;
-  bin->right = std::move(right);
+  bin->rhs = std::move(rhs);
   return bin;
 }
 
 ast::ExprPtr parseMul(ParseTokens &tok) {
   // 5
-  ast::ExprPtr left = parseUnary(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseUnary(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
@@ -142,15 +142,15 @@ ast::ExprPtr parseMul(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseUnary));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseUnary));
   }
-  return left;
+  return lhs;
 }
 
 ast::ExprPtr parseAdd(ParseTokens &tok) {
   // 6
-  ast::ExprPtr left = parseMul(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseMul(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
@@ -162,15 +162,15 @@ ast::ExprPtr parseAdd(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseMul));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseMul));
   }
-  return left;
+  return lhs;
 }
 
 ast::ExprPtr parseShift(ParseTokens &tok) {
   // 7
-  ast::ExprPtr left = parseAdd(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseAdd(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
@@ -182,15 +182,15 @@ ast::ExprPtr parseShift(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseAdd));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseAdd));
   }
-  return left;
+  return lhs;
 }
 
 ast::ExprPtr parseRel(ParseTokens &tok) {
   // 9
-  ast::ExprPtr left = parseShift(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseShift(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
@@ -206,15 +206,15 @@ ast::ExprPtr parseRel(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseShift));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseShift));
   }
-  return left;
+  return lhs;
 }
 
 ast::ExprPtr parseEq(ParseTokens &tok) {
   // 10
-  ast::ExprPtr left = parseRel(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseRel(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (true) {
@@ -226,26 +226,26 @@ ast::ExprPtr parseEq(ParseTokens &tok) {
     } else {
       break;
     }
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseRel));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseRel));
   }
-  return left;
+  return lhs;
 }
 
-/// Parse a left associative binary operator
+/// Parse a lhs associative binary operator
 ast::ExprPtr parseBin(
   ParseTokens &tok,
   const ast::BinOp op,
   const std::string_view token,
   ast::ExprPtr (*parseLower)(ParseTokens &)
 ) {
-  ast::ExprPtr left = parseLower(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseLower(tok);
+  if (!lhs) {
     return nullptr;
   }
   while (tok.checkOp(token)) {
-    left = makeBinary(op, std::move(left), expectExpr(tok, parseLower));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseLower));
   }
-  return left;
+  return lhs;
 }
 
 ast::ExprPtr parseBitAnd(ParseTokens &tok) {
@@ -275,20 +275,20 @@ ast::ExprPtr parseBoolOr(ParseTokens &tok) {
 
 ast::ExprPtr parseTern(ParseTokens &tok) {
   // 16
-  ast::ExprPtr left = parseBoolOr(tok);
-  if (!left) {
+  ast::ExprPtr lhs = parseBoolOr(tok);
+  if (!lhs) {
     return nullptr;
   }
   if (tok.checkOp("?")) {
     auto tern = make_retain<ast::Ternary>();
-    tern->loc = left->loc;
-    tern->cond = std::move(left);
+    tern->loc = lhs->loc;
+    tern->cond = std::move(lhs);
     tern->troo = expectExpr(tok, parseTern);
     tok.expectOp(":");
     tern->fols = expectExpr(tok, parseTern);
     return tern;
   }
-  return left;
+  return lhs;
 }
 
 }

@@ -14,23 +14,23 @@ using namespace stela;
 
 namespace {
 
-ast::AsgnPtr makeAssign(ParseTokens &tok, const ast::AssignOp op, ast::ExprPtr left) {
+ast::AsgnPtr makeAssign(ParseTokens &tok, const ast::AssignOp op, ast::ExprPtr dst) {
   auto assign = make_retain<ast::CompAssign>();
   assign->loc = tok.lastLoc();
-  assign->left = std::move(left);
+  assign->dst = std::move(dst);
   assign->oper = op;
-  assign->right = tok.expectNode(parseExpr, "expression");
+  assign->src = tok.expectNode(parseExpr, "expression");
   return assign;
 }
 
 }
 
 ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
-  ast::ExprPtr left = parseNested(tok);
-  if (!left) {
+  ast::ExprPtr dst = parseNested(tok);
+  if (!dst) {
     return nullptr;
   }
-  if (auto *ident = dynamic_cast<ast::Identifier *>(left.get())) {
+  if (auto *ident = dynamic_cast<ast::Identifier *>(dst.get())) {
     if (tok.checkOp(":=")) {
       auto decl = make_retain<ast::DeclAssign>();
       decl->loc = tok.lastLoc();
@@ -44,21 +44,21 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
     auto incrDecr = make_retain<ast::IncrDecr>();
     incrDecr->loc = tok.lastLoc();
     incrDecr->incr = incr;
-    incrDecr->expr = std::move(left);
+    incrDecr->expr = std::move(dst);
     return incrDecr;
   }
   
   if (tok.checkOp("=")) {
     auto assign = make_retain<ast::Assign>();
     assign->loc = tok.lastLoc();
-    assign->left = std::move(left);
-    assign->right = tok.expectNode(parseExpr, "expression");
+    assign->dst = std::move(dst);
+    assign->src = tok.expectNode(parseExpr, "expression");
     return assign;
   }
   
   #define CHECK(TOKEN, ENUM)                                                    \
     if (tok.checkOp(#TOKEN)) {                                                  \
-      return makeAssign(tok, ast::AssignOp::ENUM, std::move(left));             \
+      return makeAssign(tok, ast::AssignOp::ENUM, std::move(dst));              \
     }
   
   CHECK(+=, add)
@@ -74,12 +74,12 @@ ast::AsgnPtr stela::parseAsgn(ParseTokens &tok) {
   
   #undef CHECK
   
-  if (auto *call = dynamic_cast<ast::FuncCall *>(left.get())) {
+  if (auto *call = dynamic_cast<ast::FuncCall *>(dst.get())) {
     auto assign = make_retain<ast::CallAssign>();
     assign->loc = call->loc;
     assign->call = std::move(*call);
     return assign;
   }
   
-  tok.log().error(left->loc) << "Expression used outside of assignment or function call" << fatal;
+  tok.log().error(dst->loc) << "Expression used outside of assignment or function call" << fatal;
 }

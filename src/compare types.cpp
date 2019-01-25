@@ -18,59 +18,59 @@ namespace {
 template <typename Left>
 class RightVisitor final : public ast::Visitor {
 public:
-  RightVisitor(sym::Ctx ctx, Left &left)
-    : ctx{ctx}, left{left} {}
+  RightVisitor(sym::Ctx ctx, Left &lhs)
+    : ctx{ctx}, lhs{lhs} {}
 
-  void visit(ast::BtnType &right) override {
-    eq = compare(ctx, left, right);
+  void visit(ast::BtnType &rhs) override {
+    eq = compare(ctx, lhs, rhs);
   }
-  void visit(ast::ArrayType &right) override {
-    eq = compare(ctx, left, right);
+  void visit(ast::ArrayType &rhs) override {
+    eq = compare(ctx, lhs, rhs);
   }
-  void visit(ast::FuncType &right) override {
-    eq = compare(ctx, left, right);
+  void visit(ast::FuncType &rhs) override {
+    eq = compare(ctx, lhs, rhs);
   }
-  void visit(ast::NamedType &right) override {
-    ast::TypeAlias *def = lookupTypeName(ctx, right);
+  void visit(ast::NamedType &rhs) override {
+    ast::TypeAlias *def = lookupTypeName(ctx, rhs);
     if (def->strong) {
-      eq = compare(ctx, left, right); // a strong type alias is its own type
+      eq = compare(ctx, lhs, rhs); // a strong type alias is its own type
     } else {
-      def->type->accept(*this);       // a weak type alias is an existing type
+      def->type->accept(*this);    // a weak type alias is an existing type
     }
   }
-  void visit(ast::StructType &right) override {
-    eq = compare(ctx, left, right);
+  void visit(ast::StructType &rhs) override {
+    eq = compare(ctx, lhs, rhs);
   }
 
   bool eq = false;
 
 private:
   sym::Ctx ctx;
-  Left &left;
+  Left &lhs;
 
-  static bool compare(const sym::Ctx &, ast::BtnType &left, ast::BtnType &right) {
-    return left.value == right.value;
+  static bool compare(const sym::Ctx &, ast::BtnType &lhs, ast::BtnType &rhs) {
+    return lhs.value == rhs.value;
   }
-  static bool compare(const sym::Ctx &ctx, ast::ArrayType &left, ast::ArrayType &right) {
-    return compareTypes(ctx, left.elem, right.elem);
+  static bool compare(const sym::Ctx &ctx, ast::ArrayType &lhs, ast::ArrayType &rhs) {
+    return compareTypes(ctx, lhs.elem, rhs.elem);
   }
-  static bool compare(const sym::Ctx &ctx, ast::FuncType &left, ast::FuncType &right) {
+  static bool compare(const sym::Ctx &ctx, ast::FuncType &lhs, ast::FuncType &rhs) {
     const auto compareParams = [&ctx] (const ast::ParamType &a, const ast::ParamType &b) {
       return a.ref == b.ref && compareTypes(ctx, a.type, b.type);
     };
-    if (!compareTypes(ctx, left.ret, right.ret)) {
+    if (!compareTypes(ctx, lhs.ret, rhs.ret)) {
       return false;
     }
-    return equal_size(left.params, right.params, compareParams);
+    return equal_size(lhs.params, rhs.params, compareParams);
   }
-  static bool compare(const sym::Ctx &, ast::NamedType &left, ast::NamedType &right) {
-    return left.name == right.name;
+  static bool compare(const sym::Ctx &, ast::NamedType &lhs, ast::NamedType &rhs) {
+    return lhs.name == rhs.name;
   }
-  static bool compare(const sym::Ctx &ctx, ast::StructType &left, ast::StructType &right) {
+  static bool compare(const sym::Ctx &ctx, ast::StructType &lhs, ast::StructType &rhs) {
     const auto compareFields = [&ctx] (const ast::Field &a, const ast::Field &b) {
       return a.name == b.name && compareTypes(ctx, a.type, b.type);
     };
-    return equal_size(left.fields, right.fields, compareFields);
+    return equal_size(lhs.fields, rhs.fields, compareFields);
   }
   template <typename Right>
   static bool compare(const sym::Ctx &, Left &, Right &) {
@@ -80,42 +80,42 @@ private:
 
 class LeftVisitor final : public ast::Visitor {
 public:
-  LeftVisitor(sym::Ctx ctx, ast::Type *right)
-    : ctx{ctx}, right{right} {}
+  LeftVisitor(sym::Ctx ctx, ast::Type *rhs)
+    : ctx{ctx}, rhs{rhs} {}
 
-  void visit(ast::BtnType &left) override {
-    visitImpl(left);
+  void visit(ast::BtnType &lhs) override {
+    visitImpl(lhs);
   }
-  void visit(ast::ArrayType &left) override {
-    visitImpl(left);
+  void visit(ast::ArrayType &lhs) override {
+    visitImpl(lhs);
   }
-  void visit(ast::FuncType &left) override {
-    visitImpl(left);
+  void visit(ast::FuncType &lhs) override {
+    visitImpl(lhs);
   }
-  void visit(ast::NamedType &left) override {
-    ast::TypeAlias *def = lookupTypeName(ctx, left);
+  void visit(ast::NamedType &lhs) override {
+    ast::TypeAlias *def = lookupTypeName(ctx, lhs);
     if (def->strong) {
-      visitImpl(left);          // a strong type alias is its own type
+      visitImpl(lhs);           // a strong type alias is its own type
     } else {
       def->type->accept(*this); // a weak type alias is an existing type
     }
   }
-  void visit(ast::StructType &left) override {
-    visitImpl(left);
+  void visit(ast::StructType &lhs) override {
+    visitImpl(lhs);
   }
   
   bool eq = false;
 
 private:
   template <typename Type>
-  void visitImpl(Type &left) {
-    RightVisitor rVis{ctx, left};
-    right->accept(rVis);
+  void visitImpl(Type &lhs) {
+    RightVisitor rVis{ctx, lhs};
+    rhs->accept(rVis);
     eq = rVis.eq;
   }
   
   sym::Ctx ctx;
-  ast::Type *right;
+  ast::Type *rhs;
 };
 
 }
@@ -127,9 +127,9 @@ bool stela::compareTypes(sym::Ctx ctx, const ast::TypePtr &a, const ast::TypePtr
   if (a == nullptr || b == nullptr) {
     return false;
   }
-  LeftVisitor left{ctx, b.get()};
-  a->accept(left);
-  return left.eq;
+  LeftVisitor lhs{ctx, b.get()};
+  a->accept(lhs);
+  return lhs.eq;
 }
 
 namespace {

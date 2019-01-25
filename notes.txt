@@ -230,8 +230,6 @@ separate function signature from functions, lambdas and function types
   but actually take sym::FuncParams or ast::Func.
   This is a mess!
 consistent naming
-  left -> lhs
-  right -> rhs
   Type -> Ty
 
 is ptr_union a good idea?

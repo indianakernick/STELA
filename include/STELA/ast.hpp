@@ -172,9 +172,9 @@ enum class UnOp {
 };
 
 struct BinaryExpr final : Expression {
-  ExprPtr left;
+  ExprPtr lhs;
   BinOp oper;
-  ExprPtr right;
+  ExprPtr rhs;
   
   void accept(Visitor &) override;
 };
@@ -428,9 +428,9 @@ enum class AssignOp {
 
 /// Compound assignment a *= 4
 struct CompAssign final : Assignment {
-  ExprPtr left;
+  ExprPtr dst;
   AssignOp oper;
-  ExprPtr right;
+  ExprPtr src;
   
   void accept(Visitor &) override;
 };
@@ -445,8 +445,8 @@ struct IncrDecr final : Assignment {
 
 /// Regular assignment a = 4
 struct Assign final : Assignment {
-  ExprPtr left;
-  ExprPtr right;
+  ExprPtr dst;
+  ExprPtr src;
   
   void accept(Visitor &) override;
 };

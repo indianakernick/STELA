@@ -366,11 +366,11 @@ public:
   
   void visit(ast::Assign &assign) override {
     const size_t exprScope = enterScope();
-    ast::Type *type = assign.left->exprType.get();
-    gen::Expr left = genExpr(assign.left.get());
-    gen::Expr right = genExpr(assign.right.get());
-    assert(glvalue(left.cat));
-    lifetime.assign(type, left.obj, right);
+    ast::Type *type = assign.dst->exprType.get();
+    gen::Expr dst = genExpr(assign.dst.get());
+    gen::Expr src = genExpr(assign.src.get());
+    assert(glvalue(dst.cat));
+    lifetime.assign(type, dst.obj, src);
     destroy(exprScope);
     leaveScope();
   }
