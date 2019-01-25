@@ -385,13 +385,15 @@ TEST_F(Modules, Shadowing) {
 
 TEST_F(Modules, Cmath) {
   const char *source = R"(
+    import cmath;
+  
     type Vec2 struct {
       x: real;
       y: real;
     };
   
     func (self: Vec2) mag() {
-      return (self.x * self.x + self.y * self.y);
+      return sqrt(self.x*self.x + self.y*self.y);
     }
   
     func test() {
@@ -400,10 +402,12 @@ TEST_F(Modules, Cmath) {
     }
   )";
   
-  AST ast = createAST(source, log());
   Symbols syms = initModules(log());
-  includeCmath(syms, log());
-  compileModule(syms, ast, log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  asts.push_back(includeCmath(syms.builtins, log()));
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
 }
 
 TEST(Func, Redef) {

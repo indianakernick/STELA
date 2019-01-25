@@ -15,65 +15,69 @@ using namespace stela;
 
 namespace {
 
-ScopeMan createModule(Symbols &syms, const ast::Name name) {
-  ScopeMan man{syms.scopes, syms.global};
-  man.enterScope(name);
-  syms.global = man.cur();
-  return man;
+retain_ptr<ast::ExtFunc> makeUnary(
+  const ast::BtnTypePtr &type,
+  ast::Name name,
+  const std::string &mangledName
+) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = name;
+  func->mangledName = mangledName;
+  func->params.push_back({ast::ParamRef::val, type});
+  func->ret = type;
+  return func;
 }
 
-void insertUnary(const ast::TypePtr &type, sym::Table &table, const sym::Name &name) {
-  auto symbol = std::make_unique<sym::Func>();
-  symbol->params.push_back(sym::null_type);
-  symbol->params.push_back(sym::makeLetVal(type));
-  symbol->ret = sym::makeVarVal(type);
-  table.insert({name, std::move(symbol)});
-}
-
-void insertBinary(const ast::TypePtr &type, sym::Table &table, const sym::Name &name) {
-  auto symbol = std::make_unique<sym::Func>();
-  symbol->params.push_back(sym::null_type);
-  symbol->params.push_back(sym::makeLetVal(type));
-  symbol->params.push_back(sym::makeLetVal(type));
-  symbol->ret = sym::makeVarVal(type);
-  table.insert({name, std::move(symbol)});
+retain_ptr<ast::ExtFunc> makeBinary(
+  const ast::BtnTypePtr &type,
+  ast::Name name,
+  const std::string &mangledName
+) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = name;
+  func->mangledName = mangledName;
+  func->params.push_back({ast::ParamRef::val, type});
+  func->params.push_back({ast::ParamRef::val, type});
+  func->ret = type;
+  return func;
 }
 
 }
 
-void stela::includeCmath(Symbols &syms, LogSink &sink) {
+AST stela::includeCmath(sym::Builtins &btn, LogSink &sink) {
   Log log{sink, LogCat::semantic};
-  log.status() << "Including cmath" << endlog;
   log.module("cmath");
-  ScopeMan man = createModule(syms, "$cmath");
-  sym::Table &table = man.cur()->table;
+  AST module;
+  module.name = "cmath";
   
-  insertUnary(syms.builtins.Real, table, "fabs");
-  insertBinary(syms.builtins.Real, table, "fmod");
+  module.global.push_back(makeUnary(btn.Real, "fabs", "fabsf"));
+  module.global.push_back(makeBinary(btn.Real, "fmod", "fmodf"));
   
-  insertUnary(syms.builtins.Real, table, "exp");
-  insertUnary(syms.builtins.Real, table, "exp2");
-  insertUnary(syms.builtins.Real, table, "expm1");
-  insertUnary(syms.builtins.Real, table, "log");
-  insertUnary(syms.builtins.Real, table, "log10");
-  insertUnary(syms.builtins.Real, table, "log2");
-  insertUnary(syms.builtins.Real, table, "log1p");
+  module.global.push_back(makeUnary(btn.Real, "exp", "expf"));
+  module.global.push_back(makeUnary(btn.Real, "exp2", "exp2f"));
+  module.global.push_back(makeUnary(btn.Real, "expm1", "expm1f"));
+  module.global.push_back(makeUnary(btn.Real, "log", "logf"));
+  module.global.push_back(makeUnary(btn.Real, "log10", "log10f"));
+  module.global.push_back(makeUnary(btn.Real, "log2", "log2f"));
+  module.global.push_back(makeUnary(btn.Real, "log1p", "log1pf"));
   
-  insertBinary(syms.builtins.Real, table, "pow");
-  insertUnary(syms.builtins.Real, table, "sqrt");
-  insertUnary(syms.builtins.Real, table, "cbrt");
-  insertBinary(syms.builtins.Real, table, "hypot");
+  module.global.push_back(makeUnary(btn.Real, "pow", "powf"));
+  module.global.push_back(makeUnary(btn.Real, "sqrt", "sqrtf"));
+  module.global.push_back(makeUnary(btn.Real, "cbrt", "cbrtf"));
+  module.global.push_back(makeUnary(btn.Real, "hypot", "hypotf"));
   
-  insertUnary(syms.builtins.Real, table, "sin");
-  insertUnary(syms.builtins.Real, table, "cos");
-  insertUnary(syms.builtins.Real, table, "tan");
-  insertUnary(syms.builtins.Real, table, "asin");
-  insertUnary(syms.builtins.Real, table, "acos");
-  insertUnary(syms.builtins.Real, table, "atan");
-  insertBinary(syms.builtins.Real, table, "atan2");
+  module.global.push_back(makeUnary(btn.Real, "sin", "sinf"));
+  module.global.push_back(makeUnary(btn.Real, "cos", "cosf"));
+  module.global.push_back(makeUnary(btn.Real, "tan", "tanf"));
+  module.global.push_back(makeUnary(btn.Real, "asin", "asinf"));
+  module.global.push_back(makeUnary(btn.Real, "acos", "acosf"));
+  module.global.push_back(makeUnary(btn.Real, "atan", "atanf"));
+  module.global.push_back(makeBinary(btn.Real, "atan2", "atan2f"));
   
-  insertUnary(syms.builtins.Real, table, "ceil");
-  insertUnary(syms.builtins.Real, table, "floor");
-  insertUnary(syms.builtins.Real, table, "trunc");
-  insertUnary(syms.builtins.Real, table, "round");
+  module.global.push_back(makeUnary(btn.Real, "ceil", "ceilf"));
+  module.global.push_back(makeUnary(btn.Real, "floor", "floorf"));
+  module.global.push_back(makeUnary(btn.Real, "trunc", "truncf"));
+  module.global.push_back(makeUnary(btn.Real, "round", "roundf"));
+  
+  return module;
 }

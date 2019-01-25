@@ -14,6 +14,7 @@
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
+#include <STELA/c standard library.hpp>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 using namespace stela;
@@ -2942,6 +2943,43 @@ TEST(External_Func, Opaque_ptrs) {
   
   std::fclose(file);
   remove("file.txt");
+}
+
+TEST(External_func, Conveinience_bindings) {
+  const char *source = R"(
+    import cmath;
+  
+    type Vec2 struct {
+      x: real;
+      y: real;
+    };
+  
+    extern func angleMag(angle: real, mag: real) {
+      return make Vec2 {cos(angle) * mag, sin(angle) * mag};
+    }
+  
+    extern func twoZero() {
+      return angleMag(0.0, 2.0);
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  asts.push_back(includeCmath(syms.builtins, log()));
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  struct Vec2 {
+    Real x, y;
+  };
+  
+  auto twoZero = GET_FUNC("twoZero", Vec2());
+  const Vec2 vec = twoZero();
+  EXPECT_EQ(vec.x, 2.0);
+  EXPECT_EQ(vec.y, 0.0);
 }
 
 #undef EXPECT_FAILS

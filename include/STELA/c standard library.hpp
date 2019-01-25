@@ -14,8 +14,8 @@
 
 namespace stela {
 
-void includeCmath(Symbols &, LogSink &);
-// void includeCstdio(Symbols &, LogSink &);
+AST includeCmath(sym::Builtins &, LogSink &);
+//AST includeCstdio(sym::Builtins &, LogSink &);
 
 }
 
