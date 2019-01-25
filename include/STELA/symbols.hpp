@@ -157,6 +157,7 @@ struct BtnFunc final : Symbol {
 struct Builtins {
   // Builtin types
   ast::BtnTypePtr Void;
+  ast::BtnTypePtr Opaq;
   ast::BtnTypePtr Bool;
   ast::BtnTypePtr Byte;
   ast::BtnTypePtr Char;

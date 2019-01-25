@@ -90,6 +90,7 @@ using Name = std::string_view;
 enum class BtnTypeEnum {
   // builtin symbols.cpp depends on the order
   Void, //
+  Opaq, //
   Bool, //
   Byte, //       bitwise
   Char, // arith
@@ -356,7 +357,7 @@ struct ExtFunc final : Declaration {
   
   sym::Func *symbol = nullptr;
   llvm::Function *llvmFunc = nullptr;
-  Name mangledName;
+  std::string mangledName;
   uint64_t impl = 0;
   
   void accept(Visitor &) override;
@@ -365,6 +366,7 @@ struct ExtFunc final : Declaration {
 enum class BtnFuncEnum {
   capacity,
   size,
+  data,
   push_back,
   append,
   pop_back,

@@ -2788,10 +2788,9 @@ TEST(Closure, No_move_return_captures) {
 retain_ptr<ast::ExtFunc> makeSqrt(sym::Builtins &btn) {
   auto sqrt = make_retain<ast::ExtFunc>();
   sqrt->name = "sqrt";
-  sqrt->mangledName = "stela_ext_fun_sqrt_0";
+  sqrt->mangledName = "sqrtf";
   sqrt->params.push_back({ast::ParamRef::val, btn.Real});
   sqrt->ret = btn.Real;
-  sqrt->impl = reinterpret_cast<uint64_t>(static_cast<Real(*)(Real)>(&std::sqrt));
   return sqrt;
 }
 
@@ -2832,6 +2831,117 @@ TEST(External_Func, Basic) {
   
   auto five = GET_FUNC("five", Real());
   EXPECT_EQ(five(), 5.0f);
+}
+
+retain_ptr<ast::ExtFunc> makeFopen(sym::Builtins &btn) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = "fopen";
+  func->mangledName = "fopen";
+  func->params.push_back({ast::ParamRef::val, btn.Opaq});
+  func->params.push_back({ast::ParamRef::val, btn.Opaq});
+  func->ret = btn.Opaq;
+  return func;
+}
+
+retain_ptr<ast::ExtFunc> makeFputs(sym::Builtins &btn) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = "fputs";
+  func->mangledName = "fputs";
+  func->params.push_back({ast::ParamRef::val, btn.Opaq});
+  func->params.push_back({ast::ParamRef::val, btn.Opaq});
+  func->ret = btn.Sint;
+  return func;
+}
+
+retain_ptr<ast::ExtFunc> makeFclose(sym::Builtins &btn) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = "fclose";
+  func->mangledName = "fclose";
+  func->params.push_back({ast::ParamRef::val, btn.Opaq});
+  func->ret = btn.Sint;
+  return func;
+}
+
+AST makeStdio(sym::Builtins &btn) {
+  AST stdio;
+  stdio.name = "stdio";
+  stdio.global.push_back(makeFopen(btn));
+  stdio.global.push_back(makeFputs(btn));
+  stdio.global.push_back(makeFclose(btn));
+  return stdio;
+}
+
+TEST(External_Func, Opaque_ptrs) {
+  const char *source = R"(
+    import stdio;
+  
+    type File opaq;
+    type Mode byte;
+    let Mode_read = make Mode 0;
+    let Mode_write = make Mode 1;
+    let Mode_append = make Mode 2;
+  
+    func getModeStr(mode: Mode) {
+      switch mode {
+        case Mode_read   return "r\0";
+        case Mode_write  return "w\0";
+        case Mode_append return "a\0";
+        default          return "";
+      }
+    }
+  
+    func open(filename: [char], mode: Mode) {
+      var modeStr = getModeStr(mode);
+      push_back(filename, 0c);
+      let file = fopen(data(filename), data(modeStr));
+      pop_back(filename);
+      return make File file;
+    }
+  
+    func (stream: File) puts(str: [char]) {
+      push_back(str, 0c);
+      let ret = fputs(data(str), make opaq stream);
+      pop_back(str);
+    }
+  
+    func (stream: File) close() {
+      let ret = fclose(make opaq stream);
+    }
+  
+    extern func sayHi() {
+      let file = open("file.txt", Mode_write);
+      file.puts("Hello World\n");
+      file.close();
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  
+  asts.push_back(createAST(source, log()));
+  asts.push_back(makeStdio(syms.builtins));
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto sayHi = GET_FUNC("sayHi", Void());
+  const char msg[12] = {'H','e','l','l','o',' ','W','o','r','l','d','\n'};
+  
+  sayHi();
+  std::FILE *file = std::fopen("file.txt", "r");
+  ASSERT_TRUE(file);
+  std::fseek(file, 0, SEEK_END);
+  const long size = std::ftell(file);
+  std::rewind(file);
+  ASSERT_EQ(size, sizeof(msg));
+  
+  char realMsg[sizeof(msg)];
+  std::fread(realMsg, 1, sizeof(realMsg), file);
+  EXPECT_EQ(std::memcmp(msg, realMsg, sizeof(msg)), 0);
+  
+  std::fclose(file);
+  remove("file.txt");
 }
 
 #undef EXPECT_FAILS

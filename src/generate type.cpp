@@ -29,7 +29,9 @@ public:
   void visit(ast::BtnType &type) override {
     switch (type.value) {
       case ast::BtnTypeEnum::Void:
-        llvmType = llvm::Type::getVoidTy(ctx); return;
+        llvmType = voidTy(ctx); return;
+      case ast::BtnTypeEnum::Opaq:
+        llvmType = voidPtrTy(ctx); return;
       case ast::BtnTypeEnum::Bool:
         llvmType = llvm::Type::getInt1Ty(ctx); return;
       case ast::BtnTypeEnum::Byte:

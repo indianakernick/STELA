@@ -101,6 +101,8 @@ std::string_view stela::typeName(const ast::BtnTypeEnum type) {
     /* LCOV_EXCL_START */
     case ast::BtnTypeEnum::Void:
       return "void";
+    case ast::BtnTypeEnum::Opaq:
+      return "opaq";
     case ast::BtnTypeEnum::Bool:
       return "bool";
     case ast::BtnTypeEnum::Byte:

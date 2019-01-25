@@ -52,13 +52,15 @@ public:
     func.llvmFunc = llvm::Function::Create(
       fnType,
       llvm::GlobalObject::ExternalLinkage,
-      toStringRef(func.mangledName),
+      func.mangledName,
       module
     );
-    llvm::sys::DynamicLibrary::AddSymbol(
-      toStringRef(func.mangledName),
-      reinterpret_cast<void *>(func.impl)
-    );
+    if (func.impl) {
+      llvm::sys::DynamicLibrary::AddSymbol(
+        func.mangledName,
+        reinterpret_cast<void *>(func.impl)
+      );
+    }
   }
   
   llvm::Twine ctorName(const llvm::StringRef &objName) {

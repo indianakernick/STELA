@@ -167,7 +167,8 @@ ArithCat stela::classifyArith(ast::BtnType *type) {
       return ArithCat::unsigned_int;
     case ast::BtnTypeEnum::Real:
       return ArithCat::floating_point;
-    case ast::BtnTypeEnum::Void: ;
+    case ast::BtnTypeEnum::Void:
+    case ast::BtnTypeEnum::Opaq: ;
   }
   UNREACHABLE();
 }

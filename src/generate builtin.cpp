@@ -293,6 +293,28 @@ llvm::Function *stela::genFn<PFGI::btn_size>(InstData data, ast::ArrayType *arr)
 }
 
 template <>
+llvm::Function *stela::genFn<PFGI::btn_data>(InstData data, ast::ArrayType *arr) {
+  llvm::LLVMContext &ctx = data.mod->getContext();
+  llvm::Type *type = generateType(ctx, arr);
+  llvm::FunctionType *sig = llvm::FunctionType::get(
+    voidPtrTy(ctx), {type->getPointerTo()}, false
+  );
+  llvm::Function *func = makeInternalFunc(data.mod, sig, "btn_data");
+  assignUnaryCtorAttrs(func);
+  FuncBuilder builder{func};
+  
+  /*
+  return (void *)array.dat
+  */
+  
+  llvm::Value *array = builder.ir.CreateLoad(func->arg_begin());
+  llvm::Value *arrayDat = loadStructElem(builder.ir, array, array_idx_dat);
+  builder.ir.CreateRet(builder.ir.CreatePointerCast(arrayDat, voidPtrTy(ctx)));
+  
+  return func;
+}
+
+template <>
 llvm::Function *stela::genFn<PFGI::btn_push_back>(InstData data, ast::ArrayType *arr) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, arr);

@@ -38,6 +38,7 @@ stela::ast::BtnTypePtr insertType(
 
 void insertTypes(sym::Table &table, sym::Builtins &btn) {
   btn.Void = stela::make_retain<ast::BtnType>(ast::BtnTypeEnum::Void);
+  btn.Opaq = insertType(table, ast::BtnTypeEnum::Opaq, "opaq");
   btn.Bool = insertType(table, ast::BtnTypeEnum::Bool, "bool");
   btn.Byte = insertType(table, ast::BtnTypeEnum::Byte, "byte");
   btn.Char = insertType(table, ast::BtnTypeEnum::Char, "char");
@@ -68,6 +69,7 @@ void insertFunc(sym::Table &table, const ast::BtnFuncEnum e, const ast::Name nam
 void insertFuncs(sym::Table &table) {
   insertFunc(table, ast::BtnFuncEnum::capacity,  "capacity");
   insertFunc(table, ast::BtnFuncEnum::size,      "size");
+  insertFunc(table, ast::BtnFuncEnum::data,      "data");
   insertFunc(table, ast::BtnFuncEnum::push_back, "push_back");
   insertFunc(table, ast::BtnFuncEnum::append,    "append");
   insertFunc(table, ast::BtnFuncEnum::pop_back,  "pop_back");
@@ -191,7 +193,10 @@ bool stela::validSubscript(const ast::BtnTypePtr &index) {
 }
 
 bool stela::validCast(const ast::BtnTypePtr &dst, const ast::BtnTypePtr &src) {
-  return dst->value != ast::BtnTypeEnum::Void && src->value != ast::BtnTypeEnum::Void;
+  return dst->value != ast::BtnTypeEnum::Void &&
+         src->value != ast::BtnTypeEnum::Void &&
+         dst->value != ast::BtnTypeEnum::Opaq &&
+         src->value != ast::BtnTypeEnum::Opaq;
 }
 
 namespace {
@@ -237,6 +242,13 @@ ast::TypePtr sizeFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
   checkArgs(ctx.log, "size", loc, args.size() == 1);
   checkArray(ctx, "size", loc, args[0].type);
   return ctx.btn.Uint;
+}
+
+// func data<T>(arr: [T]) -> opaq;
+ast::TypePtr dataFn(sym::Ctx ctx, const sym::FuncParams &args, const Loc loc) {
+  checkArgs(ctx.log, "data", loc, args.size() == 1);
+  checkArray(ctx, "data", loc, args[0].type);
+  return ctx.btn.Opaq;
 }
 
 // func push_back<T>(arr: ref [T], elem: T);
@@ -325,6 +337,8 @@ ast::TypePtr stela::callBtnFunc(
       return capacityFn(ctx, args, loc);
     case ast::BtnFuncEnum::size:
       return sizeFn(ctx, args, loc);
+    case ast::BtnFuncEnum::data:
+      return dataFn(ctx, args, loc);
     case ast::BtnFuncEnum::push_back:
       return pushBackFn(ctx, args, loc);
     case ast::BtnFuncEnum::append:
