@@ -13,7 +13,7 @@
 #include <sstream>
 #include <iostream>
 #include "unreachable.hpp"
-#include <Simpleton/Utils/console color.hpp>
+#include "console color.hpp"
 
 using namespace stela;
 

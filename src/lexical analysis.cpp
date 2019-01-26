@@ -11,8 +11,8 @@
 #include <cctype>
 #include <algorithm>
 #include "log output.hpp"
+#include "parse string.hpp"
 #include "number literal.hpp"
-#include <Simpleton/Utils/parse string.hpp>
 
 using namespace stela;
 

@@ -9,7 +9,7 @@
 #include "console format.hpp"
 
 #include <iostream>
-#include <Simpleton/Utils/console color.hpp>
+#include "console color.hpp"
 
 namespace {
 
