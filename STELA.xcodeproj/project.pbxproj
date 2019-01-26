@@ -425,12 +425,9 @@
 		45C9195B21F3122000F3FF60 /* libgtest.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgtest.a; path = build/lib/libgtest.a; sourceTree = "<group>"; };
 		45C9196121F312BC00F3FF60 /* Lexer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Lexer; sourceTree = BUILT_PRODUCTS_DIR; };
 		45C9197221F3133B00F3FF60 /* Test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Test; sourceTree = BUILT_PRODUCTS_DIR; };
-		45C919AC21F4395400F3FF60 /* partial apply.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "partial apply.hpp"; sourceTree = "<group>"; };
 		45C919B321F4395400F3FF60 /* console color.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "console color.hpp"; sourceTree = "<group>"; };
 		45C919BC21F4395400F3FF60 /* parse string.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse string.hpp"; sourceTree = "<group>"; };
-		45C919BF21F4395400F3FF60 /* line col.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "line col.hpp"; sourceTree = "<group>"; };
 		45C919C221F4395400F3FF60 /* parse string.inl */ = {isa = PBXFileReference; lastKnownFileType = text; path = "parse string.inl"; sourceTree = "<group>"; };
-		45C919C421F4395400F3FF60 /* null check.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "null check.hpp"; sourceTree = "<group>"; };
 		45C91A9221F4395400F3FF60 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
 		45C91CB221F4398100F3FF60 /* googletest.in */ = {isa = PBXFileReference; lastKnownFileType = text; path = googletest.in; sourceTree = "<group>"; };
 		45DF194A21D5D80E00FA28A8 /* categories.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = categories.cpp; sourceTree = "<group>"; };
@@ -809,12 +806,9 @@
 		45C919A421F4395400F3FF60 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
-				45C919AC21F4395400F3FF60 /* partial apply.hpp */,
 				45C919B321F4395400F3FF60 /* console color.hpp */,
-				45C919BC21F4395400F3FF60 /* parse string.hpp */,
-				45C919BF21F4395400F3FF60 /* line col.hpp */,
 				45C919C221F4395400F3FF60 /* parse string.inl */,
-				45C919C421F4395400F3FF60 /* null check.hpp */,
+				45C919BC21F4395400F3FF60 /* parse string.hpp */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
