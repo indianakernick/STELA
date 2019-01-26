@@ -187,9 +187,41 @@ ast::ExprPtr parseShift(ParseTokens &tok) {
   return lhs;
 }
 
+/// Parse a left associative binary operator
+ast::ExprPtr parseBin(
+  ParseTokens &tok,
+  const ast::BinOp op,
+  const std::string_view token,
+  ast::ExprPtr (*parseLower)(ParseTokens &)
+) {
+  ast::ExprPtr lhs = parseLower(tok);
+  if (!lhs) {
+    return nullptr;
+  }
+  while (tok.checkOp(token)) {
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseLower));
+  }
+  return lhs;
+}
+
+ast::ExprPtr parseBitAnd(ParseTokens &tok) {
+  // 11
+  return parseBin(tok, ast::BinOp::bit_and, "&", parseShift);
+}
+
+ast::ExprPtr parseBitXor(ParseTokens &tok) {
+  // 12
+  return parseBin(tok, ast::BinOp::bit_xor, "^", parseBitAnd);
+}
+
+ast::ExprPtr parseBitOr(ParseTokens &tok) {
+  // 13
+  return parseBin(tok, ast::BinOp::bit_or, "|", parseBitXor);
+}
+
 ast::ExprPtr parseRel(ParseTokens &tok) {
   // 9
-  ast::ExprPtr lhs = parseShift(tok);
+  ast::ExprPtr lhs = parseBitOr(tok);
   if (!lhs) {
     return nullptr;
   }
@@ -206,7 +238,7 @@ ast::ExprPtr parseRel(ParseTokens &tok) {
     } else {
       break;
     }
-    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseShift));
+    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseBitOr));
   }
   return lhs;
 }
@@ -231,41 +263,9 @@ ast::ExprPtr parseEq(ParseTokens &tok) {
   return lhs;
 }
 
-/// Parse a lhs associative binary operator
-ast::ExprPtr parseBin(
-  ParseTokens &tok,
-  const ast::BinOp op,
-  const std::string_view token,
-  ast::ExprPtr (*parseLower)(ParseTokens &)
-) {
-  ast::ExprPtr lhs = parseLower(tok);
-  if (!lhs) {
-    return nullptr;
-  }
-  while (tok.checkOp(token)) {
-    lhs = makeBinary(op, std::move(lhs), expectExpr(tok, parseLower));
-  }
-  return lhs;
-}
-
-ast::ExprPtr parseBitAnd(ParseTokens &tok) {
-  // 11
-  return parseBin(tok, ast::BinOp::bit_and, "&", parseEq);
-}
-
-ast::ExprPtr parseBitXor(ParseTokens &tok) {
-  // 12
-  return parseBin(tok, ast::BinOp::bit_xor, "^", parseBitAnd);
-}
-
-ast::ExprPtr parseBitOr(ParseTokens &tok) {
-  // 13
-  return parseBin(tok, ast::BinOp::bit_or, "|", parseBitXor);
-}
-
 ast::ExprPtr parseBoolAnd(ParseTokens &tok) {
   // 14
-  return parseBin(tok, ast::BinOp::bool_and, "&&", parseBitOr);
+  return parseBin(tok, ast::BinOp::bool_and, "&&", parseEq);
 }
 
 ast::ExprPtr parseBoolOr(ParseTokens &tok) {

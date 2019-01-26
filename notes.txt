@@ -212,7 +212,6 @@ if closure creates wrapper functions for storing function pointers,
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)
-move construct closure captures when possible
 maybe ast::Type uniquing?
 maybe we shouldn't inline so aggressively
 swap operator? :=:

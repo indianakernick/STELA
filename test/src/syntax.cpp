@@ -1172,6 +1172,43 @@ TEST(Expr, Bits) {
         IS_ID(bxor->rhs, "f");
 }
 
+TEST(Expr, Bits_eq) {
+  /*
+             eq
+            /  \
+           /    \
+    bit_and      bit_or
+   /       \    /      \
+  a         3  b        bit_xor
+                       /       \
+                      1         c
+  */
+  
+  // this is where we diverge from C
+  
+  const char *source = R"(
+    func dummy() {
+      let test = a & 3 == b | 1 ^ c;
+    }
+  )";
+  const AST ast = createAST(source, log());
+  EXPECT_EQ(ast.global.size(), 1);
+  ASSERT_DOWN_CAST(func, Func, ast.global[0]);
+  const auto &block = func->body.nodes;
+  EXPECT_EQ(block.size(), 1);
+  ASSERT_DOWN_CAST(let, Let, block[0]);
+  
+  IS_BOP(eq, let->expr, eq);
+    IS_BOP(band, eq->lhs, bit_and);
+      IS_ID(band->lhs, "a");
+      IS_NUM(band->rhs, "3");
+    IS_BOP(bor, eq->rhs, bit_or);
+      IS_ID(bor->lhs, "b");
+      IS_BOP(bxor, bor->rhs, bit_xor);
+        IS_NUM(bxor->lhs, "1");
+        IS_ID(bxor->rhs, "c");
+}
+
 TEST(Expr, Function_call) {
   /*
   
