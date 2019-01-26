@@ -209,7 +209,6 @@ if closure creates wrapper functions for storing function pointers,
   the wrapped function will be inlined and calls directly to the wrapped
   function will be faster
   can we inline a particular function call?
-organize the src directory (folder references instead of groups)
 use memcmp when possible
 optimize for trivially copyable structs that fit in registers
 treat the return parameter as an lvalue (NRVO)

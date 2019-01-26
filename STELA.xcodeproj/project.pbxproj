@@ -629,6 +629,7 @@
 				455DADAF21C0899F0012A261 /* check missing return.hpp */,
 			);
 			name = "Semantic Analysis";
+			path = Semantic;
 			sourceTree = "<group>";
 		};
 		4572CA7E20F9985D00EA1A56 /* Formatting */ = {
@@ -640,6 +641,7 @@
 				454EB80521ABD838001A5D78 /* plain format.cpp */,
 			);
 			name = Formatting;
+			path = Format;
 			sourceTree = "<group>";
 		};
 		45816F3C21AF631E00712CA3 /* Code Generation */ = {
@@ -670,20 +672,22 @@
 				45C7FADE21C74D9100995B7D /* gen types.hpp */,
 			);
 			name = "Code Generation";
+			path = CodeGen;
 			sourceTree = "<group>";
 		};
 		45816F4421AF856000712CA3 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				45C919B321F4395400F3FF60 /* console color.hpp */,
-				45C919C221F4395400F3FF60 /* parse string.inl */,
-				45C919BC21F4395400F3FF60 /* parse string.hpp */,
 				45816F4521AF857500712CA3 /* unreachable.hpp */,
 				45816F6321B3780C00712CA3 /* assert down cast.hpp */,
 				454B36E721BA3B3100485BA4 /* iterator range.hpp */,
 				455DADA521BBAE940012A261 /* algorithms.hpp */,
+				45C919B321F4395400F3FF60 /* console color.hpp */,
+				45C919C221F4395400F3FF60 /* parse string.inl */,
+				45C919BC21F4395400F3FF60 /* parse string.hpp */,
 			);
 			name = Utilities;
+			path = Utils;
 			sourceTree = "<group>";
 		};
 		45BBA3E320D63E3D006108C1 = {
@@ -846,6 +850,7 @@
 				45EE9C1C20DE72D400CC3289 /* log output.hpp */,
 			);
 			name = Logging;
+			path = Log;
 			sourceTree = "<group>";
 		};
 		45EE9C4720E4D22600CC3289 /* Lexical Analysis */ = {
@@ -856,6 +861,7 @@
 				45EE9C2420E23D1C00CC3289 /* number literal.hpp */,
 			);
 			name = "Lexical Analysis";
+			path = Lex;
 			sourceTree = "<group>";
 		};
 		45EE9C4820E4D23E00CC3289 /* Syntax Analysis */ = {
@@ -882,6 +888,7 @@
 				45F4435D213F898300B28F05 /* parse asgn.hpp */,
 			);
 			name = "Syntax Analysis";
+			path = Syntax;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1857,6 +1864,7 @@
 				HEADER_SEARCH_PATHS = (
 					$PROJECT_DIR/include/STELA,
 					$PROJECT_DIR/include,
+					$PROJECT_DIR/src,
 				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1907,6 +1915,7 @@
 				HEADER_SEARCH_PATHS = (
 					$PROJECT_DIR/include/STELA,
 					$PROJECT_DIR/include,
+					$PROJECT_DIR/src,
 				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
