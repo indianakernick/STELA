@@ -2966,7 +2966,7 @@ TEST(External_func, Conveinience_bindings) {
   Symbols syms = initModules(log());
   ASTs asts;
   asts.push_back(createAST(source, log()));
-  asts.push_back(includeCmath(syms.builtins, log()));
+  asts.push_back(makeCmath(syms.builtins, log()));
   
   const ModuleOrder order = findModuleOrder(asts, log());
   compileModules(syms, order, asts, log());
@@ -2981,6 +2981,38 @@ TEST(External_func, Conveinience_bindings) {
   EXPECT_EQ(vec.x, 2.0);
   EXPECT_EQ(vec.y, 0.0);
 }
+
+TEST(External_func, Simple_bind) {
+  const char *source = R"(
+    import library;
+  
+    extern func test(val: real) {
+      return calc(val);
+    }
+  )";
+  
+  MangleData mangle;
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  
+  AST lib;
+  lib.name = "library";
+  lib.global.push_back(bindFunction(syms.builtins, mangle, "calc", +[](Real r) {
+    return r * 2.0f;
+  }));
+  asts.push_back(lib);
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto test = GET_FUNC("test", Real(Real));
+  EXPECT_EQ(test(0.0f), 0.0f);
+  EXPECT_EQ(test(-11.0f), -22.0f);
+  EXPECT_EQ(test(7.0f), 14.0f);
+};
 
 #undef EXPECT_FAILS
 #undef EXPECT_SUCCEEDS

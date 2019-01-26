@@ -44,7 +44,7 @@ retain_ptr<ast::ExtFunc> makeBinary(
 
 }
 
-AST stela::includeCmath(sym::Builtins &btn, LogSink &sink) {
+AST stela::makeCmath(sym::Builtins &btn, LogSink &sink) {
   Log log{sink, LogCat::semantic};
   log.module("cmath");
   AST module;

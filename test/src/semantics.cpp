@@ -405,7 +405,7 @@ TEST_F(Modules, Cmath) {
   Symbols syms = initModules(log());
   ASTs asts;
   asts.push_back(createAST(source, log()));
-  asts.push_back(includeCmath(syms.builtins, log()));
+  asts.push_back(makeCmath(syms.builtins, log()));
   const ModuleOrder order = findModuleOrder(asts, log());
   compileModules(syms, order, asts, log());
 }

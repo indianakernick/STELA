@@ -13,6 +13,7 @@
 #include <memory>
 #include <algorithm>
 #include "number.hpp"
+#include "symbols.hpp"
 #include <type_traits>
 #include "retain ptr.hpp"
 
@@ -327,6 +328,99 @@ auto makeClosureFromFunc() noexcept {
   return Closure<SigWithoutNoexcept>{
     detail::ClosureFunWrap<SigWithoutNoexcept, FunPtr>::type::call
   };
+}
+
+using MangleData = std::unordered_map<std::string_view, size_t>;
+
+inline std::string getMangled(MangleData &indicies, const std::string_view name) {
+  size_t &index = indicies[name];
+  std::string mangled = "stela_ext_fun_";
+  mangled += name;
+  mangled += '_';
+  mangled += std::to_string(index);
+  ++index;
+  return mangled;
+}
+
+template <typename T>
+struct stela_param;
+
+template <typename T>
+struct stela_param<T *> {
+  static ast::ParamType get(sym::Builtins &btn) {
+    return {ast::ParamRef::val, btn.Opaq};
+  }
+};
+
+template <typename T>
+struct stela_param<T &> {
+  static ast::ParamType get(sym::Builtins &btn) {
+    return {ast::ParamRef::ref, stela_param<T>::get(btn).type};
+  }
+};
+
+#define PRIMITIVE_PARAM(TYPE)                                                   \
+  template <>                                                                   \
+  struct stela_param<TYPE> {                                                    \
+    static ast::ParamType get(sym::Builtins &btn) {                             \
+      return {ast::ParamRef::val, btn.TYPE};                                    \
+    }                                                                           \
+  }
+
+PRIMITIVE_PARAM(Bool);
+PRIMITIVE_PARAM(Byte);
+PRIMITIVE_PARAM(Char);
+PRIMITIVE_PARAM(Real);
+PRIMITIVE_PARAM(Sint);
+PRIMITIVE_PARAM(Uint);
+
+#undef PRIMITIVE_PARAM
+
+template <bool Method, typename Sig>
+struct bind_params;
+
+template <typename Ret, typename... Params>
+struct bind_params<false, Ret(Params...)> {
+  static void bind(sym::Builtins &btn, ast::ExtFunc *func) {
+    func->params.reserve(sizeof...(Params));
+    (func->params.push_back(stela_param<Params>::get(btn)), ...);
+    if constexpr (std::is_void_v<Ret>) {
+      func->ret = btn.Void;
+    } else {
+      static_assert(!std::is_reference_v<Ret>);
+      func->ret = stela_param<Ret>::get(btn).type;
+    }
+  }
+};
+
+template <typename Ret, typename Receiver, typename... Params>
+struct bind_params<true, Ret(Receiver, Params...)> {
+  static void bind(sym::Builtins &btn, ast::ExtFunc *func) {
+    func->receiver = stela_param<Receiver>::get(btn);
+    func->params.reserve(sizeof...(Params));
+    (func->params.push_back(stela_param<Params>::get(btn)), ...);
+    if constexpr (std::is_void_v<Ret>) {
+      func->ret = btn.Void;
+    } else {
+      static_assert(!std::is_reference_v<Ret>);
+      func->ret = stela_param<Ret>::get(btn).type;
+    }
+  }
+};
+
+template <bool Method = false, typename Sig>
+retain_ptr<ast::ExtFunc> bindFunction(
+  sym::Builtins &btn,
+  MangleData &mangle,
+  std::string_view name,
+  Sig *impl
+) {
+  auto func = make_retain<ast::ExtFunc>();
+  func->name = name;
+  func->mangledName = getMangled(mangle, name);
+  func->impl = reinterpret_cast<uint64_t>(impl);
+  bind_params<Method, Sig>::bind(btn, func.get());
+  return func;
 }
 
 }
