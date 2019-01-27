@@ -12,168 +12,25 @@
 #include <tuple>
 #include <memory>
 #include <algorithm>
-#include "number.hpp"
-#include "symbols.hpp"
 #include <type_traits>
 #include "retain ptr.hpp"
+#include "pass traits.hpp"
+
+namespace llvm {
+
+class ExecutionEngine;
+
+}
 
 namespace stela {
 
-template <typename Elem>
-struct ArrayStorage : ref_count {
-  ArrayStorage()
-    : ref_count{} {}
-  explicit ArrayStorage(const Uint len)
-    : ref_count{}, cap{len}, len{len}, dat{alloc<Elem>(len)} {}
-  ~ArrayStorage() {
-    std::destroy_n(dat, len);
-    dealloc(dat);
-  }
-
-  // uint64_t ref
-  Uint cap = 0;
-  Uint len = 0;
-  Elem *dat = nullptr;
-};
-
-template <typename Elem>
-using Array = retain_ptr<ArrayStorage<Elem>>;
-
-template <typename Elem>
-Array<Elem> makeEmptyArray() noexcept {
-  return make_retain<ArrayStorage<Elem>>();
-}
-
-template <typename Elem>
-Array<Elem> makeArray(const Uint size) noexcept {
-  return make_retain<ArrayStorage<Elem>>(size);
-}
-
-template <typename Elem, typename... Args>
-Array<Elem> makeArrayOf(Args &&... args) {
-  Array<Elem> array = makeArray<Elem>(sizeof...(Args));
-  Elem elems[] = {std::forward<Args>(args)...};
-  std::uninitialized_move_n(elems, sizeof...(Args), array->dat);
-  return array;
-}
-
-template <size_t Size>
-Array<Char> makeString(const char (&value)[Size]) noexcept {
-  constexpr size_t strSize = Size - 1;
-  Array<Char> string = makeArray<Char>(strSize);
-  std::copy_n(value, strSize, string->dat);
-  string->len = strSize;
-  return string;
-}
-
-template <typename, typename = void>
-struct pass_traits;
-
-/// Classes
-template <typename T>
-struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
-  using type = const T *;
-  
-  static type unwrap(const T &arg) noexcept {
-    return &arg;
-  }
-  static T wrap(const type arg) noexcept {
-    return *arg;
-  }
-  
-  static constexpr bool nontrivial = true;
-};
-
-/// References
-template <typename T>
-struct pass_traits<T &> {
-  using type = T *;
-  
-  static type unwrap(T &arg) noexcept {
-    return &arg;
-  }
-  static T &wrap(type arg) noexcept {
-    return *arg;
-  }
-  
-  static constexpr bool nontrivial = false;
-};
-
-/// Pointers
-template <typename T>
-struct pass_traits<T *> {
-  using type = T *;
-  
-  static type unwrap(T *arg) noexcept {
-    return arg;
-  }
-  static T *wrap(type arg) noexcept {
-    return arg;
-  }
-  
-  static constexpr bool nontrivial = false;
-};
-
-#define PASS_PRIMITIVE(TYPE)                                                    \
-  template <>                                                                   \
-  struct pass_traits<TYPE> {                                                    \
-    using type = TYPE;                                                          \
-    static type unwrap(TYPE arg) noexcept {                                     \
-      return arg;                                                               \
-    }                                                                           \
-    static TYPE wrap(type arg) noexcept {                                       \
-      return arg;                                                               \
-    }                                                                           \
-    static constexpr bool nontrivial = false;                                   \
-  }
-
-PASS_PRIMITIVE(Bool);
-PASS_PRIMITIVE(Byte);
-PASS_PRIMITIVE(Char);
-PASS_PRIMITIVE(Real);
-PASS_PRIMITIVE(Sint);
-PASS_PRIMITIVE(Uint);
-
-#undef PASS_PRIMITIVE
-
-template <>
-struct pass_traits<void> {
-  using type = void;
-  static constexpr bool nontrivial = false;
-};
-
-template <typename Elem>
-struct pass_traits<Array<Elem>> {
-  using type = ArrayStorage<Elem> *const *;
-  
-  static type unwrap(const Array<Elem> &arg) noexcept {
-    return reinterpret_cast<ArrayStorage<Elem> *const *>(&arg);
-  }
-  
-  static constexpr bool nontrivial = true;
-};
-
-template <typename Fun>
-struct Closure;
-
-template <typename Fun>
-struct pass_traits<Closure<Fun>> {
-  using type = const Closure<Fun> *;
-  
-  static type unwrap(const Closure<Fun> &arg) noexcept {
-    return &arg;
-  }
-  
-  static constexpr bool nontrivial = true;
-};
-
 /// A wrapper around a compiled stela function. Acts as an ABI adapter to call
 /// Stela functions using the Stela ABI
-template <typename Fun, bool Member = false>
+template <typename Fun, bool Method = false>
 class Function;
 
-template <bool Member, typename Ret, typename... Params>
-class Function<Ret(Params...), Member> {
+template <bool Method, typename Ret, typename... Params>
+class Function<Ret(Params...), Method> {
   template <typename Param, size_t Index, typename Tuple>
   static inline auto unwrap(const Tuple &params) noexcept {
     return pass_traits<Param>::unwrap(std::get<Index>(params));
@@ -187,7 +44,7 @@ class Function<Ret(Params...), Member> {
     if constexpr (param_ret) {
       std::aligned_storage_t<sizeof(Ret), alignof(Ret)> retStorage;
       Ret *retPtr = reinterpret_cast<Ret *>(&retStorage);
-      if constexpr (Member) {
+      if constexpr (Method) {
         ptr(unwrap<Params, Indicies>(params)..., retPtr);
       } else {
         ptr(nullptr, unwrap<Params, Indicies>(params)..., retPtr);
@@ -196,13 +53,13 @@ class Function<Ret(Params...), Member> {
       retPtr->~Ret();
       return retObj;
     } else if constexpr (std::is_void_v<Ret>) {
-      if constexpr (Member) {
+      if constexpr (Method) {
         ptr(unwrap<Params, Indicies>(params)...);
       } else {
         ptr(nullptr, unwrap<Params, Indicies>(params)...);
       }
     } else {
-      if constexpr (Member) {
+      if constexpr (Method) {
         return pass_traits<Ret>::wrap(ptr(unwrap<Params, Indicies>(params)...));
       } else {
         return pass_traits<Ret>::wrap(ptr(nullptr, unwrap<Params, Indicies>(params)...));
@@ -214,7 +71,7 @@ public:
   static constexpr bool param_ret = pass_traits<Ret>::nontrivial;
 
   using type = std::conditional_t<
-    Member,
+    Method,
     std::conditional_t<
       param_ret,
       void(pass_type<Params>..., Ret *) noexcept,
@@ -243,184 +100,11 @@ private:
   type *ptr;
 };
 
-struct ClosureData : ref_count {
-  ~ClosureData() {
-    dtor(this);
-  }
-  
-  // uint64_t ref
-  void (*dtor)(void *);
-};
+uint64_t getFunctionAddress(llvm::ExecutionEngine *, const std::string &);
 
-template <typename Ret, typename... Params>
-struct Closure<Ret(Params...)> {
-  using Func = Function<Ret(ClosureData *, Params...), true>;
-  
-  template <typename... Args>
-  inline auto operator()(Args &&... args) noexcept {
-    return Func{fun}(dat.get(), std::forward<Args>(args)...);
-  }
-  
-  Closure() = delete;
-  explicit Closure(typename Func::type *fun) noexcept
-    : fun{fun}, dat{nullptr} {}
-  
-  typename Func::type *fun;
-  retain_ptr<ClosureData> dat;
-};
-
-namespace detail {
-
-template <typename Fun>
-struct is_noexcept;
-
-template <typename Ret, typename... Params, bool Noexcept>
-struct is_noexcept<Ret(Params...) noexcept(Noexcept)> {
-  static constexpr bool value = Noexcept;
-  using type = Ret(Params...);
-};
-
-template <auto FunPtr, typename Ret, typename... Params>
-struct ClosureFunWrapParamRet {
-  template <typename Param>
-  using pass_type = typename pass_traits<Param>::type;
-  
-  static void call(ClosureData *, pass_type<Params>... params, Ret *ret) noexcept {
-    new (ret) Ret{FunPtr(pass_traits<Ret>::wrap(params)...)};
-  }
-};
-
-template <auto FunPtr, typename Ret, typename... Params>
-struct ClosureFunWrapNormalRet {
-  template <typename Param>
-  using pass_type = typename pass_traits<Param>::type;
-  
-  static pass_type<Ret> call(ClosureData *, pass_type<Params>... params) noexcept {
-    if constexpr (std::is_void_v<Ret>) {
-      FunPtr(pass_traits<Ret>::wrap(params)...);
-    } else {
-      return pass_traits<Ret>::unwrap(
-        FunPtr(pass_traits<Params>::wrap(params)...)
-      );
-    }
-  }
-};
-
-template <typename Sig, auto FunPtr>
-struct ClosureFunWrap;
-
-template <auto FunPtr, typename Ret, typename... Params>
-struct ClosureFunWrap<Ret(Params...), FunPtr> {
-  using type = std::conditional_t<
-    pass_traits<Ret>::nontrivial,
-    ClosureFunWrapParamRet<FunPtr, Ret, Params...>,
-    ClosureFunWrapNormalRet<FunPtr, Ret, Params...>
-  >;
-};
-
-}
-
-template <auto FunPtr>
-auto makeClosureFromFunc() noexcept {
-  using Sig = std::remove_pointer_t<decltype(FunPtr)>;
-  static_assert(detail::is_noexcept<Sig>::value, "Stela cannot handle exceptions");
-  using SigWithoutNoexcept = typename detail::is_noexcept<Sig>::type;
-  return Closure<SigWithoutNoexcept>{
-    detail::ClosureFunWrap<SigWithoutNoexcept, FunPtr>::type::call
-  };
-}
-
-using MangleData = std::unordered_map<std::string_view, size_t>;
-
-inline std::string getMangled(MangleData &indicies, const std::string_view name) {
-  size_t &index = indicies[name];
-  std::string mangled = "stela_ext_fun_";
-  mangled += name;
-  mangled += '_';
-  mangled += std::to_string(index);
-  ++index;
-  return mangled;
-}
-
-template <typename T>
-struct stela_param;
-
-template <typename T>
-struct stela_param<T *> {
-  static ast::ParamType get(sym::Builtins &btn) {
-    return {ast::ParamRef::val, btn.Opaq};
-  }
-};
-
-template <typename T>
-struct stela_param<T &> {
-  static ast::ParamType get(sym::Builtins &btn) {
-    return {ast::ParamRef::ref, stela_param<T>::get(btn).type};
-  }
-};
-
-#define PRIMITIVE_PARAM(TYPE)                                                   \
-  template <>                                                                   \
-  struct stela_param<TYPE> {                                                    \
-    static ast::ParamType get(sym::Builtins &btn) {                             \
-      return {ast::ParamRef::val, btn.TYPE};                                    \
-    }                                                                           \
-  }
-
-PRIMITIVE_PARAM(Bool);
-PRIMITIVE_PARAM(Byte);
-PRIMITIVE_PARAM(Char);
-PRIMITIVE_PARAM(Real);
-PRIMITIVE_PARAM(Sint);
-PRIMITIVE_PARAM(Uint);
-
-#undef PRIMITIVE_PARAM
-
-template <bool Method, typename Sig>
-struct bind_params;
-
-template <typename Ret, typename... Params>
-struct bind_params<false, Ret(Params...)> {
-  static void bind(sym::Builtins &btn, ast::ExtFunc *func) {
-    func->params.reserve(sizeof...(Params));
-    (func->params.push_back(stela_param<Params>::get(btn)), ...);
-    if constexpr (std::is_void_v<Ret>) {
-      func->ret = btn.Void;
-    } else {
-      static_assert(!std::is_reference_v<Ret>);
-      func->ret = stela_param<Ret>::get(btn).type;
-    }
-  }
-};
-
-template <typename Ret, typename Receiver, typename... Params>
-struct bind_params<true, Ret(Receiver, Params...)> {
-  static void bind(sym::Builtins &btn, ast::ExtFunc *func) {
-    func->receiver = stela_param<Receiver>::get(btn);
-    func->params.reserve(sizeof...(Params));
-    (func->params.push_back(stela_param<Params>::get(btn)), ...);
-    if constexpr (std::is_void_v<Ret>) {
-      func->ret = btn.Void;
-    } else {
-      static_assert(!std::is_reference_v<Ret>);
-      func->ret = stela_param<Ret>::get(btn).type;
-    }
-  }
-};
-
-template <bool Method = false, typename Sig>
-retain_ptr<ast::ExtFunc> bindFunction(
-  sym::Builtins &btn,
-  MangleData &mangle,
-  std::string_view name,
-  Sig *impl
-) {
-  auto func = make_retain<ast::ExtFunc>();
-  func->name = name;
-  func->mangledName = getMangled(mangle, name);
-  func->impl = reinterpret_cast<uint64_t>(impl);
-  bind_params<Method, Sig>::bind(btn, func.get());
-  return func;
+template <typename Sig, bool Method = false>
+auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
+  return Function<Sig, Method>{getFunctionAddress(engine, name)};
 }
 
 }

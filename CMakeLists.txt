@@ -28,6 +28,12 @@ add_library(STELA STATIC
     "include/STELA/llvm.hpp"
     "include/STELA/number.hpp"
     "include/STELA/binding.hpp"
+    "include/STELA/reflection.hpp"
+    "include/STELA/pass traits.hpp"
+    "include/STELA/wrap function.hpp"
+    "include/STELA/native types.hpp"
+    "include/STELA/native functions.hpp"
+    "include/STELA/meta.hpp"
     "src/Utils/unreachable.hpp"
     "src/Utils/assert down cast.hpp"
     "src/Utils/iterator range.hpp"
@@ -76,6 +82,7 @@ add_library(STELA STATIC
     "src/CodeGen/function builder.hpp"
     "src/CodeGen/gen types.cpp"
     "src/CodeGen/gen types.hpp"
+    "src/CodeGen/binding.cpp"
     "src/Semantic/semantic analysis.cpp"
     "src/Semantic/modules.cpp"
     "src/Semantic/ast.cpp"
@@ -200,4 +207,4 @@ install(TARGETS STELA
 
 add_subdirectory(CLI)
 enable_testing()
-add_subdirectory(test)
+add_subdirectory(test EXCLUDE_FROM_ALL)

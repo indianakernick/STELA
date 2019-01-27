@@ -148,9 +148,23 @@ struct Field {
   TypePtr type;
   Loc loc;
 };
+using Fields = std::vector<Field>;
 
 struct StructType final : Type {
-  std::vector<Field> fields;
+  Fields fields;
+  
+  void accept(Visitor &) override;
+};
+
+struct UserField {
+  Name name;
+  TypePtr type;
+  size_t offset;
+};
+using UserFields = std::vector<UserField>;
+
+struct UserType final : Type {
+  UserFields fields;
   
   void accept(Visitor &) override;
 };

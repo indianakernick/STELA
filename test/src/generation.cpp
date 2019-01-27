@@ -10,12 +10,14 @@
 #include <iostream>
 #include <gtest/gtest.h>
 #include <STELA/llvm.hpp>
+#include <llvm/IR/Module.h>
 #include <STELA/binding.hpp>
+#include <STELA/reflection.hpp>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
+#include <STELA/native functions.hpp>
 #include <STELA/semantic analysis.hpp>
 #include <STELA/c standard library.hpp>
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 using namespace stela;
 
@@ -54,11 +56,6 @@ llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
   stela::Symbols syms = stela::initModules(log);
   stela::compileModule(syms, ast, log);
   return generate(syms, log);
-}
-
-template <typename Fun, bool Member = false>
-auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
-  return stela::Function<Fun, Member>{engine->getFunctionAddress(name)};
 }
 
 LogSink &log() {
@@ -2834,41 +2831,30 @@ TEST(External_Func, Basic) {
   EXPECT_EQ(five(), 5.0f);
 }
 
-retain_ptr<ast::ExtFunc> makeFopen(sym::Builtins &btn) {
-  auto func = make_retain<ast::ExtFunc>();
-  func->name = "fopen";
-  func->mangledName = "fopen";
-  func->params.push_back({ast::ParamRef::val, btn.Opaq});
-  func->params.push_back({ast::ParamRef::val, btn.Opaq});
-  func->ret = btn.Opaq;
-  return func;
-}
+} // namespace
 
-retain_ptr<ast::ExtFunc> makeFputs(sym::Builtins &btn) {
-  auto func = make_retain<ast::ExtFunc>();
-  func->name = "fputs";
-  func->mangledName = "fputs";
-  func->params.push_back({ast::ParamRef::val, btn.Opaq});
-  func->params.push_back({ast::ParamRef::val, btn.Opaq});
-  func->ret = btn.Sint;
-  return func;
-}
+template <>
+struct stela::reflect<FILE *> {
+  STELA_REFLECT_NAME(FILE *, File);
+  STELA_PRIMITIVE(Opaq);
+};
 
-retain_ptr<ast::ExtFunc> makeFclose(sym::Builtins &btn) {
-  auto func = make_retain<ast::ExtFunc>();
-  func->name = "fclose";
-  func->mangledName = "fclose";
-  func->params.push_back({ast::ParamRef::val, btn.Opaq});
-  func->ret = btn.Sint;
-  return func;
-}
+template <>
+struct stela::reflect<const char *> {
+  STELA_REFLECT_ANON(const char *);
+  STELA_PRIMITIVE(Opaq);
+};
 
-AST makeStdio(sym::Builtins &btn) {
+namespace {
+
+AST makeStdio() {
   AST stdio;
   stdio.name = "stdio";
-  stdio.global.push_back(makeFopen(btn));
-  stdio.global.push_back(makeFputs(btn));
-  stdio.global.push_back(makeFclose(btn));
+  Reflector refl;
+  refl.reflectPlainCFunc<&fopen>("fopen");
+  refl.reflectPlainCFunc<&fputs>("fputs");
+  refl.reflectPlainCFunc<&fclose>("fclose");
+  refl.appendDeclsTo(stdio.global);
   return stdio;
 }
 
@@ -2876,7 +2862,6 @@ TEST(External_Func, Opaque_ptrs) {
   const char *source = R"(
     import stdio;
   
-    type File opaq;
     type Mode byte;
     let Mode_read = make Mode 0;
     let Mode_write = make Mode 1;
@@ -2896,17 +2881,17 @@ TEST(External_Func, Opaque_ptrs) {
       push_back(filename, 0c);
       let file = fopen(data(filename), data(modeStr));
       pop_back(filename);
-      return make File file;
+      return file;
     }
   
     func (stream: File) puts(str: [char]) {
       push_back(str, 0c);
-      let ret = fputs(data(str), make opaq stream);
+      let ret = fputs(data(str), stream);
       pop_back(str);
     }
   
     func (stream: File) close() {
-      let ret = fclose(make opaq stream);
+      let ret = fclose(stream);
     }
   
     extern func sayHi() {
@@ -2920,7 +2905,7 @@ TEST(External_Func, Opaque_ptrs) {
   ASTs asts;
   
   asts.push_back(createAST(source, log()));
-  asts.push_back(makeStdio(syms.builtins));
+  asts.push_back(makeStdio());
   
   const ModuleOrder order = findModuleOrder(asts, log());
   compileModules(syms, order, asts, log());
@@ -2991,17 +2976,17 @@ TEST(External_func, Simple_bind) {
     }
   )";
   
-  MangleData mangle;
-  
   Symbols syms = initModules(log());
   ASTs asts;
   asts.push_back(createAST(source, log()));
   
   AST lib;
   lib.name = "library";
-  lib.global.push_back(bindFunction(syms.builtins, mangle, "calc", +[](Real r) {
+  Reflector refl;
+  refl.reflectPlainFunc("calc", +[](Real r) {
     return r * 2.0f;
-  }));
+  });
+  refl.appendDeclsTo(lib.global);
   asts.push_back(lib);
   
   const ModuleOrder order = findModuleOrder(asts, log());
@@ -3013,6 +2998,28 @@ TEST(External_func, Simple_bind) {
   EXPECT_EQ(test(-11.0f), -22.0f);
   EXPECT_EQ(test(7.0f), 14.0f);
 };
+
+/*struct Vec2 {
+  Real x, y;
+  
+  Real mag() const {
+    return std::sqrt(x*x + y*y);
+  }
+  void add(const Vec2 other) {
+    x += other.x;
+    y += other.y;
+  }
+  
+  STELA_REFLECT_ANON(Vec2);
+  STELA_FIELDS(
+    STELA_FIELD(x),
+    STELA_FIELD(y)
+  );
+  STELA_METHODS(
+    STELA_METHOD(mag),
+    STELA_METHOD(add)
+  );
+};*/
 
 #undef EXPECT_FAILS
 #undef EXPECT_SUCCEEDS

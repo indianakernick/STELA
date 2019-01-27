@@ -352,3 +352,5 @@ the compiler must determine
   whether the usage of a generic parameter matches the trait
   whether a trait is a subset of another (when a generic function calls another
   generic function)
+
+convert call to reg.view{A, B}() to runtime view invokation

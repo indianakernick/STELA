@@ -9,12 +9,12 @@
 #include <iostream>
 #include <unordered_set>
 #include <STELA/llvm.hpp>
+#include <llvm/IR/Module.h>
 #include <STELA/binding.hpp>
 #include <benchmark/benchmark.h>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
 #include <STELA/semantic analysis.hpp>
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
 
 using namespace stela;
 
@@ -55,11 +55,6 @@ llvm::ExecutionEngine *generate(const std::string_view source, LogSink &log) {
   stela::Symbols syms = stela::initModules(log);
   stela::compileModule(syms, ast, log);
   return generate(syms, log, source.data());
-}
-
-template <typename Fun, bool Member = false>
-auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
-  return stela::Function<Fun, Member>{engine->getFunctionAddress(name)};
 }
 
 LogSink &log() {

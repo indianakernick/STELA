@@ -22,6 +22,8 @@
 		450E329420E89D6100F222F1 /* parse stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328520E89A4700F222F1 /* parse stat.cpp */; };
 		450E329520E89D6100F222F1 /* parse decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328820E89B5C00F222F1 /* parse decl.cpp */; };
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
+		4514ED5C21FC3A010072F9BA /* binding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4514ED5B21FC3A010072F9BA /* binding.cpp */; };
+		4514ED6721FE78B40072F9BA /* reflection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4514ED6621FE78B40072F9BA /* reflection.cpp */; };
 		4525048D21E83876004AE038 /* gen helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525048B21E83876004AE038 /* gen helpers.cpp */; };
 		4525049021E83C16004AE038 /* generate array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525048E21E83C16004AE038 /* generate array.cpp */; };
 		4525049321E83D40004AE038 /* generate struct.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525049121E83D40004AE038 /* generate struct.cpp */; };
@@ -55,7 +57,6 @@
 		4572CAAB210EF60500EA1A56 /* scope insert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAA9210EF60500EA1A56 /* scope insert.cpp */; };
 		4572CAAE210EF61100EA1A56 /* scope lookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAAC210EF61100EA1A56 /* scope lookup.cpp */; };
 		4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4572CAAF210EFDFE00EA1A56 /* symbols.cpp */; };
-		45816F3F21AF637400712CA3 /* generation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F3D21AF637400712CA3 /* generation.cpp */; };
 		45816F4221AF64F100712CA3 /* code generation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4121AF64F100712CA3 /* code generation.cpp */; };
 		45816F4821AFA16700712CA3 /* builtin code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4621AFA16700712CA3 /* builtin code.cpp */; };
 		45816F4B21B0B6A700712CA3 /* generate decl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 45816F4921B0B6A700712CA3 /* generate decl.cpp */; };
@@ -319,6 +320,14 @@
 		450E328C20E89C9500F222F1 /* parse litr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse litr.hpp"; sourceTree = "<group>"; };
 		450E328E20E89D2F00F222F1 /* parse expr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "parse expr.cpp"; sourceTree = "<group>"; };
 		450E328F20E89D2F00F222F1 /* parse expr.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "parse expr.hpp"; sourceTree = "<group>"; };
+		4514ED5B21FC3A010072F9BA /* binding.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = binding.cpp; sourceTree = "<group>"; };
+		4514ED5D21FC3C430072F9BA /* reflection.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reflection.hpp; sourceTree = "<group>"; };
+		4514ED5E21FD1E430072F9BA /* native types.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "native types.hpp"; sourceTree = "<group>"; };
+		4514ED6221FD78210072F9BA /* pass traits.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "pass traits.hpp"; sourceTree = "<group>"; };
+		4514ED6321FD92810072F9BA /* wrap function.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "wrap function.hpp"; sourceTree = "<group>"; };
+		4514ED6421FD93AA0072F9BA /* native functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "native functions.hpp"; sourceTree = "<group>"; };
+		4514ED6521FE64C60072F9BA /* meta.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = meta.hpp; sourceTree = "<group>"; };
+		4514ED6621FE78B40072F9BA /* reflection.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = reflection.cpp; sourceTree = "<group>"; };
 		4525048B21E83876004AE038 /* gen helpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen helpers.cpp"; sourceTree = "<group>"; };
 		4525048C21E83876004AE038 /* gen helpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen helpers.hpp"; sourceTree = "<group>"; };
 		4525048E21E83C16004AE038 /* generate array.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate array.cpp"; sourceTree = "<group>"; };
@@ -557,6 +566,48 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4514ED5F21FD76800072F9BA /* Compilation */ = {
+			isa = PBXGroup;
+			children = (
+				45EE9C2A20E3AAE300CC3289 /* token.hpp */,
+				45EE9C2F20E3AAE300CC3289 /* ast.hpp */,
+				4572CA6B20F32DEA00EA1A56 /* symbols.hpp */,
+				45EE9C2C20E3AAE300CC3289 /* lexical analysis.hpp */,
+				45EE9C2B20E3AAE300CC3289 /* syntax analysis.hpp */,
+				4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */,
+				45816F4021AF645200712CA3 /* code generation.hpp */,
+				455F4185217BEDA700C62BBF /* modules.hpp */,
+				45816F6421B622BD00712CA3 /* c standard library.hpp */,
+			);
+			name = Compilation;
+			sourceTree = "<group>";
+		};
+		4514ED6021FD76A90072F9BA /* Formatting */ = {
+			isa = PBXGroup;
+			children = (
+				4572CA7D20F9951400EA1A56 /* format.hpp */,
+				4572CA8120F9FE1B00EA1A56 /* console format.hpp */,
+				4572CA8720FB254600EA1A56 /* html format.hpp */,
+				454EB80421ABD7D2001A5D78 /* plain format.hpp */,
+			);
+			name = Formatting;
+			sourceTree = "<group>";
+		};
+		4514ED6121FD76BE0072F9BA /* Binding */ = {
+			isa = PBXGroup;
+			children = (
+				455DADAD21BF6B9A0012A261 /* number.hpp */,
+				454B744221C201A900BB4BD0 /* binding.hpp */,
+				4514ED5D21FC3C430072F9BA /* reflection.hpp */,
+				4514ED6221FD78210072F9BA /* pass traits.hpp */,
+				4514ED6321FD92810072F9BA /* wrap function.hpp */,
+				4514ED5E21FD1E430072F9BA /* native types.hpp */,
+				4514ED6421FD93AA0072F9BA /* native functions.hpp */,
+				4514ED6521FE64C60072F9BA /* meta.hpp */,
+			);
+			name = Binding;
+			sourceTree = "<group>";
+		};
 		4525049721E83FA5004AE038 /* Functions */ = {
 			isa = PBXGroup;
 			children = (
@@ -670,6 +721,8 @@
 				454B744921C4A5B700BB4BD0 /* function builder.hpp */,
 				45C7FADD21C74D9100995B7D /* gen types.cpp */,
 				45C7FADE21C74D9100995B7D /* gen types.hpp */,
+				4514ED5B21FC3A010072F9BA /* binding.cpp */,
+				4514ED6621FE78B40072F9BA /* reflection.cpp */,
 			);
 			name = "Code Generation";
 			path = CodeGen;
@@ -794,25 +847,13 @@
 		45EE9C2920E3AAE300CC3289 /* STELA */ = {
 			isa = PBXGroup;
 			children = (
-				45EE9C2A20E3AAE300CC3289 /* token.hpp */,
-				45EE9C2F20E3AAE300CC3289 /* ast.hpp */,
-				4572CA6B20F32DEA00EA1A56 /* symbols.hpp */,
+				4514ED5F21FD76800072F9BA /* Compilation */,
+				4514ED6021FD76A90072F9BA /* Formatting */,
+				4514ED6121FD76BE0072F9BA /* Binding */,
 				45EE9C2D20E3AAE300CC3289 /* location.hpp */,
 				45EE9C2E20E3AAE300CC3289 /* log.hpp */,
-				45EE9C2C20E3AAE300CC3289 /* lexical analysis.hpp */,
-				45EE9C2B20E3AAE300CC3289 /* syntax analysis.hpp */,
-				4572CA6220F32C9D00EA1A56 /* semantic analysis.hpp */,
-				45816F4021AF645200712CA3 /* code generation.hpp */,
-				455F4185217BEDA700C62BBF /* modules.hpp */,
-				4572CA7D20F9951400EA1A56 /* format.hpp */,
-				4572CA8120F9FE1B00EA1A56 /* console format.hpp */,
-				4572CA8720FB254600EA1A56 /* html format.hpp */,
-				454EB80421ABD7D2001A5D78 /* plain format.hpp */,
 				454EB7FB219E4681001A5D78 /* retain ptr.hpp */,
-				45816F6421B622BD00712CA3 /* c standard library.hpp */,
 				455DADA621BDE4F90012A261 /* llvm.hpp */,
-				455DADAD21BF6B9A0012A261 /* number.hpp */,
-				454B744221C201A900BB4BD0 /* binding.hpp */,
 			);
 			path = STELA;
 			sourceTree = "<group>";
@@ -1234,13 +1275,13 @@
 				454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */,
 				45C7FADF21C74D9100995B7D /* gen types.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
+				4514ED5C21FC3A010072F9BA /* binding.cpp in Sources */,
 				45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */,
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,
 				4572CA8320F9FF6000EA1A56 /* console format.cpp in Sources */,
 				454EB80021AB6E41001A5D78 /* expr lookup.cpp in Sources */,
 				454EB80621ABD838001A5D78 /* plain format.cpp in Sources */,
 				45EE9C2020DF19BD00CC3289 /* parse tokens.cpp in Sources */,
-				45816F3F21AF637400712CA3 /* generation.cpp in Sources */,
 				4572CA8020F9987500EA1A56 /* format.cpp in Sources */,
 				454EB80C21ACAAC9001A5D78 /* check scopes.cpp in Sources */,
 				4525049321E83D40004AE038 /* generate struct.cpp in Sources */,
@@ -1252,6 +1293,7 @@
 				45816F4821AFA16700712CA3 /* builtin code.cpp in Sources */,
 				4525048D21E83876004AE038 /* gen helpers.cpp in Sources */,
 				45EE9C1D20DE72D400CC3289 /* log output.cpp in Sources */,
+				4514ED6721FE78B40072F9BA /* reflection.cpp in Sources */,
 				455DADAC21BE29920012A261 /* generate stat.cpp in Sources */,
 				45BBA40620D6418B006108C1 /* lexical analysis.cpp in Sources */,
 				45816F6621B6249200712CA3 /* c standard library.cpp in Sources */,
