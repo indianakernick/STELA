@@ -2999,6 +2999,70 @@ TEST(External_func, Simple_bind) {
   EXPECT_EQ(test(7.0f), 14.0f);
 };
 
+enum class Dir : unsigned char {
+  up,
+  right,
+  down,
+  left,
+  none = 255
+};
+
+} // namespace
+
+template <>
+struct stela::reflect<Dir> {
+  STELA_REFLECT(Dir);
+  STELA_ENUM_TYPE();
+  STELA_DECLS(
+    STELA_ENUM_CASE(Dir_up, up),
+    STELA_ENUM_CASE(Dir_right, right),
+    STELA_ENUM_CASE(Dir_down, down),
+    STELA_ENUM_CASE(Dir_left, left),
+    STELA_ENUM_CASE(Dir_none, none)
+  );
+};
+
+namespace {
+
+TEST(External_func, Enums) {
+  const char *source = R"(
+    import library;
+  
+    extern func opposite(dir: Dir) {
+      switch (dir) {
+        case Dir_up return Dir_down;
+        case Dir_right return Dir_left;
+        case Dir_down return Dir_up;
+        case Dir_left return Dir_right;
+        default return Dir_none;
+      }
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  
+  AST lib;
+  lib.name = "library";
+  Reflector refl;
+  refl.reflectType<Dir>();
+  refl.appendDeclsTo(lib.global);
+  asts.push_back(lib);
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto opposite = GET_FUNC("opposite", Dir(Dir));
+  
+  EXPECT_EQ(opposite(Dir::up), Dir::down);
+  EXPECT_EQ(opposite(Dir::right), Dir::left);
+  EXPECT_EQ(opposite(Dir::down), Dir::up);
+  EXPECT_EQ(opposite(Dir::left), Dir::right);
+  EXPECT_EQ(opposite(Dir::none), Dir::none);
+}
+
 /*struct Vec2 {
   Real x, y;
   

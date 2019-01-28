@@ -495,7 +495,7 @@ struct StringLiteral final : Literal {
 
 struct CharLiteral final : Literal {
   std::string_view literal;
-  char value = 0;
+  char value = -1;
   
   void accept(Visitor &) override;
 };

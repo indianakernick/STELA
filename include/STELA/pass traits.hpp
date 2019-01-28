@@ -31,6 +31,23 @@ struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
   static constexpr bool nontrivial = true;
 };
 
+// @TODO deal with classes
+
+/// Enums
+template <typename T>
+struct pass_traits<T, std::enable_if_t<std::is_enum_v<T>>> {
+  using type = typename pass_traits<std::underlying_type_t<T>>::type;
+  
+  static type unwrap(const T arg) noexcept {
+    return static_cast<type>(arg);
+  }
+  static T wrap(const type arg) noexcept {
+    return static_cast<T>(arg);
+  }
+  
+  static constexpr bool nontrivial = false;
+};
+
 /// References
 template <typename T>
 struct pass_traits<T &> {

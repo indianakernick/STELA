@@ -139,12 +139,19 @@ public:
   }
   
   void visit(ast::StringLiteral &str) override {
-    str.value = parseStringLiteral(str.literal, str.loc, ctx.log);
+    if (str.value.empty() && !str.literal.empty()) {
+      str.value = parseStringLiteral(str.literal, str.loc, ctx.log);
+    }
     str.exprType = ctx.btn.string;
     lkp.setExpr(sym::makeLetVal(ctx.btn.string));
   }
   void visit(ast::CharLiteral &chr) override {
-    std::string str = parseStringLiteral(chr.literal, chr.loc, ctx.log);
+    std::string str;
+    if (chr.value == -1) {
+      str = parseStringLiteral(chr.literal, chr.loc, ctx.log);
+    } else {
+      str = chr.value;
+    }
     if (str.size() != 1) {
       ctx.log.error(chr.loc) << "Character literal must be one character" << fatal;
     }
@@ -153,7 +160,9 @@ public:
     lkp.setExpr(sym::makeLetVal(ctx.btn.Char));
   }
   void visit(ast::NumberLiteral &n) override {
-    n.value = parseNumberLiteral(n.literal, ctx.log);
+    if (std::holds_alternative<std::monostate>(n.value)) {
+      n.value = parseNumberLiteral(n.literal, ctx.log);
+    }
     ast::TypePtr type;
     if (std::holds_alternative<Byte>(n.value)) {
       type = ctx.btn.Byte;

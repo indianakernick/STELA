@@ -26,43 +26,43 @@ struct reflect {
 namespace detail {
 
 template <typename Type>
-constexpr auto hasMethods(int) -> decltype(Type::reflected_meth, bool{}) {
+constexpr auto hasDecls(int) -> decltype(Type::reflected_decl, bool{}) {
   return true;
 }
 
 template <typename Type>
-constexpr bool hasMethods(long) {
+constexpr bool hasDecls(long) {
   return false;
 }
 
 template <typename Type>
 using basic_reflectible = decltype(Type::reflected_name, Type::reflected_type);
 
-struct MethDummy {
+struct DeclDummy {
   static constexpr std::string_view reflected_name = "steve";
   static inline const auto reflected_type = 0;
-  static inline const auto reflected_meth = 1;
+  static inline const auto reflected_decl = 1;
 };
 
-struct NoMethDummy {
+struct NoDeclDummy {
   static constexpr std::string_view reflected_name = "steve";
   static inline const auto reflected_type = 0;
 };
 
-static_assert(hasMethods<MethDummy>(0));
-static_assert(!hasMethods<NoMethDummy>(0));
+static_assert(hasDecls<DeclDummy>(0));
+static_assert(!hasDecls<NoDeclDummy>(0));
 
 }
 
 template <typename Type>
-struct reflect<Type, decltype(std::enable_if_t<detail::hasMethods<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
+struct reflect<Type, decltype(std::enable_if_t<detail::hasDecls<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
   static constexpr std::string_view reflected_name = Type::reflected_name;
   static inline const auto &reflected_type = Type::reflected_type;
-  static inline const auto &reflected_meth = Type::reflected_meth;
+  static inline const auto &reflected_decl = Type::reflected_decl;
 };
 
 template <typename Type>
-struct reflect<Type, decltype(std::enable_if_t<!detail::hasMethods<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
+struct reflect<Type, decltype(std::enable_if_t<!detail::hasDecls<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
   static constexpr std::string_view reflected_name = Type::reflected_name;
   static inline const auto &reflected_type = Type::reflected_type;
 };
@@ -98,13 +98,12 @@ public:
       decls.push_back(std::move(alias));
       types[index] = std::move(named);
     }
-    if constexpr (detail::hasMethods<Refl>(0)) {
-      Refl::reflected_meth.reg(*this);
+    if constexpr (detail::hasDecls<Refl>(0)) {
+      Refl::reflected_decl.reg(*this);
     }
   }
   
-  /// Builds a wrapper function with a direct call to the given function.
-  /// If the C++ compiler has any sense, it will inline the call.
+  /// Builds a wrapper function with a direct call to the given function
   template <auto FunPtr, bool Method = false>
   void reflectFunc(const std::string_view name) {
     auto func = make_retain<ast::ExtFunc>();
@@ -114,7 +113,21 @@ public:
     func->impl = reinterpret_cast<uint64_t>( // Clang bug workaround :(
       &FunctionWrap<decltype(FunPtr), static_cast<decltype(FunPtr)>(FunPtr)>::type::call
     );
-    reflectFunc(std::move(func));
+    reflectDecl(std::move(func));
+  }
+  
+  /// Builds a wrapper function with a direct call to the given member function
+  template <auto MemFunPtr>
+  void reflectMethod(const std::string_view name) {
+    auto func = make_retain<ast::ExtFunc>();
+    func->name = name;
+    func->mangledName = mangledName(name);
+    using Ptr = decltype(MemFunPtr);
+    detail::write_sig<typename mem_to_fun<Ptr>::type, true>::write(*func, *this);
+    func->impl = reinterpret_cast<uint64_t>( // Clang bug workaround :(
+      &MethodWrap<Ptr, static_cast<Ptr>(MemFunPtr)>::type::call
+    );
+    reflectDecl(std::move(func));
   }
   
   /*
@@ -141,7 +154,7 @@ public:
     func->mangledName = mangledName(name);
     detail::write_sig<Sig *, Method>::write(*func, *this);
     func->impl = reinterpret_cast<uint64_t>(impl);
-    reflectFunc(std::move(func));
+    reflectDecl(std::move(func));
   }
   
   /// Provide the symbol name of a C function and all calls will be direct.
@@ -153,7 +166,7 @@ public:
     func->name = name;
     func->mangledName = mangled;
     detail::write_sig<decltype(FunPtr), Method>::write(*func, *this);
-    reflectFunc(std::move(func));
+    reflectDecl(std::move(func));
   }
   
   template <auto FunPtr, bool Method = false>
@@ -161,11 +174,15 @@ public:
     return reflectPlainCFunc<FunPtr, Method>(name, name);
   }
   
-  void reflectFunc(retain_ptr<ast::Func> func) {
-    decls.push_back(func);
+  void reflectConstant(const std::string_view name, ast::ExprPtr init) {
+    auto constant = make_retain<ast::Let>();
+    constant->name = name;
+    constant->expr = init;
+    reflectDecl(constant);
   }
-  void reflectFunc(retain_ptr<ast::ExtFunc> func) {
-    decls.push_back(func);
+  
+  void reflectDecl(ast::DeclPtr decl) {
+    decls.push_back(decl);
   }
 
   template <typename Type>
@@ -236,12 +253,34 @@ struct reflect<Array<Elem>> {
   }
 };
 
-template <ast::BtnTypeEnum Type>
-struct Primitive {
+template <auto Enum>
+struct PrimitiveType {
   static ast::TypePtr get(Reflector &) {
-    return make_retain<ast::BtnType>(Type);
+    return make_retain<ast::BtnType>(Enum);
   }
 };
+
+template <typename Type>
+struct Primitive;
+
+#define PRIMITIVE(TYPE)                                                         \
+  template <>                                                                   \
+  struct Primitive<TYPE> {                                                      \
+    static ast::TypePtr get(Reflector &) {                                      \
+      return make_retain<ast::BtnType>(ast::BtnTypeEnum::TYPE);                 \
+    }                                                                           \
+  }
+
+PRIMITIVE(Void);
+PRIMITIVE(Opaq);
+PRIMITIVE(Bool);
+PRIMITIVE(Byte);
+PRIMITIVE(Char);
+PRIMITIVE(Real);
+PRIMITIVE(Sint);
+PRIMITIVE(Uint);
+
+#undef PRIMITIVE
 
 /*template <typename Type>
 struct field {
@@ -318,61 +357,139 @@ Fields(Field<MemPtrs>...) -> Fields<
   typename member_traits<decltype(MemPtrs)>::member...
 >;
 
-template <auto MemFunPtr>
-struct Method {
-  std::string_view name;
-};
-
-template <typename Class, auto... MemPtrs>
-struct Methods {
-  template <typename... MethodTypes>
-  Methods(MethodTypes... methods) noexcept
-    : names{methods.name...} {}
+template <typename... Types>
+struct Decls {
+  template <typename... DeclTypes>
+  Decls(const DeclTypes &... decls) noexcept
+    : decls{decls...} {}
   
   void reg(Reflector &refl) const {
-    reflectMethods(refl, std::make_index_sequence<sizeof...(MemPtrs)>{});
+    reflectDecls(refl, std::index_sequence_for<Types...>{});
   }
 
 private:
-  const std::string_view names[sizeof...(MemPtrs)];
+  std::tuple<Types...> decls;
   
-  template <auto MemPtr, size_t Index>
-  void reflectMethod(Reflector &refl) const {
-    auto func = make_retain<ast::ExtFunc>();
-    func->name = names[Index];
-    func->mangledName = mangledName(names[Index]);
-    detail::write_sig<typename mem_to_fun<decltype(MemPtr)>::type, true>::write(*func, refl);
-    func->impl = reinterpret_cast<uint64_t>( // Clang bug workaround :(
-      &MethodWrap<decltype(MemPtr), static_cast<decltype(MemPtr)>(MemPtr)>::type::call
-    );
-    refl.reflectFunc(std::move(func));
+  template <size_t Index>
+  void reflectDecl(Reflector &refl) const {
+    std::get<Index>(decls).reg(refl);
   }
   
   template <size_t... Indicies>
-  void reflectMethods(Reflector &refl, std::index_sequence<Indicies...>) const {
-    (reflectMethod<MemPtrs, Indicies>(refl), ...);
+  void reflectDecls(Reflector &refl, std::index_sequence<Indicies...>) const {
+    (reflectDecl<Indicies>(refl), ...);
   }
 };
 
-template <auto... MemPtrs>
-Methods(Method<MemPtrs>...) -> Methods<
-  first_t<typename member_traits<decltype(MemPtrs)>::object...>,
-  MemPtrs...
->;
-
-template <typename Class>
-struct Methods<Class> {
+template <>
+struct Decls<> {
   void reg(Reflector &) const {}
 };
 
-Methods() -> Methods<void>;
+template <typename... Types>
+Decls(const Types &...) -> Decls<Types...>;
+
+template <auto MemFunPtr>
+struct Method {
+  std::string_view name;
+  
+  void reg(Reflector &refl) const {
+    refl.reflectMethod<MemFunPtr>(name);
+  }
+};
+
+template <typename Type, bool Strong = true>
+struct Typealias {
+  std::string_view name;
+  
+  void reg(Reflector &refl) const {
+    auto alias = make_retain<ast::TypeAlias>();
+    alias->name = name;
+    alias->type = refl.getType<Type>();
+    alias->strong = Strong;
+    refl.reflectDecl(alias);
+  }
+};
+
+template <typename Type>
+ast::LitrPtr makeLiteral(Type);
+
+template <>
+inline ast::LitrPtr makeLiteral(const std::string_view value) {
+  auto con = make_retain<ast::StringLiteral>();
+  con->value = value;
+  return con;
+}
+
+template <>
+inline ast::LitrPtr makeLiteral(const std::string &value) {
+  auto con = make_retain<ast::StringLiteral>();
+  con->value = value;
+  return con;
+}
+
+#define NUMBER_LITERAL(TYPE)                                                    \
+  template <>                                                                   \
+  inline ast::LitrPtr makeLiteral(const TYPE value) {                           \
+    auto litr = make_retain<ast::NumberLiteral>();                              \
+    litr->value = value;                                                        \
+    return litr;                                                                \
+  }
+
+NUMBER_LITERAL(Byte);
+NUMBER_LITERAL(Char);
+NUMBER_LITERAL(Real);
+NUMBER_LITERAL(Sint);
+NUMBER_LITERAL(Uint);
+
+#undef NUMBER_LITERAL
+
+template <>
+inline ast::LitrPtr makeLiteral(const Bool value) {
+  auto litr = make_retain<ast::BoolLiteral>();
+  litr->value = value;
+  return litr;
+}
+
+template <typename Type>
+struct Constant {
+  Constant(const std::string_view name, const Bool value)
+    : name{name}, value{value} {}
+
+  const std::string_view name;
+  const Type value;
+  
+  void reg(Reflector &refl) const {
+    refl.reflectConstant(name, makeLiteral(value));
+  }
+};
+
+template <typename Type>
+Constant(std::string_view, Type) -> Constant<Type>;
+
+template <typename Enum>
+struct EnumConstant {
+  const std::string_view name;
+  const Enum value;
+  
+  void reg(Reflector &refl) const {
+    using Underlying = std::underlying_type_t<Enum>;
+    auto cast = make_retain<ast::Make>();
+    cast->expr = makeLiteral(static_cast<Underlying>(value));
+    cast->type = refl.getType<Enum>();
+    refl.reflectConstant(name, std::move(cast));
+  }
+};
+
+template <typename Type>
+EnumConstant(std::string_view, Type) -> EnumConstant<Type>;
 
 #define REFLECT_PRIMITIVE(TYPE)                                                 \
   template <>                                                                   \
   struct reflect<TYPE> {                                                        \
     static constexpr std::string_view reflected_name = "";                      \
-    static inline const auto reflected_type = Primitive<ast::BtnTypeEnum::TYPE>{}; \
-    static inline const auto reflected_meth = Methods{};                        \
+    static inline const auto reflected_type = Primitive<TYPE>{};                \
+    static inline const auto reflected_decl = Decls{};                          \
   }
 
 REFLECT_PRIMITIVE(Void);
@@ -384,7 +501,7 @@ REFLECT_PRIMITIVE(Real);
 REFLECT_PRIMITIVE(Sint);
 REFLECT_PRIMITIVE(Uint);
 
-#undef PRIMITIVE_NODE
+#undef REFLECT_PRIMITIVE
 
 #define STELA_REFLECT_NAME(CLASS, NAME)                                         \
   using reflected_typedef = CLASS;                                              \
@@ -395,22 +512,36 @@ REFLECT_PRIMITIVE(Uint);
 #define STELA_REFLECT_ANON(CLASS) STELA_REFLECT_NAME(CLASS,)
 
 #define STELA_PRIMITIVE(TYPE)                                                   \
-  static inline const auto reflected_type = stela::Primitive<ast::BtnTypeEnum::TYPE>{}
+  static inline const auto reflected_type = stela::Primitive<TYPE>{}
 
 #define STELA_FIELDS(...)                                                       \
   static inline const auto reflected_type = stela::Fields{__VA_ARGS__}
 
+#define STELA_ENUM_TYPE()                                                       \
+  static inline const auto reflected_type = stela::Primitive<                   \
+    std::underlying_type_t<reflected_typedef>                                   \
+  >{}
+
 #define STELA_FIELD(MEMBER)                                                     \
   stela::Field<&reflected_typedef::MEMBER>{#MEMBER}
 
-#define STELA_METHODS(...)                                                      \
-  static inline const auto reflected_meth = stela::Methods{__VA_ARGS__}
+#define STELA_DECLS(...)                                                        \
+  static inline const auto reflected_decl = stela::Decls{__VA_ARGS__}
 
 #define STELA_METHOD(MEMBER)                                                    \
   stela::Method<&reflected_typedef::MEMBER>{#MEMBER}
 
 #define STELA_METHOD_SIG(MEMBER, SIGNATURE)                                     \
   stela::Method<stela::overload_mem<SIGNATURE>(&reflected_typedef::MEMBER)>{#MEMBER}
+
+#define STELA_TYPEALIAS(NAME, TYPE)                                             \
+  stela::Typealias<Type>{NAME}
+
+#define STELA_CONSTANT(NAME, VALUE)                                             \
+  stela::Constant{NAME, VALUE}
+
+#define STELA_ENUM_CASE(NAME, VALUE)                                            \
+  stela::EnumConstant{#NAME, reflected_typedef::VALUE}
 
 #define STELA_THIS reflected_typedef
 
