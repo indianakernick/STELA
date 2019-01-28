@@ -9,6 +9,7 @@
 #ifndef stela_reflection_hpp
 #define stela_reflection_hpp
 
+#include <new>
 #include "meta.hpp"
 #include "symbols.hpp"
 #include "pass traits.hpp"
@@ -17,10 +18,11 @@
 namespace stela {
 
 std::string mangledName(std::string_view);
+std::string mangledName(const std::string &);
 
 template <typename Type, typename = void>
 struct reflect {
-  static_assert(sizeof(Type) == 0, "Type is not reflectible");
+  //static_assert(sizeof(Type) == 0, "Type is not reflectible");
 };
 
 namespace detail {
@@ -52,17 +54,18 @@ struct NoDeclDummy {
 static_assert(hasDecls<DeclDummy>(0));
 static_assert(!hasDecls<NoDeclDummy>(0));
 
-}
+template <typename Type, typename = void>
+struct with_decls {};
 
 template <typename Type>
-struct reflect<Type, decltype(std::enable_if_t<detail::hasDecls<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
-  static constexpr std::string_view reflected_name = Type::reflected_name;
-  static inline const auto &reflected_type = Type::reflected_type;
+struct with_decls<Type, std::enable_if_t<hasDecls<Type>(0)>> {
   static inline const auto &reflected_decl = Type::reflected_decl;
 };
 
+}
+
 template <typename Type>
-struct reflect<Type, decltype(std::enable_if_t<!detail::hasDecls<Type>(0), int>{}, detail::basic_reflectible<Type>{}, void())> {
+struct reflect<Type, std::void_t<detail::basic_reflectible<Type>>> : detail::with_decls<Type> {
   static constexpr std::string_view reflected_name = Type::reflected_name;
   static inline const auto &reflected_type = Type::reflected_type;
 };
@@ -79,8 +82,11 @@ public:
   template <typename Type>
   void reflectType() {
     const size_t index = typeIndex<Type>();
-    if (index < types.size() && types[index]) return;
-    types.insert(types.end(), index - types.size() + 1, nullptr);
+    if (index < types.size()) {
+      if (types[index]) return;
+    } else {
+      types.insert(types.end(), index - types.size() + 1, nullptr);
+    }
     
     using Refl = reflect<Type>;
     constexpr std::string_view name = Refl::reflected_name;
@@ -323,14 +329,114 @@ struct Field {
   static constexpr auto member = MemPtr;
 };
 
-template <typename Class, typename... MemTypes>
-struct Fields {
+namespace detail {
+
+#define WRITE(CTOR, TRAIT)                                                      \
+  if constexpr (std::is_trivially_##TRAIT##_v<Class>) {                         \
+    CTOR.addr = ast::UserCtor::trivial;                                         \
+  } else if constexpr (!std::is_##TRAIT##_v<Class>) {                           \
+    CTOR.addr = ast::UserCtor::none;                                            \
+  } else
+#define WRITE_UNARY(CTOR, TRAIT, NAME, EXPR)                                    \
+  WRITE(CTOR, TRAIT) {                                                          \
+    CTOR.addr = reinterpret_cast<uint64_t>(+[] (Class *obj) noexcept {          \
+      EXPR;                                                                     \
+    });                                                                         \
+    CTOR.name = mangledName(className + "_"#NAME);                              \
+  }
+#define WRITE_BINARY(CTOR, TRAIT, NAME, EXPR)                                   \
+  WRITE(CTOR, TRAIT) {                                                          \
+    CTOR.addr = reinterpret_cast<uint64_t>(+[] (Class *dst, Class *src) noexcept { \
+      EXPR;                                                                     \
+    });                                                                         \
+    CTOR.name = mangledName(className + "_"#NAME);                              \
+  }
+
+template <typename Class>
+auto writeEq(ast::UserCtor &ctor, const std::string &className, int) noexcept
+  -> std::void_t<decltype(std::declval<Class>() == std::declval<Class>())> {
+  ctor.addr = reinterpret_cast<uint64_t>(+[] (Class *lhs, Class *rhs) noexcept -> Bool {
+    return *lhs == *rhs;
+  });
+  ctor.name = mangledName(className + "_eq");
+}
+template <typename Class>
+static void writeEq(ast::UserCtor &ctor, const std::string &, long) {
+  ctor.addr = ast::UserCtor::none;
+}
+
+template <typename Class>
+auto writeLt(ast::UserCtor &ctor, const std::string &className, int) noexcept
+  -> std::void_t<decltype(std::declval<Class>() < std::declval<Class>())> {
+  ctor.addr = reinterpret_cast<uint64_t>(+[] (Class *lhs, Class *rhs) noexcept -> Bool {
+    return *lhs < *rhs;
+  });
+  ctor.name = mangledName(className + "_lt");
+}
+template <typename ClassType>
+static void writeLt(ast::UserCtor &ctor, const std::string &, long) noexcept {
+  ctor.addr = ast::UserCtor::none;
+}
+
+template <typename Class>
+auto writeBool(ast::UserCtor &ctor, const std::string &className, int) noexcept
+  -> std::void_t<decltype(static_cast<bool>(std::declval<Class>()))> {
+  ctor.addr = reinterpret_cast<uint64_t>(+[] (Class *obj) noexcept -> Bool {
+    return bool(*obj);
+  });
+  ctor.name = mangledName(className + "_bool");
+}
+template <typename Class>
+static void writeBool(ast::UserCtor &ctor, const std::string &, long) noexcept {
+  ctor.addr = ast::UserCtor::none;
+}
+
+template <typename Class>
+void writeCtors(ast::UserType &user) noexcept {
+  constexpr std::string_view classNameView = reflect<Class>::reflected_name;
+  std::string className;
+  if constexpr (classNameView.empty()) {
+    className = "anon";
+  } else {
+    className.assign(classNameView.data(), classNameView.size());
+  }
+  WRITE_UNARY(user.dtor, destructible, dtor, obj->~Class())
+  WRITE_UNARY(user.defCtor, default_constructible, def_ctor, new (obj) Class{})
+  WRITE_BINARY(user.copCtor, copy_constructible, cop_ctor, new (dst) Class{*src})
+  WRITE_BINARY(user.copAsgn, copy_assignable, cop_asgn, *dst = *src)
+  WRITE_BINARY(user.movCtor, move_constructible, mov_ctor, new (dst) Class{std::move(*src)})
+  WRITE_BINARY(user.movAsgn, move_assignable, mov_asgn, *dst = std::move(*src))
+  writeEq<Class>(user.eq, className, 0);
+  writeLt<Class>(user.lt, className, 0);
+  writeBool<Class>(user.boolConv, className, 0);
+}
+
+#undef WRITE_BINARY
+#undef WRITE_UNARY
+#undef WRITE
+
+template <typename Class>
+void writeUserType(ast::UserType &user) noexcept {
+  static_assert(sizeof(Class) % alignof(Class) == 0);
+  user.size = sizeof(Class);
+  user.align = alignof(Class);
+  writeCtors<Class>(user);
+}
+
+} // namespace detail
+
+template <typename T>
+struct class_tag_t {};
+
+template <typename Type, typename... MemTypes>
+struct Class {
   template <typename... FieldTypes>
-  Fields(FieldTypes... fields) noexcept
+  Class(class_tag_t<Type>, FieldTypes... fields) noexcept
     : names{fields.name...}, offsets{getOffset(fields.member)...} {}
   
   ast::TypePtr get(Reflector &refl) const noexcept {
     auto user = make_retain<ast::UserType>();
+    detail::writeUserType<Type>(*user);
     user->fields.reserve(sizeof...(MemTypes));
     pushFields(user->fields, refl, std::make_index_sequence<sizeof...(MemTypes)>{});
     return user;
@@ -351,9 +457,20 @@ private:
   }
 };
 
-template <auto... MemPtrs>
-Fields(Field<MemPtrs>...) -> Fields<
-  first_t<typename member_traits<decltype(MemPtrs)>::object...>,
+template <typename Type>
+struct Class<Type> {
+  Class(class_tag_t<Type>) {}
+
+  ast::TypePtr get(Reflector &) const noexcept {
+    auto user = make_retain<ast::UserType>();
+    detail::writeUserType<Type>(*user);
+    return user;
+  }
+};
+
+template <typename Type, auto... MemPtrs>
+Class(class_tag_t<Type>, Field<MemPtrs>...) -> Class<
+  Type,
   typename member_traits<decltype(MemPtrs)>::member...
 >;
 
@@ -514,8 +631,10 @@ REFLECT_PRIMITIVE(Uint);
 #define STELA_PRIMITIVE(TYPE)                                                   \
   static inline const auto reflected_type = stela::Primitive<TYPE>{}
 
-#define STELA_FIELDS(...)                                                       \
-  static inline const auto reflected_type = stela::Fields{__VA_ARGS__}
+#define STELA_CLASS(...)                                                        \
+  static inline const auto reflected_type = stela::Class{                       \
+    class_tag_t<reflected_typedef>{}, __VA_ARGS__                               \
+  }
 
 #define STELA_ENUM_TYPE()                                                       \
   static inline const auto reflected_type = stela::Primitive<                   \
@@ -528,11 +647,17 @@ REFLECT_PRIMITIVE(Uint);
 #define STELA_DECLS(...)                                                        \
   static inline const auto reflected_decl = stela::Decls{__VA_ARGS__}
 
+#define STELA_METHOD_NAME(MEMBER, NAME)                                         \
+  stela::Method<&reflected_typedef::MEMBER>{#NAME}
+
 #define STELA_METHOD(MEMBER)                                                    \
-  stela::Method<&reflected_typedef::MEMBER>{#MEMBER}
+  STELA_METHOD_NAME(MEMBER, MEMBER)
+
+#define STELA_METHOD_NAME_SIG(MEMBER, NAME, SIGNATURE)                          \
+  stela::Method<stela::overload_mem<SIGNATURE>(&reflected_typedef::MEMBER)>{#NAME}
 
 #define STELA_METHOD_SIG(MEMBER, SIGNATURE)                                     \
-  stela::Method<stela::overload_mem<SIGNATURE>(&reflected_typedef::MEMBER)>{#MEMBER}
+  STELA_METHOD_NAME_SIG(MEMBER, MEMBER, SIGNATURE)
 
 #define STELA_TYPEALIAS(NAME, TYPE)                                             \
   stela::Typealias<Type>{NAME}

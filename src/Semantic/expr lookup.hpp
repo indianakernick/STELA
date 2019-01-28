@@ -116,6 +116,9 @@ private:
   ast::TypePtr expType;
   ExprStack stack;
   
+  template <typename FieldType>
+  void lookupField(FieldType *, ast::TypePtr, const sym::Name &, ast::MemberIdent &);
+  
   ast::Declaration *popCallPushRet(sym::Func *);
   
   sym::Symbol *lookupIdent(sym::Scope *, const sym::Name &);

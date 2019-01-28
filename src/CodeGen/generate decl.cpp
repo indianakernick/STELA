@@ -55,6 +55,7 @@ public:
       func.mangledName,
       module
     );
+    func.llvmFunc->addFnAttr(llvm::Attribute::NoUnwind);
     if (func.impl) {
       llvm::sys::DynamicLibrary::AddSymbol(
         func.mangledName,

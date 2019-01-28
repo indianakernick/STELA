@@ -121,6 +121,12 @@ void checkMethodCollide(sym::Ctx ctx, ast::Name name, const ast::TypePtr &receiv
         ctx.log.error(loc) << "Colliding function and field \"" << name << "\"" << fatal;
       }
     }
+  } else if (auto user = lookupConcrete<ast::UserType>(ctx, receiver)) {
+    for (const ast::UserField &field : user->fields) {
+      if (field.name == name) {
+        ctx.log.error(loc) << "Colliding function and field \"" << name << "\"" << fatal;
+      }
+    }
   }
 }
 

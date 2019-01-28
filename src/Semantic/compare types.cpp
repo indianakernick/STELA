@@ -41,6 +41,9 @@ public:
   void visit(ast::StructType &rhs) override {
     eq = compare(ctx, lhs, rhs);
   }
+  void visit(ast::UserType &rhs) override {
+    eq = compare(ctx, lhs, rhs);
+  }
 
   bool eq = false;
 
@@ -72,6 +75,16 @@ private:
     };
     return equal_size(lhs.fields, rhs.fields, compareFields);
   }
+  static bool compare(const sym::Ctx &ctx, ast::UserType &lhs, ast::UserType &rhs) {
+    const auto compareFields = [&ctx] (const ast::UserField &a, const ast::UserField &b) {
+      return a.offset == b.offset &&
+        a.name == b.name &&
+        compareTypes(ctx, a.type, b.type);
+    };
+    return lhs.size == rhs.size &&
+      lhs.align == rhs.align &&
+      equal_size(lhs.fields, rhs.fields, compareFields);
+  }
   template <typename Right>
   static bool compare(const sym::Ctx &, Left &, Right &) {
     return false;
@@ -101,6 +114,9 @@ public:
     }
   }
   void visit(ast::StructType &lhs) override {
+    visitImpl(lhs);
+  }
+  void visit(ast::UserType &lhs) override {
     visitImpl(lhs);
   }
   
@@ -175,6 +191,9 @@ public:
     if (dup != names.cend()) {
       ctx.log.error(dup->second) << "Duplicate field \"" << dup->first << "\" in struct" << fatal;
     }
+  }
+  void visit(ast::UserType &) override {
+    // @TODO do we need to do anything here?
   }
 
 private:

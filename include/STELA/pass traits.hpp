@@ -18,7 +18,7 @@ struct pass_traits;
 
 /// Classes
 template <typename T>
-struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
+struct pass_traits<T, std::enable_if_t<std::is_class_v<T>>> {
   using type = const T *;
   
   static type unwrap(const T &arg) noexcept {
@@ -30,8 +30,6 @@ struct pass_traits<T, std::enable_if_t<std::is_aggregate_v<T>>> {
   
   static constexpr bool nontrivial = true;
 };
-
-// @TODO deal with classes
 
 /// Enums
 template <typename T>
@@ -107,7 +105,7 @@ struct pass_traits<void> {
   static constexpr bool nontrivial = false;
 };
 
-template <typename Elem>
+/*template <typename Elem>
 struct pass_traits<Array<Elem>> {
   using type = ArrayStorage<Elem> *const *;
   
@@ -127,7 +125,7 @@ struct pass_traits<Closure<Fun>> {
   }
   
   static constexpr bool nontrivial = true;
-};
+};*/
 
 }
 

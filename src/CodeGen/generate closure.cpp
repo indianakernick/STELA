@@ -62,13 +62,8 @@ template <>
 llvm::Function *stela::genFn<PFGI::clo_bool>(InstData data, ast::FuncType *clo) {
   llvm::LLVMContext &ctx = data.mod->getContext();
   llvm::Type *type = generateType(ctx, clo);
-  llvm::FunctionType *sig = llvm::FunctionType::get(
-    llvm::Type::getInt1Ty(ctx), {type->getPointerTo()}, false
-  );
-  llvm::Function *func = makeInternalFunc(data.mod, sig, "clo_bool");
-  func->addParamAttr(0, llvm::Attribute::NonNull);
-  func->addParamAttr(0, llvm::Attribute::ReadOnly);
-  func->addAttribute(0, llvm::Attribute::ZExt);
+  llvm::Function *func = makeInternalFunc(data.mod, boolFor(type), "clo_bool");
+  assignBoolAttrs(func);
   FuncBuilder builder{func};
   
   /*

@@ -36,6 +36,9 @@ llvm::IntegerType *getType(llvm::LLVMContext &ctx) {
   return getSizedType<sizeof(Int)>(ctx);
 }
 
+/// Integer type with the given size
+llvm::IntegerType *getSizedType(llvm::LLVMContext &ctx, size_t);
+
 /// Integer for storing length of array
 llvm::IntegerType *lenTy(llvm::LLVMContext &);
 /// Integer for storing reference count

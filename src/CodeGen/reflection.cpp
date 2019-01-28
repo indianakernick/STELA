@@ -18,3 +18,7 @@ std::string stela::mangledName(const std::string_view name) {
   ++index;
   return mangled;
 }
+
+std::string stela::mangledName(const std::string &name) {
+  return mangledName(std::string_view{name.data(), name.size()});
+}

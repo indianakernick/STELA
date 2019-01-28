@@ -39,7 +39,9 @@ public:
     //   the struct is nontrivial
     cat = TypeCat::nontrivial;
   }
-  // @TODO check for user types
+  void visit(ast::UserType &) override {
+    cat = TypeCat::nontrivial;
+  }
 
   TypeCat cat;
 };

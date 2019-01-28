@@ -123,6 +123,25 @@ void ExprLookup::member(const sym::Name &name) {
   stack.pushMember(name);
 }
 
+template <typename FieldType>
+void ExprLookup::lookupField(
+  FieldType *strut,
+  ast::TypePtr type,
+  const sym::Name &name,
+  ast::MemberIdent &mem
+) {
+  for (size_t f = 0; f != strut->fields.size(); ++f) {
+    const auto &field = strut->fields[f];
+    if (field.name == name) {
+      stack.pushMemberExpr(field.type);
+      mem.index = static_cast<uint32_t>(f);
+      mem.exprType = field.type;
+      return;
+    }
+  }
+  ctx.log.error(mem.loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
+}
+
 void ExprLookup::lookupMember(ast::MemberIdent &mem) {
   if (stack.memVarExpr(ExprKind::expr)) {
     ast::TypePtr type = stack.popExpr().type;
@@ -132,16 +151,9 @@ void ExprLookup::lookupMember(ast::MemberIdent &mem) {
       ctx.log.error(mem.loc) << "Cannot access field \"" << name << "\" of void expression" << fatal;
     }
     if (auto strut = dynamic_pointer_cast<ast::StructType>(concType)) {
-      for (size_t f = 0; f != strut->fields.size(); ++f) {
-        const ast::Field &field = strut->fields[f];
-        if (field.name == name) {
-          stack.pushMemberExpr(field.type);
-          mem.index = static_cast<uint32_t>(f);
-          mem.exprType = field.type;
-          return;
-        }
-      }
-      ctx.log.error(mem.loc) << "No field \"" << name << "\" found in " << typeDesc(type) << fatal;
+      lookupField(strut.get(), std::move(type), name, mem);
+    } else if (auto user = dynamic_pointer_cast<ast::UserType>(concType)) {
+      lookupField(user.get(), std::move(type), name, mem);
     } else {
       ctx.log.error(mem.loc) << "Cannot access field \"" << name << "\" of " << typeDesc(type) << fatal;
     }

@@ -37,11 +37,13 @@ llvm::Function *declareCFunc(llvm::Module *, llvm::FunctionType *, const llvm::T
 llvm::FunctionType *unaryCtorFor(llvm::Type *);
 llvm::FunctionType *binaryCtorFor(llvm::Type *);
 llvm::FunctionType *compareFor(llvm::Type *);
+llvm::FunctionType *boolFor(llvm::Type *);
 
 void assignUnaryCtorAttrs(llvm::Function *);
 void assignBinaryAliasCtorAttrs(llvm::Function *);
 void assignBinaryCtorAttrs(llvm::Function *);
 void assignCompareAttrs(llvm::Function *);
+void assignBoolAttrs(llvm::Function *);
 
 llvm::Constant *constantFor(llvm::Type *, uint64_t);
 llvm::Constant *constantFor(llvm::Value *, uint64_t);

@@ -268,7 +268,14 @@ public:
   }
 
   bool convertibleToBool(const ast::TypePtr &type) {
-    return dynamic_cast<ast::FuncType *>(type.get());
+    ast::TypePtr concrete = lookupConcreteType(ctx, type);
+    if (dynamic_cast<ast::FuncType *>(concrete.get())) {
+      return true;
+    } else if (auto *usr = dynamic_cast<ast::UserType *>(concrete.get())) {
+      return usr->boolConv.addr != ast::UserCtor::none;
+    } else {
+      return false;
+    }
   }
 
   sym::ExprType visitExprNoCheckBool(const ast::ExprPtr &expr, const ast::TypePtr &type) {

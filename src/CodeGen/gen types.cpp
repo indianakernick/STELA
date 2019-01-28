@@ -9,6 +9,7 @@
 #include "gen types.hpp"
 
 #include <llvm/IR/Constants.h>
+#include "Utils/unreachable.hpp"
 #include <llvm/IR/DerivedTypes.h>
 
 using namespace stela;
@@ -36,6 +37,17 @@ llvm::IntegerType *stela::getSizedType<8>(llvm::LLVMContext &ctx) {
 template <>
 llvm::IntegerType *stela::getSizedType<16>(llvm::LLVMContext &ctx) {
   return llvm::Type::getInt128Ty(ctx);
+}
+
+llvm::IntegerType *stela::getSizedType(llvm::LLVMContext &ctx, const size_t size) {
+  switch (size) {
+    case 1: return getSizedType<1>(ctx);
+    case 2: return getSizedType<2>(ctx);
+    case 4: return getSizedType<4>(ctx);
+    case 8: return getSizedType<8>(ctx);
+    case 16: return getSizedType<16>(ctx);
+  }
+  UNREACHABLE();
 }
 
 llvm::IntegerType *stela::lenTy(llvm::LLVMContext &ctx) {

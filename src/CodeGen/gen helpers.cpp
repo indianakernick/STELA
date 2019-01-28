@@ -83,6 +83,14 @@ llvm::FunctionType *stela::compareFor(llvm::Type *type) {
   );
 }
 
+llvm::FunctionType *stela::boolFor(llvm::Type *type) {
+  return llvm::FunctionType::get(
+    llvm::Type::getInt1Ty(type->getContext()),
+    {type->getPointerTo()},
+    false
+  );
+}
+
 void stela::assignUnaryCtorAttrs(llvm::Function *func) {
   func->addFnAttr(llvm::Attribute::NoRecurse);
   func->addParamAttr(0, llvm::Attribute::NonNull);
@@ -105,6 +113,12 @@ void stela::assignCompareAttrs(llvm::Function *func) {
   func->addParamAttr(0, llvm::Attribute::ReadOnly);
   func->addParamAttr(1, llvm::Attribute::ReadOnly);
   func->addFnAttr(llvm::Attribute::ReadOnly);
+}
+
+void stela::assignBoolAttrs(llvm::Function *func) {
+  assignUnaryCtorAttrs(func);
+  func->addParamAttr(0, llvm::Attribute::ReadOnly);
+  func->addAttribute(0, llvm::Attribute::ZExt);
 }
 
 llvm::Constant *stela::constantFor(llvm::Type *type, const uint64_t value) {

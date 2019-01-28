@@ -44,6 +44,10 @@ llvm::Value *CompareExpr::eq(ast::Type *type, gen::Expr lhs, gen::Expr rhs) {
     return ir.CreateCall(inst.get<PFGI::clo_eq>(clo), {lhs.obj, rhs.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::srt_eq>(srt), {lhs.obj, rhs.obj});
+  } else if (auto *usr = dynamic_cast<ast::UserType *>(concrete)) {
+    assert(usr->eq.addr != ast::UserCtor::none);
+    assert(usr->eq.addr != ast::UserCtor::trivial);
+    return ir.CreateCall(inst.get<PFGI::usr_eq>(usr), {lhs.obj, rhs.obj});
   } else {
     UNREACHABLE();
   }
@@ -63,6 +67,10 @@ llvm::Value *CompareExpr::lt(ast::Type *type, gen::Expr lhs, gen::Expr rhs) {
     return ir.CreateCall(inst.get<PFGI::clo_lt>(clo), {lhs.obj, rhs.obj});
   } else if (auto *srt = dynamic_cast<ast::StructType *>(concrete)) {
     return ir.CreateCall(inst.get<PFGI::srt_lt>(srt), {lhs.obj, rhs.obj});
+  } else if (auto *usr = dynamic_cast<ast::UserType *>(concrete)) {
+    assert(usr->lt.addr != ast::UserCtor::none);
+    assert(usr->lt.addr != ast::UserCtor::trivial);
+    return ir.CreateCall(inst.get<PFGI::usr_lt>(usr), {lhs.obj, rhs.obj});
   } else {
     UNREACHABLE();
   }

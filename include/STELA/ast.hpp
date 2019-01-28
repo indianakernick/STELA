@@ -163,8 +163,30 @@ struct UserField {
 };
 using UserFields = std::vector<UserField>;
 
+struct UserCtor {
+  static constexpr uint64_t none = 0;
+  static constexpr uint64_t trivial = 1;
+  
+  uint64_t addr = none;
+  std::string name;
+};
+
+// @TODO I don't like the name User. Maybe use Class instead
+
 struct UserType final : Type {
   UserFields fields;
+  size_t size;
+  size_t align;
+  
+  UserCtor dtor;
+  UserCtor defCtor;
+  UserCtor copCtor;
+  UserCtor copAsgn;
+  UserCtor movCtor;
+  UserCtor movAsgn;
+  UserCtor eq;
+  UserCtor lt;
+  UserCtor boolConv;
   
   void accept(Visitor &) override;
 };
@@ -549,6 +571,7 @@ public:
   virtual void visit(FuncType &) {}
   virtual void visit(NamedType &) {}
   virtual void visit(StructType &) {}
+  virtual void visit(UserType &) {}
   
   // expressions
   virtual void visit(BinaryExpr &) {}

@@ -49,6 +49,7 @@ public:
   }
   
 private:
+  // @TODO seriously, we need ast::Type uniquing
   using FuncMap = std::unordered_map<llvm::Type *, llvm::Function *>;
 
   llvm::Module *module;

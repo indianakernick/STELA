@@ -24,6 +24,7 @@
 		450E329620E89D6100F222F1 /* parse litr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 450E328B20E89C9500F222F1 /* parse litr.cpp */; };
 		4514ED5C21FC3A010072F9BA /* binding.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4514ED5B21FC3A010072F9BA /* binding.cpp */; };
 		4514ED6721FE78B40072F9BA /* reflection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4514ED6621FE78B40072F9BA /* reflection.cpp */; };
+		4514ED6921FEBE200072F9BA /* generate class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4514ED6821FEBE200072F9BA /* generate class.cpp */; };
 		4525048D21E83876004AE038 /* gen helpers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525048B21E83876004AE038 /* gen helpers.cpp */; };
 		4525049021E83C16004AE038 /* generate array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525048E21E83C16004AE038 /* generate array.cpp */; };
 		4525049321E83D40004AE038 /* generate struct.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4525049121E83D40004AE038 /* generate struct.cpp */; };
@@ -328,6 +329,7 @@
 		4514ED6421FD93AA0072F9BA /* native functions.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "native functions.hpp"; sourceTree = "<group>"; };
 		4514ED6521FE64C60072F9BA /* meta.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = meta.hpp; sourceTree = "<group>"; };
 		4514ED6621FE78B40072F9BA /* reflection.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = reflection.cpp; sourceTree = "<group>"; };
+		4514ED6821FEBE200072F9BA /* generate class.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate class.cpp"; sourceTree = "<group>"; };
 		4525048B21E83876004AE038 /* gen helpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen helpers.cpp"; sourceTree = "<group>"; };
 		4525048C21E83876004AE038 /* gen helpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen helpers.hpp"; sourceTree = "<group>"; };
 		4525048E21E83C16004AE038 /* generate array.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate array.cpp"; sourceTree = "<group>"; };
@@ -623,6 +625,7 @@
 				4525049C21E993B6004AE038 /* generate builtin.cpp */,
 				455EDB7121EB0BFB00B7278E /* generate closure.cpp */,
 				450DA3A321ED4B950012574A /* generate closure.hpp */,
+				4514ED6821FEBE200072F9BA /* generate class.cpp */,
 			);
 			name = Functions;
 			sourceTree = "<group>";
@@ -1275,6 +1278,7 @@
 				454B744121C0EB4900BB4BD0 /* optimize module.cpp in Sources */,
 				45C7FADF21C74D9100995B7D /* gen types.cpp in Sources */,
 				4572CAB0210EFDFE00EA1A56 /* symbols.cpp in Sources */,
+				4514ED6921FEBE200072F9BA /* generate class.cpp in Sources */,
 				4514ED5C21FC3A010072F9BA /* binding.cpp in Sources */,
 				45C7FAE521D1F3CA00995B7D /* lifetime exprs.cpp in Sources */,
 				45816F6221B3583D00712CA3 /* generate func.cpp in Sources */,

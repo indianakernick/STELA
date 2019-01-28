@@ -3014,11 +3014,11 @@ struct stela::reflect<Dir> {
   STELA_REFLECT(Dir);
   STELA_ENUM_TYPE();
   STELA_DECLS(
-    STELA_ENUM_CASE(Dir_up, up),
+    STELA_ENUM_CASE(Dir_up,    up),
     STELA_ENUM_CASE(Dir_right, right),
-    STELA_ENUM_CASE(Dir_down, down),
-    STELA_ENUM_CASE(Dir_left, left),
-    STELA_ENUM_CASE(Dir_none, none)
+    STELA_ENUM_CASE(Dir_down,  down),
+    STELA_ENUM_CASE(Dir_left,  left),
+    STELA_ENUM_CASE(Dir_none,  none)
   );
 };
 
@@ -3056,14 +3056,14 @@ TEST(External_func, Enums) {
   
   auto opposite = GET_FUNC("opposite", Dir(Dir));
   
-  EXPECT_EQ(opposite(Dir::up), Dir::down);
+  EXPECT_EQ(opposite(Dir::up),    Dir::down);
   EXPECT_EQ(opposite(Dir::right), Dir::left);
-  EXPECT_EQ(opposite(Dir::down), Dir::up);
-  EXPECT_EQ(opposite(Dir::left), Dir::right);
-  EXPECT_EQ(opposite(Dir::none), Dir::none);
+  EXPECT_EQ(opposite(Dir::down),  Dir::up);
+  EXPECT_EQ(opposite(Dir::left),  Dir::right);
+  EXPECT_EQ(opposite(Dir::none),  Dir::none);
 }
 
-/*struct Vec2 {
+struct Vec2 {
   Real x, y;
   
   Real mag() const {
@@ -3074,16 +3074,165 @@ TEST(External_func, Enums) {
     y += other.y;
   }
   
-  STELA_REFLECT_ANON(Vec2);
-  STELA_FIELDS(
+  STELA_REFLECT(Vec2);
+  STELA_CLASS(
     STELA_FIELD(x),
     STELA_FIELD(y)
   );
-  STELA_METHODS(
+  STELA_DECLS(
     STELA_METHOD(mag),
     STELA_METHOD(add)
   );
-};*/
+};
+
+//struct Vec2 {
+//  Real x, y;
+//
+//  Real mag() const {
+//    return std::sqrt(x*x + y*y);
+//  }
+//  void add(const Vec2 other) {
+//    x += other.x;
+//    y += other.y;
+//  }
+//
+//  static constexpr std::string_view reflected_name = "Vec2";
+//  static inline const auto reflected_type = stela::Class{
+//    class_tag_t<Vec2>{},
+//    stela::Field<&Vec2::x>{"x"},
+//    stela::Field<&Vec2::y>{"y"}
+//  };
+//  static inline const auto reflected_decl = stela::Decls{
+//    stela::Method<&Vec2::mag>{"mag"},
+//    stela::Method<&Vec2::add>{"add"}
+//  };
+//};
+
+TEST(External_func, User_type) {
+  const char *source = R"(
+    import glm;
+  
+    extern func test(v: Vec2) {
+      var three_four: Vec2;
+      three_four.x = 3.0;
+      three_four.y = 4.0;
+      v.add(three_four);
+      return v.mag();
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  
+  AST lib;
+  lib.name = "glm";
+  Reflector refl;
+  refl.reflectType<Vec2>();
+  refl.appendDeclsTo(lib.global);
+  asts.push_back(lib);
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto test = GET_FUNC("test", Real(Vec2));
+  
+  EXPECT_EQ(test(Vec2{0.0f, 0.0f}), 5.0f);
+  EXPECT_EQ(test(Vec2{2.0f, 8.0f}), 13.0f);
+  EXPECT_EQ(test(Vec2{4.0f, 20.0f}), 25.0f);
+}
+
+} // namespace
+
+template <>
+struct reflect<std::shared_ptr<int>> {
+  STELA_REFLECT_NAME(std::shared_ptr<int>, SharedInt);
+  STELA_CLASS();
+  STELA_DECLS(
+    STELA_METHOD(get)
+  );
+};
+
+template <>
+struct reflect<int *> {
+  STELA_REFLECT_NAME(int *, IntPtr);
+  STELA_PRIMITIVE(Opaq);
+};
+
+namespace {
+
+TEST(External_func, Shared_ptr) {
+  const char *source = R"(
+    import memory;
+  
+    extern func identity(ptr: SharedInt) {
+      return ptr;
+    }
+  
+    extern func getOr(ptr: SharedInt, value: sint) {
+      var copy = identity(ptr);
+      if (copy) {
+        return load_ptr(copy.get());
+      } else {
+        return value;
+      }
+    }
+  
+    extern func getNull() {
+      var null: SharedInt;
+      return null;
+    }
+  )";
+  
+  Symbols syms = initModules(log());
+  ASTs asts;
+  asts.push_back(createAST(source, log()));
+  
+  AST lib;
+  lib.name = "memory";
+  Reflector refl;
+  refl.reflectType<std::shared_ptr<int>>();
+  refl.reflectPlainFunc("load_ptr", +[](int *ptr) noexcept {
+    assert(ptr);
+    return *ptr;
+  });
+  refl.appendDeclsTo(lib.global);
+  asts.push_back(lib);
+  
+  const ModuleOrder order = findModuleOrder(asts, log());
+  compileModules(syms, order, asts, log());
+  llvm::ExecutionEngine *engine = generate(syms, log());
+  
+  auto identity = GET_FUNC("identity", std::shared_ptr<int>(std::shared_ptr<int>));
+  
+  auto ptr = std::make_shared<int>(5);
+  EXPECT_EQ(ptr.use_count(), 1);
+  auto copy = identity(ptr);
+  EXPECT_EQ(ptr.use_count(), 2);
+  EXPECT_EQ(ptr, copy);
+  EXPECT_EQ(*ptr, 5);
+  
+  auto getOr = GET_FUNC("getOr", int(std::shared_ptr<int>, int));
+  
+  auto ten = std::make_shared<int>(10);
+  EXPECT_EQ(ten.use_count(), 1);
+  int ret = getOr(ten, 45);
+  EXPECT_EQ(ret, 10);
+  EXPECT_EQ(ten.use_count(), 1);
+  
+  std::shared_ptr<int> null;
+  EXPECT_EQ(null.use_count(), 0);
+  ret = getOr(null, 7);
+  EXPECT_EQ(ret, 7);
+  EXPECT_EQ(null.use_count(), 0);
+  
+  auto getNull = GET_FUNC("getNull", std::shared_ptr<int>());
+  
+  std::shared_ptr<int> nullPtr = getNull();
+  EXPECT_EQ(nullPtr.use_count(), 0);
+  EXPECT_FALSE(nullPtr);
+}
 
 #undef EXPECT_FAILS
 #undef EXPECT_SUCCEEDS

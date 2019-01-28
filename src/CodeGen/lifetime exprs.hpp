@@ -44,6 +44,7 @@ private:
   llvm::IRBuilder<> &ir;
   
   llvm::ConstantInt *objectSize(llvm::Value *);
+  void triviallyCopy(size_t, size_t, llvm::Value *, llvm::Value *);
 };
 
 }

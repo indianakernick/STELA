@@ -57,6 +57,7 @@ add_library(STELA STATIC
     "src/CodeGen/generate builtin.cpp"
     "src/CodeGen/generate closure.cpp"
     "src/CodeGen/generate closure.hpp"
+    "src/CodeGen/generate class.cpp"
     "src/CodeGen/categories.cpp"
     "src/CodeGen/categories.hpp"
     "src/CodeGen/lifetime exprs.cpp"

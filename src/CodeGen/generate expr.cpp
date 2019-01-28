@@ -65,9 +65,14 @@ public:
       }
     }
     
-    auto *funcType = concreteType<ast::FuncType>(exprType);
-    assert(funcType);
-    llvm::Function *conv = ctx.inst.get<PFGI::clo_bool>(funcType);
+    ast::Type *concrete = concreteType(exprType);
+    llvm::Function *conv = nullptr;
+    if (auto *funcType = dynamic_cast<ast::FuncType *>(concrete)) {
+      conv = ctx.inst.get<PFGI::clo_bool>(funcType);
+    } else if (auto *userType = dynamic_cast<ast::UserType *>(concrete)) {
+      conv = ctx.inst.get<PFGI::usr_bool>(userType);
+    }
+    assert(conv);
     llvm::Value *boolValue = builder.ir.CreateCall(conv, {expr.obj});
     if (expr.cat == ValueCat::prvalue) {
       lifetime.destroy(exprType, expr.obj);
@@ -372,7 +377,7 @@ public:
     std::vector<Object> dtors;
     dtors.resize(1 + call.args.size());
     if (func->receiver.type) {
-      ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get());
+      ast::Expression *self = assertDownCast<ast::MemberIdent>(call.func.get())->object.get();
       ast::ParamType &rec = func->receiver;
       args.push_back(visitParam(rec.type.get(), rec.ref, self, &dtors[0]));
     }
@@ -413,7 +418,25 @@ public:
   void visit(ast::MemberIdent &mem) override {
     llvm::Value *resultAddr = result;
     llvm::Value *object = materialize(mem.object.get());
-    value = builder.ir.CreateStructGEP(object, mem.index);
+    ast::Type *objectType = concreteType(mem.object->exprType.get());
+    if (auto *strut = dynamic_cast<ast::StructType *>(objectType)) {
+      value = builder.ir.CreateStructGEP(object, mem.index);
+    } else if (auto *user = dynamic_cast<ast::UserType *>(objectType)) {
+      llvm::Type *byteTy = builder.ir.getInt8Ty();
+      llvm::Type *bytePtrTy = byteTy->getPointerTo();
+      llvm::Value *bytePtr = builder.ir.CreatePointerCast(object, bytePtrTy);
+      ast::UserField &field = user->fields[mem.index];
+      auto offset = static_cast<unsigned>(field.offset);
+      llvm::Value *fieldBytePtr = builder.ir.CreateConstInBoundsGEP1_32(
+        byteTy, bytePtr, offset
+      );
+      //llvm::Value *fieldBytePtr = builder.ir.CreateStructGEP(bytePtr, offset);
+      llvm::Type *fieldTy = generateType(ctx.llvm, field.type.get());
+      llvm::Type *fieldPtrTy = fieldTy->getPointerTo();
+      value = builder.ir.CreatePointerCast(fieldBytePtr, fieldPtrTy);
+    } else {
+      UNREACHABLE();
+    }
     constructResultFromValue(resultAddr, &mem);
   }
   

@@ -66,6 +66,10 @@ public:
     }
     llvmType = llvm::StructType::get(ctx, elems);
   }
+  void visit(ast::UserType &type) override {
+    const size_t elems = type.size / type.align;
+    llvmType = llvm::ArrayType::get(getSizedType(ctx, type.align), elems);
+  }
   
   llvm::Type *llvmType = nullptr;
   

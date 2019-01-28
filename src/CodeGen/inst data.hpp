@@ -33,6 +33,7 @@ struct Type;
 struct ArrayType;
 struct FuncType;
 struct StructType;
+struct UserType;
 
 }
 
@@ -109,6 +110,16 @@ enum class PFGI : size_t {
   clo_mov_asgn,
   clo_eq,
   clo_lt,
+  
+  usr_dtor,
+  usr_def_ctor,
+  usr_cop_ctor,
+  usr_cop_asgn,
+  usr_mov_ctor,
+  usr_mov_asgn,
+  usr_eq,
+  usr_lt,
+  usr_bool,
   
   count_
 };

@@ -41,6 +41,7 @@ ACCEPT(ArrayType)
 ACCEPT(FuncType)
 ACCEPT(NamedType)
 ACCEPT(StructType)
+ACCEPT(UserType)
 
 ACCEPT(BinaryExpr)
 ACCEPT(UnaryExpr)
