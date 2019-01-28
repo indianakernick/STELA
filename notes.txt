@@ -175,87 +175,6 @@ the other?
 
 --------------------------------------------------------------------------------
 
-think about the rules for function overloading and shadowing. Overload across modules?
-should mutability be part of the type system properly? What we have now just lets use make variables constant
-deal with user types void *
-functional switch
-cache some stuff in the AST. Benchmark
-consider using ORC
-help optimizer with switch on global let
-trivially relocatable optimizations
-
-This is could be part of the standard library
-func (self: sint) to_string() -> [char]
-
-
-
-
-
-
-
-
-USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
-
-
-
-
-
-
-
-
-deduce the type of InitList in all places that C++ can
-a closure can capture the array that contains it
-if closure creates wrapper functions for storing function pointers,
-  the wrapped function will be inlined and calls directly to the wrapped
-  function will be faster
-  can we inline a particular function call?
-use memcmp when possible
-optimize for trivially copyable structs that fit in registers
-treat the return parameter as an lvalue (NRVO)
-maybe ast::Type uniquing?
-maybe we shouldn't inline so aggressively
-swap operator? :=:
-expose reference counted pointers
-arrays should be value types
-cref
-  maybe cref could be a little smarter than const &
-  for generic programming, it would be really handy if cref sint just passed
-  sint by value.
-  cref can bind to an rvalue like it can in C++
-
-separate function signature from functions, lambdas and function types
-  there are a lot of functions that only need to know the function signature
-  but actually take sym::FuncParams or ast::Func.
-  This is a mess!
-consistent naming
-  Type -> Ty
-
-is ptr_union a good idea?
-  we can remove a few dynamic casts
-  malloc returns a pointer with alignment of std::max_align_t
-
-range for loops might speed up iteration
-
-IDE extensions
-  pretty printing
-  syntax highlighing
-  separate the two
-  intellisense
-  
-Have a look at Wren and Crystal
-
-Write some programs to benchmark the compiler and language
-  Project Euler
-  Computer Language Benchmarks Game
-  Physics simulation
-  Genetic algorithm
-
-Use a stack allocator for the AST
-
-64 bit floats and ints
-
---------------------------------------------------------------------------------
-
 Iterators know when they have reached their end
   A pseudo random number generator could have an interface like an iterator
   This would allow you to do something like std::copy to fill an array with
@@ -353,4 +272,90 @@ the compiler must determine
   whether a trait is a subset of another (when a generic function calls another
   generic function)
 
+--------------------------------------------------------------------------------
+
+think about the rules for function overloading and shadowing. Overload across modules?
+should mutability be part of the type system properly? What we have now just lets use make variables constant
+deal with user types void *
+functional switch
+cache some stuff in the AST. Benchmark
+consider using ORC
+help optimizer with switch on global let
+trivially relocatable optimizations
+
+This is could be part of the standard library
+func (self: sint) to_string() -> [char]
+
+
+
+
+
+
+
+
+USE A STELA SCRIPT TO DEFINE A VECTOR SPRITE
+
+
+
+
+
+
+
+
+deduce the type of InitList in all places that C++ can
+a closure can capture the array that contains it
+if closure creates wrapper functions for storing function pointers,
+  the wrapped function will be inlined and calls directly to the wrapped
+  function will be faster
+  can we inline a particular function call?
+use memcmp when possible
+optimize for trivially copyable structs that fit in registers
+treat the return parameter as an lvalue (NRVO)
+maybe ast::Type uniquing?
+maybe we shouldn't inline so aggressively
+swap operator? :=:
+expose reference counted pointers
+arrays should be value types
+cref
+  maybe cref could be a little smarter than const &
+  for generic programming, it would be really handy if cref sint just passed
+  sint by value.
+  cref can bind to an rvalue like it can in C++
+
+separate function signature from functions, lambdas and function types
+  there are a lot of functions that only need to know the function signature
+  but actually take sym::FuncParams or ast::Func.
+  This is a mess!
+consistent naming
+  Type -> Ty
+
+is ptr_union a good idea?
+  we can remove a few dynamic casts
+  malloc returns a pointer with alignment of std::max_align_t
+
+range for loops might speed up iteration
+
+IDE extensions
+  pretty printing
+  syntax highlighing
+  separate the two
+  intellisense
+
+Have a look at Wren and Crystal
+
+Write some programs to benchmark the compiler and language
+  Project Euler
+  Computer Language Benchmarks Game
+  Physics simulation
+  Genetic algorithm
+
+Use a stack allocator for the AST
+
+64 bit floats and ints
 convert call to reg.view{A, B}() to runtime view invokation
+a string type that is optionally owning
+  useful for concatenting strings in reflection
+  char *data, size_t size
+    using bit in data pointer to determine view vs own
+  char *data, size_t size, size_t cap
+    using cap == 0 to determine view vs own
