@@ -21,7 +21,7 @@ struct ClosureFunWrapParamRet {
   using pass_type = typename pass_traits<Param>::type;
   
   static void call(ClosureData *, pass_type<Params>... params, Ret *ret) noexcept {
-    new (ret) Ret{FunPtr(pass_traits<Ret>::wrap(params)...)};
+    new (ret) Ret{FunPtr(pass_traits<Params>::wrap(params)...)};
   }
 };
 
@@ -47,7 +47,7 @@ struct FunctionWrapParamRet {
   using pass_type = typename pass_traits<Param>::type;
   
   static void call(pass_type<Params>... params, Ret *ret) noexcept {
-    new (ret) Ret{FunPtr(pass_traits<Ret>::wrap(params)...)};
+    new (ret) Ret{FunPtr(pass_traits<Params>::wrap(params)...)};
   }
 };
 
@@ -58,7 +58,7 @@ struct FunctionWrapNormalRet {
   
   static pass_type<Ret> call(pass_type<Params>... params) noexcept {
     if constexpr (std::is_void_v<Ret>) {
-      FunPtr(pass_traits<Ret>::wrap(params)...);
+      FunPtr(pass_traits<Params>::wrap(params)...);
     } else {
       return pass_traits<Ret>::unwrap(
         FunPtr(pass_traits<Params>::wrap(params)...)
@@ -73,7 +73,7 @@ struct MethodWrapParamRet {
   using pass_type = typename pass_traits<Param>::type;
   
   static void call(Class &rec, pass_type<Params>... params, Ret *ret) noexcept {
-    new (ret) Ret{(rec.*MemFunPtr)(pass_traits<Ret>::wrap(params)...)};
+    new (ret) Ret{(rec.*MemFunPtr)(pass_traits<Params>::wrap(params)...)};
   }
 };
 

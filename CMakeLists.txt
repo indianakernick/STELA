@@ -87,6 +87,7 @@ add_library(STELA STATIC
     "src/CodeGen/gen types.cpp"
     "src/CodeGen/gen types.hpp"
     "src/CodeGen/binding.cpp"
+    "src/CodeGen/reflection.cpp"
     "src/Semantic/semantic analysis.cpp"
     "src/Semantic/modules.cpp"
     "src/Semantic/ast.cpp"

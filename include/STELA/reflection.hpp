@@ -36,7 +36,7 @@ struct reflect<Closure<Sig>> {
   template <>                                                                   \
   struct reflect<TYPE> {                                                        \
     static constexpr std::string_view reflected_name = "";                      \
-    static inline const auto reflected_type = bnd::Primitive<TYPE>{};                \
+    static inline const auto reflected_type = bnd::Primitive<TYPE>{};           \
   }
 
 REFLECT_PRIMITIVE(Void);
@@ -83,7 +83,7 @@ REFLECT_PRIMITIVE(Uint);
 #define STELA_METHOD(MEMBER)                                                    \
   STELA_METHOD_NAME(MEMBER, MEMBER)
 #define STELA_METHOD_NAME_SIG(MEMBER, NAME, SIGNATURE)                          \
-  stela::Method<stela::overload_mem<SIGNATURE>(&reflected_typedef::MEMBER)>{#NAME}
+  stela::bnd::Method<stela::overload_mem<SIGNATURE>(&reflected_typedef::MEMBER)>{#NAME}
 #define STELA_METHOD_SIG(MEMBER, SIGNATURE)                                     \
   STELA_METHOD_NAME_SIG(MEMBER, MEMBER, SIGNATURE)
   

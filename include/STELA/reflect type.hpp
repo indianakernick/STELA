@@ -203,7 +203,7 @@ template <typename Sig>
 struct Closure {
   ast::TypePtr get(ReflectionState &state) const noexcept {
     auto closure = make_retain<ast::FuncType>();
-    detail::write_sig<Sig, false>::write(*closure, state);
+    detail::write_sig<Sig *, false>::write(*closure, state);
     return closure;
   }
 };

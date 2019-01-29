@@ -73,3 +73,11 @@ llvm::ExecutionEngine *stela::generateCode(
   
   return engine;
 }
+
+llvm::ExecutionEngine *stela::generateCode(
+  const Symbols &syms,
+  LogSink &sink,
+  const OptFlags flags
+) {
+  return generateCode(generateIR(syms, sink), sink, flags);
+}

@@ -127,7 +127,12 @@ llvm::FunctionType *stela::generateSig(llvm::LLVMContext &ctx, const ast::ExtFun
     params.push_back(convertParam(ctx, param));
   }
   llvm::Type *ret = generateType(ctx, func.ret.get());
-  return llvm::FunctionType::get(ret, params, false);
+  if (classifyType(func.ret.get()) == TypeCat::trivially_copyable) {
+    return llvm::FunctionType::get(ret, params, false);
+  } else {
+    params.push_back(ret->getPointerTo());
+    return llvm::FunctionType::get(voidTy(ctx), params, false);
+  }
 }
 
 Signature stela::getSignature(const ast::Func &func) {

@@ -46,10 +46,19 @@ void stela::compileModule(Symbols &syms, AST &ast, LogSink &sink) {
   checkScopes(log, syms);
 }
 
+void stela::compileModule(Symbols &syms, std::string_view source, LogSink &sink) {
+  AST ast = createAST(source, sink);
+  compileModule(syms, ast, sink);
+}
+
 void stela::compileModules(Symbols &syms, const ModuleOrder &order, ASTs &asts, LogSink &sink) {
   Log log{sink, LogCat::semantic};
   for (const size_t index : order) {
     compileModuleImpl(syms, asts[index], log);
   }
   checkScopes(log, syms);
+}
+
+void stela::compileModules(Symbols &syms, ASTs &asts, LogSink &sink) {
+  compileModules(syms, findModuleOrder(asts, sink), asts, sink);
 }

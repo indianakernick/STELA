@@ -72,7 +72,7 @@ void LifetimeExpr::copyConstruct(ast::Type *type, llvm::Value *dst, llvm::Value 
   } else if (auto *usr = dynamic_cast<ast::UserType *>(concrete)) {
     assert(usr->copCtor.addr != ast::UserCtor::none); // @TODO deal with this in semantic analysis
     if (usr->copCtor.addr == ast::UserCtor::trivial) {
-      triviallyCopy(usr->size, usr->size, dst, src);
+      triviallyCopy(usr->size, usr->align, dst, src);
     } else {
       ir.CreateCall(inst.get<PFGI::usr_cop_ctor>(usr), {dst, src});
     }

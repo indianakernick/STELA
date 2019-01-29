@@ -189,7 +189,7 @@ public:
     const sym::ExprType src = getExprType(ctx, as.src, dst.type);
     if (auto builtinLeft = lookupConcrete<ast::BtnType>(ctx, dst.type)) {
       if (auto builtinRight = lookupConcrete<ast::BtnType>(ctx, src.type)) {
-        assert(builtinLeft == builtinRight);
+        assert(compareTypes(ctx, builtinLeft, builtinRight));
         if (validOp(as.oper, builtinLeft)) {
           if (dst.mut == sym::ValueMut::var) {
             return;

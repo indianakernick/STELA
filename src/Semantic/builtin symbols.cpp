@@ -161,7 +161,7 @@ ast::BtnTypePtr stela::validOp(
   const ast::BtnTypePtr &lhs,
   const ast::BtnTypePtr &rhs
 ) {
-  if (lhs != rhs) {
+  if (lhs->value != rhs->value) {
     return nullptr;
   }
   assert(!isEqualOp(op));

@@ -105,28 +105,6 @@ struct pass_traits<void> {
   static constexpr bool nontrivial = false;
 };
 
-/*template <typename Elem>
-struct pass_traits<Array<Elem>> {
-  using type = ArrayStorage<Elem> *const *;
-  
-  static type unwrap(const Array<Elem> &arg) noexcept {
-    return reinterpret_cast<ArrayStorage<Elem> *const *>(&arg);
-  }
-  
-  static constexpr bool nontrivial = true;
-};
-
-template <typename Fun>
-struct pass_traits<Closure<Fun>> {
-  using type = const Closure<Fun> *;
-  
-  static type unwrap(const Closure<Fun> &arg) noexcept {
-    return &arg;
-  }
-  
-  static constexpr bool nontrivial = true;
-};*/
-
 }
 
 #endif
