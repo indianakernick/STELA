@@ -2850,11 +2850,11 @@ namespace {
 AST makeStdio() {
   AST stdio;
   stdio.name = "stdio";
-  Reflector refl;
-  refl.reflectPlainCFunc<&fopen>("fopen");
-  refl.reflectPlainCFunc<&fputs>("fputs");
-  refl.reflectPlainCFunc<&fclose>("fclose");
-  refl.appendDeclsTo(stdio.global);
+  ReflectionState state;
+  state.reflectPlainCFunc<&fopen>("fopen");
+  state.reflectPlainCFunc<&fputs>("fputs");
+  state.reflectPlainCFunc<&fclose>("fclose");
+  state.appendDeclsTo(stdio.global);
   return stdio;
 }
 
@@ -2982,11 +2982,11 @@ TEST(External_func, Simple_bind) {
   
   AST lib;
   lib.name = "library";
-  Reflector refl;
-  refl.reflectPlainFunc("calc", +[](Real r) {
+  ReflectionState state;
+  state.reflectPlainFunc("calc", +[](Real r) {
     return r * 2.0f;
   });
-  refl.appendDeclsTo(lib.global);
+  state.appendDeclsTo(lib.global);
   asts.push_back(lib);
   
   const ModuleOrder order = findModuleOrder(asts, log());
@@ -3045,9 +3045,9 @@ TEST(External_func, Enums) {
   
   AST lib;
   lib.name = "library";
-  Reflector refl;
-  refl.reflectType<Dir>();
-  refl.appendDeclsTo(lib.global);
+  ReflectionState state;
+  state.reflectType<Dir>();
+  state.appendDeclsTo(lib.global);
   asts.push_back(lib);
   
   const ModuleOrder order = findModuleOrder(asts, log());
@@ -3127,9 +3127,9 @@ TEST(External_func, User_type) {
   
   AST lib;
   lib.name = "glm";
-  Reflector refl;
-  refl.reflectType<Vec2>();
-  refl.appendDeclsTo(lib.global);
+  ReflectionState state;
+  state.reflectType<Vec2>();
+  state.appendDeclsTo(lib.global);
   asts.push_back(lib);
   
   const ModuleOrder order = findModuleOrder(asts, log());
@@ -3166,16 +3166,16 @@ struct stela::reflect<int *> {
   );
 };
 
+namespace {
+
 stela::AST makeMemoryLib() {
-  stela::Reflector refl;
-  refl.reflectType<std::shared_ptr<int>>();
+  stela::ReflectionState state;
+  state.reflectType<std::shared_ptr<int>>();
   stela::AST lib;
   lib.name = "memory";
-  refl.appendDeclsTo(lib.global);
+  state.appendDeclsTo(lib.global);
   return lib;
 }
-
-namespace {
 
 TEST(External_func, Shared_ptr) {
   const char *source = R"(
@@ -3199,11 +3199,11 @@ TEST(External_func, Shared_ptr) {
     }
   )";
   
-  Symbols syms = initModules(log());
   ASTs asts;
   asts.push_back(createAST(source, log()));
   asts.push_back(makeMemoryLib());
   
+  Symbols syms = initModules(log());
   const ModuleOrder order = findModuleOrder(asts, log());
   compileModules(syms, order, asts, log());
   llvm::ExecutionEngine *engine = generate(syms, log());
@@ -3236,6 +3236,31 @@ TEST(External_func, Shared_ptr) {
   std::shared_ptr<int> nullPtr = getNull();
   EXPECT_EQ(nullPtr.use_count(), 0);
   EXPECT_FALSE(nullPtr);
+}
+
+TEST(External_func, Globals) {
+  EXPECT_SUCCEEDS(R"(
+    extern var value = 7;
+  
+    extern func mulValue(multiplier: sint) {
+      value *= multiplier;
+    }
+  
+    extern func getValue() {
+      return value;
+    }
+  )");
+  
+  Global value = getGlobal<Sint>(engine, "value");
+  EXPECT_EQ(*value, 7);
+  
+  Function mulValue = getFunc<Void(Sint)>(engine, "mulValue");
+  mulValue(3);
+  EXPECT_EQ(*value, 21);
+  
+  Function getValue = getFunc<Sint()>(engine, "getValue");
+  EXPECT_EQ(getValue(), 21);
+  EXPECT_EQ(*value, 21);
 }
 
 #undef EXPECT_FAILS

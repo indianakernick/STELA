@@ -10,9 +10,9 @@
 #define stela_reflect_type_hpp
 
 #include <new>
-#include "reflector.hpp"
+#include "reflection state.hpp"
 
-namespace stela {
+namespace stela::bnd {
 
 template <typename Type>
 struct Primitive;
@@ -20,7 +20,7 @@ struct Primitive;
 #define PRIMITIVE(TYPE)                                                         \
   template <>                                                                   \
   struct Primitive<TYPE> {                                                      \
-    static ast::TypePtr get(Reflector &) {                                      \
+    static ast::TypePtr get(ReflectionState &) {                                \
       return make_retain<ast::BtnType>(ast::BtnTypeEnum::TYPE);                 \
     }                                                                           \
   }
@@ -141,17 +141,20 @@ void writeUserType(ast::UserType &user) noexcept {
 template <typename T>
 struct class_tag_t {};
 
+template <typename T>
+constexpr class_tag_t<T> class_tag {};
+
 template <typename Type, typename... MemTypes>
 struct Class {
   template <typename... FieldTypes>
   Class(class_tag_t<Type>, FieldTypes... fields) noexcept
     : names{fields.name...}, offsets{getOffset(fields.member)...} {}
   
-  ast::TypePtr get(Reflector &refl) const noexcept {
+  ast::TypePtr get(ReflectionState &state) const noexcept {
     auto user = make_retain<ast::UserType>();
     detail::writeUserType<Type>(*user);
     user->fields.reserve(sizeof...(MemTypes));
-    pushFields(user->fields, refl, std::make_index_sequence<sizeof...(MemTypes)>{});
+    pushFields(user->fields, state, std::make_index_sequence<sizeof...(MemTypes)>{});
     return user;
   }
 
@@ -160,13 +163,13 @@ private:
   const size_t offsets[sizeof...(MemTypes)];
   
   template <typename MemType, size_t Index>
-  ast::UserField getField(Reflector &refl) const noexcept {
-    return {names[Index], refl.getType<MemType>(), offsets[Index]};
+  ast::UserField getField(ReflectionState &state) const noexcept {
+    return {names[Index], state.getType<MemType>(), offsets[Index]};
   }
   
   template <size_t... Indicies>
-  void pushFields(ast::UserFields &fields, Reflector &refl, std::index_sequence<Indicies...>) const noexcept {
-    (fields.push_back(getField<MemTypes, Indicies>(refl)), ...);
+  void pushFields(ast::UserFields &fields, ReflectionState &state, std::index_sequence<Indicies...>) const noexcept {
+    (fields.push_back(getField<MemTypes, Indicies>(state)), ...);
   }
 };
 
@@ -174,7 +177,7 @@ template <typename Type>
 struct Class<Type> {
   Class(class_tag_t<Type>) {}
 
-  ast::TypePtr get(Reflector &) const noexcept {
+  ast::TypePtr get(ReflectionState &) const noexcept {
     auto user = make_retain<ast::UserType>();
     detail::writeUserType<Type>(*user);
     return user;
@@ -188,19 +191,19 @@ Class(class_tag_t<Type>, Field<MemPtrs>...) -> Class<
 >;
 
 template <typename Elem>
-struct ReflArray {
-  ast::TypePtr get(Reflector &refl) const noexcept {
+struct Array {
+  ast::TypePtr get(ReflectionState &state) const noexcept {
     auto array = make_retain<ast::ArrayType>();
-    array->elem = refl.getType<Elem>();
+    array->elem = state.getType<Elem>();
     return array;
   }
 };
 
 template <typename Sig>
-struct ReflClosure {
-  ast::TypePtr get(Reflector &refl) const noexcept {
+struct Closure {
+  ast::TypePtr get(ReflectionState &state) const noexcept {
     auto closure = make_retain<ast::FuncType>();
-    detail::write_sig<Sig, false>::write(*closure, refl);
+    detail::write_sig<Sig, false>::write(*closure, state);
     return closure;
   }
 };

@@ -10,9 +10,9 @@
 #define stela_reflect_decl_hpp
 
 #include <tuple>
-#include "reflector.hpp"
+#include "reflection state.hpp"
 
-namespace stela {
+namespace stela::bnd {
 
 template <typename... Types>
 struct Decls {
@@ -20,27 +20,27 @@ struct Decls {
   Decls(const DeclTypes &... decls) noexcept
     : decls{decls...} {}
   
-  void reg(Reflector &refl) const {
-    reflectDecls(refl, std::index_sequence_for<Types...>{});
+  void reg(ReflectionState &state) const {
+    reflectDecls(state, std::index_sequence_for<Types...>{});
   }
 
 private:
   std::tuple<Types...> decls;
   
   template <size_t Index>
-  void reflectDecl(Reflector &refl) const {
-    std::get<Index>(decls).reg(refl);
+  void reflectDecl(ReflectionState &state) const {
+    std::get<Index>(decls).reg(state);
   }
   
   template <size_t... Indicies>
-  void reflectDecls(Reflector &refl, std::index_sequence<Indicies...>) const {
-    (reflectDecl<Indicies>(refl), ...);
+  void reflectDecls(ReflectionState &state, std::index_sequence<Indicies...>) const {
+    (reflectDecl<Indicies>(state), ...);
   }
 };
 
 template <>
 struct Decls<> {
-  void reg(Reflector &) const {}
+  void reg(ReflectionState &) const {}
 };
 
 template <typename... Types>
@@ -51,44 +51,52 @@ template <auto MemFunPtr>
 struct Method {
   std::string_view name;
   
-  void reg(Reflector &refl) const {
-    refl.reflectMethod<MemFunPtr>(name);
+  void reg(ReflectionState &state) const {
+    state.reflectMethod<MemFunPtr>(name);
   }
 };
 
-/// A method implemented as a function pointer
-template <auto FunPtr>
-struct MethodFunc {
+template <auto FunPtr, bool Method = true>
+struct Func {
   std::string_view name;
   
-  void reg(Reflector &refl) const noexcept {
-    refl.reflectFunc<FunPtr, true>(name);
+  void reg(ReflectionState &state) const noexcept {
+    state.reflectFunc<FunPtr, Method>(name);
   }
 };
 
-template <typename Sig>
-struct MethodPlain {
+template <typename Sig, bool Method = true>
+struct PlainFunc {
   std::string_view name;
   Sig *func;
   
-  void reg(Reflector &refl) const noexcept {
-    refl.reflectPlainFunc<true>(name, func);
+  void reg(ReflectionState &state) const noexcept {
+    state.reflectPlainFunc<Method>(name, func);
   }
 };
 
+template <bool Method>
+struct method_tag_t {};
+
+template <bool Method>
+constexpr method_tag_t<Method> method_tag {};
+
 template <typename Sig>
-MethodPlain(std::string_view, Sig *) -> MethodPlain<Sig>;
+PlainFunc(std::string_view, Sig *) -> PlainFunc<Sig>;
+
+template <typename Sig, bool Method>
+PlainFunc(std::string_view, Sig *, method_tag_t<Method>) -> PlainFunc<Sig, Method>;
 
 template <typename Type, bool Strong = true>
 struct Typealias {
   std::string_view name;
   
-  void reg(Reflector &refl) const {
+  void reg(ReflectionState &state) const {
     auto alias = make_retain<ast::TypeAlias>();
     alias->name = name;
-    alias->type = refl.getType<Type>();
+    alias->type = state.getType<Type>();
     alias->strong = Strong;
-    refl.reflectDecl(alias);
+    state.reflectDecl(alias);
   }
 };
 
@@ -140,8 +148,8 @@ struct Constant {
   const std::string_view name;
   const Type value;
   
-  void reg(Reflector &refl) const {
-    refl.reflectConstant(name, makeLiteral(value));
+  void reg(ReflectionState &state) const {
+    state.reflectConstant(name, makeLiteral(value));
   }
 };
 
@@ -153,12 +161,12 @@ struct EnumConstant {
   const std::string_view name;
   const Enum value;
   
-  void reg(Reflector &refl) const {
+  void reg(ReflectionState &state) const {
     using Underlying = std::underlying_type_t<Enum>;
     auto cast = make_retain<ast::Make>();
     cast->expr = makeLiteral(static_cast<Underlying>(value));
-    cast->type = refl.getType<Enum>();
-    refl.reflectConstant(name, std::move(cast));
+    cast->type = state.getType<Enum>();
+    state.reflectConstant(name, std::move(cast));
   }
 };
 

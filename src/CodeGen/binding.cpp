@@ -13,3 +13,7 @@
 uint64_t stela::getFunctionAddress(llvm::ExecutionEngine *engine, const std::string &name) {
   return engine->getFunctionAddress(name);
 }
+
+uint64_t stela::getGlobalAddress(llvm::ExecutionEngine *engine, const std::string &name) {
+  return engine->getGlobalValueAddress(name);
+}

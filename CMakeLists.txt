@@ -36,7 +36,7 @@ add_library(STELA STATIC
     "include/STELA/meta.hpp"
     "include/STELA/reflect decl.hpp"
     "include/STELA/reflect type.hpp"
-    "include/STELA/reflector.hpp"
+    "include/STELA/reflection state.hpp"
     "src/Utils/unreachable.hpp"
     "src/Utils/assert down cast.hpp"
     "src/Utils/iterator range.hpp"

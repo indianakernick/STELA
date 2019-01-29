@@ -1,13 +1,13 @@
 //
-//  reflector.hpp
+//  reflection state.hpp
 //  STELA
 //
 //  Created by Indi Kernick on 29/1/19.
 //  Copyright © 2019 Indi Kernick. All rights reserved.
 //
 
-#ifndef stela_reflector_hpp
-#define stela_reflector_hpp
+#ifndef stela_reflection_state_hpp
+#define stela_reflection_state_hpp
 
 #include "ast.hpp"
 #include "meta.hpp"
@@ -60,12 +60,16 @@ struct with_decls<Type, std::enable_if_t<hasDecls<Type>(0)>> {
   static inline const auto &reflected_decl = Type::reflected_decl;
 };
 
+} // namespace detail
+
+namespace bnd::detail {
+
 template <typename Signature, bool Method>
 struct write_sig;
 
-} // namespace detail
+}
 
-class Reflector {
+class ReflectionState {
   template <typename Type>
   static inline const size_t typeID = TypeID<struct ReflectorFamily>::id<Type>;
 
@@ -106,7 +110,7 @@ public:
     auto func = make_retain<ast::ExtFunc>();
     func->name = name;
     func->mangledName = mangledName(name);
-    detail::write_sig<decltype(FunPtr), Method>::write(*func, *this);
+    bnd::detail::write_sig<decltype(FunPtr), Method>::write(*func, *this);
     func->impl = reinterpret_cast<uint64_t>( // Clang bug workaround :(
       &FunctionWrap<decltype(FunPtr), static_cast<decltype(FunPtr)>(FunPtr)>::type::call
     );
@@ -120,7 +124,7 @@ public:
     func->name = name;
     func->mangledName = mangledName(name);
     using Ptr = decltype(MemFunPtr);
-    detail::write_sig<typename mem_to_fun<Ptr>::type, true>::write(*func, *this);
+    bnd::detail::write_sig<typename mem_to_fun<Ptr>::type, true>::write(*func, *this);
     func->impl = reinterpret_cast<uint64_t>( // Clang bug workaround :(
       &MethodWrap<Ptr, static_cast<Ptr>(MemFunPtr)>::type::call
     );
@@ -149,7 +153,7 @@ public:
     auto func = make_retain<ast::ExtFunc>();
     func->name = name;
     func->mangledName = mangledName(name);
-    detail::write_sig<Sig *, Method>::write(*func, *this);
+    bnd::detail::write_sig<Sig *, Method>::write(*func, *this);
     func->impl = reinterpret_cast<uint64_t>(impl);
     reflectDecl(std::move(func));
   }
@@ -162,7 +166,7 @@ public:
     auto func = make_retain<ast::ExtFunc>();
     func->name = name;
     func->mangledName = mangled;
-    detail::write_sig<decltype(FunPtr), Method>::write(*func, *this);
+    bnd::detail::write_sig<decltype(FunPtr), Method>::write(*func, *this);
     reflectDecl(std::move(func));
   }
   
@@ -198,10 +202,10 @@ private:
   std::vector<ast::DeclPtr> decls;
 };
 
-namespace detail {
+namespace bnd::detail {
 
 template <typename Param>
-ast::ParamType getParamType(Reflector &refl) {
+ast::ParamType getParamType(ReflectionState &state) {
   using WithoutRef = std::remove_reference_t<Param>;
   using WithoutConst = std::remove_const_t<WithoutRef>;
   ast::ParamRef paramRef;
@@ -210,26 +214,26 @@ ast::ParamType getParamType(Reflector &refl) {
   } else {
     paramRef = ast::ParamRef::ref;
   }
-  return {paramRef, refl.getType<WithoutConst>()};
+  return {paramRef, state.getType<WithoutConst>()};
 }
 
 template <bool Noexcept, typename Class, typename Ret, typename... Params>
 struct write_sig<Ret(*)(Class, Params...) noexcept(Noexcept), true> {
   template <typename Func>
-  static void write(Func &func, Reflector &refl) {
-    func.receiver = getParamType<Class>(refl);
-    write_sig<Ret(*)(Params...) noexcept(Noexcept), false>::write(func, refl);
+  static void write(Func &func, ReflectionState &state) {
+    func.receiver = getParamType<Class>(state);
+    write_sig<Ret(*)(Params...) noexcept(Noexcept), false>::write(func, state);
   }
 };
 
 template <bool Noexcept, typename Ret, typename... Params>
 struct write_sig<Ret(*)(Params...) noexcept(Noexcept), false> {
   template <typename Func>
-  static void write(Func &func, Reflector &refl) {
+  static void write(Func &func, ReflectionState &state) {
     static_assert(!std::is_reference_v<Ret>, "Stela functions cannot return references");
-    func.ret = refl.getType<Ret>();
+    func.ret = state.getType<Ret>();
     func.params.reserve(sizeof...(Params));
-    (func.params.push_back(getParamType<Params>(refl)), ...);
+    (func.params.push_back(getParamType<Params>(state)), ...);
   }
 };
 

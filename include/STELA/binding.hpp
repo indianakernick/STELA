@@ -100,11 +100,37 @@ private:
   type *ptr;
 };
 
+template <typename Type>
+class Global {
+public:
+  using type = Type;
+
+  explicit Global(const uint64_t addr) noexcept
+    : ptr{reinterpret_cast<type *>(addr)} {}
+  
+  type &operator*() const noexcept {
+    return *ptr;
+  }
+  type *operator->() const noexcept {
+    return ptr;
+  }
+
+private:
+  type *ptr;
+};
+
 uint64_t getFunctionAddress(llvm::ExecutionEngine *, const std::string &);
 
 template <typename Sig, bool Method = false>
 auto getFunc(llvm::ExecutionEngine *engine, const std::string &name) {
   return Function<Sig, Method>{getFunctionAddress(engine, name)};
+}
+
+uint64_t getGlobalAddress(llvm::ExecutionEngine *, const std::string &);
+
+template <typename Type>
+auto getGlobal(llvm::ExecutionEngine *engine, const std::string &name) {
+  return Global<Type>{getGlobalAddress(engine, name)};
 }
 
 }

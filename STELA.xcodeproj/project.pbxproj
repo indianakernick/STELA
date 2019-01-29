@@ -332,7 +332,7 @@
 		4514ED6821FEBE200072F9BA /* generate class.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate class.cpp"; sourceTree = "<group>"; };
 		4514ED6A21FFE7A90072F9BA /* reflect decl.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "reflect decl.hpp"; sourceTree = "<group>"; };
 		4514ED6B21FFE8380072F9BA /* reflect type.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "reflect type.hpp"; sourceTree = "<group>"; };
-		4514ED6C21FFE8D10072F9BA /* reflector.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = reflector.hpp; sourceTree = "<group>"; };
+		4514ED6C21FFE8D10072F9BA /* reflection state.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "reflection state.hpp"; sourceTree = "<group>"; };
 		4525048B21E83876004AE038 /* gen helpers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "gen helpers.cpp"; sourceTree = "<group>"; };
 		4525048C21E83876004AE038 /* gen helpers.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = "gen helpers.hpp"; sourceTree = "<group>"; };
 		4525048E21E83C16004AE038 /* generate array.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "generate array.cpp"; sourceTree = "<group>"; };
@@ -611,7 +611,7 @@
 				4514ED6521FE64C60072F9BA /* meta.hpp */,
 				4514ED6A21FFE7A90072F9BA /* reflect decl.hpp */,
 				4514ED6B21FFE8380072F9BA /* reflect type.hpp */,
-				4514ED6C21FFE8D10072F9BA /* reflector.hpp */,
+				4514ED6C21FFE8D10072F9BA /* reflection state.hpp */,
 			);
 			name = Binding;
 			sourceTree = "<group>";
