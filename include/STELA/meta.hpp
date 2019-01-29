@@ -138,12 +138,48 @@ static_assert(
   static_cast<long(detail::Dummy::*)(int, short) noexcept>(&detail::Dummy::fun)
 );
 
+template <typename Sig>
+constexpr auto overload(Sig *fun) {
+  return fun;
+}
+
+namespace detail {
+
+char dummyFun();
+unsigned dummyFun(double);
+long dummyFun(int, short) noexcept;
+
+}
+
+static_assert(
+  overload<char()>(detail::dummyFun) ==
+  static_cast<char(*)()>(detail::dummyFun)
+);
+static_assert(
+  overload<unsigned(double)>(detail::dummyFun) ==
+  static_cast<unsigned(*)(double)>(detail::dummyFun)
+);
+static_assert(
+  overload<long(int, short)>(detail::dummyFun) ==
+  static_cast<long(*)(int, short)>(detail::dummyFun)
+);
+
 template <typename Class, typename Member>
 size_t getOffset(Member (Class::*member)) {
   Class *const null = nullptr;
   Member *const pointer = &(null->*member);
   return reinterpret_cast<size_t>(pointer);
 }
+
+template <typename Family>
+struct TypeID {
+private:
+  static inline size_t counter = 0;
+
+public:
+  template <typename Type>
+  static inline const size_t id = counter++;
+};
 
 }
 

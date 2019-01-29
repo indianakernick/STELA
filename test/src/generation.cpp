@@ -3146,7 +3146,7 @@ TEST(External_func, User_type) {
 } // namespace
 
 template <>
-struct reflect<std::shared_ptr<int>> {
+struct stela::reflect<std::shared_ptr<int>> {
   STELA_REFLECT_NAME(std::shared_ptr<int>, SharedInt);
   STELA_CLASS();
   STELA_DECLS(
@@ -3155,10 +3155,25 @@ struct reflect<std::shared_ptr<int>> {
 };
 
 template <>
-struct reflect<int *> {
+struct stela::reflect<int *> {
   STELA_REFLECT_NAME(int *, IntPtr);
   STELA_PRIMITIVE(Opaq);
+  STELA_DECLS(
+    STELA_METHOD_PLAIN_NAME(load, +[](int *ptr) noexcept {
+      assert(ptr);
+      return *ptr;
+    })
+  );
 };
+
+stela::AST makeMemoryLib() {
+  stela::Reflector refl;
+  refl.reflectType<std::shared_ptr<int>>();
+  stela::AST lib;
+  lib.name = "memory";
+  refl.appendDeclsTo(lib.global);
+  return lib;
+}
 
 namespace {
 
@@ -3173,32 +3188,21 @@ TEST(External_func, Shared_ptr) {
     extern func getOr(ptr: SharedInt, value: sint) {
       var copy = identity(ptr);
       if (copy) {
-        return load_ptr(copy.get());
+        return copy.get().load();
       } else {
         return value;
       }
     }
   
     extern func getNull() {
-      var null: SharedInt;
-      return null;
+      return make SharedInt {};
     }
   )";
   
   Symbols syms = initModules(log());
   ASTs asts;
   asts.push_back(createAST(source, log()));
-  
-  AST lib;
-  lib.name = "memory";
-  Reflector refl;
-  refl.reflectType<std::shared_ptr<int>>();
-  refl.reflectPlainFunc("load_ptr", +[](int *ptr) noexcept {
-    assert(ptr);
-    return *ptr;
-  });
-  refl.appendDeclsTo(lib.global);
-  asts.push_back(lib);
+  asts.push_back(makeMemoryLib());
   
   const ModuleOrder order = findModuleOrder(asts, log());
   compileModules(syms, order, asts, log());

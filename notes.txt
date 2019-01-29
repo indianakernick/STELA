@@ -359,3 +359,6 @@ a string type that is optionally owning
     using bit in data pointer to determine view vs own
   char *data, size_t size, size_t cap
     using cap == 0 to determine view vs own
+error messages when we
+  compare a user type that doesn't have an operator==
+  try to copy a unique_ptr

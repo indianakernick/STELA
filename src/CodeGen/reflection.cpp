@@ -8,6 +8,8 @@
 
 #include "reflection.hpp"
 
+#include <unordered_map>
+
 std::string stela::mangledName(const std::string_view name) {
   static std::unordered_map<std::string_view, size_t> indicies;
   size_t &index = indicies[name];
