@@ -14,6 +14,7 @@
 #include <benchmark/benchmark.h>
 #include <STELA/code generation.hpp>
 #include <STELA/syntax analysis.hpp>
+#include <STELA/native functions.hpp>
 #include <STELA/semantic analysis.hpp>
 
 using namespace stela;

@@ -455,8 +455,7 @@ make
 This will build a static library, a command-line tool and a test suite. Optionally, you may install these.
 
 ```bash
-# might want to run the tests before installing
-make CTEST_OUTPUT_ON_FAILURE=1 test
+make check
 make install
 ```
 

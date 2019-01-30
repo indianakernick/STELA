@@ -54,4 +54,4 @@ script:
 - cd build
 - cmake -DCMAKE_BUILD_TYPE=Debug ${DEFINITION} ..
 - make
-- make CTEST_OUTPUT_ON_FAILURE=1 test
+- make check

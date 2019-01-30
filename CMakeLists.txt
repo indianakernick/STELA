@@ -213,3 +213,7 @@ install(TARGETS STELA
 add_subdirectory(CLI)
 enable_testing()
 add_subdirectory(test EXCLUDE_FROM_ALL)
+add_custom_target(check
+    COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+    DEPENDS Lexer Syntax Semantics Generation Format Compiler Language
+)
