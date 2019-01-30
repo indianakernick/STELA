@@ -3143,6 +3143,8 @@ TEST(External_func, User_type) {
   EXPECT_EQ(test(Vec2{4.0f, 20.0f}), 25.0f);
 }
 
+/*
+
 } // namespace
 
 template <>
@@ -3236,7 +3238,7 @@ TEST(External_func, Shared_ptr) {
   std::shared_ptr<int> nullPtr = getNull();
   EXPECT_EQ(nullPtr.use_count(), 0);
   EXPECT_FALSE(nullPtr);
-}
+}*/
 
 TEST(External_func, Globals) {
   EXPECT_SUCCEEDS(R"(
