@@ -131,18 +131,15 @@ int main() {
   // Make sure LLVM is initialized before you do any code generation
   stela::initLLVM();
   
-  // Generate LLVM IR
-  // The whole program (with all of the modules) is compiled to one llvm::Module
-  std::unique_ptr<llvm::Module> module = stela::generateIR(syms, sink);
-  // Create an executable from the LLVM IR
-  llvm::ExecutionEngine *engine = stela::generateCode(std::move(module), sink);
+  // Generate LLVM IR and create an executable
+  llvm::ExecutionEngine *engine = stela::generateCode(syms, sink);
   
   // stela::Real is just an alias for float so you can do this if you want
   // using Signature = float(float, float);
   using Signature = stela::Real(stela::Real, stela::Real);
   // There's no type checking yet
   // We're just blindly reinterpret_casting a pointer
-  stela::Function<Signature> plus{engine->getFunctionAddress("plus")};
+  stela::Function plus = stela::getFunc<Signature>(engine, "plus");
   std::cout << "7 + 9 = " << plus(7.0f, 9.0f) << '\n';
   
   stela::quitLLVM();
