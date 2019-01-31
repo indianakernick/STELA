@@ -334,7 +334,7 @@ void closures_stela(::benchmark::State &state) {
   )");
   
   auto apply = GET_FUNC("apply", Sint(Closure<Sint(Sint)>, Sint));
-  auto fn = makeClosureFromFunc<operation>();
+  auto fn = makeClosureFromFunc<&operation>();
   ::benchmark::ClobberMemory();
   
   for (auto _ : state) {
@@ -349,7 +349,7 @@ Sint apply(std::function<Sint(Sint)> fn, Sint arg) {
 }
 
 void closures_cpp(::benchmark::State &state) {
-  volatile auto *op = operation;
+  volatile auto *op = &operation;
   std::function<Sint(Sint)> fn = op;
   ::benchmark::ClobberMemory();
   

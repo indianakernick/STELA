@@ -17,7 +17,7 @@ namespace stela::bnd {
 template <typename... Types>
 struct Decls {
   template <typename... DeclTypes>
-  Decls(const DeclTypes &... decls) noexcept
+  Decls(DeclTypes... decls) noexcept
     : decls{decls...} {}
   
   void reg(ReflectionState &state) const {
@@ -44,7 +44,7 @@ struct Decls<> {
 };
 
 template <typename... Types>
-Decls(const Types &...) -> Decls<Types...>;
+Decls(Types...) -> Decls<Types...>;
 
 /// A method implemented as a member function pointer
 template <auto MemFunPtr>
